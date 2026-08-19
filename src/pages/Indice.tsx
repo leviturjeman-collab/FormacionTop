@@ -55,14 +55,24 @@ export default function Indice({ letter }: { letter?: string }) {
           <dl>
             {groups.get(item)!.map((entry) => (
               <div className="st-index-entry" key={entry.term}>
-                <dt>{entry.term}</dt>
+                <dt>
+                  {entry.term}
+                  {entry.meaning && <em>{entry.meaning}</em>}
+                </dt>
                 <dd>
-                  {entry.meaning && <p>{entry.meaning}</p>}
-                  <div className="st-index-links">
-                    {entry.lessons.map((lesson) => (
-                      <a key={lesson.slug} href={href({ name: 'leccion', slug: lesson.slug })}>{lesson.title}</a>
-                    ))}
-                  </div>
+                  {entry.long && <p className="st-index-long">{entry.long}</p>}
+                  {entry.analogy && <p className="st-index-analogy">{entry.analogy}</p>}
+                  {entry.confusion && <p className="st-index-confusion"><b>No lo confundas:</b> {entry.confusion}</p>}
+                  {(entry.seeAlso?.length || entry.lessons.length) > 0 && (
+                    <div className="st-index-links">
+                      {(entry.seeAlso || []).map((related) => (
+                        <a key={related} href={href({ name: 'indice', letter: related[0].toUpperCase() })}>{related}</a>
+                      ))}
+                      {entry.lessons.map((lesson) => (
+                        <a key={lesson.slug} href={href({ name: 'leccion', slug: lesson.slug })}>{lesson.title}</a>
+                      ))}
+                    </div>
+                  )}
                 </dd>
               </div>
             ))}

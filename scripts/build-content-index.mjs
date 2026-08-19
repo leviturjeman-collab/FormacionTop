@@ -365,9 +365,23 @@ if (await exists(quizDir)) {
 
 /* --- Indice alfabetico de conceptos -------------------------------- */
 
-const glossaryIndex = buildGlossaryIndex(
-  lessons.map((lesson) => ({ slug: lesson.slug, title: lesson.title, terms: lesson.indexTerms || [] })),
-)
+// El glosario escrito a mano (content/glosario/) sustituye por completo al
+// automático: el automático recogía nombres de archivo sin definición.
+const glosarioManual = (await loadContent('glosario'))[0]
+const glossaryIndex = glosarioManual?.terms?.length
+  ? glosarioManual.terms.map((entry) => ({
+      term: entry.term,
+      letter: entry.letter || entry.term[0].toUpperCase(),
+      meaning: entry.short,
+      long: entry.long,
+      analogy: entry.analogy || null,
+      confusion: entry.confusion || null,
+      seeAlso: entry.seeAlso || [],
+      lessons: [],
+    }))
+  : buildGlossaryIndex(
+      lessons.map((lesson) => ({ slug: lesson.slug, title: lesson.title, terms: lesson.indexTerms || [] })),
+    )
 for (const lesson of lessons) delete lesson.indexTerms
 
 /* --- Paginas por herramienta --------------------------------------- */

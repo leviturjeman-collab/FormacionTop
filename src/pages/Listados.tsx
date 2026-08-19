@@ -432,5 +432,52 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
       ignore: guide.ignore,
     },
   ]
+
+  // Las secciones nuevas: atajos, lo del día a día, plantillas listas,
+  // errores frecuentes y prompts propios de la herramienta.
+  if (guide.shortcuts?.length) {
+    blocks.push({
+      kind: 'palabras',
+      title: 'Atajos y botones que vas a usar cada día',
+      items: guide.shortcuts.map(([term, meaning]) => ({ term, meaning })),
+    })
+  }
+
+  if (guide.daily?.length) {
+    blocks.push({
+      kind: 'comprobar',
+      title: `El 20% de ${label} que resuelve el 80% del trabajo`,
+      items: guide.daily,
+    })
+  }
+
+  for (const template of guide.templates || []) {
+    blocks.push({
+      kind: 'receta',
+      title: `Listo para usar: ${template.name}`,
+      text: `${template.what} ${template.how}`,
+      code: template.code,
+      lang: 'json',
+      lines: template.fill,
+    })
+  }
+
+  if (guide.errors?.length) {
+    blocks.push({
+      kind: 'palabras',
+      title: 'Errores que te vas a encontrar, con su arreglo',
+      items: guide.errors.map(([term, meaning]) => ({ term, meaning })),
+    })
+  }
+
+  for (const item of guide.prompts || []) {
+    blocks.push({
+      kind: 'codigo',
+      title: `Prompt: ${item.name}`,
+      code: item.prompt,
+      lang: 'prompt',
+    })
+  }
+
   return blocks
 }

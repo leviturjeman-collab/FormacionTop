@@ -338,6 +338,11 @@ export interface GlossaryEntry {
   term: string
   meaning: string
   letter: string
+  /** Del glosario escrito a mano: explicación larga, analogía y confusiones. */
+  long?: string
+  analogy?: string | null
+  confusion?: string | null
+  seeAlso?: string[]
   lessons: { slug: string; title: string }[]
 }
 

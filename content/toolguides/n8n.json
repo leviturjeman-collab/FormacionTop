@@ -1,0 +1,309 @@
+{
+  "id": "n8n",
+  "tool": "n8n",
+  "plain": "n8n es un tablero donde montas recados automáticos uniendo cajitas con una línea, como quien dibuja una tubería: por un lado entra algo (un correo, un mensaje de WhatsApp, la hora de la mañana) y por el otro sale una acción hecha sin que tú estés delante. Se parece a Zapier, pero con dos diferencias que se notan en la cartera y en la libertad: te cobra por recado completo en vez de por cada paso, y puedes tenerlo en un ordenador tuyo alquilado por cinco euros al mes con recados ilimitados. Lo que lo hace especial para este curso es que un flujo entero de n8n es un texto que se copia y se pega: le pides a la IA \"escríbeme el flujo\", copias lo que te devuelve, pulsas Ctrl+V encima del tablero y aparecen todas las cajitas ya unidas. Tú solo pones tus datos y le das al interruptor.",
+  "account": {
+    "url": "n8n.io",
+    "free": "Dos caminos. El fácil: n8n Cloud, la versión que ellos alojan, con 14 días de prueba gratis y sin tarjeta. Cuando se acaba, el plan Starter ronda los 20-24 € al mes (unas 2.500 ejecuciones y 5 flujos encendidos a la vez) y el Pro los 50-60 €. El camino barato: instalarlo tú en un ordenador alquilado (un VPS de Hetzner o DigitalOcean por 4-6 € al mes); el programa es gratis y las ejecuciones son ilimitadas, pero el que arregla las averías eres tú. Los precios cambian cada pocos meses: mira n8n.io/pricing el día que vayas a pagar en vez de fiarte de esta cifra. Aparte, la IA que uses dentro (OpenAI, Claude) se paga por separado y no está incluida en ningún plan.",
+    "steps": [
+      [
+        "Crea la cuenta en n8n.io",
+        "Botón 'Get started free' (empieza gratis) arriba a la derecha. Elige la opción Cloud, no la de descargar. Te pide correo y contraseña, y te hace elegir la región del servidor: elige la europea si vas a mover datos de clientes españoles. Esa elección no se cambia luego."
+      ],
+      [
+        "Salta el cuestionario y fíjate en el reloj de la prueba",
+        "Te pregunta a qué te dedicas y qué quieres automatizar. Contesta rápido o pulsa 'Skip'. Arriba verás un aviso tipo 'X days left in your trial' (te quedan X días de prueba). Anótalo en el calendario: el día 15 los flujos se apagan y dejan de hacer su trabajo en silencio."
+      ],
+      [
+        "Abre tu primer lienzo vacío",
+        "En la pantalla de inicio, botón naranja 'Create Workflow' (crear flujo) arriba a la derecha. Se abre un tablero gris casi vacío con un cuadro que pone 'Add first step...' (añade el primer paso). Ese tablero se llama lienzo (canvas) y es donde vas a vivir."
+      ],
+      [
+        "Conecta una sola cuenta, tu Gmail o tu Telegram",
+        "Menú de la izquierda, 'Overview' (resumen) y pestaña 'Credentials' (credenciales), botón 'Add credential'. Busca 'Gmail OAuth2'. Se abre una ventana de Google pidiendo permisos: léelos, porque ahí es donde le das acceso de verdad a tu correo. En n8n Cloud esta conexión se hace en dos clics; si te lo has instalado tú, Gmail te obliga a crear un proyecto en Google Cloud y eso lleva media hora larga."
+      ],
+      [
+        "Pon el interruptor de Telegram como red de seguridad",
+        "Antes de nada, abre Telegram en el móvil, busca @BotFather, escríbele /newbot y sigue los pasos. Te devuelve un token (una contraseña larga). Luego escríbele a tu bot cualquier cosa y busca @userinfobot para saber tu chat ID (tu número de usuario). Con esas dos cosas ya puedes recibir avisos gratis e instantáneos. Es lo más barato que vas a montar y lo que más vas a usar."
+      ],
+      [
+        "Importa tu primer flujo pegándolo",
+        "Copia el JSON de la plantilla 'Avísame cuando algo falle' de esta guía, vuelve al lienzo, haz clic en cualquier hueco gris y pulsa Ctrl+V. Aparecen las cajitas ya unidas. Eso es todo el ritual de importar: no hay menú, no hay diálogo de subir archivo. Ctrl+V."
+      ],
+      [
+        "Guarda y mira dónde está el interruptor",
+        "Ctrl+S guarda. Arriba a la derecha hay un interruptor que pone 'Inactive' (apagado). Mientras esté apagado, el flujo solo corre cuando le das a 'Test workflow'. En cuanto lo pases a 'Active' empieza a actuar solo sobre tus datos reales. No lo toques todavía."
+      ]
+    ],
+    "warning": "Activar un flujo no es un simulacro: hace cosas de verdad, en tus cuentas de verdad, y no hay botón de deshacer. El accidente de manual es el bucle de correo: montas un flujo que se dispara con cada correo entrante y que responde por correo, alguien tiene respuesta automática puesta, y en diez minutos has mandado doscientos mensajes desde tu dirección real. Por eso las plantillas de esta guía guardan borradores en vez de enviar. Y si te lo instalas tú en un servidor: n8n cifra tus contraseñas con una clave llamada N8N_ENCRYPTION_KEY que se genera sola la primera vez. Cópiala y guárdala fuera del servidor hoy mismo. Si pierdes esa clave, todas tus credenciales guardadas se vuelven ilegibles para siempre y hay que reconectar cuenta por cuenta a mano."
+  },
+  "first": [
+    "Pega el flujo 'Avísame cuando algo falle' con Ctrl+V, mete tu chat ID de Telegram y guárdalo. Cinco minutos y ya tienes vigilante.",
+    "Pega el flujo 'Vigilante de mi web', cambia el dominio por el tuyo y pulsa 'Test workflow' abajo en el centro. Mira cómo se ponen verdes las cajitas una a una.",
+    "Haz doble clic en la cajita 'Llamar a la web' y quédate mirando las tres columnas: izquierda INPUT (lo que entra), centro los ajustes, derecha OUTPUT (lo que sale). Ese panel es el 80% de n8n.",
+    "En la columna OUTPUT pincha la pestaña 'Schema' (esquema), agarra el campo statusCode con el ratón y suéltalo dentro de un hueco de texto de otro nodo. n8n escribe la fórmula sola. No vuelvas a teclear un nombre de campo nunca más.",
+    "Selecciona un nodo, pulsa la tecla P y fíjate en el icono de chincheta: acabas de congelar el resultado de la prueba. Ahora puedes tocar el resto del flujo mil veces sin volver a llamar a la web ni gastar dinero de IA."
+  ],
+  "shortcuts": [
+    [
+      "Ctrl+V encima del lienzo",
+      "Pega un flujo entero desde el portapapeles: las cajitas aparecen ya colocadas y unidas. Es la forma de importar cualquier plantilla, la tuya o la que te acaba de escribir la IA. Si aprendes un solo atajo, que sea este."
+    ],
+    [
+      "Ctrl+A y luego Ctrl+C",
+      "Selecciona todo el flujo y lo copia al portapapeles como texto. Sirve para pegárselo a la IA y decirle 'arréglame esto' o 'añádele un paso'. Copiar y pegar es cómo se hacen copias de seguridad y cómo se pide ayuda."
+    ],
+    [
+      "Tab",
+      "Abre el buscador de nodos por la derecha. Escribes 'gmail', 'telegram', 'whatsapp' o 'wait' y le das a Enter. Más rápido que buscar el botón +, y es como añades cualquier paso."
+    ],
+    [
+      "Doble clic en una cajita",
+      "Abre el panel de tres columnas: INPUT a la izquierda, los ajustes en el centro, OUTPUT a la derecha. Aquí es donde de verdad se trabaja. Para salir, tecla Escape o el botón 'Back to canvas' arriba a la izquierda."
+    ],
+    [
+      "Arrastrar un campo de INPUT a un hueco",
+      "En la columna INPUT, pestaña 'Schema', agarras el nombre del campo y lo sueltas dentro del hueco que quieras rellenar. n8n escribe la fórmula exacta él solo. Escribir esos nombres a mano es la causa número uno de flujos que no funcionan."
+    ],
+    [
+      "Tecla P con un nodo seleccionado",
+      "Pone o quita la chincheta (pin) sobre el resultado de la prueba. Congelado, el nodo devuelve siempre esos mismos datos y deja de llamar a la aplicación de verdad. Ahorra dinero de IA y evita mandar correos sin querer mientras montas."
+    ],
+    [
+      "Tecla D con un nodo seleccionado",
+      "Apaga o enciende esa cajita sola. El flujo la salta como si no existiera. Es el truco para probar un flujo de correo sin el último paso, el que envía."
+    ],
+    [
+      "Ctrl+Enter",
+      "Ejecuta el flujo entero de principio a fin, lo mismo que el botón 'Test workflow' de abajo en el centro. Las cajitas se van poniendo verdes y la que falle sale con borde rojo."
+    ],
+    [
+      "Ctrl+S",
+      "Guarda. n8n no guarda solo. Los cambios que no guardas se pierden al recargar, y un flujo activo sigue corriendo la versión vieja hasta que guardas."
+    ],
+    [
+      "Tecla 1, tecla 0 y Ctrl+arrastrar",
+      "1 encaja todo el flujo en la pantalla, 0 vuelve al zoom normal, y arrastrar con Ctrl pulsado (o con la rueda del ratón pulsada) mueve el lienzo sin tocar las cajitas. Con Shift+S sueltas una nota amarilla para dejarte recordatorios encima del flujo."
+    ]
+  ],
+  "daily": [
+    "El panel de tres columnas. Doble clic en cualquier nodo y ves a la vez lo que le llega (INPUT), lo que hace (centro) y lo que devuelve (OUTPUT). Si algo no sale como esperas, la respuesta está siempre en la columna izquierda: te está llegando otra cosa distinta de la que creías.",
+    "Arrastrar campos en vez de escribirlos. Pestaña 'Schema' en INPUT, agarras el campo, lo sueltas en el hueco. El hueco se pone morado y aparece la fórmula. Debajo verás en gris el valor real que va a llevar: si ahí pone [undefined], la fórmula apunta a un sitio vacío.",
+    "'Test step' antes que 'Test workflow'. Cada nodo tiene su propio botón de probar (arriba de la columna OUTPUT). Montas un paso, lo pruebas, ves los datos, y solo entonces añades el siguiente. Montar cinco pasos de golpe y probar al final es cómo se pierde una tarde.",
+    "La chincheta. Pulsa P sobre el nodo disparador y su resultado queda congelado. Ese correo de prueba, ese mensaje de WhatsApp, esa fila. Ahora repites el flujo cuarenta veces sin gastar ni un céntimo de IA y sin depender de que llegue un correo nuevo.",
+    "El historial. Menú de la izquierda, 'Executions' (ejecuciones). Sale la lista de todas las veces que ha corrido cada flujo, en verde o en rojo. Pinchas una y ves el flujo exactamente como estaba en ese momento, con los datos que pasaron por cada cajita. Es la caja negra del avión.",
+    "Las credenciales viven aparte. Conectas Gmail una vez y esa conexión la reutilizan todos los nodos de Gmail de todos tus flujos. Si algo deja de funcionar de golpe en varios flujos a la vez, casi siempre es que caducó una credencial, no que se rompieran los flujos.",
+    "Guardar no es activar. Ctrl+S guarda el dibujo. El interruptor de arriba a la derecha, pasar de 'Inactive' a 'Active', es lo que lo pone a trabajar solo. Un flujo guardado y apagado no hace absolutamente nada, por muy bonito que sea."
+  ],
+  "templates": [
+    {
+      "name": "Bandeja bajo control: cada correo nuevo, un borrador escrito por la IA",
+      "what": "Vigila tu Gmail. Cuando entra un correo sin leer, la IA lo lee, decide si merece respuesta y, si la merece, escribe el borrador y lo deja guardado en el hilo de Gmail. No envía nada: tú abres Gmail, lees, corriges dos palabras y le das a enviar. Para cualquiera que reciba entre diez y cien correos al día y pierda la mañana contestando lo mismo. La publicidad y las notificaciones automáticas las descarta solas.",
+      "how": "Copia el bloque de texto de abajo entero. Abre n8n, botón 'Create Workflow', haz clic en cualquier zona gris del lienzo y pulsa Ctrl+V. Aparecen las cuatro cajitas unidas. Haz doble clic en 'Correo nuevo' y en 'Credential to connect with' elige tu Gmail (o créala ahí mismo con 'Create new credential'). Repite en 'Guardar borrador' con la misma credencial, y en 'IA redacta' elige tu cuenta de OpenAI. Ahora abre 'IA redacta' y cambia los [CORCHETES] del recuadro de arriba por tus datos. Pulsa 'Test workflow' abajo en el centro: coge tu último correo sin leer y verás el borrador en tu Gmail en unos segundos. Cuando te guste el tono, Ctrl+S y pasa el interruptor a 'Active'.",
+      "fill": [
+        [
+          "[TU NOMBRE] y [TU NEGOCIO] dentro del nodo 'IA redacta'",
+          "Tu nombre real y una frase de qué haces: 'Levi, que lleva una tienda online de material de escalada'"
+        ],
+        [
+          "El modelo en 'IA redacta'",
+          "gpt-4o-mini si quieres barato (céntimos al mes con este volumen); gpt-4o si quieres que escriba mejor y te da igual pagar unos euros"
+        ],
+        [
+          "Credencial de Gmail en los nodos 'Correo nuevo' y 'Guardar borrador'",
+          "Tu cuenta de correo. Usa una cuenta de pruebas la primera semana, no la del negocio"
+        ],
+        [
+          "El filtro de 'Correo nuevo'",
+          "Viene puesto en INBOX y sin leer. Si recibes mucho, cámbialo por una etiqueta concreta de Gmail para que solo mire esos"
+        ],
+        [
+          "La frecuencia de 'Correo nuevo'",
+          "Viene cada minuto. En n8n Cloud eso son hasta 43.200 comprobaciones al mes: si vas justo de plan, ponlo cada 15 minutos"
+        ]
+      ],
+      "code": "{\n  \"name\": \"Bandeja bajo control - borrador con IA\",\n  \"nodes\": [\n    {\n      \"parameters\": {\n        \"pollTimes\": {\n          \"item\": [\n            {\n              \"mode\": \"everyMinute\"\n            }\n          ]\n        },\n        \"simple\": false,\n        \"filters\": {\n          \"labelIds\": [\n            \"INBOX\"\n          ],\n          \"readStatus\": \"unread\"\n        },\n        \"options\": {}\n      },\n      \"id\": \"n8n-mail-01\",\n      \"name\": \"Correo nuevo\",\n      \"type\": \"n8n-nodes-base.gmailTrigger\",\n      \"typeVersion\": 1.2,\n      \"position\": [\n        -260,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"modelId\": {\n          \"__rl\": true,\n          \"value\": \"gpt-4o-mini\",\n          \"mode\": \"list\",\n          \"cachedResultName\": \"gpt-4o-mini\"\n        },\n        \"messages\": {\n          \"values\": [\n            {\n              \"role\": \"system\",\n              \"content\": \"Eres el asistente de [TU NOMBRE], que lleva [TU NEGOCIO]. Escribes borradores de respuesta en español de España, tuteando, en menos de 120 palabras. Nunca inventes precios, plazos ni disponibilidad: si el correo pide un dato que no tienes, deja el hueco escrito como [CONFIRMAR]. No prometas nada. Firma siempre como [TU NOMBRE]. Si el correo es publicidad, una factura automática o una notificación de una aplicacion, responde exactamente con la palabra IGNORAR y nada mas.\"\n            },\n            {\n              \"content\": \"=De: {{ $json.from.value[0].address }}\\nAsunto: {{ $json.subject }}\\n\\n{{ $json.text }}\"\n            }\n          ]\n        },\n        \"options\": {\n          \"temperature\": 0.3\n        }\n      },\n      \"id\": \"n8n-mail-02\",\n      \"name\": \"IA redacta\",\n      \"type\": \"@n8n/n8n-nodes-langchain.openAi\",\n      \"typeVersion\": 1.8,\n      \"position\": [\n        -40,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"conditions\": {\n          \"options\": {\n            \"caseSensitive\": false,\n            \"leftValue\": \"\",\n            \"typeValidation\": \"loose\",\n            \"version\": 2\n          },\n          \"conditions\": [\n            {\n              \"id\": \"cond-ignorar\",\n              \"leftValue\": \"={{ $json.message.content }}\",\n              \"rightValue\": \"IGNORAR\",\n              \"operator\": {\n                \"type\": \"string\",\n                \"operation\": \"notContains\"\n              }\n            }\n          ],\n          \"combinator\": \"and\"\n        },\n        \"looseTypeValidation\": true,\n        \"options\": {}\n      },\n      \"id\": \"n8n-mail-03\",\n      \"name\": \"Merece respuesta\",\n      \"type\": \"n8n-nodes-base.if\",\n      \"typeVersion\": 2.2,\n      \"position\": [\n        180,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"resource\": \"draft\",\n        \"subject\": \"=Re: {{ $('Correo nuevo').item.json.subject }}\",\n        \"emailType\": \"text\",\n        \"message\": \"={{ $json.message.content }}\",\n        \"options\": {\n          \"sendTo\": \"={{ $('Correo nuevo').item.json.from.value[0].address }}\",\n          \"threadId\": \"={{ $('Correo nuevo').item.json.threadId }}\"\n        }\n      },\n      \"id\": \"n8n-mail-04\",\n      \"name\": \"Guardar borrador\",\n      \"type\": \"n8n-nodes-base.gmail\",\n      \"typeVersion\": 2.1,\n      \"position\": [\n        420,\n        -100\n      ]\n    }\n  ],\n  \"connections\": {\n    \"Correo nuevo\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"IA redacta\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"IA redacta\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Merece respuesta\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Merece respuesta\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Guardar borrador\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ],\n        []\n      ]\n    }\n  },\n  \"pinData\": {},\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    },
+    {
+      "name": "Asistente de WhatsApp que contesta solo las preguntas de siempre",
+      "what": "Alguien te escribe al WhatsApp del negocio preguntando el horario, la dirección o cuánto cuesta algo. La IA le contesta en dos frases al momento, con los datos que tú le has dado, y si le preguntan algo que no sabe dice que lo mira una persona. Descarta los audios y las fotos para no responder tonterías. Para tiendas, consultas, academias y cualquiera que conteste lo mismo veinte veces al día.",
+      "how": "Antes de tocar n8n hay una parte tediosa que no se puede saltar: WhatsApp para empresas va por Meta. Entra en developers.facebook.com, crea una app de tipo Business, añade el producto 'WhatsApp' y apunta dos cosas de la pantalla de configuración: el 'Phone number ID' (identificador del número) y el token de acceso. Con eso ya puedes seguir. En n8n, pega el JSON de abajo con Ctrl+V. Abre 'Mensaje de WhatsApp', crea la credencial 'WhatsApp Trigger API' con tu token y tu 'App Secret'; n8n te enseña una URL y un 'Verify Token' que tienes que copiar en Meta, en WhatsApp > Configuration > Webhook, y marcar la casilla 'messages'. Abre 'Responder por WhatsApp' y pega tu Phone number ID donde pone PEGA_AQUI. Cambia los [CORCHETES] del nodo 'IA contesta' por tus datos. Guarda y activa: el disparador de WhatsApp solo escucha con el flujo en 'Active'.",
+      "fill": [
+        [
+          "PEGA_AQUI_TU_PHONE_NUMBER_ID en 'Responder por WhatsApp'",
+          "El número largo que te da Meta en WhatsApp > API Setup. No es tu número de teléfono, es un identificador"
+        ],
+        [
+          "[TU HORARIO], [TU DIRECCION], [TUS PRECIOS], [TU PLAZO] en 'IA contesta'",
+          "Escríbelo tal cual se lo dirías a un empleado nuevo. Lo que no pongas ahí, la IA no lo sabe y remitirá a una persona"
+        ],
+        [
+          "Credencial 'WhatsApp Trigger API'",
+          "Tu token de acceso de Meta y el App Secret de la app. Los dos están en developers.facebook.com"
+        ],
+        [
+          "Credencial 'WhatsApp API' del nodo que responde",
+          "El mismo token de acceso. Ojo: el token de prueba caduca a las 24 horas; para que aguante hay que generar uno permanente desde Business Settings > System Users"
+        ],
+        [
+          "Los números que pueden escribirte durante las pruebas",
+          "En Meta, apartado 'To', añade tu propio móvil a la lista de destinatarios permitidos. Mientras estés en modo prueba, a cualquier otro número no le llega nada"
+        ]
+      ],
+      "code": "{\n  \"name\": \"Asistente de WhatsApp\",\n  \"nodes\": [\n    {\n      \"parameters\": {\n        \"updates\": [\n          \"messages\"\n        ]\n      },\n      \"id\": \"n8n-wa-01\",\n      \"name\": \"Mensaje de WhatsApp\",\n      \"type\": \"n8n-nodes-base.whatsAppTrigger\",\n      \"typeVersion\": 1,\n      \"position\": [\n        -260,\n        0\n      ],\n      \"webhookId\": \"cambiame-al-importar\"\n    },\n    {\n      \"parameters\": {\n        \"conditions\": {\n          \"options\": {\n            \"caseSensitive\": true,\n            \"leftValue\": \"\",\n            \"typeValidation\": \"loose\",\n            \"version\": 2\n          },\n          \"conditions\": [\n            {\n              \"id\": \"cond-texto\",\n              \"leftValue\": \"={{ $json.messages[0].type }}\",\n              \"rightValue\": \"text\",\n              \"operator\": {\n                \"type\": \"string\",\n                \"operation\": \"equals\"\n              }\n            }\n          ],\n          \"combinator\": \"and\"\n        },\n        \"looseTypeValidation\": true,\n        \"options\": {}\n      },\n      \"id\": \"n8n-wa-02\",\n      \"name\": \"Solo texto\",\n      \"type\": \"n8n-nodes-base.if\",\n      \"typeVersion\": 2.2,\n      \"position\": [\n        -40,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"modelId\": {\n          \"__rl\": true,\n          \"value\": \"gpt-4o-mini\",\n          \"mode\": \"list\",\n          \"cachedResultName\": \"gpt-4o-mini\"\n        },\n        \"messages\": {\n          \"values\": [\n            {\n              \"role\": \"system\",\n              \"content\": \"Eres el asistente de WhatsApp de [TU NEGOCIO]. Contestas en español de España, tuteando, en 2 o 3 frases como maximo, sin listas ni negritas: es WhatsApp, no un correo. Datos que puedes dar: horario [TU HORARIO], direccion [TU DIRECCION], precios orientativos [TUS PRECIOS]. Si te preguntan algo que no esta en esa lista, contesta que lo mira una persona y que responden en menos de [TU PLAZO]. Nunca confirmes una reserva ni cobres nada.\"\n            },\n            {\n              \"content\": \"={{ $json.messages[0].text.body }}\"\n            }\n          ]\n        },\n        \"options\": {\n          \"temperature\": 0.4\n        }\n      },\n      \"id\": \"n8n-wa-03\",\n      \"name\": \"IA contesta\",\n      \"type\": \"@n8n/n8n-nodes-langchain.openAi\",\n      \"typeVersion\": 1.8,\n      \"position\": [\n        180,\n        -100\n      ]\n    },\n    {\n      \"parameters\": {\n        \"operation\": \"send\",\n        \"phoneNumberId\": \"PEGA_AQUI_TU_PHONE_NUMBER_ID\",\n        \"recipientPhoneNumber\": \"={{ $('Mensaje de WhatsApp').item.json.messages[0].from }}\",\n        \"textBody\": \"={{ $json.message.content }}\",\n        \"additionalFields\": {}\n      },\n      \"id\": \"n8n-wa-04\",\n      \"name\": \"Responder por WhatsApp\",\n      \"type\": \"n8n-nodes-base.whatsApp\",\n      \"typeVersion\": 1,\n      \"position\": [\n        400,\n        -100\n      ]\n    }\n  ],\n  \"connections\": {\n    \"Mensaje de WhatsApp\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Solo texto\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Solo texto\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"IA contesta\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ],\n        []\n      ]\n    },\n    \"IA contesta\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Responder por WhatsApp\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"pinData\": {},\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    },
+    {
+      "name": "Vigilante de tu web con aviso instantáneo al móvil",
+      "what": "Cada 15 minutos llama a tu web. Si no responde con normalidad, te manda un mensaje de Telegram al móvil con el código del fallo y la hora. Para cualquiera que haya montado una web o una tienda con IA y no quiera enterarse de que llevaba dos días caída porque se lo dijo un cliente. Telegram es gratis e instantáneo, y llega aunque estés en el metro.",
+      "how": "Necesitas el bot de Telegram del paso 5 de la instalación: el token de @BotFather y tu chat ID de @userinfobot. Pega el JSON de abajo con Ctrl+V en un lienzo nuevo. Abre 'Llamar a la web' y cambia https://[TU-DOMINIO].com por tu dirección de verdad, con https delante. Abre 'Avisarme por Telegram', crea la credencial pegando el token del bot, y sustituye PEGA_AQUI_TU_CHAT_ID por tu número. Para probarlo sin esperar a que se caiga nada: cambia la dirección por una inventada tipo https://estonoexiste-1234.com, pulsa 'Test workflow' y comprueba que te llega el aviso al móvil. Luego devuelve tu dirección real, Ctrl+S y pasa el interruptor a 'Active'.",
+      "fill": [
+        [
+          "https://[TU-DOMINIO].com en 'Llamar a la web'",
+          "La dirección de tu web o de tu tienda, entera y con https://"
+        ],
+        [
+          "PEGA_AQUI_TU_CHAT_ID en 'Avisarme por Telegram'",
+          "El número que te da @userinfobot en Telegram. Es un número, sin comillas ni arroba"
+        ],
+        [
+          "Credencial de Telegram",
+          "El token que te dio @BotFather, del estilo 7123456789:AAH... Pégalo entero"
+        ],
+        [
+          "Los 15 minutos de 'Cada 15 minutos'",
+          "Cada comprobación es una ejecución. 15 minutos son unas 2.880 al mes, más de lo que trae el plan Starter de n8n Cloud. Si estás en Cloud, pon 30 o 60 minutos; si te lo has instalado tú, déjalo en 5 si quieres"
+        ]
+      ],
+      "code": "{\n  \"name\": \"Vigilante de mi web\",\n  \"nodes\": [\n    {\n      \"parameters\": {\n        \"rule\": {\n          \"interval\": [\n            {\n              \"field\": \"minutes\",\n              \"minutesInterval\": 15\n            }\n          ]\n        }\n      },\n      \"id\": \"n8n-vig-01\",\n      \"name\": \"Cada 15 minutos\",\n      \"type\": \"n8n-nodes-base.scheduleTrigger\",\n      \"typeVersion\": 1.2,\n      \"position\": [\n        -280,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"url\": \"https://[TU-DOMINIO].com\",\n        \"options\": {\n          \"timeout\": 10000,\n          \"response\": {\n            \"response\": {\n              \"fullResponse\": true,\n              \"neverError\": true\n            }\n          }\n        }\n      },\n      \"id\": \"n8n-vig-02\",\n      \"name\": \"Llamar a la web\",\n      \"type\": \"n8n-nodes-base.httpRequest\",\n      \"typeVersion\": 4.2,\n      \"position\": [\n        -60,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"conditions\": {\n          \"options\": {\n            \"caseSensitive\": true,\n            \"leftValue\": \"\",\n            \"typeValidation\": \"loose\",\n            \"version\": 2\n          },\n          \"conditions\": [\n            {\n              \"id\": \"cond-caida\",\n              \"leftValue\": \"={{ $json.statusCode }}\",\n              \"rightValue\": 200,\n              \"operator\": {\n                \"type\": \"number\",\n                \"operation\": \"notEquals\"\n              }\n            }\n          ],\n          \"combinator\": \"and\"\n        },\n        \"looseTypeValidation\": true,\n        \"options\": {}\n      },\n      \"id\": \"n8n-vig-03\",\n      \"name\": \"Esta caida\",\n      \"type\": \"n8n-nodes-base.if\",\n      \"typeVersion\": 2.2,\n      \"position\": [\n        160,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"chatId\": \"PEGA_AQUI_TU_CHAT_ID\",\n        \"text\": \"=🔴 [TU-DOMINIO].com no responde bien.\\nCodigo: {{ $json.statusCode }}\\nHora: {{ $now.setZone('Europe/Madrid').toFormat('dd/MM/yyyy HH:mm') }}\",\n        \"additionalFields\": {}\n      },\n      \"id\": \"n8n-vig-04\",\n      \"name\": \"Avisarme por Telegram\",\n      \"type\": \"n8n-nodes-base.telegram\",\n      \"typeVersion\": 1.2,\n      \"position\": [\n        400,\n        -100\n      ]\n    }\n  ],\n  \"connections\": {\n    \"Cada 15 minutos\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Llamar a la web\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Llamar a la web\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Esta caida\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Esta caida\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Avisarme por Telegram\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ],\n        []\n      ]\n    }\n  },\n  \"pinData\": {},\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    },
+    {
+      "name": "Avísame cuando algo falle (el flujo que salva a los demás)",
+      "what": "Dos cajitas. Se dispara cuando cualquier otro flujo tuyo se rompe y te manda a Telegram el nombre del flujo, el nodo que petó, el mensaje de error y un enlace directo para verlo. Sin esto, un flujo puede llevar tres semanas fallando en silencio y tú creyendo que todo va bien, porque n8n no avisa por su cuenta. Es el primero que debes montar y el que menos tiempo cuesta.",
+      "how": "Pega el JSON de abajo con Ctrl+V en un lienzo nuevo. Pon tu chat ID y tu credencial de Telegram igual que en el vigilante. Ctrl+S y llámalo 'Avísame cuando algo falle'. Este flujo NO se activa con el interruptor: se queda apagado a propósito, porque se dispara solo cuando otro falla. Ahora ve a cada uno de tus otros flujos, abre los tres puntos de arriba a la derecha, entra en 'Settings' (ajustes) y en el desplegable 'Error Workflow' (flujo de errores) elige este. Hay que hacerlo flujo por flujo, no se hereda. Para probarlo, mete a propósito una credencial mal en un flujo de prueba y ejecútalo.",
+      "fill": [
+        [
+          "PEGA_AQUI_TU_CHAT_ID",
+          "Tu chat ID de Telegram, el mismo del vigilante"
+        ],
+        [
+          "Credencial de Telegram",
+          "El mismo bot que ya creaste. No hace falta uno nuevo"
+        ],
+        [
+          "El desplegable 'Error Workflow' de cada flujo",
+          "Elige este flujo en los ajustes de todos los demás, uno a uno. Si no lo haces, no se entera de nada"
+        ]
+      ],
+      "code": "{\n  \"name\": \"Avisame cuando algo falle\",\n  \"nodes\": [\n    {\n      \"parameters\": {},\n      \"id\": \"n8n-err-01\",\n      \"name\": \"Cuando falla un flujo\",\n      \"type\": \"n8n-nodes-base.errorTrigger\",\n      \"typeVersion\": 1,\n      \"position\": [\n        -200,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"chatId\": \"PEGA_AQUI_TU_CHAT_ID\",\n        \"text\": \"=⚠️ Se ha roto un flujo de n8n\\n\\nFlujo: {{ $json.workflow.name }}\\nNodo: {{ $json.execution.lastNodeExecuted }}\\nError: {{ $json.execution.error.message }}\\n\\nVerlo: {{ $json.execution.url }}\",\n        \"additionalFields\": {}\n      },\n      \"id\": \"n8n-err-02\",\n      \"name\": \"Avisarme por Telegram\",\n      \"type\": \"n8n-nodes-base.telegram\",\n      \"typeVersion\": 1.2,\n      \"position\": [\n        40,\n        0\n      ]\n    }\n  ],\n  \"connections\": {\n    \"Cuando falla un flujo\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Avisarme por Telegram\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"pinData\": {},\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    }
+  ],
+  "errors": [
+    [
+      "Workflow could not be activated: Workflow has no trigger node",
+      "\"No puedo encender esto porque no tiene ningún nodo que lo dispare\". El primer nodo que tienes es 'When clicking Test workflow', que es un botón manual y solo sirve para probar. Bórralo, pulsa Tab y elige un disparador de verdad: 'Schedule Trigger' (a una hora), 'Gmail Trigger' (cuando llega correo), 'Webhook' (cuando te llaman de fuera)."
+    ],
+    [
+      "The requested webhook \"POST /abc-123\" is not registered / 404 The resource you are requesting could not be found",
+      "Estás llamando a la dirección de pruebas del webhook, y esa dirección solo existe durante los dos minutos en los que tienes pulsado 'Listen for test event'. Cada webhook tiene DOS direcciones distintas, 'Test URL' y 'Production URL', y se cambia entre ellas con las pestañas de dentro del nodo. Para el día a día: guarda, pon el flujo en 'Active' y usa la Production URL."
+    ],
+    [
+      "ERROR: Referenced node is unexecuted. An expression references the node 'Correo nuevo', but it hasn't been executed yet",
+      "Tu fórmula mira los datos de una cajita que todavía no ha corrido en esta prueba. Pasa cuando ejecutas un solo paso con 'Test step' sin haber ejecutado los anteriores. Arreglo: pulsa 'Test workflow' (Ctrl+Enter) para que corra todo desde el principio, o clava la chincheta (tecla P) en el nodo del principio para que sus datos estén siempre disponibles."
+    ],
+    [
+      "Authorization failed - please check your credentials / 401 Unauthorized",
+      "La contraseña o el permiso que le diste a esa aplicación ya no vale. Casi siempre es un token caducado, y en Google pasa si la conexión lleva días sin usarse o si cambiaste la contraseña. Vete a 'Overview' > 'Credentials', abre esa credencial, pulsa 'Reconnect' o vuelve a hacer 'Sign in with Google'. No toques el flujo: el flujo está bien."
+    ],
+    [
+      "(#131030) Recipient phone number not in allowed list",
+      "Error de WhatsApp. Tu app de Meta sigue en modo prueba y solo puede escribir a los números que has dado de alta a mano. Entra en developers.facebook.com, WhatsApp > API Setup, apartado 'To', y añade el móvil al que quieres escribir con su prefijo (+34...). Para escribir a cualquier cliente hay que verificar el negocio con Meta, y eso es papeleo de días, no de minutos."
+    ],
+    [
+      "429 - The service is receiving too many requests from you",
+      "Le estás pegando gritos a la otra aplicación más rápido de lo que aguanta. Suele salir cuando un nodo recibe 200 filas de golpe y dispara 200 llamadas seguidas. Arreglo de dos clics: abre el nodo, pestaña 'Settings', y sube 'Retry On Fail' (reintentar si falla). Si sigue, mete un nodo 'Wait' (esperar) de 1 segundo antes, o baja el tamaño del lote en 'Loop Over Items'."
+    ],
+    [
+      "insufficient_quota / You exceeded your current quota, please check your plan and billing details",
+      "Este no es de n8n, es de OpenAI: te has quedado sin saldo. Tener ChatGPT Plus pagado no da saldo de API, son dos monederos distintos y es el malentendido más común. Entra en platform.openai.com, apartado 'Billing', y carga 5 o 10 €. Pon un límite de gasto mensual en 'Usage limits' antes de activar nada, porque un flujo en bucle se puede comer el saldo en una tarde."
+    ],
+    [
+      "El campo se queda en [undefined] o sale 'Can't get data for expression'",
+      "Tu fórmula apunta a un campo que no existe con ese nombre exacto. Nueve de cada diez veces es una mayúscula o un guion bajo: escribiste $json.Email y el campo se llama email. No lo arregles a mano: borra el contenido del hueco, vete a la columna INPUT, pestaña 'Schema', y arrastra el campo bueno desde la izquierda. Si el campo tampoco está en INPUT, el problema es el nodo anterior, no este."
+    ]
+  ],
+  "prompts": [
+    {
+      "name": "Que la IA te escriba el flujo entero para pegarlo con Ctrl+V",
+      "prompt": "Eres experto en n8n. Necesito que me escribas un flujo de n8n COMPLETO en formato JSON, listo para copiar y pegar directamente sobre el lienzo con Ctrl+V. No sé programar y no voy a tocar el JSON a mano, así que tiene que venir entero y bien formado. Lo que quiero que haga el flujo: [DESCRIBE EN ESPAÑOL LO QUE QUIERES, PASO A PASO, COMO SE LO CONTARÍAS A UN BECARIO]. Se tiene que disparar cuando [CUÁNDO EMPIEZA: llega un correo / alguien rellena un formulario / son las 8 de la mañana / me llaman a una dirección web]. Las aplicaciones que tengo conectadas son [GMAIL, TELEGRAM, GOOGLE SHEETS, OPENAI, LO QUE SEA]. Reglas obligatorias: usa solo nodos oficiales de n8n, nada de nodos de comunidad; no uses el nodo Code ni JavaScript, resuélvelo con nodos normales, expresiones y el nodo Edit Fields; pon el JSON con las claves nodes, connections, pinData y settings con executionOrder v1; pon nombres de nodo en español y usa esos mismos nombres dentro de connections; deja las credenciales sin rellenar para que las elija yo; coloca las cajitas con coordenadas separadas para que no se solapen; y marca con [CORCHETES EN MAYÚSCULAS] cada dato mío que tenga que sustituir. Después del JSON, y fuera del bloque de código, escríbeme en español y en lenguaje llano: 1) la lista numerada de qué relleno y dónde, nodo por nodo; 2) qué credenciales tengo que crear antes; 3) qué pasa la primera vez que le dé a 'Test workflow'; 4) qué acciones de este flujo son irreversibles o cuestan dinero. Nada de explicaciones teóricas de n8n: solo el JSON y esas cuatro listas."
+    },
+    {
+      "name": "Descifrar un error rojo y arreglarlo",
+      "prompt": "Tengo un flujo de n8n que falla y no sé programar, así que necesito que me traduzcas el problema a español llano y me des los clics exactos para arreglarlo. Te paso todo lo que veo en pantalla. El mensaje de error completo, copiado tal cual del recuadro rojo: [PEGA EL ERROR ENTERO, INCLUIDO EL CÓDIGO DE NÚMEROS SI LO HAY]. El nodo que se pone rojo se llama [NOMBRE DEL NODO] y es de tipo [GMAIL / TELEGRAM / HTTP REQUEST / OPENAI / LO QUE SEA]. Lo que el flujo debería hacer es [EXPLÍCALO EN UNA FRASE]. Esto es lo que aparece en la columna INPUT de ese nodo, copiado desde la pestaña JSON: [PEGA EL JSON DE ENTRADA, O ESCRIBE 'la columna INPUT está vacía' SI NO HAY NADA]. Y esta es la configuración del nodo, copiada seleccionándolo y pulsando Ctrl+C: [PEGA EL JSON DEL NODO]. Contéstame con esta estructura y sin rodeos: primero, qué significa ese error en una sola frase que entienda mi madre. Segundo, cuál es la causa más probable en MI caso concreto, mirando los datos que te he pasado, no en general. Tercero, los pasos exactos para arreglarlo: qué nodo abro, qué pestaña pincho, qué campo cambio y por qué valor exacto, con los nombres de los botones tal como salen en pantalla. Cuarto, cómo compruebo en 30 segundos que ya está arreglado. Quinto, si el arreglo puede provocar que se envíe algo de verdad o que gaste dinero, avísame en negrita antes de que lo haga. Si necesitas ver algún dato más de mi pantalla para estar seguro, dime exactamente dónde pincho para encontrarlo en vez de adivinar."
+    },
+    {
+      "name": "Escribir la expresión exacta que va en un hueco",
+      "prompt": "Estoy dentro de un nodo de n8n y necesito rellenar un hueco con datos que vienen del paso anterior, pero no sé escribir expresiones. Esto es lo que me llega, copiado de la columna INPUT en la pestaña JSON, tal cual: [PEGA EL JSON DE ENTRADA COMPLETO, AUNQUE SEA LARGO]. El nodo anterior se llama exactamente [NOMBRE DEL NODO ANTERIOR, COPIADO LETRA POR LETRA]. Lo que quiero que salga en ese hueco es: [DESCRÍBELO EN ESPAÑOL: 'el nombre de pila del cliente, con la primera letra en mayúscula', 'la fecha de hoy en formato día/mes/año', 'el asunto del correo pero cortado a 60 caracteres', 'el precio con dos decimales y un símbolo de euro detrás']. Dame la expresión completa, con las dobles llaves incluidas, lista para pegar en el hueco, y recuérdame que antes de pegarla tengo que poner el interruptor del hueco en 'Expression' y no en 'Fixed'. Explícame en una línea qué hace cada trozo de la expresión, para que la próxima vez la sepa retocar yo. Si el dato que pido se puede conseguir simplemente arrastrando un campo desde la columna INPUT sin escribir nada, dímelo y ahórrame la expresión: prefiero arrastrar. Si el campo que necesito no está en el JSON que te he pasado, no te lo inventes: dime qué nodo debería traerlo y qué tengo que cambiar antes. Y avísame si la expresión se va a romper cuando ese campo llegue vacío, dándome la versión a prueba de vacíos."
+    },
+    {
+      "name": "Auditar el flujo antes de darle al interruptor",
+      "prompt": "Voy a activar un flujo de n8n por primera vez y quiero que alguien lo revise antes, porque cuando lo active va a tocar mis cuentas de verdad y no hay botón de deshacer. Este es el flujo entero, copiado con Ctrl+A y Ctrl+C sobre el lienzo: [PEGA EL JSON COMPLETO DEL FLUJO]. Mi situación: el disparador se va a activar unas [NÚMERO] veces al día, estoy en [n8n Cloud plan Starter / n8n instalado en mi propio servidor], y las cuentas conectadas son [REALES DE MI NEGOCIO / DE PRUEBAS]. Revísamelo y contéstame en español llano con estos seis apartados. Uno: qué va a pasar exactamente en los primeros cinco minutos después de que ponga el interruptor en 'Active', contado como una película. Dos: qué acciones de este flujo son irreversibles, es decir, mandan un correo, escriben un mensaje, borran algo o cobran; dime en qué nodo está cada una. Tres: si hay algún riesgo de bucle, o sea, de que el flujo se dispare a sí mismo y se ponga a repetir sin parar; si lo hay, dime cómo cortarlo. Cuatro: cuántas ejecuciones al mes me va a consumir esto con los números que te he dado, y si eso se sale de mi plan. Cinco: cuánto me va a costar al mes en euros, sumando n8n y las llamadas a la IA, con la cuenta hecha delante. Seis: dame un plan de prueba concreto de cinco pasos, usando la chincheta de datos y desactivando nodos con la tecla D, para probarlo entero sin que se envíe nada de verdad."
+    },
+    {
+      "name": "Pasar a n8n un flujo que ya tienes en Zapier o en Make",
+      "prompt": "Tengo una automatización montada en [ZAPIER / MAKE] y me está costando demasiado dinero al mes porque me cobran por cada paso. Quiero pasarla a n8n, donde se cobra por ejecución completa. No sé programar, así que necesito el resultado listo para pegar. Esta es la automatización actual, descrita paso a paso tal como se ve en la herramienta: [DESCRIBE CADA PASO EN ORDEN: qué lo dispara, qué aplicación toca cada paso y qué hace exactamente]. Si tengo el archivo exportado te lo pego aquí: [PEGA EL JSON EXPORTADO DE ZAPIER O EL BLUEPRINT DE MAKE, O BORRA ESTA LÍNEA]. Se dispara unas [NÚMERO] veces al mes y ahora mismo pago [CANTIDAD] € al mes. Hazme cuatro cosas. Primera: la tabla de equivalencias, en qué se convierte cada paso mío al pasarlo a n8n, con el nombre exacto del nodo de n8n que lo sustituye. Segunda: avísame de los pasos que NO tienen equivalente directo y cómo se resuelven con otros nodos, sin usar el nodo Code. Tercera: el JSON completo del flujo de n8n listo para pegar con Ctrl+V, con las credenciales vacías, nombres de nodo en español y [CORCHETES] en todo lo que tenga que rellenar yo. Cuarta: la cuenta de la vieja, cuánto pagaría al mes en n8n con mi volumen frente a lo que pago ahora, contando el plan y el servidor si hace falta, y a partir de qué volumen deja de compensar el cambio. Sé honesto: si con mi volumen no merece la pena moverse, dímelo y explícame por qué."
+    }
+  ],
+  "words": [
+    [
+      "Nodo",
+      "Cada cajita del tablero. Una cajita es una aplicación haciendo una cosa: 'Gmail enviando un correo', 'OpenAI escribiendo un texto'. Se añaden con la tecla Tab y se abren con doble clic."
+    ],
+    [
+      "Lienzo (canvas)",
+      "El tablero gris donde colocas las cajitas y las unes con líneas. Te mueves por él arrastrando con Ctrl pulsado y encajas todo en pantalla con la tecla 1."
+    ],
+    [
+      "Disparador (trigger)",
+      "La primera cajita, la que decide cuándo arranca todo. Tiene la esquina redondeada y un rayo. Sin disparador de verdad, n8n no te deja activar el flujo."
+    ],
+    [
+      "Ejecución (execution)",
+      "Una pasada entera del flujo, de la primera cajita a la última, tenga tres pasos o cuarenta. Es la unidad con la que n8n te cobra, y por eso sale mucho más barato que Zapier en flujos largos."
+    ],
+    [
+      "Ítem",
+      "Cada dato suelto que viaja por la tubería. Si el primer nodo te trae 20 correos, eso son 20 ítems, y los nodos siguientes se ejecutan 20 veces, una por cada uno. Entender esto evita el 90% de los sustos."
+    ],
+    [
+      "Expresión",
+      "Una fórmula entre dobles llaves, {{ }}, que se sustituye por un dato real al ejecutarse. Se escribe sola cuando arrastras un campo desde la columna INPUT. El hueco se pone morado cuando lleva una."
+    ],
+    [
+      "Pin de datos",
+      "La chincheta, tecla P. Congela el resultado de una prueba para que ese nodo devuelva siempre lo mismo mientras montas. Solo funciona probando a mano: en cuanto el flujo está activo, la chincheta se ignora."
+    ],
+    [
+      "Credencial",
+      "El permiso guardado que le das a n8n para entrar en tu Gmail, tu Telegram o tu OpenAI. Vive fuera de los flujos, en 'Overview' > 'Credentials', y la comparten todos los nodos de esa aplicación."
+    ],
+    [
+      "Webhook",
+      "Una dirección web que n8n te regala para que otra cosa le avise. Tu web vibecodeada llama a esa dirección cuando alguien compra y n8n se pone en marcha. Tiene dos versiones, la de prueba y la de producción, y confundirlas es el error más repetido."
+    ],
+    [
+      "Autoalojado (self-hosted)",
+      "Tener n8n instalado en un ordenador alquilado tuyo en vez de en el de ellos. Sale por 4-6 € al mes con ejecuciones ilimitadas, pero las actualizaciones, las copias de seguridad y las averías son cosa tuya."
+    ]
+  ],
+  "matters": [
+    "Los datos viajan en lista y el flujo se repite una vez por cada dato. Traes 200 filas de una hoja y el nodo de correo que va detrás manda 200 correos, no uno. Nadie se lo espera la primera vez, y no se descubre en la prueba porque en la prueba traes tres filas. Antes de activar, mira el número que sale en la esquina de la columna OUTPUT: ahí pone cuántos ítems salen. Ese número es cuántas veces va a hacerse todo lo que viene después.",
+    "Guardar no es activar, y la dirección de prueba no es la de producción. Un flujo perfecto que sigue en 'Inactive' no hace nada, y esa es la razón número uno de 'lo tengo montado y no funciona'. La segunda es el webhook: la 'Test URL' solo vive los dos minutos que tienes pulsado 'Listen for test event', así que si conectas tu web a esa dirección funciona mientras lo pruebas y deja de funcionar en cuanto cierras la pestaña. Para la vida real: guardar, activar, y copiar la 'Production URL'.",
+    "Activar es actuar sobre cuentas reales sin red. La primera vez que enciendas algo, hazlo con una cuenta de correo de pruebas y con la tecla D apagando el último nodo, el que envía. Y monta el flujo 'Avísame cuando algo falle' antes que ningún otro: n8n no te avisa por su cuenta cuando algo se rompe. Puedes tener un flujo fallando tres semanas seguidas y enterarte por un cliente enfadado, no por n8n.",
+    "Si te lo instalas tú, eres tú el servicio técnico. n8n cifra tus contraseñas con una clave llamada N8N_ENCRYPTION_KEY que aparece sola la primera vez que arranca. Cópiala hoy y guárdala fuera del servidor. Si el disco se borra o mueves n8n a otra máquina sin esa clave, todas las credenciales guardadas se convierten en ruido y hay que reconectar cuenta por cuenta, con el papeleo de Google y de Meta otra vez. Lo mismo con la base de datos: sin copia de seguridad, un servidor caído se lleva todos tus flujos."
+  ],
+  "ignore": [
+    "Todo el apartado de IA avanzada: AI Agent, Vector Store, memoria, RAG, herramientas encadenadas. Son cajitas preciosas que resuelven problemas que aún no tienes. Con un nodo OpenAI normal y un buen texto de instrucciones cubres tus tres primeros meses. Vuelve a esa sección cuando tengas tres flujos rectos funcionando en producción.",
+    "El nodo Code y todo lo que huela a JavaScript o Python. Existe, y algún día te sacará de un apuro, pero casi todo lo que crees que necesita código se hace con 'Edit Fields' para cambiar nombres de campos, 'IF' para decidir y una expresión arrastrada. Si un tutorial empieza metiéndote un nodo Code para algo sencillo, busca otro tutorial.",
+    "Instalarlo tú en un servidor el primer mes. Docker, variables de entorno, dominios, certificados, modo cola, trabajadores. Todo eso ahorra dinero cuando ya sabes qué flujos quieres, y hasta entonces solo te roba las tardes. Empieza en n8n Cloud con la prueba gratis, monta cuatro flujos, y solo entonces plantéate mudarte para ahorrar los 24 € al mes."
+  ]
+}
