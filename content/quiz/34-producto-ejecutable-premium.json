@@ -1,0 +1,63 @@
+{
+  "categoryId": "34-producto-ejecutable-premium",
+  "basico": [
+    {
+      "prompt": "Preparas una pieza para el producto: un flujo que clasifica correos de soporte. Lo enseñas funcionando con tres correos bien escritos y das la pieza por terminada.",
+      "options": [
+        { "text": "Falta el resto del criterio: además del caso que sale bien hacen falta un caso roto, la reparación y una defensa corta de por qué está montado así", "correct": true, "why": "Con tres correos correctos demuestras que un día funcionó. La pieza se considera terminada cuando alguien puede verla fallar, ver cómo se arregla y entender la decisión de fondo. Eso es lo que la separa de un tutorial." },
+        { "text": "Está terminada: hace lo que promete y se ve funcionando", "correct": false, "why": "Es lo que se siente al ver el flujo en verde, y por eso se entrega así. Pero el día que llegue un correo vacío o en otro idioma, quien herede la pieza no tiene ni un ejemplo de cómo se diagnostica aquí." },
+        { "text": "Faltaría probarla con muchos más correos, unos cincuenta", "correct": false, "why": "Más volumen da confianza y no está de más. Pero cincuenta correos bien escritos son cincuenta veces el mismo camino: sigues sin saber qué pasa cuando uno viene mal." }
+      ],
+      "explain": "Caso feliz, caso roto, reparación y defensa. Con menos, la pieza no está terminada."
+    },
+    {
+      "prompt": "Te dicen que cada pieza del producto tiene que llevar \"defensa\". Piensas que es un documento legal o algo parecido.",
+      "options": [
+        { "text": "Es explicar en pocas frases por qué está montado así: qué herramienta elegiste, cuál descartaste y qué pasa si falla", "correct": true, "why": "Tres frases bien puestas. \"Uso n8n porque el cliente lo va a mantener sin programar; descarté un script propio por eso mismo; si la API cae, el flujo reintenta y avisa por correo\". Eso es la defensa." },
+        { "text": "Es la documentación técnica completa de la pieza", "correct": false, "why": "Se confunde a menudo porque las dos se escriben al entregar. La documentación dice cómo se usa; la defensa dice por qué es así. Puedes tener un manual impecable y no saber justificar ninguna decisión." },
+        { "text": "Es el aviso legal sobre el uso de datos", "correct": false, "why": "La palabra \"defensa\" empuja a pensar en lo legal. Los criterios de privacidad son otro apartado y también hacen falta, pero la defensa es sobre decisiones técnicas." }
+      ],
+      "explain": "Defender es explicar por qué está montado así, no cómo se usa."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tienes que preparar el caso roto de una pieza que extrae datos de facturas. Le pasas un archivo que no es una factura, un ticket de aparcamiento, y el sistema devuelve datos con toda naturalidad.",
+      "options": [
+        { "text": "Ese es exactamente el caso roto que vale: no falla con error, devuelve algo plausible que es mentira, y la reparación pasa por comprobar que el documento es lo que dice ser antes de extraer", "correct": true, "why": "Los fallos que se ven son fáciles: alguien los nota. Los peligrosos son estos, en los que el sistema sigue adelante y ensucia datos silenciosamente. La comprobación puede ser tan simple como buscar la palabra \"factura\" y un NIF antes de continuar." },
+        { "text": "No sirve como caso roto: le has dado un archivo que no correspondía, y eso no es un fallo del sistema", "correct": false, "why": "Es un razonamiento muy común y suena justo. Pero en un buzón real entran tickets, publicidad y contratos: el sistema tiene que sobrevivir a lo que le llegue, no solo a lo que esperabas." },
+        { "text": "Sirve, y se arregla escribiendo en las instrucciones que solo procese facturas", "correct": false, "why": "Es lo primero que se prueba y a veces mejora algo. Pero el modelo interpretará que ese ticket es una factura pequeña y seguirá adelante. La comprobación tiene que ser una regla fija, no una petición al modelo." }
+      ],
+      "explain": "El caso roto que vale no da error. Devuelve algo creíble y falso."
+    },
+    {
+      "prompt": "Al documentar la reparación de una pieza escribes: \"había un error en el flujo, lo he corregido y ya funciona\".",
+      "options": [
+        { "text": "Faltan las tres partes que hacen útil una reparación: qué síntoma se veía, cuál era la causa y qué evita que vuelva a pasar", "correct": true, "why": "\"Ya funciona\" no le sirve a quien mantenga esto en marzo. \"Se creaban tareas duplicadas porque el formulario permitía reenviar; ahora se comprueba el correo antes de crear\" sí, porque le dice dónde mirar si vuelve a aparecer." },
+        { "text": "Es suficiente si el arreglo se ve en el propio flujo al abrirlo", "correct": false, "why": "Se piensa porque el cambio es visible ahí. Pero al abrirlo se ve el estado final, no el problema que resolvía. Quien lo lea dentro de seis meses puede quitar esa comprobación pensando que sobra." },
+        { "text": "Falta sobre todo indicar la fecha y quién lo corrigió", "correct": false, "why": "Ayuda a rastrear y conviene ponerlo. Pero saber quién lo tocó y cuándo no te dice qué estaba fallando: sigue sin haber información para diagnosticar el mismo síntoma otra vez." }
+      ],
+      "explain": "Una reparación son tres cosas: síntoma, causa y qué impide que vuelva."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tienes que decidir qué entra en el producto: una pieza con un agente autónomo muy vistoso que a veces hace cosas raras, o una plantilla de texto bien explicada que resuelve el mismo problema el 90% de las veces.",
+      "options": [
+        { "text": "La plantilla, porque el criterio no es cuánta tecnología usa sino si deja el sistema más claro para quien lo recibe", "correct": true, "why": "Una plantilla bien usada puede ser mejor que un script que nadie explica, y un flujo simple con registro puede ser mejor que un agente autónomo sin control. Lo que se vende es criterio, y una pieza que \"a veces hace cosas raras\" enseña lo contrario." },
+        { "text": "El agente: un producto premium tiene que demostrar nivel técnico", "correct": false, "why": "Es la lectura natural de la palabra premium y por eso se cae ahí. Pero premium significa que otra persona puede ejecutarlo y mantenerlo, no que impresione. Un agente impredecible en manos de un cliente es una llamada esperando a ocurrir." },
+        { "text": "Las dos, dejando que quien compre elija según su nivel", "correct": false, "why": "Parece dar opciones sin coste. En realidad publicas una pieza que sabes que se comporta mal y trasladas la decisión a alguien que no tiene información para tomarla. Si no la defenderías, no entra." }
+      ],
+      "explain": "La calidad no está en usar más tecnología. Está en dejar el sistema más claro."
+    },
+    {
+      "prompt": "Una pieza del producto usa un modelo de pago: unos 0,003 € por ejecución, y en un cliente medio se ejecuta unas 2.000 veces al mes. Tienes que decidir cómo presentarla.",
+      "options": [
+        { "text": "Se documenta el coste por ejecución y el estimado mensual (unos 6 €), y se avisa de que hay que configurar un tope de gasto antes de activarla", "correct": true, "why": "6 € al mes es asumible y decirlo evita la conversación incómoda de la primera factura. El tope de gasto es lo que importa de verdad: sin él, un flujo que reintenta en bucle una noche multiplica esa cifra sin que nadie lo vea hasta el mes siguiente." },
+        { "text": "No hace falta mencionarlo: 6 € al mes es una cantidad irrelevante para cualquier cliente", "correct": false, "why": "La cifra es pequeña, es verdad, y por eso se omite tanto. Lo que molesta al cliente no es el importe sino enterarse por la factura: un coste no avisado se percibe como algo escondido, por poco que sea." },
+        { "text": "Se presenta como \"coste variable según uso\" para no comprometerse con una cifra", "correct": false, "why": "Es prudente porque el uso real varía de verdad. Pero \"variable\" no le deja al cliente decidir nada. Una horquilla concreta (\"entre 4 y 15 € al mes según volumen\") es igual de honesta y sí sirve para decidir." }
+      ],
+      "explain": "Coste por ejecución, estimación mensual y tope configurado. Antes de activar, no después."
+    }
+  ]
+}

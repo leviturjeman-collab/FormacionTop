@@ -1,0 +1,63 @@
+{
+  "categoryId": "34-producto-ejecutable-premium-datasets-casos",
+  "basico": [
+    {
+      "prompt": "Necesitas datos para probar tu flujo de clasificación de leads. Exportas 200 contactos reales del CRM de tu empresa y los usas.",
+      "options": [
+        { "text": "Se usa un conjunto ficticio: nombres inventados, correos del tipo cliente1@ejemplo.com y teléfonos que no existen", "correct": true, "why": "Probar es la fase en la que más se comparte pantalla, más se pega en un chat y más archivos quedan sueltos. Con datos inventados el flujo se prueba igual de bien y desaparece el problema entero. Y una vez exportado el CSV a tu escritorio, ya no controlas dónde acaba." },
+        { "text": "Se pueden usar reales si es para pruebas internas y no se publican", "correct": false, "why": "Es lo que se piensa al hacerlo, y la intención es de verdad interna. Pero los archivos de prueba viajan: acaban en la carpeta del proyecto, en el repositorio y en la copia de seguridad. Y la exportación ya sacó los datos del sistema que los protegía." },
+        { "text": "Se pueden usar quitando la columna del nombre", "correct": false, "why": "Suena a anonimizar y por eso convence. Pero el correo suele contener el nombre y la empresa, y el teléfono identifica solo. Quitar una columna no convierte datos personales en datos inventados." }
+      ],
+      "explain": "Para probar, datos inventados. Funcionan igual y no hay nada que lamentar."
+    },
+    {
+      "prompt": "Preparas el conjunto de datos para probar un flujo de facturas. Metes 30 facturas perfectas, todas con los mismos campos rellenos y bien formateadas.",
+      "options": [
+        { "text": "Falta la mitad: hacen falta también casos rotos, con campos vacíos, importes ambiguos o formato insuficiente", "correct": true, "why": "Treinta facturas perfectas prueban treinta veces lo mismo. Con tres rotas descubres si tu flujo se para, avisa o sigue adelante inventando. Y eso último es lo que te interesa saber antes de que ocurra con un cliente." },
+        { "text": "Está bien: primero se comprueba que funciona con datos buenos y luego ya se verá", "correct": false, "why": "Es el orden natural y el primer paso es correcto. El problema es el \"luego ya se verá\": ese momento no llega nunca, porque cuando funciona con datos buenos se da por terminado y se pasa a otra cosa." },
+        { "text": "Faltan más facturas: con 200 la prueba sería más sólida", "correct": false, "why": "Más volumen sirve para probar rendimiento, que es otra cosa. Pero 200 facturas correctas siguen sin decirte qué pasa con una que no lleva importe. La variedad importa más que la cantidad." }
+      ],
+      "explain": "Un conjunto de prueba útil trae casos rotos. Los buenos ya sabes que pasan."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Pruebas tu flujo de tickets con el conjunto de datos ficticio y funciona. Lo pasas a datos reales y falla en el 40% de los casos.",
+      "options": [
+        { "text": "Tus datos inventados eran demasiado limpios: los reales traen acentos raros, campos con espacios de más, respuestas de dos palabras y correos reenviados con cadenas enteras", "correct": true, "why": "El conjunto ficticio se escribe con la cabeza puesta en lo que esperas, y por eso sale ordenado. El arreglo es coger diez casos reales, quitarles los datos personales y usar esa forma como plantilla para los inventados." },
+        { "text": "Los datos ficticios no sirven para probar de verdad; hay que probar directamente con reales", "correct": false, "why": "Es la conclusión que se saca del susto, y es entendible. Pero el problema no era que fueran ficticios: era que eran ideales. Unos datos inventados que copien el desorden real prueban igual de bien y sin riesgo." },
+        { "text": "El flujo está mal montado; hay que rehacerlo con más validaciones", "correct": false, "why": "Vas a acabar añadiendo validaciones, sí, así que la intuición apunta bien. Pero sin saber qué formas concretas rompen el flujo, las validaciones que escribas serán a ciegas y seguirás fallando en otro 20%." }
+      ],
+      "explain": "Datos ficticios sí, pero tan sucios como los reales. El desorden es la parte que hay que copiar."
+    },
+    {
+      "prompt": "Creas un conjunto de datos de alumnos para probar un sistema de seguimiento. Para que sea realista usas nombres de compañeros tuyos con notas inventadas.",
+      "options": [
+        { "text": "Sigue siendo dato personal: son personas identificables asociadas a notas, aunque las notas sean falsas; se usan nombres inventados", "correct": true, "why": "El daño no está en si la nota es real: está en que \"Laura Gómez, suspenso\" aparezca en una captura de una demo. Nombres inventados cuestan lo mismo de escribir y quitan el problema." },
+        { "text": "No hay problema porque las notas son inventadas y eso es lo sensible", "correct": false, "why": "Es un razonamiento con lógica: lo falso no puede perjudicar. Pero quien vea la pantalla no sabe que son inventadas, y tus compañeros tampoco dieron permiso para aparecer en tu material de prácticas." },
+        { "text": "No hay problema si les avisas de que los has usado", "correct": false, "why": "Es un gesto correcto y mejor que no decirlo. Pero avisar después no es lo mismo que pedir permiso antes, y no evita que ese archivo acabe en una demo pública meses más tarde." }
+      ],
+      "explain": "Nombre real más dato inventado sigue siendo dato personal. Inventa también el nombre."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tienes que decidir cómo generar el conjunto de datos ficticio de 500 leads: a mano, con un generador de datos falsos, o pidiéndoselo a un modelo de IA.",
+      "options": [
+        { "text": "Generador para los campos con formato fijo (nombres, correos, teléfonos) y modelo solo para los textos libres, revisando que no invente datos de personas reales", "correct": true, "why": "Un generador te da 500 filas coherentes en segundos y gratis. El modelo aporta lo que un generador no sabe hacer: comentarios que suenan a persona. Y la revisión importa porque un modelo puede colar nombres de personas conocidas o direcciones que existen." },
+        { "text": "Todo con el modelo: es lo más rápido y produce datos que parecen reales", "correct": false, "why": "Es lo que hace casi todo el mundo ahora y funciona para 20 filas. Con 500 empieza a repetirse, a inventar teléfonos con formatos imposibles y a costarte dinero de API para algo que un generador hace gratis y mejor." },
+        { "text": "Todo a mano: es la única forma de controlar exactamente qué casos entran", "correct": false, "why": "El control es real y para los diez casos rotos concretos es justo lo que hay que hacer. Para 500 filas es una tarde perdida, y acabarás repitiendo patrones sin darte cuenta." }
+      ],
+      "explain": "Generador para lo estructurado, modelo para lo escrito, tu mano para los casos rotos."
+    },
+    {
+      "prompt": "Vas a publicar tu conjunto de datos ficticio junto con el producto para que la gente pueda probar. Alguien te pregunta si hace falta documentarlo.",
+      "options": [
+        { "text": "Hace falta decir qué casos contiene y cuáles rompen a propósito, porque si no, quien lo use pensará que su sistema falla cuando en realidad está haciendo lo correcto", "correct": true, "why": "Sin esa nota, alguien prueba con la factura sin importe, ve que el flujo la aparta y cree que hay un fallo. Con la nota (\"las filas 12, 30 y 47 están rotas a propósito\") el conjunto se convierte en una herramienta de diagnóstico." },
+        { "text": "No hace falta: los datos se explican solos al abrirlos", "correct": false, "why": "Con 20 filas es casi cierto y por eso se omite. Con 500 nadie las revisa una por una: se cargan, se ejecuta y se mira el resultado. Los casos rotos pasan desapercibidos hasta que confunden." },
+        { "text": "Basta con avisar de que son datos ficticios y no reales", "correct": false, "why": "Ese aviso hace falta también, para que nadie los confunda con datos de cliente. Pero no es la información que necesita quien va a probar: esa es qué se supone que debe pasar con cada caso." }
+      ],
+      "explain": "Documenta qué filas están rotas a propósito. Si no, parecerán fallos de quien prueba."
+    }
+  ]
+}

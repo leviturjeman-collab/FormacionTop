@@ -1,0 +1,63 @@
+{
+  "categoryId": "05-practicas-y-ejercicios-debugging",
+  "basico": [
+    {
+      "prompt": "Ayer tu script funcionaba. Cierras el portátil, lo abres hoy, ejecutas lo mismo en una ventana nueva de terminal y sale «authentication_error». No has tocado nada.",
+      "options": [
+        { "text": "Comprueba primero si esa ventana ve la clave: `echo $env:ANTHROPIC_API_KEY` en Windows, `echo $ANTHROPIC_API_KEY` en Mac o Linux", "correct": true, "why": "Correcto. La clave se guarda como variable de entorno, o sea un dato que el sistema recuerda con un nombre. Si se puso sólo para aquella sesión, la ventana nueva no la ve. Comprobarlo cuesta cinco segundos." },
+        { "text": "Genera una clave nueva en la consola del proveedor", "correct": false, "why": "Es lo primero que apetece y a veces parece que funciona. Pero si la clave anterior estaba bien, ahora tienes dos claves vivas facturando a tu nombre y el mismo fallo mañana." },
+        { "text": "Desinstala y reinstala la herramienta", "correct": false, "why": "Es el reflejo clásico. Reinstalar no crea variables de entorno, así que el error vuelve idéntico y has perdido veinte minutos." }
+      ],
+      "explain": "Antes de tocar la clave, comprueba si el programa la está viendo."
+    },
+    {
+      "prompt": "Tu script llevaba una hora funcionando y empieza a devolver 429 en la mitad de las llamadas. La clave es la misma de siempre.",
+      "options": [
+        { "text": "Estás pidiendo demasiado deprisa: es un límite de ritmo o de cuota. Baja la frecuencia y reintenta esperando cada vez más", "correct": true, "why": "Correcto. 429 significa «demasiadas peticiones». Si la clave fuese inválida sería 401, y si faltara permiso sería 403: las dos fallarían siempre, no la mitad de las veces." },
+        { "text": "La clave ha caducado", "correct": false, "why": "Se confunde porque «de pronto deja de funcionar» suena a caducidad. Una clave caducada da 401 y falla el cien por cien, no la mitad." },
+        { "text": "Tu cuenta no tiene permiso para ese modelo", "correct": false, "why": "Eso es un 403, y sería constante desde la primera llamada. Aquí llevabas una hora funcionando." }
+      ],
+      "explain": "401 es «no te reconozco», 403 es «no puedes» y 429 es «no tan deprisa»."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Pides al modelo que devuelva JSON (un formato de texto con campos con nombre, tipo ficha) para tu automatización de leads. En el campo email aparece «undefined» y el flujo se para.",
+      "options": [
+        { "text": "Mira la respuesta cruda del modelo antes de tocar el prompt", "correct": true, "why": "Correcto. Casi siempre el modelo ha metido una frase antes del JSON, o ha puesto el email vacío porque el lead no traía. Sin ver el texto exacto estás adivinando." },
+        { "text": "Añade al prompt «responde SOLO con JSON, sin explicaciones» y vuelve a lanzarlo", "correct": false, "why": "Mejora la tasa de acierto y por eso todo el mundo empieza por ahí. Pero no la garantiza, y si el problema es que ese lead no tenía email, el prompt no lo arreglará nunca." },
+        { "text": "Cambia a un modelo más grande, que se equivocará menos", "correct": false, "why": "Pagas más por llamada y sigue fallando alguna vez. A quinientas ejecuciones al día, un 2 % son diez fallos diarios que no has resuelto." }
+      ],
+      "explain": "Antes de arreglar, mira el texto exacto que devolvió el modelo."
+    },
+    {
+      "prompt": "Tienes un formulario conectado a una automatización. Cada vez que alguien lo envía aparecen dos filas idénticas en tu hoja de cálculo.",
+      "options": [
+        { "text": "Guarda el identificador del evento y descarta el que ya hayas visto", "correct": true, "why": "Correcto. Quien te llama reintenta si tardas en responder, y no puedes evitarlo. El arreglo está en tu lado: que recibir dos veces el mismo evento produzca una sola fila." },
+        { "text": "Mete una espera de dos segundos antes de escribir la fila", "correct": false, "why": "Parece una carrera entre dos ejecuciones simultáneas y por eso la espera suena lógica. Pero las dos ejecuciones siguen llegando y las dos siguen escribiendo, sólo que más tarde." },
+        { "text": "Programa una limpieza nocturna que borre los duplicados", "correct": false, "why": "Tapa el síntoma y durante todo el día quien mira esa hoja ve datos dobles. Además, borrar filas automáticamente es irreversible: si el criterio falla, te comes registros buenos." }
+      ],
+      "explain": "No intentes evitar que te llamen dos veces; haz que la segunda llamada no cambie nada."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Dejas un agente trabajando y te vas a comer. Vuelves a los cuarenta minutos y lleva trescientas llamadas repitiendo el mismo paso. En el panel de facturación ves unos 18 € gastados.",
+      "options": [
+        { "text": "Pon un tope duro de pasos y de gasto, que pare y te avise, y guarda el registro de por qué se repetía", "correct": true, "why": "Correcto. Un agente no se aburre ni se cansa: el freno tiene que ser externo. El registro es lo que después te dice si se repetía por una herramienta que devolvía siempre lo mismo." },
+        { "text": "Mejora las instrucciones para que no entre en bucle", "correct": false, "why": "Hace falta y hay que hacerlo. Pero una instrucción mejor baja la probabilidad, no pone techo al gasto. El día que vuelva a pasar, vuelve a costar." },
+        { "text": "Usa un modelo más barato para que dé igual si se repite", "correct": false, "why": "Baja el coste por llamada pero no lo acota. Trescientas llamadas baratas siguen siendo dinero, siguen tardando cuarenta minutos y siguen sin dar resultado." }
+      ],
+      "explain": "Un agente sin tope de pasos y de gasto es una factura abierta."
+    },
+    {
+      "prompt": "Tu agente tiene dos herramientas: `buscar_cliente` y `buscar_pedido`. En las pruebas elige la equivocada casi la mitad de las veces.",
+      "options": [
+        { "text": "Reescribe las descripciones diciendo también cuándo NO usar cada una, y añade un ejemplo de entrada en cada descripción", "correct": true, "why": "Correcto. El modelo elige leyendo la descripción en ese momento. Si las dos dicen «busca información», la elección es una moneda al aire." },
+        { "text": "Fusiónalas en una sola herramienta con un parámetro «tipo»", "correct": false, "why": "A veces funciona y es una técnica legítima. Aquí mueves el problema al parámetro, y pierdes lo bueno de tenerlas separadas: poder dar permiso de lectura a una y no a la otra." },
+        { "text": "Escribe en las instrucciones generales del agente «usa buscar_cliente para clientes»", "correct": false, "why": "Ayuda algo y es rápido de probar. Pero las instrucciones generales quedan lejos en el contexto; la descripción de la herramienta es lo que el modelo tiene delante justo al elegir." }
+      ],
+      "explain": "Un agente elige mal cuando dos herramientas se describen igual, no cuando piensa poco."
+    }
+  ]
+}

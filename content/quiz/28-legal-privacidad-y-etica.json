@@ -1,0 +1,63 @@
+{
+  "categoryId": "28-legal-privacidad-y-etica",
+  "basico": [
+    {
+      "prompt": "Tienes una hoja con 40 clientes: nombre, correo y teléfono. La copias entera en ChatGPT y pides que te escriba un correo personalizado para cada uno. Un compañero te dice que eso no se hace. ¿Por qué tiene razón?",
+      "options": [
+        { "text": "Esos datos no son tuyos y no te los dieron para esto; antes de sacarlos de tu sistema hay que saber para qué se recogieron y enviar lo mínimo imprescindible", "correct": true, "why": "Correcto. La regla se llama minimización: mandas solo lo que hace falta para la tarea. Y aquí no hace falta nada: pide la plantilla con huecos ([NOMBRE], [EMPRESA]) y rellénala tú en tu ordenador. El resultado es el mismo y los 40 clientes no han salido a ningún sitio." },
+        { "text": "Se puede si quitas los apellidos y dejas solo nombre, correo y teléfono", "correct": false, "why": "Suena a anonimizar y por eso convence, pero un correo y un teléfono identifican a una persona mejor que su apellido. Siguen siendo datos personales: no has quitado nada, has quitado la parte que menos identifica." },
+        { "text": "Se puede si tienes un plan de pago en el que el proveedor no entrena con tus datos", "correct": false, "why": "Es verdad a medias y por eso engaña: en los planes de empresa normalmente no se entrena con lo que envías. Pero \"no entrenan\" no es lo mismo que \"tienes derecho a enviarlo\". Mandarlo ya es sacarlo de tu sistema y cedérselo a un tercero, entrene o no." }
+      ],
+      "explain": "Lo que no envías no se puede filtrar. Pide la plantilla, no el trabajo hecho con los datos dentro."
+    },
+    {
+      "prompt": "Un amigo te pide que le montes un asistente que le diga si el despido que le han comunicado es legal, aprovechando lo que estás aprendiendo. ¿Cómo lo planteas?",
+      "options": [
+        { "text": "Se lo montas como práctica, dejando escrito y visible que no es asesoramiento legal y que un abogado tiene que revisarlo antes de hacer nada", "correct": true, "why": "Correcto. Puedes construirlo: prototipar es exactamente para lo que sirve el curso. Lo que no puedes es dejar que la herramienta ocupe el sitio del abogado. El empleo es de los casos donde una persona cualificada tiene que revisar sí o sí, y el aviso va donde se lee, no escondido." },
+        { "text": "Si el asistente cita artículos concretos del Estatuto de los Trabajadores, ya puedes fiarte de la respuesta", "correct": false, "why": "Las citas dan una sensación de rigor tremenda, y ahí está la trampa. Un modelo puede inventarse un número de artículo y un texto que suenan perfectamente reales. Una cita no es una prueba mientras no la hayas abierto y leído en la fuente oficial." },
+        { "text": "Con poner abajo, en letra pequeña, \"puede contener errores\", ya queda cubierto", "correct": false, "why": "Es lo que hace todo el mundo y por eso parece suficiente. Pero un aviso que nadie ve no avisa, y aquí lo que hay que decir no es \"puede fallar\" sino \"esto lo tiene que mirar un abogado antes de que actúes\". Son mensajes distintos." }
+      ],
+      "explain": "Que la respuesta la escriba un modelo no traslada la responsabilidad al modelo."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Montaste un filtro que sustituye correos y teléfonos por marcas ([EMAIL_1], [TELEFONO_1]) antes de mandar el texto al modelo. Lleva un mes funcionando. Hoy un cliente se queja de que su DNI ha aparecido tal cual en un resumen. ¿Qué ha pasado?",
+      "options": [
+        { "text": "El DNI llegó en un formato que tu filtro no contemplaba (12.345.678-Z con puntos, por ejemplo) y pasó de largo; el filtro solo atrapa lo que supiste describir de antemano", "correct": true, "why": "Correcto, y es la lección incómoda: la sustitución automática es una red, no un muro. Puedes añadir ese formato, y mañana llegará otro. Por eso, con datos de verdad sensibles, la regla no es \"lo filtro\", es \"no lo mando\": el filtro es el segundo cinturón, no el primero." },
+        { "text": "El modelo dedujo el DNI a partir del contexto del texto", "correct": false, "why": "Se cree porque los modelos parecen adivinar cosas, pero aquí no cuadra. Un DNI lleva una letra calculada a partir de los ocho dígitos; acertar los ocho por contexto no pasa. Si salió en el resumen, entró en el envío." },
+        { "text": "Faltaba pedirle al modelo, en el prompt, que no repita nunca datos personales", "correct": false, "why": "Es razonable y no está de más ponerlo, pero llega tarde: cuando el modelo lee el prompt, el dato ya ha salido de tu sistema y está en el servidor del proveedor. Una instrucción condiciona la respuesta, no el envío." }
+      ],
+      "explain": "Un filtro de datos personales solo ve lo que le enseñaste a buscar. Lo que no sale de casa no hace falta filtrarlo."
+    },
+    {
+      "prompt": "En tu web hay un formulario donde los clientes pegan su incidencia y un asistente la clasifica. Desde legal te preguntan qué aviso ven los usuarios. Habías escrito: \"Usamos inteligencia artificial para mejorar el servicio\". ¿Qué falta?",
+      "options": [
+        { "text": "Para qué se usa el texto exactamente, cuánto tiempo se guarda, qué proveedores lo ven, quién responde de esos datos y cómo pedir revisión o borrado", "correct": true, "why": "Correcto: esas cinco cosas son el aviso, y \"mejorar el servicio\" no dice ninguna. El punto que más se olvida es el del proveedor: si el texto sale hacia un servicio externo, el usuario tiene que poder saberlo antes de escribir, no después." },
+        { "text": "Nada: basta con enlazar la política de privacidad general de la web", "correct": false, "why": "Es lo que hace casi todo el mundo, y por eso parece la respuesta segura. Pero esa política se escribió antes de que existiera este formulario: si no nombra que el texto se envía a un tercero para clasificarlo, no lo cubre." },
+        { "text": "Poner una casilla de \"acepto\" antes de enviar y con eso ya hay consentimiento", "correct": false, "why": "La casilla es lo que uno imagina al oír consentimiento, y es parte de la solución. Pero el consentimiento tiene que ser informado y específico: una casilla sobre un texto que no explica nada no informa. Además no siempre es la base correcta; a veces lo que aplica es el contrato que ya tienes con el cliente." }
+      ],
+      "explain": "El aviso se mide por lo que el usuario puede saber antes de escribir, no por su longitud."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Recursos Humanos quiere pasar 400 currículums por un asistente y descartar automáticamente el 60% peor puntuado, para que el equipo solo lea 160. Te piden criterio antes de montarlo. ¿Qué defiendes?",
+      "options": [
+        { "text": "Que la IA ordene y resuma, pero que el descarte lo firme una persona y que el candidato pueda pedir revisión humana", "correct": true, "why": "Correcto. Ordenar 400 currículums es ayuda legítima; descartar 240 personas sin que nadie lo mire es otra cosa. El empleo entra de lleno en decisiones sensibles: afecta a los ingresos y a la carrera de alguien. Y si el modelo arrastra sesgos, descarta por código postal o por cómo está redactado el currículum sin que tú lo veas." },
+        { "text": "Se puede automatizar el descarte si antes quitas nombre, sexo, edad y foto de cada currículum", "correct": false, "why": "Es el currículum ciego y la intención es buena, pero el sesgo no viaja solo en esos campos. Se cuela por el barrio, el instituto, los huecos en las fechas, la manera de escribir. Quitar la casilla evidente no rompe la correlación que hay detrás." },
+        { "text": "Se puede si mides la precisión con un conjunto de prueba y sale un 92%", "correct": false, "why": "Parece lo más riguroso de las tres y por eso es la trampa buena. Un 92% sobre 400 son 32 personas descartadas por error. Y la precisión media no te dice si falla igual en todos los grupos: puede acertar el 97% en unos perfiles y el 70% en otros, y el promedio lo tapa." }
+      ],
+      "explain": "En decisiones que afectan al trabajo de alguien, la IA propone y una persona firma."
+    },
+    {
+      "prompt": "Sois seis en el equipo y todos usáis la misma clave de API, pegada en un documento compartido de Drive desde hace meses. La factura ha pasado de 40 € a 380 € en un mes y nadie sabe por qué. ¿Qué propones?",
+      "options": [
+        { "text": "Revocar esa clave (está expuesta) y crear una por persona o por servicio, cada una con su tope de gasto, guardada en la variable de entorno de cada máquina y nunca en un documento", "correct": true, "why": "Correcto, y el motivo práctico pesa tanto como el de seguridad: con claves separadas, el panel de consumo te dice qué clave gastó los 340 € de más, y puedes cortar solo esa sin parar a los otros cinco. Ojo, revocar es irreversible: avisa antes, porque todo lo que use la clave vieja deja de funcionar en ese momento." },
+        { "text": "Poner un tope global de 100 € al mes en la cuenta y seguir como estáis", "correct": false, "why": "Es útil y hay que tenerlo igualmente, así que la intuición es buena. Pero al llegar al tope se para todo para los seis a la vez, normalmente el día peor. Y sigues sin saber quién gastó qué, que era la pregunta original." },
+        { "text": "Dejar la clave compartida y revisar el panel de consumo cada semana", "correct": false, "why": "Suena a disciplina y vigilancia, pero el panel agrupa por clave: con una sola clave, los seis son una única línea. Además, una clave que ha estado meses en un documento compartido hay que darla por expuesta, la mire quien la mire." }
+      ],
+      "explain": "Una clave por persona no es burocracia: es lo que te deja saber quién gastó y cortar solo a quien toca."
+    }
+  ]
+}

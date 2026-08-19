@@ -1,0 +1,63 @@
+{
+  "categoryId": "21-troubleshooting-y-errores-reales",
+  "basico": [
+    {
+      "prompt": "Configuras tu clave y la primera llamada funciona. Cambias el modelo por uno más nuevo y esa segunda llamada devuelve 403.",
+      "options": [
+        { "text": "La clave es válida; lo que falta es acceso a ese modelo con tu plan, tu organización o tu proyecto", "correct": true, "why": "Correcto. La primera llamada funcionó, así que el sistema te reconoce. 403 significa «te reconozco pero no puedes»: mira plan, rol y si ese modelo está habilitado en tu cuenta." },
+        { "text": "Has copiado mal la clave", "correct": false, "why": "Es lo primero que se sospecha porque suele ser verdad. Aquí no: una clave mal copiada da 401 y falla también la primera llamada." },
+        { "text": "Estás haciendo demasiadas llamadas seguidas", "correct": false, "why": "Eso sería 429. Llevas dos llamadas en total, así que no hay límite de ritmo que puedas haber tocado." }
+      ],
+      "explain": "401 es «no sé quién eres», 403 es «sé quién eres y no puedes»."
+    },
+    {
+      "prompt": "Sigues un tutorial escrito en Mac. Copias el comando tal cual en tu PowerShell de Windows y sale «no se reconoce como un comando».",
+      "options": [
+        { "text": "Traduce el comando a tu sistema en vez de copiarlo tal cual", "correct": true, "why": "Correcto. El paso es el mismo, la escritura no: barras `/` frente a `\\`, `export` frente a `setx`. Pide la traducción a un asistente y compárala con la documentación oficial." },
+        { "text": "Instala el subsistema Linux de Windows para que todo funcione igual", "correct": false, "why": "Es una solución real y para trabajo continuado incluso buena. Para un comando suelto, te añade un sistema entero que también tienes que aprender y mantener." },
+        { "text": "El tutorial está roto, busca otro", "correct": false, "why": "Se piensa después de tres intentos fallidos. Perderás la tarde: la mayoría de tutoriales técnicos están escritos en Mac o Linux, y el siguiente te hará lo mismo." }
+      ],
+      "explain": "Casi ningún tutorial está escrito para tu sistema: aprende a traducir el comando, no a buscar otro tutorial."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Pruebas un modelo con Ollama, que ejecuta modelos en tu propio ordenador sin coste por uso. Tarda cuatro minutos por respuesta y el portátil se queda bloqueado mientras.",
+      "options": [
+        { "text": "El modelo no cabe en tu memoria. Prueba uno más pequeño y recorta el texto que le pasas", "correct": true, "why": "Correcto. Cuando el modelo no cabe en la RAM, el sistema empieza a tirar de disco y todo se arrastra. Es el fallo número uno de los modelos locales. Llama 3.2 en su tamaño pequeño va bien en portátiles normales." },
+        { "text": "Tu conexión a internet va lenta", "correct": false, "why": "Es razonable si vienes de usar servicios en la nube, donde eso sí importa. Pero una vez descargado, el modelo local no toca internet para responder." },
+        { "text": "Necesitas el plan de pago de Ollama para que vaya rápido", "correct": false, "why": "Ollama es gratis y corre en tu equipo. No existe un plan que te añada memoria RAM: lo que limita es tu hardware." }
+      ],
+      "explain": "Un modelo local lento casi siempre es un modelo demasiado grande para tu memoria."
+    },
+    {
+      "prompt": "Le pides a un asistente de código «arregla el formulario de contacto» y te devuelve un cambio que toca 14 archivos.",
+      "options": [
+        { "text": "No lo aceptes en bloque: revisa archivo por archivo y rechaza lo que no habías pedido", "correct": true, "why": "Correcto. Aceptar un cambio grande sin leerlo es la forma más rápida de romper algo que funcionaba, y luego no sabrás cuál de los 14 fue." },
+        { "text": "Acéptalo y si algo se rompe, deshaces", "correct": false, "why": "Es válido si tienes control de versiones bien puesto y todo confirmado antes. Sin eso, «deshacer» no existe y acabas de sobrescribir el archivo bueno." },
+        { "text": "Pídele que lo repita más pequeño y descarta este", "correct": false, "why": "Ayuda para la próxima vez y conviene hacerlo. Pero no te ahorra revisar: si ya vas a mirar el resultado, míralo ahora en vez de pagar otra ronda." }
+      ],
+      "explain": "Un cambio que no puedes revisar de un vistazo es un cambio que todavía no debes aceptar."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tu integración empieza a devolver 429 en horas punta. Añades reintentos automáticos inmediatos. El lunes siguiente falla más que antes.",
+      "options": [
+        { "text": "Los reintentos inmediatos multiplican la carga. Hay que esperar cada vez más entre intentos y limitar cuántas llamadas van a la vez", "correct": true, "why": "Correcto. Reintentar al instante es echar más peticiones al mismo cuello de botella. El proveedor cuenta peticiones, no intenciones: cada reintento cuenta igual que el original." },
+        { "text": "Sube de plan para tener más cuota", "correct": false, "why": "Puede formar parte de la solución y cuesta dinero real. Pero sin espaciar los reintentos alcanzas el límite nuevo también, sólo que pagando más por llegar." },
+        { "text": "Reparte las llamadas entre dos claves de la misma cuenta", "correct": false, "why": "Se intenta mucho porque parece que duplica el cupo. El límite suele contarse por organización, no por clave, y además te destroza la trazabilidad de quién gastó qué." }
+      ],
+      "explain": "Contra un 429, esperar más entre intentos; reintentar al instante es echar gasolina."
+    },
+    {
+      "prompt": "Tu extractor de datos de facturas ha pasado 200 pruebas. En producción descubres que el 3 % de facturas no traen NIF y el flujo entero se detiene en cada una.",
+      "options": [
+        { "text": "El esquema debe permitir «desconocido» en ese campo y el flujo debe apartar esas facturas para revisión humana en vez de pararse", "correct": true, "why": "Correcto. Un dato ausente es un caso legítimo, no un error del sistema. Con 3 % sobre mil facturas al mes son treinta a revisar: perfectamente manejable si salen a una bandeja aparte." },
+        { "text": "Pide al modelo que deduzca el NIF a partir del nombre de la empresa", "correct": false, "why": "Es lo que se hace por comodidad y es exactamente donde se inventan datos. Un NIF inventado en contabilidad es mucho peor que un hueco, porque nadie lo va a cuestionar." },
+        { "text": "Marca el campo como obligatorio y reintenta hasta que el modelo lo devuelva", "correct": false, "why": "Suena a rigor. Si el dato no está en la factura, reintentar sólo gasta llamadas y acaba empujando al modelo a rellenar algo para cumplir el formato." }
+      ],
+      "explain": "Un esquema debe tener sitio para «no lo sé»; si no lo tiene, el modelo se lo inventa."
+    }
+  ]
+}

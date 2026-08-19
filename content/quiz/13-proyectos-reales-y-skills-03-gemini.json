@@ -1,0 +1,63 @@
+{
+  "categoryId": "13-proyectos-reales-y-skills-03-gemini",
+  "basico": [
+    {
+      "prompt": "Le pides a Gemini los datos de esta semana sobre un tema y te contesta con una seguridad absoluta. Compruebas uno de los datos: es falso.",
+      "options": [
+        { "text": "Por defecto responde con lo que aprendió, y eso tiene fecha de corte. Para lo actual hay que activar el anclaje con la búsqueda de Google, y entonces además te da las fuentes", "correct": true, "why": "Correcto, y las fuentes son la mitad del valor: puedes comprobar. Sin anclaje, el modelo no está mintiendo; está completando lo más plausible con lo que sabe, que es de hace meses." },
+        { "text": "Hay que usar el modelo más nuevo, que tendrá datos más frescos", "correct": false, "why": "Se cree porque cada versión nueva sí adelanta la fecha de corte. Pero sigue habiendo corte: lo de esta semana no lo sabe ninguno." },
+        { "text": "Hay que decirle en el prompt \"no te inventes nada\"", "correct": false, "why": "Es lo primero que hace todo el mundo y suena razonable. Se rompe porque el modelo no tiene forma fiable de saber que no lo sabe: para él, la respuesta inventada y la correcta se generan igual." }
+      ],
+      "explain": "Para datos actuales hace falta que salga a buscarlos. Pedirle honestidad no le da información."
+    },
+    {
+      "prompt": "Estás sacando datos de facturas en texto libre y necesitas que la respuesta traiga siempre los mismos campos, para meterla en una hoja de cálculo sin tocarla a mano.",
+      "options": [
+        { "text": "Se le puede exigir una salida estructurada: defines de antemano los campos y sus tipos, y deja de ser un texto que haya que interpretar", "correct": true, "why": "Correcto. Es la diferencia entre recibir un párrafo que casi siempre trae lo que quieres y recibir siempre una ficha con los mismos huecos. Lo segundo se puede procesar sin escribir un intérprete." },
+        { "text": "Pedirlo en el prompt: \"responde en formato JSON\"", "correct": false, "why": "Funciona en nueve de cada diez casos, y ese noventa por ciento es lo que lo hace peligroso. El caso restante añade una frase de cortesía delante y te rompe el proceso, normalmente un viernes." },
+        { "text": "Dejar que responda en texto y procesarlo después buscando las palabras clave", "correct": false, "why": "Es lo que se hace cuando no sabes que existe la otra opción, y se puede llegar lejos así. Acabas manteniendo un intérprete frágil que se rompe cada vez que el modelo cambia un poco el estilo." }
+      ],
+      "explain": "La forma de la respuesta se puede exigir de antemano. No hace falta pedirla por favor."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tienes la salida estructurada activada y el proceso funciona. Pero al revisar los resultados ves que el campo \"fecha de vencimiento\" llega vacío en un tercio de las fichas.",
+      "options": [
+        { "text": "El formato garantiza la forma, no la verdad. Si el dato no estaba en el texto de entrada, sale vacío o inventado: hay que validarlo y decidir qué hacer con los huecos", "correct": true, "why": "Correcto, y esa decisión es tuya, no del modelo: apartar la ficha para revisión humana, marcarla, o pedir el dato al cliente. Lo que no vale es dejar que un hueco entre en la hoja como si fuera un dato." },
+        { "text": "El esquema está mal definido y por eso no rellena el campo", "correct": false, "why": "Vale la pena comprobarlo, así que no es tiempo perdido. Pero un esquema perfecto tampoco crea datos: si la factura no lleva fecha de vencimiento, no hay de dónde sacarla." },
+        { "text": "Subir la temperatura para que se atreva a rellenarlo", "correct": false, "why": "Tiene una lógica interna: más creatividad, menos huecos. Lo que consigues es que se lo invente con más soltura, y un dato inventado en una hoja de facturas es mucho peor que un hueco." }
+      ],
+      "explain": "La salida estructurada te asegura los campos. Que estén llenos y sean ciertos es otra pregunta."
+    },
+    {
+      "prompt": "Has conectado una función que consulta tu inventario y el modelo la llama con un nombre de producto que no existe en el catálogo.",
+      "options": [
+        { "text": "Describe en el esquema qué formato espera cada parámetro y valida en tu función antes de consultar. El modelo propone; quien acepta es tu código", "correct": true, "why": "Correcto, y es la regla que hay que interiorizar de una vez: nada de lo que propone un modelo entra en tu sistema sin pasar por una comprobación tuya. La descripción de cada parámetro reduce los errores; la validación los detiene." },
+        { "text": "Es un fallo del modelo eligiendo mal el parámetro", "correct": false, "why": "Se elige porque el síntoma apunta ahí. Pero el modelo hace lo que puede con lo que le describiste: si el esquema dice solo \"nombre del producto\", no hay forma de que sepa que aquí van referencias tipo REF-4410." },
+        { "text": "Devolverle un error genérico para que reintente", "correct": false, "why": "Es lo que sale por defecto y algo ayuda: al menos no consulta con basura. Pero un \"error\" a secas no le dice qué corregir, así que reintenta parecido; devuélvele algo útil, como los valores válidos más cercanos." }
+      ],
+      "explain": "El modelo rellena parámetros. Validar antes de usarlos es trabajo tuyo, siempre."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tu asistente responde preguntas de clientes y decides activar el anclaje con búsqueda de Google en todas las peticiones, para no arriesgarte a datos viejos.",
+      "options": [
+        { "text": "La búsqueda se factura aparte del modelo, por consulta. Actívala cuando la pregunta dependa de algo actual; para el resto es dinero y espera sin ganancia", "correct": true, "why": "Correcto. \"¿Cuál es vuestro horario?\" no necesita salir a Internet, y si el 80% de las preguntas son así, estás pagando una búsqueda por cada una. La decisión de activarlo se puede tomar por tipo de pregunta." },
+        { "text": "Siempre activo: la precisión es lo primero", "correct": false, "why": "Es defendible en un producto de investigación, donde cada respuesta debe llevar fuentes. En un asistente general multiplica el coste y la latencia de preguntas que ya se respondían bien." },
+        { "text": "Nunca activo: así el coste es predecible", "correct": false, "why": "Ahorra de verdad y el coste queda plano, que es cómodo de defender. Se rompe cuando un cliente actúa sobre un dato caducado: eso cuesta mucho más que las búsquedas de todo el mes." }
+      ],
+      "explain": "El anclaje con búsqueda se paga por consulta. Actívalo por tipo de pregunta, no por defecto."
+    },
+    {
+      "prompt": "Tu proyecto con Gemini funciona en el nivel gratuito y quieres empezar a usarlo con datos de clientes reales.",
+      "options": [
+        { "text": "El nivel gratuito tiene límites por minuto y por día, y sus condiciones sobre el uso de los datos no son las mismas que las de pago. Antes de meter datos de un cliente, pasa a nivel de pago y lee las condiciones", "correct": true, "why": "Correcto, y son dos problemas distintos que hay que resolver los dos. El de los límites lo notarás el día de más tráfico; el de las condiciones de datos no lo notarás nunca, que es precisamente lo que lo hace grave si alguien pregunta." },
+        { "text": "Seguir en gratuito hasta que empiece a dar errores por límite", "correct": false, "why": "Es lo que hace muchísima gente y funciona durante semanas. El problema es cuándo llega el error: justo el día de más volumen, que suele ser el día de la demo." },
+        { "text": "Crear varias claves y repartir las peticiones entre ellas para multiplicar el límite", "correct": false, "why": "Es tentador porque técnicamente funciona y parece listo. Va contra las condiciones de uso, y la consecuencia no es que te corten esa clave: es que te cierren la cuenta entera, con todo lo que haya dentro." }
+      ],
+      "explain": "El nivel gratuito es para aprender. Con datos de un cliente se pasa a pago y se leen las condiciones."
+    }
+  ]
+}

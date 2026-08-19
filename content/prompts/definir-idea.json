@@ -1,0 +1,156 @@
+{
+  "id": "definir-idea",
+  "title": "Convertir una idea vaga en un proyecto que se puede construir",
+  "intro": "Tienes una idea en la cabeza del tipo \"quiero algo que me ayude con los pedidos\" y no sabes por dónde se empieza. Esta familia de prompts la convierte en un proyecto definido: qué entra, qué sale, quién lo usa y cuál es la versión más pequeña que ya te ahorra tiempo el primer día. Úsalos en orden y en el mismo chat, antes de pedirle a nadie que construya nada.",
+  "model": "ChatGPT va bien para la entrevista y el ida y vuelta del día a día, pero para la ficha larga y el encargo final tira de Claude, que aguanta mejor los textos largos sin perder el hilo; Gemini solo si tu idea vive dentro de Google (Drive, Sheets, Gmail).",
+  "prompts": [
+    {
+      "name": "La entrevista: que te pregunte a ti",
+      "when": "El primer mensaje de todos, cuando lo único que tienes es una frase vaga y ninguna respuesta.",
+      "prompt": "Actúa como un consultor de producto que trabaja con gente sin ningún conocimiento técnico. Tu trabajo hoy NO es darme soluciones, sino sacarme la información de la cabeza a base de preguntas.\n\nMi idea, tal cual me sale: [TU IDEA EN UNA FRASE].\nA qué me dedico y cómo es mi día normal: [TU TRABAJO Y TU RUTINA].\n\nReglas de la entrevista, cúmplelas a rajatabla:\n1. Hazme UNA sola pregunta por mensaje y espera mi respuesta. Nunca varias de golpe.\n2. Cada pregunta, máximo dos líneas y en lenguaje normal. Si usas una palabra técnica, tradúcela entre paréntesis.\n3. Debajo de cada pregunta ponme tres ejemplos de respuesta posible, para que yo entienda qué me estás preguntando. Puedo elegir uno o escribirte el mío.\n4. Si mi respuesta es vaga (\"pues depende\", \"más o menos\", \"lo normal\"), no la des por buena: repregúntame con un caso concreto hasta que te dé un dato real.\n5. No propongas ninguna solución, ni herramienta, ni tecnología, ni nombre de programa hasta que la entrevista termine.\n6. Empieza por lo que hago hoy sin ninguna ayuda: paso a paso, con qué papeles, en qué momento del día y cuánto tiempo me lleva.\n\nCuando tengas suficiente para describir el proyecto entero (calcula unas doce preguntas), escribe \"ENTREVISTA TERMINADA\" y párate ahí, sin resumir todavía.\n\nEmpieza por la primera pregunta.",
+      "fill": [
+        [
+          "[TU IDEA EN UNA FRASE]",
+          "Tal cual la piensas, sin arreglarla. Ejemplo real: \"quiero algo que me ayude con los pedidos de la tienda, que ahora los apunto en una libreta\"."
+        ],
+        [
+          "[TU TRABAJO Y TU RUTINA]",
+          "Tres o cuatro líneas sobre lo que haces cada día. Ejemplo: \"tengo una panadería, recibo unos 15 encargos al día por WhatsApp y por teléfono, y a las 6 de la mañana preparo la lista de lo que hay que hornear\"."
+        ]
+      ],
+      "expect": "Una única pregunta corta, con tres ejemplos de respuesta debajo. Nada de listas de funcionalidades ni de tecnologías. Si te suelta diez preguntas de golpe o empieza a recomendarte programas, no ha leído las reglas: contéstale \"vuelve a empezar, una sola pregunta\" y sigue.",
+      "next": "Contesta con casos reales de esta semana, con nombres y cifras. Cuando escriba ENTREVISTA TERMINADA, sigue con el prompt siguiente en el mismo chat, sin abrir uno nuevo."
+    },
+    {
+      "name": "La ficha del proyecto",
+      "when": "Justo después de la entrevista, con tus respuestas todavía en el mismo chat.",
+      "prompt": "Ya tienes mis respuestas de la entrevista. Ahora conviértelas en una ficha de proyecto de una sola página, escrita para que la entienda alguien que no ha programado nunca.\n\nUsa exactamente estos apartados y este orden:\n1. NOMBRE PROVISIONAL: cómo llamamos a esto, en dos o tres palabras.\n2. EL PROBLEMA EN UNA FRASE: qué me duele hoy, sin adornos y sin venderme nada.\n3. QUIÉN LO USA: cada persona que va a tocarlo, qué sabe de tecnología y desde qué aparato lo usa (móvil, ordenador, tablet).\n4. QUÉ ENTRA: la información que le doy al sistema, de dónde sale y en qué forma llega hoy (un WhatsApp, un papel, una llamada, un correo, una hoja de cálculo).\n5. QUÉ SALE: lo que me devuelve, con un ejemplo escrito de la salida real, palabra por palabra.\n6. QUÉ HACE POR DENTRO: los pasos, en cuatro o cinco frases, sin una sola palabra técnica.\n7. QUÉ NO HACE: la lista de cosas que cualquiera daría por hechas y que este proyecto deja fuera a propósito.\n8. CÓMO SÉ QUE FUNCIONA: una señal que se pueda medir, del tipo \"tardo diez minutos en vez de una hora\".\n\nSi te falta un dato para rellenar cualquier apartado, no te lo inventes: escribe \"FALTA:\" y dime exactamente qué necesitas de mí.\n\nCuando termines, no añadas consejos ni siguientes pasos. Solo la ficha.",
+      "fill": [],
+      "expect": "Una página con los ocho apartados rellenos y, si acaso, algún \"FALTA:\" señalando lo que no le has contado. Es tu primer documento de verdad.",
+      "next": "Léela entera y corrige a mano lo que no encaje con tu realidad. La IA escribe muy bien cosas que no son ciertas sobre tu negocio; tú eres el único que puede pillarlo. Luego guárdala en un bloc de notas: la vas a pegar en casi todos los prompts siguientes."
+    },
+    {
+      "name": "El recorrido de un caso real",
+      "when": "Cuando la ficha te suena bien pero quieres comprobar si aguanta con un caso de verdad.",
+      "prompt": "Vamos a comprobar si la ficha aguanta con un caso real. Ficha del proyecto: [PEGA AQUÍ LA FICHA DEL PROYECTO]. Y este es un caso de verdad de mi trabajo: [UN CASO CONCRETO DE ESTA SEMANA, CON NOMBRES Y CIFRAS].\n\nEscríbeme el recorrido completo de ese caso dentro del proyecto, desde el primer segundo hasta que se da por terminado, en forma de tabla con cuatro columnas: PASO / QUIÉN LO HACE (yo, otra persona o el sistema solo) / QUÉ VE EN LA PANTALLA / QUÉ PASA POR DETRÁS.\n\nReglas:\n- Nada de resúmenes: un paso por fila, aunque salgan veinte filas.\n- En \"qué ve en la pantalla\" describe botones y textos concretos, como si me lo estuvieras enseñando con el dedo.\n- Marca con un aviso cada paso en el que haga falta que una persona decida algo, y cada paso que no se pueda deshacer: mandar un mensaje a un cliente, cobrar, borrar algo.\n- Después de la tabla, dime tres momentos del recorrido en los que esto se rompería en la vida real y por qué.\n\nY termina con una sola frase: cuál es el paso más caro de construir de toda la tabla.\n\nSi el caso que te doy no encaja en la ficha, no lo fuerces: dime en qué punto se sale del plan.",
+      "fill": [
+        [
+          "[PEGA AQUÍ LA FICHA DEL PROYECTO]",
+          "La página que te dio el prompt anterior, copiada entera."
+        ],
+        [
+          "[UN CASO CONCRETO DE ESTA SEMANA, CON NOMBRES Y CIFRAS]",
+          "Un caso auténtico, cuanto más feo mejor. Ejemplo: \"el martes María pidió por WhatsApp 3 tartas para el sábado, el jueves cambió una por sin gluten y al final vino a recogerlas su hermano\"."
+        ]
+      ],
+      "expect": "Una tabla larga, con avisos en los pasos peligrosos, y tres puntos de rotura. Aquí aparecen los agujeros que no habías visto: quién avisa al cliente, qué pasa si cambia de idea, quién cobra.",
+      "next": "Si un paso te suena raro, contéstale \"el paso 7 no funciona así, en realidad pasa esto\" y pídele la tabla otra vez. Cuando la tabla describa tu trabajo de verdad, la ficha ya vale."
+    },
+    {
+      "name": "¿Esto ya existe hecho?",
+      "when": "Antes de construir nada, para no pasarte tres semanas haciendo algo que se compra por 15 euros al mes.",
+      "prompt": "Antes de construir nada quiero saber si esto ya está inventado. Este es mi proyecto: [PEGA AQUÍ LA FICHA DEL PROYECTO].\n\nBusca y compárame lo que ya existe en el mercado que resuelva esto o casi esto, con atención a lo que se usa en España. Preséntalo en una tabla con estas columnas: NOMBRE / QUÉ RESUELVE DE MI LISTA / QUÉ NO RESUELVE / PRECIO APROXIMADO AL MES EN EUROS / SI HAY VERSIÓN GRATIS Y QUÉ LÍMITE TIENE / CUÁNTO TARDARÍA YO EN TENERLO FUNCIONANDO.\n\nIncluye por lo menos una opción que no sea un programa de pago: una hoja de cálculo bien montada, una plantilla, o algo que ya venga incluido en las herramientas que uso a diario.\n\nAl final escribe un veredicto honesto en tres líneas, eligiendo una de estas tres opciones: (a) cómpralo hecho y no construyas nada; (b) constrúyete tu versión, porque lo que existe no encaja por estos motivos concretos; (c) empieza usando lo que existe y constrúyete solo el trozo que falta.\n\nSi no estás seguro de un precio o de una función porque pueden haber cambiado, dilo con esas palabras en vez de darme una cifra inventada.",
+      "fill": [
+        [
+          "[PEGA AQUÍ LA FICHA DEL PROYECTO]",
+          "La ficha completa. Cuanto más concreto sea el apartado \"qué no hace\", mejor filtra las alternativas."
+        ]
+      ],
+      "expect": "Una tabla de tres a seis alternativas con precios en euros y un veredicto claro. Es la respuesta más rentable de toda la familia: a veces te ahorra el proyecto entero.",
+      "next": "Los precios y las funciones caducan y la IA los da de memoria: entra en la web de las dos opciones que te convenzan y compruébalo antes de pagar nada."
+    },
+    {
+      "name": "Elegir la forma de construirlo",
+      "when": "Ya sabes que merece la pena hacerlo tú y hay que decidir en qué se convierte: una web, una hoja de cálculo, un bot de mensajes.",
+      "prompt": "Ayúdame a decidir con qué forma construyo esto. Mi proyecto: [PEGA AQUÍ LA FICHA DEL PROYECTO]. Mi nivel: no he programado nunca y trabajo escribiéndole a una IA en su página web, copiando y pegando lo que me dice. Lo van a usar [NÚMERO DE PERSONAS] personas. Puedo gastarme como mucho [CIFRA EN EUROS] al mes.\n\nProponme tres formas distintas de construir lo mismo, ordenadas de menos a más esfuerzo. Para cada una dime: EN QUÉ CONSISTE, en dos frases; QUÉ TENGO QUE APRENDER para manejarla; CUÁNTO TARDO en tener la primera versión funcionando; CUÁNTO CUESTA AL MES EN EUROS, contando todas las partes de pago; QUÉ PASA CUANDO CREZCA, con más gente y más volumen; y QUÉ ME ATA a esa opción, es decir, qué sería difícil de deshacer si me arrepiento dentro de seis meses.\n\nTraduce cada palabra técnica la primera vez que la uses, entre paréntesis y en lenguaje de calle.\n\nTermina recomendándome una sola opción y explicando en tres líneas por qué esa y no las otras dos, teniendo en cuenta que lo que más me importa es [LO QUE MÁS TE IMPORTA].",
+      "fill": [
+        [
+          "[PEGA AQUÍ LA FICHA DEL PROYECTO]",
+          "La ficha completa, otra vez."
+        ],
+        [
+          "[NÚMERO DE PERSONAS]",
+          "Cuánta gente lo va a tocar de verdad. Ejemplo: \"2 (yo y mi socia)\". Si sois uno, dilo: cambia mucho la recomendación."
+        ],
+        [
+          "[CIFRA EN EUROS]",
+          "Tu tope real al mes. Ejemplo: \"0 euros, quiero empezar solo con lo gratis\" o \"hasta 20 euros\"."
+        ],
+        [
+          "[LO QUE MÁS TE IMPORTA]",
+          "Una sola cosa: rapidez, precio, que no se rompa, o que sea bonito de enseñar a un cliente."
+        ]
+      ],
+      "expect": "Tres caminos comparados con tiempos y precios en euros, y una recomendación única al final. Fíjate sobre todo en la columna de \"qué me ata\": ahí está el arrepentimiento futuro.",
+      "next": "Si la recomendación te suena a chino, pídele: \"explícame la opción que recomiendas como si tuviera doce años y dime qué hago yo el primer día\"."
+    },
+    {
+      "name": "Recortar hasta lo mínimo que ya sirve",
+      "when": "Cuando la ficha se te ha ido de las manos y ya son quince cosas. Este prompt es obligatorio antes de construir.",
+      "prompt": "Sé sincero conmigo: lo que hemos descrito es demasiado grande para una primera versión. Esta es la ficha: [PEGA AQUÍ LA FICHA DEL PROYECTO].\n\nRecórtala hasta dejar la versión más pequeña que ya me ahorre tiempo el primer día. Para hacerlo, reparte todo lo que hay en la ficha en tres montones y justifica cada decisión en una línea:\n- VERSIÓN 1: lo que, si falta, hace que esto no sirva para nada. Máximo cinco cosas, ni una más.\n- LUEGO: lo que está bien pero puede esperar dos meses sin que pase nada.\n- NUNCA: lo que suena bien pero no me cambia el día.\n\nCada vez que mandes algo al montón de \"luego\", dime qué hago yo mientras tanto a mano y cuánto tiempo me va a costar hacerlo así.\n\nDespués escribe la versión 1 como una sola frase con este molde, rellenando tú los huecos: \"Cuando pase (esto), el sistema hace (esto otro) y yo veo (esto de aquí)\".\n\nY termina con la prueba del algodón: si de la versión 1 solo pudieras dejar UNA cosa funcionando, ¿cuál dejarías y por qué? Dame una sola respuesta, no dos.",
+      "fill": [
+        [
+          "[PEGA AQUÍ LA FICHA DEL PROYECTO]",
+          "La ficha, con las correcciones que ya le hayas hecho tú a mano."
+        ]
+      ],
+      "expect": "Tres listas, una frase que resume la versión 1 y una respuesta única a la prueba del algodón. Si la lista de \"versión 1\" tiene más de cinco cosas, contéstale \"demasiado, córtalo a la mitad\" y repite.",
+      "next": "Esa frase de \"cuando pase X, el sistema hace Y y yo veo Z\" es lo que vas a construir primero. Guárdala aparte: es tu meta."
+    },
+    {
+      "name": "La lista de lo que se guarda",
+      "when": "Cuando ya sabes qué hace y necesitas saber qué información tiene que recordar.",
+      "prompt": "Vamos con la información que este proyecto tiene que guardar. Ficha del proyecto: [PEGA AQUÍ LA FICHA DEL PROYECTO]. Y aquí tienes un ejemplo real de lo que manejo hoy: [PEGA UN PEDIDO, FICHA O MENSAJE REAL CON LOS NOMBRES CAMBIADOS].\n\nHazme la lista de las cosas que el sistema tiene que recordar, en lenguaje normal y sin jerga de bases de datos. Para cada dato que se guarda, dame una tabla con: CÓMO SE LLAMA / QUÉ ES, EXPLICADO A UNA PERSONA / UN EJEMPLO REAL / SI PUEDE ESTAR VACÍO O NO / QUIÉN LO RELLENA (yo, el cliente, o el sistema solo).\n\nDespués explícame en cuatro frases cómo se relacionan entre ellas, del tipo \"un cliente tiene muchos pedidos y cada pedido tiene varias líneas\".\n\nMarca aparte, con un aviso claro, cualquier dato personal que aparezca (nombre, teléfono, dirección, correo) y dime en una línea qué obligación tengo con esos datos si voy a usarlo con clientes reales en España.\n\nTermina con tres preguntas que debería contestarte yo antes de dar esta lista por buena.",
+      "fill": [
+        [
+          "[PEGA AQUÍ LA FICHA DEL PROYECTO]",
+          "Mejor la ficha ya recortada a la versión 1 que la larga."
+        ],
+        [
+          "[PEGA UN PEDIDO, FICHA O MENSAJE REAL CON LOS NOMBRES CAMBIADOS]",
+          "Un ejemplo auténtico copiado tal cual: el WhatsApp del cliente, la fila de tu Excel, la nota de la libreta. Cambia nombres y teléfonos antes de pegarlo."
+        ]
+      ],
+      "expect": "Una tabla con quince o veinte datos, con sus ejemplos, y un bloque marcado con los datos personales. Te sirve de guion para la conversación en la que se construye de verdad.",
+      "next": "Contesta las tres preguntas finales dentro del mismo chat. Suelen ser justo las que te van a arruinar el proyecto si las dejas para después."
+    },
+    {
+      "name": "Lo que puede salir mal",
+      "when": "Antes de construir, cuando el plan te parece perfecto. Ahí es cuando toca.",
+      "prompt": "Ponte en el papel de la persona más pesimista del equipo. Este es el plan: [PEGA AQUÍ LA FICHA Y LA FRASE DE LA VERSIÓN 1].\n\nDime todo lo que puede salir mal, agrupado en cuatro bloques:\n1. CASOS RAROS: la vida real que no encaja en el plan. Un pedido a medias, alguien que cambia de opinión, dos cosas que se llaman igual, un número escrito mal, alguien que escribe todo en mayúsculas y sin acentos.\n2. QUE SE ROMPA ALGO: qué pasa si se cae internet, si el móvil se queda sin batería a mitad, si dos personas tocan lo mismo a la vez.\n3. QUE LA LÍE YO: en qué punto voy a meter la pata usándolo con prisa un lunes por la mañana.\n4. LO QUE NO TIENE VUELTA ATRÁS: cada acción del sistema que borra algo, que cobra o que manda un mensaje a otra persona.\n\nOrdénalos por el daño que hacen, del uno al diez. Para los cinco peores dame una solución barata, del tipo \"pedir confirmación antes de\" o \"guardar siempre una copia de\".\n\nNo me digas que todo va a ir bien. Si algo de mi plan te parece directamente una mala idea, dímelo con esas palabras.",
+      "fill": [
+        [
+          "[PEGA AQUÍ LA FICHA Y LA FRASE DE LA VERSIÓN 1]",
+          "La ficha recortada más la frase \"cuando pase X, el sistema hace Y y yo veo Z\" que salió del prompt de recortar."
+        ]
+      ],
+      "expect": "Una lista incómoda, ordenada por gravedad, con soluciones baratas para las cinco peores. Presta atención al bloque 4: todo lo que borra, cobra o escribe a un cliente es irreversible y conviene que pida confirmación antes.",
+      "next": "Mete las cinco soluciones baratas dentro de la ficha, en el apartado de \"qué hace por dentro\". No abras un documento nuevo."
+    },
+    {
+      "name": "El encargo de una página",
+      "when": "Al final del todo, para llevarte el proyecto a un chat nuevo y empezar a construir.",
+      "prompt": "Última tarea con esta idea. Junta todo lo que hemos hablado y escríbeme un encargo de una página que yo pueda copiar y pegar en un chat completamente nuevo, para que otra IA empiece a construir esto sin haber estado en esta conversación.\n\nEscríbelo en segunda persona, dirigido a esa IA, y que contenga: qué se construye y para quién; qué entra y qué sale, con un ejemplo real de cada cosa; los pasos que hace por dentro; la lista de lo que se guarda; lo que queda fuera de la versión 1 y no hay que construir; con qué herramientas se va a montar y por qué; el nivel de quien lo va a manejar, que no ha programado nunca y trabaja copiando y pegando lo que la IA le diga; y una instrucción final para que pregunte antes de dar cualquier cosa por supuesta y me explique cada paso en lenguaje normal.\n\nFormato: texto plano y seguido, sin tablas, sin negritas y sin florituras, listo para pegar de una vez. No des nada por sabido: quien lo lea no ha visto esta conversación.\n\nAntes de escribirlo, repasa si te falta algún dato mío y pregúntamelo. Solo cuando lo tengas todo, escríbelo entero.",
+      "fill": [],
+      "expect": "Un texto seguido de media página o algo más, sin adornos, que se entiende sin haber leído nada anterior. Si empieza con \"como hemos comentado\" o \"según lo que hablamos\", está mal: pídele que lo reescriba sin referencias a esta conversación.",
+      "next": "Guárdalo en un archivo de texto en el escritorio. Ese encargo abre el primer chat de construcción, y lo vuelves a pegar cada vez que la IA se despiste."
+    }
+  ],
+  "canDo": [
+    "Hacerte las preguntas que tú no sabías que tenías que contestarte, una a una y sin dejarte escapar con un \"depende\".",
+    "Convertir una frase suelta en una ficha con entrada, salida, pasos, usuarios y lo que queda fuera.",
+    "Recortar sin piedad hasta la versión que ya te sirve el primer día, y decirte qué haces a mano mientras tanto.",
+    "Escribirte el encargo que luego pegas en otro chat para que se construya, sin que ese chat haya visto nada de esto."
+  ],
+  "cantDo": [
+    "No conoce tu negocio: lo que se invente sobre tus pedidos sonará razonable y será falso hasta que tú lo corrijas.",
+    "No sabe si tu idea va a tener clientes. Valida la definición, no el mercado: eso lo comprueban las personas que pagan.",
+    "Los precios y las funciones de las herramientas los da de memoria y caducan; antes de pagar 15 o 30 euros al mes, míralo en la web del que cobra.",
+    "No te construye nada con estos prompts: aquí solo se define. Construir es otra conversación, con el encargo de una página delante."
+  ],
+  "tips": [
+    "Contesta la entrevista con casos reales de esta semana, con nombres, horas y cifras. Cada \"más o menos\" que le cueles te devuelve una ficha inventada.",
+    "Trabaja los nueve prompts en el mismo chat. Si abres uno nuevo, la IA no recuerda absolutamente nada: pega antes la ficha o empezáis de cero.",
+    "Cuando una respuesta te suene bien pero vacía, contéstale \"dame la versión que no me va a gustar\" o \"dime qué se te ha olvidado preguntarme\". Ahí sale lo que sirve."
+  ]
+}

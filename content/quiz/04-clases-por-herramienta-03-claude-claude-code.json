@@ -1,0 +1,63 @@
+{
+  "categoryId": "04-clases-por-herramienta-03-claude-claude-code",
+  "basico": [
+    {
+      "prompt": "Primera sesión con Claude Code. Abres la terminal (esa ventana donde se escriben órdenes en vez de hacer clic) en la carpeta de tu proyecto, escribes claude y te sale el cursor esperando. ¿Cuál es la primera petición sensata?",
+      "options": [
+        { "text": "Que lea un archivo concreto y te explique qué hace, sin tocar nada todavía", "correct": true, "why": "Una lectura te enseña dos cosas a la vez: si él entiende tu proyecto y si tú entiendes lo que te contesta. Y como no cambia nada, no hay nada que deshacer." },
+        { "text": "Que arregle los errores que encuentre en el proyecto, para ver de qué es capaz", "correct": false, "why": "Es la tentación normal y a veces sale bien, que es lo peor. Errores lo interpreta él: toca lo que le parece y acabas con un cambio grande que no sabes revisar en tu primer día." },
+        { "text": "Nada: primero hay que dejar toda la configuración escrita para que funcione bien", "correct": false, "why": "Las reglas del proyecto ayudan muchísimo, pero escribirlas antes de haberlo usado es inventárselas. Salen mucho mejor después de dos o tres sesiones, cuando ya sabes qué se le olvida." }
+      ],
+      "explain": "Primero que lea, luego que cambie. La confianza se gana en ese orden."
+    },
+    {
+      "prompt": "Cada vez que abres una sesión nueva le tienes que volver a contar cómo se arranca tu proyecto y qué carpeta no debe tocar. Te cansa repetirlo.",
+      "options": [
+        { "text": "Escribes un archivo CLAUDE.md en la raíz del proyecto con esas reglas: lo lee solo al empezar cada sesión", "correct": true, "why": "Es lo que más cambia la calidad del resultado y casi nadie lo escribe. Qué hace el proyecto, cómo se arranca y qué no se toca. Con eso deja de preguntarte lo mismo." },
+        { "text": "Pagas el plan superior, que guarda más memoria entre sesiones", "correct": false, "why": "Suena razonable porque más plan parece más memoria. Pero no recuerda tu proyecto entre sesiones en ningún plan: si quieres que lo sepa, se lo tienes que dar por escrito. El Pro son unos 20 € al mes y esto no lo arregla." },
+        { "text": "Dejas la misma conversación abierta para siempre y no la cierras nunca", "correct": false, "why": "Funciona un rato, por eso mucha gente lo hace. Se rompe porque en una conversación larga lo primero que dijiste deja de caber y se cae; y pierdes todo el día que se cierre." }
+      ],
+      "explain": "Lo que quieres que sepa siempre se escribe en un archivo, no se repite cada día."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Le pides el mismo cambio dos veces y las dos veces se equivoca igual. Vas a por la tercera, esta vez con la instrucción más larga y en mayúsculas.",
+      "options": [
+        { "text": "Mal camino: sales, piensas qué contexto le falta y vuelves con eso", "correct": true, "why": "Dos fallos iguales casi nunca son terquedad: es que no tiene algo que tú das por sabido. El archivo que no ha leído, la convención del equipo, un dato de ejemplo real. Insistir sin añadir información repite el resultado." },
+        { "text": "Bien: repetir con más énfasis suele desatascarlo", "correct": false, "why": "A veces cambia la respuesta y eso refuerza la costumbre. Pero lo que cambió fue el azar de la generación, no su comprensión del problema. La tercera vuelta sin datos nuevos es una tirada de dados." },
+        { "text": "Bien, pero cambiando a un modelo más potente en la misma conversación", "correct": false, "why": "Un modelo mejor ayuda cuando el problema es de razonamiento. Aquí falta información, y esa falta la arrastra igual el modelo grande: no puede adivinar lo que no le has dicho." }
+      ],
+      "explain": "Si falla dos veces igual, no le falta insistencia: le falta contexto."
+    },
+    {
+      "prompt": "Ha terminado un cambio y te dice que ha tocado dos archivos. Pides el resumen de cambios con git diff --stat, que lista qué archivos cambiaron y cuántas líneas, y salen doce archivos.",
+      "options": [
+        { "text": "Paras y descartas: ese cambio no entra hasta entender qué hace en los otros diez archivos", "correct": true, "why": "La diferencia entre lo que dice y lo que hizo es exactamente la señal que buscas al mirar el resumen. Con git checkout -- . descartas lo no guardado y se lo vuelves a pedir acotado." },
+        { "text": "Revisas los dos archivos que mencionó y aceptas el resto", "correct": false, "why": "Es lo que apetece, porque revisar doce cansa. Pero justo los diez que no mencionó son los que no esperabas, o sea los que más probabilidad tienen de romper algo en otro sitio." },
+        { "text": "Le preguntas por qué tocó doce y aceptas si la explicación convence", "correct": false, "why": "La explicación va a sonar bien, casi siempre suenan bien. Le estás pidiendo cuentas del trabajo a quien lo hizo, con el diff delante sin leer." }
+      ],
+      "explain": "El resumen de archivos tocados es tu alarma. Si no cuadra con lo que pediste, para."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Montas un proceso que cada mañana resume solo los correos del buzón de soporte. En el código pones temperatura 0,7 porque en el chat escribe más natural con ese valor.",
+      "options": [
+        { "text": "Mal: el mismo correo te va a dar resúmenes distintos cada día y no vas a poder comparar ni diagnosticar", "correct": true, "why": "La temperatura es cuánto azar se permite al elegir palabras. En procesos automáticos va a 0: misma entrada, misma salida. El 0,7 se reserva para textos donde quieres variedad y hay alguien leyendo." },
+        { "text": "Da igual: la temperatura cambia el estilo, no el contenido", "correct": false, "why": "Se cree porque en un chat lo que notas es el tono. Pero también cambia qué se decide incluir y qué se deja fuera, y ahí te muerde el día que alguien toma una decisión mirando el resumen." },
+        { "text": "Mal, porque gasta más: explora más opciones antes de responder", "correct": false, "why": "La confusión es razonable, parece que más azar es más trabajo. Se paga por cantidad de texto de entrada y de salida, no por la temperatura." }
+      ],
+      "explain": "Proceso automático, temperatura 0. Texto para leer, súbela si quieres variedad."
+    },
+    {
+      "prompt": "Vais a conectar el asistente a herramientas reales: el correo de la empresa y la base de datos de clientes. Alguien propone poner en las reglas del proyecto un no borres nunca nada y darlo por resuelto.",
+      "options": [
+        { "text": "No aguanta: una instrucción es un aviso, y si la capacidad de borrar no debe usarse, no se le da", "correct": true, "why": "La defensa sólida es no tener la llave, no pedir por favor que no la use. Y hay un ataque real, la inyección indirecta: un correo o una web que lea puede llevar instrucciones escondidas que contradigan las tuyas." },
+        { "text": "Aguanta si la instrucción está en el archivo de reglas del proyecto, que se lee siempre", "correct": false, "why": "Se lee siempre, es verdad, y por eso parece más fuerte que decirlo en el chat. Sigue siendo texto compitiendo con otro texto, no un permiso del sistema que alguien tenga que conceder." },
+        { "text": "Aguanta si además le pides confirmación antes de cada acción destructiva", "correct": false, "why": "La confirmación es una buena capa y merece estar. Falla cuando sube el volumen: a la vigésima confirmación del día se aprueba sin leer, y esa es justo la que borra." }
+      ],
+      "explain": "Lo que no debe poder hacer no se le pide: se le quita."
+    }
+  ]
+}

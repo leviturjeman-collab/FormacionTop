@@ -1,0 +1,78 @@
+{
+  "id": "webhook-server",
+  "match": "webhook|webhooks|fastapi|api|endpoint|servidor|firma|hmac|callback",
+  "stages": [
+    "automatizacion",
+    "seguridad"
+  ],
+  "tools": [
+    "python"
+  ],
+  "title": "Recibe webhooks verificando la firma y responde en menos de un segundo",
+  "what": "Monta un servidor que acepta avisos automáticos de otros servicios, comprueba que vienen de quien dicen venir, contesta al instante y hace el trabajo pesado después.",
+  "why": "Un webhook es un aviso: cuando pasa algo en otro servicio (alguien paga, alguien abre una incidencia), ese servicio llama a una dirección tuya para contártelo. Esa dirección es pública, así que cualquiera que la descubra puede inventarse avisos falsos, y si dentro llamas a la API de Claude te vacía el saldo. Además nadie te espera: GitHub corta la conexión a los 10 segundos y da la entrega por fallida, y Stripe reintenta el mismo evento durante días si no le contestas rápido. Este código arregla las dos cosas: verifica la firma y contesta antes de ponerse a trabajar.",
+  "lang": "python",
+  "install": "pip install fastapi \"uvicorn[standard]\"",
+  "code": "import hashlib\nimport hmac\nimport json\nimport os\n\nfrom fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request\n\n# El secreto lo genera quien te manda los webhooks (GitHub, Stripe, Shopify...).\n# Nunca lo escribas aquí dentro: se lee de una variable de entorno.\nSECRETO = os.environ[\"WEBHOOK_SECRET\"].encode()\nLIMITE_BYTES = 1_000_000  # 1 MB. Más grande que eso, ni lo miramos.\n\napp = FastAPI()\n\n\ndef firma_correcta(cuerpo: bytes, cabecera: str) -> bool:\n    \"\"\"Recalcula la firma con el cuerpo tal cual llegó y la compara con la recibida.\"\"\"\n    esperada = \"sha256=\" + hmac.new(SECRETO, cuerpo, hashlib.sha256).hexdigest()\n    return hmac.compare_digest(esperada.encode(), cabecera.encode())\n\n\ndef procesar(evento: dict) -> None:\n    \"\"\"El trabajo lento. Aquí ya no espera nadie: la respuesta salió hace rato.\"\"\"\n    repo = evento.get(\"repository\", {}).get(\"full_name\")\n    print(\"Evento:\", evento.get(\"action\"), \"| repo:\", repo)\n\n\n@app.post(\"/webhook\", status_code=202)\nasync def recibir(\n    request: Request,\n    tareas: BackgroundTasks,\n    x_hub_signature_256: str = Header(default=\"\"),\n):\n    cuerpo = await request.body()      # bytes crudos, sin tocar ni un espacio\n    if len(cuerpo) > LIMITE_BYTES:\n        raise HTTPException(status_code=413, detail=\"cuerpo demasiado grande\")\n    if not firma_correcta(cuerpo, x_hub_signature_256):\n        raise HTTPException(status_code=401, detail=\"firma invalida\")\n    try:\n        evento = json.loads(cuerpo)\n    except json.JSONDecodeError:\n        raise HTTPException(status_code=400, detail=\"json invalido\")\n    tareas.add_task(procesar, evento)   # se ejecuta DESPUÉS de responder\n    return {\"recibido\": True}\n\n\n# Guarda esto como webhook.py y arráncalo así:\n#   set WEBHOOK_SECRET=loquesea     (Windows; en Mac/Linux: export WEBHOOK_SECRET=loquesea)\n#   uvicorn webhook:app --port 8000\n",
+  "lines": [
+    [
+      "SECRETO = os.environ[\"WEBHOOK_SECRET\"].encode()",
+      "El secreto es una contraseña compartida: la copias del panel del servicio que te manda los webhooks. Va en una variable de entorno (un valor que vive fuera del código, en el sistema) para que no acabe subido a GitHub. Los corchetes son a propósito: si la variable no existe, el programa se niega a arrancar. Peor sería arrancar sin secreto y tragarse cualquier cosa."
+    ],
+    [
+      "cuerpo = await request.body()",
+      "Pide el mensaje en bruto: los bytes exactos que llegaron por el cable. Es el fallo número uno de este tema. Si primero conviertes el mensaje a diccionario y luego lo vuelves a convertir a texto para firmarlo, un espacio de más o el orden de las claves cambian y la firma no cuadra jamás. Firma lo que llegó, no tu versión de lo que llegó."
+    ],
+    [
+      "hmac.new(SECRETO, cuerpo, hashlib.sha256).hexdigest()",
+      "Aquí se calcula la firma. HMAC-SHA256 mezcla el secreto con el mensaje y saca una huella de 64 caracteres. Quien te envía el webhook ha hecho exactamente lo mismo con el mismo secreto. Si las dos huellas coinciden, el mensaje es auténtico y nadie lo ha tocado por el camino."
+    ],
+    [
+      "hmac.compare_digest(esperada.encode(), cabecera.encode())",
+      "Comparar con == sería un agujero de seguridad de verdad: == se para en cuanto encuentra el primer carácter distinto, así que tarda un pelín más cuanto más acierta. Midiendo esos microsegundos se puede adivinar la firma letra a letra. compare_digest siempre tarda lo mismo. Los .encode() pasan el texto a bytes, que es lo único que compare_digest maneja sin quejarse."
+    ],
+    [
+      "x_hub_signature_256: str = Header(default=\"\")",
+      "Recoge la firma que viene en la cabecera HTTP. FastAPI traduce los guiones bajos a guiones, así que esto lee la cabecera X-Hub-Signature-256, la que usa GitHub. El valor vacío por defecto es intencionado: si alguien llama sin cabecera queremos un 401 limpio, no un error 422 de validación que le confirme qué cabecera esperabas."
+    ],
+    [
+      "if len(cuerpo) > LIMITE_BYTES:",
+      "Un candado antes del candado. Calcular la firma de 500 MB se come CPU y memoria; sin este corte, cualquiera te tumba el servidor mandándote basura enorme. Un webhook normal pesa entre 2 y 50 KB, así que con 1 MB vas sobrado."
+    ],
+    [
+      "raise HTTPException(status_code=401, detail=\"firma invalida\")",
+      "Rechaza y punto. El mensaje es escueto aposta: no digas si falló la cabecera, el secreto o el formato. Cada detalle que sueltas es una pista para quien está probando a colarse."
+    ],
+    [
+      "except json.JSONDecodeError:",
+      "La firma puede ser correcta y el contenido llegar roto igualmente, por ejemplo si la entrega se cortó a medias. Sin este try tu servidor devolvería un 500, y el servicio de origen te reintentaría el mismo evento roto una y otra vez."
+    ],
+    [
+      "tareas.add_task(procesar, evento)",
+      "La clave de la velocidad. Esto no ejecuta procesar ahora: lo apunta en una lista y FastAPI lo lanza justo después de haber enviado la respuesta. El que te llamó ve su respuesta en milisegundos aunque tu función tarde 40 segundos hablando con la IA."
+    ],
+    [
+      "@app.post(\"/webhook\", status_code=202)",
+      "202 significa «recibido y aceptado, todavía no lo he procesado». Es honesto y a todos los emisores les vale igual que un 200. Devolver 200 cuando el trabajo aún no ha pasado es mentir: si luego falla, el emisor cree que todo fue bien y no reintenta nunca."
+    ]
+  ],
+  "errors": [
+    [
+      "KeyError: 'WEBHOOK_SECRET'",
+      "No has definido la variable de entorno antes de arrancar. En la misma ventana de terminal desde la que vas a lanzar el servidor: en Windows escribe set WEBHOOK_SECRET=tu_secreto y luego uvicorn webhook:app --port 8000. En Mac o Linux, export WEBHOOK_SECRET=tu_secreto. Ojo: si abres una ventana nueva, la variable ya no está ahí."
+    ],
+    [
+      "{\"detail\":\"firma invalida\"}   (con código 401)",
+      "Tres causas, por orden de frecuencia. Una: estás firmando el JSON reconstruido en vez del cuerpo crudo; si has tocado la línea de request.body(), deshazlo. Dos: al copiar el secreto del panel se ha colado un espacio o un salto de línea al final; bórralo y vuelve a pegarlo. Tres: ese servicio no usa el prefijo sha256= (Shopify, por ejemplo, manda la firma en base64 y sin prefijo)."
+    ],
+    [
+      "TypeError: key: expected bytes or bytearray, but got 'str'",
+      "Se te ha caído el .encode() del final de la línea del SECRETO. hmac trabaja con bytes, no con texto. Déjala otra vez como os.environ[\"WEBHOOK_SECRET\"].encode()."
+    ],
+    [
+      "ERROR: [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8000)",
+      "El puerto 8000 ya está ocupado, casi siempre por otro uvicorn que dejaste abierto en otra ventana. Ciérralo, o arranca en otro puerto con --port 8001. En Mac o Linux el mismo fallo sale como [Errno 48] Address already in use."
+    ]
+  ],
+  "adapt": "Cambia el nombre de la cabecera y el formato de la firma según quién te envíe: GitHub usa X-Hub-Signature-256 con prefijo sha256= (tal cual está aquí), Shopify usa X-Shopify-Hmac-Sha256 en base64 y sin prefijo, y Stripe usa Stripe-Signature con un formato distinto que además lleva la hora dentro; para Stripe instala su librería con pip install stripe y usa stripe.Webhook.construct_event, que comprueba también que el aviso no sea viejo. Dentro de procesar mete tu trabajo de verdad: la llamada a la IA, el correo, lo que sea. Para probarlo desde tu ordenador necesitas una dirección pública: ngrok tiene plan gratis y te da una URL en medio minuto con ngrok http 8000. Para dejarlo funcionando siempre, Render o Railway cuestan unos 5-7 euros al mes por un servidor pequeño; Render tiene plan gratis, pero apaga el servidor tras 15 minutos sin tráfico y el primer webhook que llegue se pierde mientras vuelve a arrancar. Un aviso serio: add_task ejecuta la tarea dentro del mismo programa, así que si reinicias o se cae el servidor pierdes los eventos que estuvieran a medias y no hay forma de recuperarlos. En cuanto pases de unos pocos eventos al día, guarda el evento en una base de datos nada más verificar la firma y procésalo desde ahí."
+}

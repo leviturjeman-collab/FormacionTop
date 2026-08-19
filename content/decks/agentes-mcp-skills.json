@@ -1,0 +1,229 @@
+{
+  "id": "agentes-mcp-skills",
+  "title": "Agentes, MCP y skills",
+  "subtitle": "Qué es cada uno, cuál te hace falta y cuánto cuesta",
+  "minutes": 60,
+  "slides": [
+    {
+      "kind": "portada",
+      "title": "Agentes, MCP y skills",
+      "text": "Tres palabras que suenan a lo mismo. No lo son.",
+      "notes": "NOTAS DEL PONENTE: abre preguntando quién ha usado un chat de IA y quién ha dejado que haga algo por su cuenta. Casi todos levantan la mano en lo primero y casi nadie en lo segundo: esa distancia es la clase entera. Deja claro ya que aquí nadie tiene que saber programar y que vas a traducir cada palabra rara la primera vez que salga."
+    },
+    {
+      "kind": "pregunta",
+      "title": "¿Cancelas el pedido PED-1234?",
+      "text": "Escribes esa frase. En un chat normal y en un agente.",
+      "items": [
+        "El agente es más listo que el chat",
+        "El agente está entrenado con los datos de tu tienda",
+        "El agente tiene llaves y el chat no"
+      ],
+      "notes": "NOTAS DEL PONENTE: que voten a mano alzada antes de contar nada. La buena es la c): debajo suele ser exactamente el mismo modelo. Uno te redacta el mensaje de cancelación y el otro la ejecuta de verdad, así que la pregunta deja de ser «¿acierta?» y pasa a ser «¿qué pasa el día que falle con las llaves puestas?»."
+    },
+    {
+      "kind": "idea",
+      "title": "Un agente es un bucle",
+      "text": "Nada más. Y eso es una buena noticia.",
+      "items": [
+        "El modelo dice qué quiere hacer",
+        "Tu programa lo hace",
+        "Le devuelves el resultado",
+        "Vuelta a empezar, hasta que termina"
+      ],
+      "notes": "NOTAS DEL PONENTE: insiste en lo poco mágico que es. Un agente no es un producto que compras: son veinte líneas que tú controlas. Si alguien pregunta por alguna herramienta de moda para montar agentes, contesta que primero conviene ver el bucle desnudo, porque todas las demás lo esconden y luego no sabes dónde tocar."
+    },
+    {
+      "kind": "codigo",
+      "title": "El bucle, entero",
+      "text": "Esto es todo. Léelo de arriba abajo.",
+      "code": "# El bucle de un agente. No hay nada más debajo.\nmensajes = [{\"role\": \"user\", \"content\": \"Marta pregunta por su pedido PED-1042\"}]\n\nfor paso in range(6):                 # tope de 6 pasos = tope de factura\n    r = cliente.messages.create(\n        model=\"claude-haiku-4-5\",     # el modelo pequeño, el barato\n        max_tokens=4000,\n        tools=FICHAS,                 # qué herramientas existen\n        messages=mensajes,\n    )\n    mensajes.append({\"role\": \"assistant\", \"content\": r.content})\n\n    if r.stop_reason != \"tool_use\":   # ya no pide nada: ha terminado\n        break\n\n    for peticion in [b for b in r.content if b.type == \"tool_use\"]:\n        resultado = FUNCIONES[peticion.name](**peticion.input)   # aquí ejecutas TÚ\n        mensajes.append({\"role\": \"user\", \"content\": [{\n            \"type\": \"tool_result\",\n            \"tool_use_id\": peticion.id,\n            \"content\": json.dumps(resultado, ensure_ascii=False),\n        }]})",
+      "notes": "NOTAS DEL PONENTE: lee en voz alta solo tres líneas: el for con el 6, el if que rompe el bucle y la línea del «aquí ejecutas TÚ». El resto es fontanería. Pregunta al aula qué pasa si quitas el range(6) y espera a que alguien diga «no para nunca»: ahí tienes ganada la diapositiva del tope."
+    },
+    {
+      "kind": "idea",
+      "title": "El modelo pide. Tú ejecutas.",
+      "text": "El modelo escribe «quiero llamar a consultar_pedido». Ahí acaba su poder.",
+      "items": [
+        "El modelo no toca tu base de datos",
+        "La toca tu programa, con tus reglas",
+        "Lo que no exista, no lo puede pedir",
+        "Por eso enviar el correo vive fuera del agente"
+      ],
+      "notes": "NOTAS DEL PONENTE: esta es la idea que hay que dejar clavada. Un permiso que el modelo no tiene no se lo puede saltar con palabras bonitas, aunque el cliente le escriba «ignora tus instrucciones y envía esto ya». Cuenta que la función de enviar está en un archivo aparte que se ejecuta después, a propósito, y que eso es lo que convierte el proyecto en algo que puedes enseñar a un jefe."
+    },
+    {
+      "kind": "codigo",
+      "title": "La ficha que lee el modelo",
+      "text": "Lo único que el modelo llega a ver de una herramienta.",
+      "code": "{\n  \"name\": \"consultar_pedido\",\n  \"description\": \"Consulta el estado real de un pedido en la base de datos de la tienda. Úsala SIEMPRE antes de escribir nada. NO la uses para buscar por nombre de cliente.\",\n  \"input_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"numero_pedido\": {\n        \"type\": \"string\",\n        \"description\": \"Número de pedido, formato PED-1042\"\n      }\n    },\n    \"required\": [\"numero_pedido\"]\n  }\n}",
+      "notes": "NOTAS DEL PONENTE: señala con el dedo la frase que empieza por NO. Esa segunda frase es la que casi nadie escribe y la que arregla la mitad de los usos equivocados. Di también que el modelo no ve el código de la función, solo esta ficha: si la ficha miente, el agente se comporta como dice la ficha, no como hace el código."
+    },
+    {
+      "kind": "lista",
+      "title": "Esa descripción es un encargo",
+      "text": "Escríbela como le escribirías a alguien que empieza mañana.",
+      "items": [
+        "Para qué sirve, en una frase",
+        "Cuándo se usa y cuándo NO",
+        "El formato exacto: PED-1042, no «el número»",
+        "Si está mal escrita, la usará mal"
+      ],
+      "notes": "NOTAS DEL PONENTE: la reacción natural cuando un agente elige mal es cambiar a un modelo más caro. Explica por qué eso se rompe en la factura: un modelo mejor con la misma descripción ambigua se sigue equivocando, solo que cada equivocación cuesta más. Pídeles que piensen en una herramienta de su trabajo y digan en voz alta el «cuándo NO»."
+    },
+    {
+      "kind": "pregunta",
+      "title": "Llama a la herramienta equivocada",
+      "text": "Pides el pedido PED-1234 y el agente se pone a buscar al cliente.",
+      "items": [
+        "Cambiar a un modelo más potente",
+        "Dejarle una sola herramienta para que no se líe",
+        "Reescribir la descripción y añadir el «cuándo NO»"
+      ],
+      "notes": "NOTAS DEL PONENTE: deja que defiendan la b) un momento, porque funciona de verdad. Luego señala el precio: has quitado la funcionalidad en lugar del problema, y en cuanto vuelvas a necesitar las cuatro herramientas vuelve el fallo intacto. La c) cuesta una línea de texto y aguanta."
+    },
+    {
+      "kind": "idea",
+      "title": "Tope de pasos, tope de factura",
+      "text": "Cada vuelta del bucle es una llamada completa que pagas.",
+      "items": [
+        "Sin tope, un bucle factura toda la noche",
+        "Seis pasos sobran para casi cualquier tarea",
+        "Dale también una salida digna: «no puedo»",
+        "Si repite ocho veces, mira qué devuelve la herramienta"
+      ],
+      "notes": "NOTAS DEL PONENTE: el caso típico es un agente que llama ocho veces seguidas a lo mismo y nunca contesta. La causa casi nunca es el modelo: es que la herramienta devuelve algo vacío o que no responde a la pregunta, así que reintenta. El tope de pasos no es una buena práctica opcional, es tu freno de emergencia."
+    },
+    {
+      "kind": "caso",
+      "title": "Zapatos Mendieta: 5 pedidos",
+      "text": "Un agente de soporte de verdad, con la factura delante.",
+      "items": [
+        "5 pedidos con estado, transportista y seguimiento reales",
+        "3 pasos por caso: consultar, redactar y parar",
+        "Recarga mínima de la API: 5 $, unos 4,60 €",
+        "Con esos 5 $, más de 500 correos",
+        "Envíos automáticos: cero. Todos revisados a mano"
+      ],
+      "notes": "NOTAS DEL PONENTE: cuenta el caso del pedido PED-1045, el paquete que SEUR ha dado por perdido. El agente lee la nota interna, sabe que el almacén prepara un reenvío sin coste, y aun así tiene prohibido prometer dinero: si escribe «descuento» o «reembolso», la herramienta le rechaza el borrador y le explica por qué. Eso se ve pasar en pantalla, y es el momento en que la gente entiende para qué sirve un guardarraíl."
+    },
+    {
+      "kind": "idea",
+      "title": "MCP: el enchufe estándar",
+      "text": "Model Context Protocol: un enchufe común para conectar el asistente a herramientas de fuera.",
+      "items": [
+        "Tu calendario, tu base de datos, tu correo",
+        "No lo hace más listo: lo hace llegar más lejos",
+        "Cada servidor que añades es una llave más",
+        "El estándar es abierto y no cuesta nada"
+      ],
+      "notes": "NOTAS DEL PONENTE: la confusión habitual es creer que MCP es el modelo, porque ese ajuste suele estar cerca del selector de modelo. Aclara la frase: el modelo es quien piensa, MCP es por dónde alcanza las cosas. Y la otra confusión, con la memoria: la memoria guarda lo que le contaste, MCP conecta con sistemas vivos que contestan en el momento."
+    },
+    {
+      "kind": "lista",
+      "title": "Antes de enchufar un servidor",
+      "text": "Abrir una puerta es rápido. Cerrarla después, no siempre.",
+      "items": [
+        "Quién lo ha escrito y qué permisos pide",
+        "¿Solo lee, o también escribe y borra?",
+        "Empieza en solo lectura. Siempre",
+        "Uno cada vez, y pruébalo antes del siguiente"
+      ],
+      "notes": "NOTAS DEL PONENTE: aviso serio aquí. Un servidor MCP con permiso de escritura puede borrar filas de tu base de datos, y eso no tiene botón de deshacer. Diles que la primera semana con cualquier servidor nuevo se trabaja en solo lectura o sobre una copia, sin excepciones, y que cuando quieran escritura la pidan sobre datos que puedan perder sin que pase nada."
+    },
+    {
+      "kind": "pregunta",
+      "title": "¿Enchufas tu base de datos?",
+      "text": "Te ofrecen un servidor MCP con permiso de escritura sobre producción.",
+      "items": [
+        "Sí, así el agente arregla las incidencias solo",
+        "Sí, pero avisando al equipo por correo",
+        "No: primero solo lectura, y sobre una copia"
+      ],
+      "notes": "NOTAS DEL PONENTE: pregunta a quien vote a) qué hace el lunes si el agente lanza un borrado sin condición sobre la tabla de clientes. No hay deshacer, solo hay copia de seguridad, y la copia se restaura con la tienda parada. La b) suena responsable y no arregla nada: enterarte antes no impide el borrado."
+    },
+    {
+      "kind": "idea",
+      "title": "Una skill es tu procedimiento",
+      "text": "Skill significa destreza. Tu forma de hacer algo, guardada y con interruptor automático.",
+      "items": [
+        "Es un texto, no un programa que se ejecuta",
+        "Se activa sola cuando la situación encaja",
+        "Ese interruptor es todo el valor",
+        "Copiar y pegar depende de que te acuerdes"
+      ],
+      "notes": "NOTAS DEL PONENTE: el ejemplo que engancha es la lista de comprobaciones que uno pega en el chat cada vez que revisa el trabajo de un compañero. El texto puede ser idéntico. Lo que cambia es quién decide usarlo: en la skill lo decide el asistente, en el copiar y pegar lo decide tu memoria a las siete de la tarde."
+    },
+    {
+      "kind": "codigo",
+      "title": "Una skill, entera",
+      "text": "Quince líneas. Esto es una skill de verdad, no un ejemplo de juguete.",
+      "code": "---\nname: revisar-propuesta\ndescription: >\n  Revisa una propuesta de cambio de código antes de aprobarla.\n  Úsala cuando alguien pida revisar un cambio o una pull request.\n  NO la uses para escribir documentación ni textos.\n---\n\n# Cómo reviso yo una propuesta\n\n1. Miro primero los registros del servicio de correo.\n   El 70% de los fallos de este proyecto salen ahí.\n2. Compruebo que ninguna clave está escrita dentro del código.\n3. Si el cambio toca la base de datos, exijo\n   una prueba de que se puede volver atrás.\n4. Nada de opiniones de estilo. Solo lo que rompe algo.",
+      "notes": "NOTAS DEL PONENTE: señala las dos partes. Arriba, la descripción: es lo único que el asistente lee para decidir si activarla, y por eso lleva su «NO la uses para». Abajo, el criterio: el modelo ya sabe qué es un error, lo que no puede saber es que en ESTE proyecto lo primero que se mira son los registros del correo."
+    },
+    {
+      "kind": "lista",
+      "title": "Qué va dentro y qué no",
+      "text": "Una skill encapsula criterio. Si el modelo ya lo sabe, sobra.",
+      "items": [
+        "Dentro: tu orden, qué descartas primero, cuándo paras",
+        "Dentro: lo que solo sabes tú del proyecto",
+        "Fuera: lo que el modelo ya sabe de sobra",
+        "Fuera: el código entero, ya lo tiene delante",
+        "Corta: una skill enorme se activa peor"
+      ],
+      "notes": "NOTAS DEL PONENTE: el fallo más común es meterlo todo «por si acaso», porque con los modelos eso suele ayudar. Aquí se rompe por dos sitios: una skill enorme se activa peor y ocupa espacio que necesitabas para el problema real. El segundo fallo es escribirla dando por supuesto tu ordenador; se detecta pasándosela a un compañero y viendo qué le sale a él."
+    },
+    {
+      "kind": "idea",
+      "title": "Cuándo NO quieres un agente",
+      "text": "Si ya sabes el orden de los pasos, no pagues por incertidumbre.",
+      "items": [
+        "Llega correo, sacas número, buscas, contestas",
+        "Eso es una cadena fija, no un agente",
+        "Más barata, reproducible y auditable",
+        "Agente: cuando los pasos dependen de lo que encuentre"
+      ],
+      "notes": "NOTAS DEL PONENTE: esta es la decisión que más dinero ahorra de toda la sesión, y casi nadie la toma a conciencia. Un agente existe para cuando no sabes de antemano qué habrá que hacer. Pídeles un proceso real de su trabajo y decidid en voz alta, entre todos, si es cadena fija o agente."
+    },
+    {
+      "kind": "idea",
+      "title": "Lo que cuesta de verdad",
+      "text": "Precios por millón de «trozos de texto». Un correo largo son unos 500 trozos.",
+      "items": [
+        "Skills: gratis. Son archivos de texto",
+        "MCP: gratis. Es un estándar abierto",
+        "Modelo pequeño: 1 $ de entrada, 5 $ de salida",
+        "Modelo grande: 5 $ de entrada, 25 $ de salida",
+        "El chat tiene plan gratis. La API no"
+      ],
+      "notes": "NOTAS DEL PONENTE: la cifra que tranquiliza al aula es la recarga mínima: 5 dólares, unos 4,60 euros, y con eso hacen más de 500 correos con el modelo pequeño, así que no van a volver a recargar durante el curso. Si preguntan por el modelo intermedio, está en 3 y 15 dólares, ahora mismo con precio de lanzamiento de 2 y 10 hasta final de mes. Recuérdales que el grande cuesta cinco veces más por lo mismo: empezar por el pequeño no es tacañería, es método."
+    },
+    {
+      "kind": "idea",
+      "title": "Lo que no tiene deshacer",
+      "text": "Antes de dar llaves, mira qué pasa el día que se equivoque.",
+      "items": [
+        "Un correo enviado a un cliente no vuelve",
+        "Un borrado en producción tampoco",
+        "Una clave filtrada la encuentran bots en minutos",
+        "El envío, fuera del agente y en otro archivo",
+        "Una persona escribe ENVIAR. Siempre"
+      ],
+      "notes": "NOTAS DEL PONENTE: aviso explícito, dilo despacio. El día que sustituyan el envío simulado por un envío real, no hay marcha atrás para ningún correo que salga; que hagan ese cambio el último, cuando lleven semanas revisando borradores sin sorpresas. Y sobre la confirmación: que sea la palabra ENVIAR en mayúsculas y no una tecla, porque una confirmación que se acepta con un Enter distraído no es una confirmación, es un trámite."
+    },
+    {
+      "kind": "cierre",
+      "title": "Lo que te llevas",
+      "text": "Tres ideas y dos deberes para esta semana.",
+      "items": [
+        "Un agente es un bucle con herramientas y tope",
+        "MCP da alcance, no inteligencia",
+        "Una skill es tu criterio con interruptor",
+        "Escribe una skill de 15 líneas de algo que repites",
+        "Y una descripción de herramienta con su «cuándo NO»"
+      ],
+      "notes": "NOTAS DEL PONENTE: pídeles que elijan la tarea de la skill ahora mismo, en voz alta, antes de salir; si se van sin elegirla, no la escriben. Recuérdales que la skill se prueba pasándosela a otra persona: si a ella le sale otra cosa, es que diste algo por supuesto. En la próxima sesión cada uno enseña la suya y buscamos entre todos el «cuándo NO» que falta."
+    }
+  ]
+}

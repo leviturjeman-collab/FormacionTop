@@ -1,0 +1,128 @@
+{
+  "id": "datos-propios",
+  "title": "Que la IA trabaje con TUS documentos",
+  "intro": "Tienes contratos, apuntes, actas, presupuestos o un manual de trescientas páginas, y quieres que la IA responda con eso y no con lo que se sabe de internet. Esta familia va de meter tus papeles en un sitio fijo dentro de la app, preguntarles cosas y obligar a la IA a decirte de qué página ha sacado cada dato. Y de qué hacer cuando el documento es tan largo que no cabe de una sentada.",
+  "model": "Claude para documentos largos y para exigirle citas exactas, ChatGPT para el día a día y para PDFs con tablas o facturas, y Gemini si tus papeles ya viven en Google Drive.",
+  "prompts": [
+    {
+      "name": "Inventario de lo que has subido",
+      "when": "Justo después de crear el Proyecto (la carpeta dentro de la app donde dejas los archivos fijos: en Claude y en ChatGPT se llama Proyecto, en Gemini es un Gem) y arrastrar los archivos dentro. Antes de preguntar nada.",
+      "prompt": "Actúa como un documentalista meticuloso. Acabo de subir a este Proyecto los archivos que tienes disponibles. Antes de que te pregunte nada, quiero saber exactamente con qué estás trabajando.\n\nTarea: revisa TODOS los archivos disponibles y devuélveme un inventario. Todavía no resumas el contenido: quiero el mapa, no el viaje.\n\nFormato de salida, una ficha por archivo:\n- NOMBRE DEL ARCHIVO: tal cual aparece.\n- QUÉ ES: en una frase y sin tecnicismos.\n- FECHA: la que aparezca dentro del documento. Si no hay ninguna, escribe «sin fecha».\n- TAMAÑO: cuántas páginas o apartados tiene.\n- QUÉ SE PUEDE PREGUNTAR AQUÍ: tres preguntas de ejemplo que este archivo sí podría responder.\n- QUÉ NO ESTÁ AQUÍ: dos temas que uno esperaría encontrar en este archivo y no están.\n\nDespués del inventario, añade dos apartados:\n1. SOLAPES Y CONTRADICCIONES: qué archivos hablan de lo mismo y si se contradicen entre ellos.\n2. HUECOS: qué documento me falta subir para que puedas responder bien sobre [TEMA DEL QUE VOY A PREGUNTAR].\n\nReglas: si un archivo no lo puedes abrir o no lo puedes leer entero, dilo en su ficha con la palabra ILEGIBLE y explica hasta dónde has llegado. No inventes el contenido de un archivo que no puedes leer, ni lo deduzcas por el nombre. Si dos archivos parecen la misma cosa en versiones distintas, dímelo y señala cuál es el más reciente.",
+      "fill": [
+        ["[TEMA DEL QUE VOY A PREGUNTAR]", "El asunto que te ha traído aquí, en pocas palabras. Ejemplo: «las condiciones de pago a proveedores» o «los requisitos para presentarme a la oposición»."]
+      ],
+      "expect": "Una ficha por cada archivo con su fecha y su tamaño, la lista de archivos que se pisan entre ellos, y una lista de lo que te falta por subir. Si algo aparece marcado como ILEGIBLE, mejor saberlo ahora que dentro de dos horas.",
+      "next": "Vuelve a subir en otro formato lo que salga ILEGIBLE: un PDF que en realidad es una foto escaneada no se lee, hay que convertirlo antes a texto. Dos avisos: los Proyectos solo están en los planes de pago, unos 20-23 € al mes en Claude o en ChatGPT; y si borras el Proyecto, los archivos subidos se van con él y no hay papelera de la que rescatarlos."
+    },
+    {
+      "name": "Las instrucciones fijas del Proyecto",
+      "when": "Una sola vez, al crear el Proyecto. Esto no se pega en el chat: se pega en la casilla de instrucciones del Proyecto, para que valga en todas las conversaciones que abras dentro.",
+      "prompt": "Trabajas exclusivamente con los documentos de este Proyecto. El tema es [TEMA DEL PROYECTO]. Yo soy [QUIÉN SOY Y PARA QUÉ LO USO].\n\nReglas que no puedes saltarte:\n1. Toda afirmación tuya sale de los documentos. Si algo no está, escribe literalmente NO ESTÁ EN LOS DOCUMENTOS. No lo rellenes con lo que sabes por tu cuenta.\n2. Si crees saber la respuesta pero no aparece en los papeles, puedes decirla, siempre precedida de la etiqueta FUERA DE TUS DOCUMENTOS escrita en mayúsculas, para que yo sepa que eso no ha salido de mis archivos.\n3. Cada dato, cifra, fecha o nombre propio va acompañado de su origen entre paréntesis: archivo y página o apartado. Si el documento no tiene páginas numeradas, cita el título del apartado y las cinco primeras palabras del párrafo.\n4. Cuando dos documentos digan cosas distintas, no elijas por tu cuenta: enséñame las dos versiones con su origen y dime cuál es más reciente.\n5. Responde en español de España, tuteando, con frases cortas y sin adornos.\n6. Si mi pregunta es ambigua, hazme una sola pregunta de vuelta antes de contestar. Una, no cinco.\n7. No me des consejos legales, fiscales ni médicos como si fueran definitivos: dime qué dicen mis documentos y recuérdame que lo contraste con un profesional.\n\nFormato por defecto de toda respuesta: primero la versión corta, cinco líneas como máximo. Después el detalle con las citas. Y al final una línea que diga CONFIANZA: alta, media o baja, explicando en media línea por qué.",
+      "fill": [
+        ["[TEMA DEL PROYECTO]", "De qué van los papeles. Ejemplo: «el alquiler de mi local y las obras que tengo pendientes»."],
+        ["[QUIÉN SOY Y PARA QUÉ LO USO]", "Tu papel y tu objetivo. Ejemplo: «soy el inquilino, no tengo abogado, y quiero saber qué obras me tocan a mí antes de la reunión del día 12»."]
+      ],
+      "expect": "Nada visible al momento: esto es la configuración. A partir de aquí, cada respuesta del Proyecto viene con sus citas, con la etiqueta FUERA DE TUS DOCUMENTOS cuando toca y con su línea de confianza al final.",
+      "next": "Abre un chat nuevo dentro del Proyecto y haz una pregunta cuya respuesta ya te sepas. Si te contesta sin citar nada, las instrucciones no se han guardado: vuelve a la casilla y comprueba que el texto sigue ahí."
+    },
+    {
+      "name": "Preguntar con la cita pegada",
+      "when": "Cada vez que la respuesta la vas a usar para decidir algo o para enseñársela a otra persona.",
+      "prompt": "Necesito una respuesta que pueda defender delante de alguien, así que la quiero con las pruebas pegadas.\n\nPregunta: [TU PREGUNTA]\n\nResponde usando solo los documentos de este Proyecto, con este formato exacto:\n\nRESPUESTA CORTA\nTres líneas como mucho. La versión que le contarías a alguien con prisa, sin matices.\n\nRESPUESTA CON PRUEBAS\nParte la respuesta en afirmaciones sueltas, una por línea. Detrás de cada una, entre corchetes, el archivo y la página o apartado. Y después, entre comillas angulares, la frase literal del documento, máximo veinticinco palabras. Así:\nEl plazo de pago es de sesenta días [contrato-marco.pdf, cláusula 7.2] «el pago se efectuará a los sesenta días fecha factura».\n\nLO QUE NO HE PODIDO CONFIRMAR\nTodo lo que mi pregunta da por hecho y no aparece en ningún documento. Escríbelo aquí en vez de adivinarlo.\n\nCONTRADICCIONES\nSi dos documentos dicen cosas distintas sobre esto, ponlas una al lado de la otra con sus fechas.\n\nReglas: no mezcles nada que sepas de fuera de mis documentos. Si la pregunta no se puede responder con lo que hay subido, la RESPUESTA CORTA tiene que empezar por «Con tus documentos no se puede responder porque...» y ahí acaba tu trabajo. Prefiero un no rotundo a una respuesta bonita que luego no aguante.",
+      "fill": [
+        ["[TU PREGUNTA]", "La pregunta concreta, cuanto más cerrada mejor. Ejemplo: «¿en qué plazo tengo que avisar si no quiero renovar, y cómo hay que enviar ese aviso?»"]
+      ],
+      "expect": "Una respuesta corta arriba y, debajo, cada afirmación con su archivo, su página y la frase original del documento. Más una lista honesta de lo que no ha encontrado.",
+      "next": "Coge dos o tres de esas frases entre comillas, abre el archivo y búscalas con Ctrl+F. Si están, el resto de la respuesta se merece un voto de confianza. Si una no aparece, deja de fiarte de esa respuesta entera."
+    },
+    {
+      "name": "Sacar los datos a una tabla",
+      "when": "Cuando lo que quieres no es una explicación, sino los datos: importes, fechas, plazos, nombres, referencias.",
+      "prompt": "Actúa como el becario más obsesivo del mundo copiando datos a mano.\n\nDe los documentos de este Proyecto, extrae [QUÉ DATOS QUIERES] y ponlos en una tabla.\n\nColumnas, en este orden:\n1. Concepto.\n2. Valor exacto tal y como aparece en el documento. No lo redondees, no lo traduzcas y no lo cambies de moneda.\n3. Fecha a la que corresponde.\n4. Archivo de origen.\n5. Página o apartado.\n6. Frase literal donde lo has encontrado, entre comillas angulares.\n7. Seguridad: ALTA si el dato está escrito tal cual, MEDIA si has tenido que interpretar o sumar, BAJA si lo has deducido.\n\nDebajo de la tabla, tres bloques:\nFILAS DUDOSAS: repite las filas con seguridad MEDIA o BAJA y explica en una frase qué has tenido que suponer en cada una.\nDATOS QUE FALTAN: conceptos que yo esperaría ver en esta tabla y no aparecen en ningún documento. Ponlos con el valor NO ESTÁ.\nCÁLCULOS: si has sumado, restado o sacado un porcentaje, escribe la operación entera, con los números, para que yo pueda repetirla con una calculadora.\n\nReglas: no rellenes ninguna celda con un valor aproximado sin marcarlo. Si dos documentos dan valores distintos para el mismo concepto, crea dos filas y no elijas tú. Si la tabla pasa de treinta filas, párate en treinta y dime cuántas quedan pendientes.",
+      "fill": [
+        ["[QUÉ DATOS QUIERES]", "Los datos concretos, nombrados uno a uno. Ejemplo: «todos los importes que tengo que pagar, con su fecha límite y su concepto» o «todas las fechas de examen y de entrega de documentación»."]
+      ],
+      "expect": "Una tabla donde cada número lleva al lado el archivo y la página de la que sale, más una lista aparte de las filas donde ha tenido que suponer algo.",
+      "next": "Repasa solo las filas MEDIA y BAJA: ahí es donde están los errores. Las sumas compruébalas tú con la calculadora del móvil, porque contar y sumar es justo lo que peor se le da."
+    },
+    {
+      "name": "Auditar una respuesta frase por frase",
+      "when": "Justo después de una respuesta que te ha gustado demasiado, o antes de mandársela a alguien.",
+      "prompt": "Cambia de papel. Ya no eres quien ha escrito la respuesta anterior: ahora eres un revisor externo al que le pagan por encontrar fallos, y ser blando le cuesta el puesto.\n\nCoge tu última respuesta y pártela en afirmaciones, una por línea. Clasifica cada una:\n\nVERIFICADA: está literalmente en un documento del Proyecto. Pon archivo, página y la frase exacta.\nDEDUCIDA: no está escrita en ningún sitio, la has montado juntando dos o más partes. Di qué partes has juntado.\nDE FUERA: sale de lo que sabes en general, no de mis documentos.\nFALSA: contradice lo que dicen los documentos.\n\nDespués de la lista, escribe:\n1. VEREDICTO: qué parte de la respuesta es VERIFICADA, en porcentaje aproximado.\n2. LO MÁS PELIGROSO: las tres afirmaciones que, si fueran falsas, más me perjudicarían al usar esto para [PARA QUÉ VOY A USAR ESTO].\n3. RESPUESTA CORREGIDA: reescribe la respuesta entera dejando solo lo VERIFICADO, con lo DEDUCIDO bien marcado, y borra el resto.\n\nRegla importante: no defiendas lo que escribiste antes. Si te equivocaste, dilo en una línea y sigue, sin disculparte durante tres párrafos. Si al revisar descubres que la respuesta original no se sostiene, la reescritura puede ser simplemente: con estos documentos no hay datos suficientes.",
+      "fill": [
+        ["[PARA QUÉ VOY A USAR ESTO]", "La decisión real que hay detrás. Ejemplo: «firmar la renovación el viernes» o «reclamar por escrito a la empresa»."]
+      ],
+      "expect": "Una lista donde ves con tus ojos cuánto de la respuesta salía de verdad de tus papeles, y una versión corregida y más corta, que casi siempre es la buena.",
+      "next": "Quédate con la RESPUESTA CORREGIDA y tira la anterior. Si el veredicto baja del setenta por ciento verificado, es señal de que te faltan documentos por subir, no de que la pregunta estuviera mal hecha."
+    },
+    {
+      "name": "Plan de troceo para un documento larguísimo",
+      "when": "Cuando el archivo es demasiado grande: la IA se queja del tamaño, se le olvida el principio a mitad de la conversación, o te responde sobre el índice en lugar del contenido.",
+      "prompt": "Tengo un documento demasiado largo para trabajarlo de una sentada: [NOMBRE DEL DOCUMENTO], de unas [NÚMERO] páginas. Lo que necesito sacar de él es [QUÉ NECESITAS SABER].\n\nNo lo resumas todavía. Primero quiero un plan de trabajo.\n\nHaz esto:\n1. Dime en cuántas partes hay que dividirlo para recorrerlo entero sin que se escape nada, y dónde corta cada parte: por capítulo, por apartado o por número de página. Los cortes tienen que caer en sitios lógicos, nunca a mitad de una idea.\n2. Para cada parte: un título, de dónde a dónde va, y en una frase qué pinta tiene de contener.\n3. Marca con una estrella las partes que probablemente contienen lo que busco y con una equis las que casi seguro puedo saltarme. Justifica las dos cosas en media línea.\n4. Dame el orden en el que conviene leerlas, que no tiene por qué ser del principio al final.\n5. Escríbeme el mensaje exacto que debo enviarte para trabajar cada parte, con un hueco señalado donde yo pegaré el texto. Quiero poder copiarlo y pegarlo sin pensar.\n\nSi no puedes ver el documento entero y solo estás leyendo trozos sueltos, dímelo ahora y dime hasta qué página llegas. Prefiero saberlo ya que descubrirlo cuando me falte medio contrato.",
+      "fill": [
+        ["[NOMBRE DEL DOCUMENTO]", "El nombre del archivo tal cual lo has subido. Ejemplo: «convenio-colectivo-2025.pdf»."],
+        ["[NÚMERO]", "Las páginas aproximadas, aunque sea a ojo. Ejemplo: «310»."],
+        ["[QUÉ NECESITAS SABER]", "El motivo por el que abres ese ladrillo. Ejemplo: «cuántos días de vacaciones me corresponden y cómo hay que pedirlos»."]
+      ],
+      "expect": "Una lista de partes con sus páginas, marcadas según si merecen la pena, en un orden recomendado, y el mensaje ya escrito para atacar cada una.",
+      "next": "Guarda ese plan en un bloc de notas y ve tachando partes. Empieza por las marcadas con estrella: con dos o tres suele estar resuelto lo que buscabas."
+    },
+    {
+      "name": "La ficha de cada trozo",
+      "when": "Una vez por cada parte del plan anterior. Es siempre el mismo mensaje, cambiando el número y el texto que pegas al final.",
+      "prompt": "Esta es la parte [NÚMERO DE PARTE] de [TOTAL DE PARTES] del documento [NOMBRE DEL DOCUMENTO]. Trátala sola: no intentes adivinar qué dicen las partes que todavía no has visto, ni des por hecho nada que no esté en este trozo.\n\nSigo buscando: [QUÉ NECESITAS SABER].\n\nDevuélveme siempre esta misma ficha, en este orden:\n\nDE QUÉ VA ESTA PARTE: cuatro líneas como máximo.\nLO QUE ME SIRVE: solo lo relacionado con lo que busco. Cada punto con la frase literal entre comillas angulares y su apartado o página. Si aquí no hay nada útil, escribe «nada útil en esta parte» y no rellenes por rellenar.\nCIFRAS, FECHAS Y NOMBRES: lista limpia de todos los datos duros que aparezcan, cada uno con su referencia.\nOBLIGACIONES Y CONDICIONES: todo lo que obligue a alguien a hacer algo. Quién, qué y cuándo.\nSEÑALES DE ALARMA: lo que me sorprendería, me costaría dinero o me ataría las manos.\nSE ENLAZA CON: menciones a otros apartados o documentos que habrá que mirar después.\nPARA LA MEMORIA: cinco líneas que resuman esta parte de forma que, cuando llevemos diez, siga entendiéndose sin releerla.\n\nY al final del todo, un bloque ACUMULADO HASTA AQUÍ con las conclusiones juntando esta parte y todas las anteriores, diez líneas como máximo.\n\nTexto de la parte [NÚMERO DE PARTE]:\n[PEGA AQUÍ EL TEXTO]",
+      "fill": [
+        ["[NÚMERO DE PARTE]", "En cuál vas. Ejemplo: «3»."],
+        ["[TOTAL DE PARTES]", "Cuántas te dijo el plan de troceo. Ejemplo: «8»."],
+        ["[NOMBRE DEL DOCUMENTO]", "El mismo nombre de archivo de siempre, para que no se despiste. Ejemplo: «convenio-colectivo-2025.pdf»."],
+        ["[QUÉ NECESITAS SABER]", "Copia aquí exactamente lo mismo que pusiste en el plan de troceo, sin cambiar ni una palabra."],
+        ["[PEGA AQUÍ EL TEXTO]", "El texto de esa parte, copiado del documento. Si el archivo entero ya está subido al Proyecto, cámbialo por: «trabaja sobre las páginas 45 a 90 del archivo»."]
+      ],
+      "expect": "La misma ficha una y otra vez, con la misma estructura, lo que te permite leerlas en diagonal y comparar partes de un vistazo. Y un acumulado que va creciendo.",
+      "next": "Copia el bloque ACUMULADO HASTA AQUÍ y pégalo al principio del mensaje de la parte siguiente. Es lo que evita que se le olvide por dónde ibais cuando la conversación se hace larga."
+    },
+    {
+      "name": "Cruzar dos documentos",
+      "when": "Cuando tienes dos versiones de lo mismo: el contrato viejo y el nuevo, dos presupuestos, una norma y su reforma.",
+      "prompt": "Compara [DOCUMENTO A] con [DOCUMENTO B]. Los dos están subidos a este Proyecto.\n\nNo quiero dos resúmenes seguidos: quiero las diferencias.\n\nFormato:\n1. TABLA DE DIFERENCIAS. Columnas: asunto, qué dice A con su página, qué dice B con su página, a quién favorece el cambio, y gravedad (alta, media o baja).\n2. LO QUE HA DESAPARECIDO: cosas que estaban en A y ya no están en B. Esto se escapa si no se busca a propósito, así que búscalo a propósito.\n3. LO QUE ES NUEVO: cosas que están en B y no estaban en A.\n4. IGUAL PERO DICHO DISTINTO: apartados que parecen cambiados y en el fondo dicen lo mismo. Sepáralos del ruido para que no pierda el tiempo con ellos.\n5. LAS CINCO QUE IMPORTAN: de todas las diferencias, las cinco que de verdad cambian algo para [QUIÉN ERES TÚ EN ESTO], ordenadas por lo que me juego.\n6. PREGUNTAS QUE HACER: qué le preguntarías a la otra parte antes de firmar o de aceptar.\n\nReglas: cita siempre las dos versiones con su frase literal, la de A y la de B. Si un apartado solo lo encuentras en uno de los dos, dilo, en lugar de suponer que en el otro pone lo mismo. Y si no estás seguro de que dos apartados sean equivalentes, márcalo con un interrogante en vez de emparejarlos a la ligera.",
+      "fill": [
+        ["[DOCUMENTO A]", "El nombre exacto del archivo antiguo o de referencia. Ejemplo: «presupuesto-reforma-empresa1.pdf»."],
+        ["[DOCUMENTO B]", "El nombre exacto del otro. Ejemplo: «presupuesto-reforma-empresa2.pdf»."],
+        ["[QUIÉN ERES TÚ EN ESTO]", "Tu posición, porque cambia qué diferencia es grave. Ejemplo: «soy quien paga la obra y no puedo pasar de 18.000 €»."]
+      ],
+      "expect": "Una tabla con las dos versiones enfrentadas, la lista de lo que ha desaparecido (que suele ser lo interesante) y cinco preguntas que hacer antes de firmar.",
+      "next": "Céntrate en el apartado de LO QUE HA DESAPARECIDO y en las cinco que importan. Lo demás es contexto. Si la comparación va a decidir una firma, contrástalo con un profesional antes de estampar el nombre."
+    },
+    {
+      "name": "Escribir hacia fuera con tus datos",
+      "when": "Cuando ya has preguntado y ahora toca redactar algo que sale de tu ordenador: un correo, una propuesta, una reclamación, un resumen para tu jefe.",
+      "prompt": "Con la información de los documentos de este Proyecto, escribe [QUÉ HAY QUE ESCRIBIR] dirigido a [A QUIÉN VA].\n\nQué quiero conseguir: [OBJETIVO].\nTono: [TONO].\nExtensión: [EXTENSIÓN].\n\nCómo lo quiero:\nPrimero el texto limpio, listo para copiar y enviar. Sin corchetes, sin huecos y sin frases del tipo «inserte aquí su nombre». Si te falta un dato para completarlo, no te lo inventes: párate y pregúntamelo antes de escribir nada.\n\nDespués del texto, separado por una línea, un bloque titulado DE DÓNDE SALE CADA COSA. Repite ahí cada dato, cifra o afirmación del texto y di de qué archivo y página lo has sacado, con la frase original entre comillas angulares. Si una frase no sale de ningún documento y es solo forma de decir las cosas, márcala como REDACCIÓN. Si sale de lo que tú sabes por tu cuenta, márcala como FUERA DE TUS DOCUMENTOS y avísame de que ahí me la estoy jugando.\n\nY por último, un bloque RIESGOS: qué frases de este texto podrían volverse en mi contra si la otra parte las lee con lupa, y cómo suavizarlas sin perder lo que quiero conseguir.\n\nAntes de terminar, dime en una línea si en el texto aparece algún dato personal o confidencial de mis documentos que quizá no debería salir de aquí.",
+      "fill": [
+        ["[QUÉ HAY QUE ESCRIBIR]", "El tipo de texto. Ejemplo: «un correo reclamando la devolución de la fianza»."],
+        ["[A QUIÉN VA]", "El destinatario y su papel. Ejemplo: «a la administradora de fincas, que no ha contestado a dos mensajes»."],
+        ["[OBJETIVO]", "Qué quieres que pase después de que lo lean. Ejemplo: «que me den una fecha por escrito antes de fin de mes»."],
+        ["[TONO]", "Cómo quieres sonar. Ejemplo: «cordial pero firme, sin amenazar» o «formal, porque esto puede acabar en un juzgado»."],
+        ["[EXTENSIÓN]", "El largo. Ejemplo: «que quepa en la pantalla del móvil, unas 150 palabras»."]
+      ],
+      "expect": "El texto listo para enviar y, debajo, el desglose de qué frase sale de qué papel, más un aviso de las frases que te pueden salir caras.",
+      "next": "Lee el bloque RIESGOS antes que el texto. Y hazle caso al aviso de datos confidenciales: enviar un correo es irreversible, y una cifra copiada de un documento interno ya no la recuperas."
+    }
+  ],
+  "canDo": [
+    "Leer cien páginas de golpe y encontrarte en segundos la cláusula que llevabas media hora buscando.",
+    "Sacar los datos sueltos (importes, plazos, fechas, nombres) y ordenarlos en una tabla diciendo de qué página sale cada uno.",
+    "Comparar dos versiones de un documento y señalarte qué ha cambiado, incluido lo que han quitado sin avisar.",
+    "Traducir a cristiano lo que dicen tus papeles para un correo, un resumen o una explicación a alguien que no los ha leído."
+  ],
+  "cantDo": [
+    "No te garantiza la cita. Puede darte una página que no existe o una frase que suena a tu documento pero no está escrita así. Por eso se comprueba: abres el archivo y buscas la frase con Ctrl+F.",
+    "No lee un PDF que en realidad es la foto de un papel. Si no puedes seleccionar el texto con el ratón, la IA tampoco lo ve. Hay que convertirlo a texto antes de subirlo.",
+    "No cuenta ni suma bien. Si le pides el total de una columna de doscientas filas, te dará un número con mucho aplomo y puede estar mal. Las cuentas, con calculadora.",
+    "No se acuerda de la conversación de ayer aunque sea el mismo Proyecto. Los archivos siguen ahí, pero lo que hablasteis en otro chat no lo tiene delante: si algo importa, pégalo otra vez."
+  ],
+  "tips": [
+    "Pon nombres de archivo que digan algo: «contrato-alquiler-2024-firmado.pdf» funciona mucho mejor que «documento(3).pdf». La IA usa ese nombre para citarte y tú lo usas para saber si te está colando algo.",
+    "Pide siempre la frase literal entre comillas, nunca el resumen. Un resumen no lo puedes comprobar; una frase literal la buscas con Ctrl+F y en cinco segundos sabes si existe o se la ha inventado.",
+    "Antes de trabajar en serio, hazle una pregunta cuya respuesta ya te sepas. Si falla en esa, no te fíes de las demás. Es la forma más barata de saber si te va a servir."
+  ]
+}

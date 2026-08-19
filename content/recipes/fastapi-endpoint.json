@@ -1,0 +1,78 @@
+{
+  "id": "fastapi-endpoint",
+  "match": "fastapi|api|endpoint|servidor|uvicorn|pydantic|http|rest|desplegar|despliegue",
+  "stages": [
+    "entrega",
+    "entorno"
+  ],
+  "tools": [
+    "python"
+  ],
+  "title": "Envuelve tu modelo en una API con FastAPI",
+  "what": "Levanta un servidor que recibe texto, se lo pasa a un modelo de IA y devuelve el resumen, rechazando por su cuenta todo lo que no cumpla las reglas que tú pones.",
+  "why": "Un script en tu portátil solo lo puedes usar tú, sentado delante. Una API (una puerta de entrada por la que otro programa te llama) convierte ese script en algo que una web, una app de móvil o un compañero pueden usar sin tocar tu código. Y sin validación, la primera petición que llegue con el campo vacío o con un texto de 400.000 caracteres te tumba el servidor o te cuesta varios euros de golpe.",
+  "lang": "python",
+  "install": "pip install fastapi \"uvicorn[standard]\" anthropic",
+  "code": "# Guarda este archivo como api.py y arráncalo con:  uvicorn api:app --reload\nimport os\n\nimport anthropic\nfrom fastapi import FastAPI, HTTPException\nfrom pydantic import BaseModel, Field\n\n# La clave de pago nunca se escribe aquí: se lee del entorno (los ajustes que\n# guarda el ordenador fuera del código), así no acaba subida a internet sin querer.\nAPI_KEY = os.environ.get(\"ANTHROPIC_API_KEY\")\nif not API_KEY:\n    raise RuntimeError(\"Falta ANTHROPIC_API_KEY. Ponla antes de arrancar el servidor.\")\n\ncliente = anthropic.Anthropic(api_key=API_KEY)\napp = FastAPI(title=\"Resumidor de textos\", version=\"1.0\")\n\n\n# El molde de lo que aceptamos. Lo que no encaje, FastAPI lo rechaza él solo.\nclass Peticion(BaseModel):\n    texto: str = Field(min_length=20, max_length=8000)\n    frases: int = Field(default=3, ge=1, le=10)\n\n\nclass Respuesta(BaseModel):\n    resumen: str\n    tokens_gastados: int\n\n\n@app.post(\"/resumir\", response_model=Respuesta)\ndef resumir(peticion: Peticion):\n    try:\n        mensaje = cliente.messages.create(\n            model=\"claude-haiku-4-5\",\n            max_tokens=600,\n            system=f\"Resume en exactamente {peticion.frases} frases. Sin preámbulo.\",\n            messages=[{\"role\": \"user\", \"content\": peticion.texto}],\n        )\n    except anthropic.RateLimitError:\n        # Has pedido demasiadas cosas seguidas. Quien te llama puede reintentar.\n        raise HTTPException(status_code=429, detail=\"Demasiadas peticiones, prueba en un minuto.\")\n    except anthropic.AuthenticationError:\n        # Fallo tuyo, no de quien llama: no le cuentes por fuera qué ha pasado.\n        raise HTTPException(status_code=500, detail=\"Error de configuración del servidor.\")\n    except anthropic.APIError as error:\n        raise HTTPException(status_code=502, detail=f\"El modelo no ha respondido: {error}\")\n\n    return Respuesta(\n        resumen=mensaje.content[0].text,\n        tokens_gastados=mensaje.usage.input_tokens + mensaje.usage.output_tokens,\n    )\n\n\n@app.get(\"/salud\")\ndef salud():\n    return {\"estado\": \"vivo\"}\n",
+  "lines": [
+    [
+      "API_KEY = os.environ.get(\"ANTHROPIC_API_KEY\")",
+      "La clave de pago se lee del entorno del ordenador, no se escribe en el archivo. Es la diferencia entre subir tu proyecto a GitHub tranquilo y que un desconocido te vacíe la cuenta esa misma noche. En Windows la pones antes de arrancar, en la misma ventana: $env:ANTHROPIC_API_KEY=\"sk-ant-...\""
+    ],
+    [
+      "raise RuntimeError(\"Falta ANTHROPIC_API_KEY. Ponla antes de arrancar el servidor.\")",
+      "Si falta la clave, el servidor se niega a arrancar. Preferimos petar en el segundo cero con un mensaje claro que arrancar bien y fallar tres horas después, cuando llegue la primera petición de verdad y no estés mirando."
+    ],
+    [
+      "texto: str = Field(min_length=20, max_length=8000)",
+      "Aquí está toda la validación. Menos de 20 caracteres no es un texto que resumir; más de 8.000 dispara el coste sin aportar nada. FastAPI comprueba esto antes de ejecutar una sola línea tuya y contesta con un error 422 si no cuadra. Tú no escribes ni un if."
+    ],
+    [
+      "frases: int = Field(default=3, ge=1, le=10)",
+      "ge y le son \"mayor o igual\" y \"menor o igual\". Sin ese tope, alguien pide 5.000 frases y el modelo intenta obedecer. Poner el límite en el molde, y no dentro de la función, hace además que quede documentado solo."
+    ],
+    [
+      "@app.post(\"/resumir\", response_model=Respuesta)",
+      "Esta línea crea la dirección POST /resumir. El response_model no es decorativo: recorta la respuesta a esos dos campos exactos, así que aunque mañana metas datos internos en la función, no se escapan por la puerta."
+    ],
+    [
+      "except anthropic.RateLimitError:",
+      "El proveedor te limita las peticiones por minuto. Es el único error de la lista que se arregla solo esperando, y por eso devolvemos un 429: quien te llama entiende que puede reintentar en vez de rendirse."
+    ],
+    [
+      "raise HTTPException(status_code=500, detail=\"Error de configuración del servidor.\")",
+      "Aquí mentimos a propósito. El fallo real es que tu clave no vale, pero eso es información tuya: contarla fuera es decirle a un desconocido por dónde atacarte. El detalle completo se queda en los registros del servidor, donde solo lo ves tú."
+    ],
+    [
+      "except anthropic.APIError as error:",
+      "El cajón de sastre, y va el último a propósito: los dos anteriores son casos concretos de este, así que arriba se los tragaría. Devuelve 502, que significa \"yo estoy bien, quien me da el servicio no\"."
+    ],
+    [
+      "tokens_gastados=mensaje.usage.input_tokens + mensaje.usage.output_tokens,",
+      "Devolver el gasto convierte una factura sorpresa en un número que ves en cada llamada. Con claude-haiku-4-5 pagas 1 dólar por millón de tokens de entrada y 5 por millón de salida: mil resúmenes de media página salen por poco más de un euro. No hay plan gratis, se paga por uso desde la primera llamada."
+    ],
+    [
+      "@app.get(\"/salud\")",
+      "Una dirección tonta que solo dice \"estoy vivo\". La usan los servicios donde alojes esto para saber si tienen que reiniciarte, y tú para comprobar en dos segundos que el servidor arranca sin gastar un céntimo en el modelo."
+    ]
+  ],
+  "errors": [
+    [
+      "ModuleNotFoundError: No module named 'fastapi'",
+      "Python no encuentra FastAPI. Casi siempre es que no has activado el entorno virtual del proyecto (la carpeta .venv) antes de instalar o de arrancar. Actívalo con .venv\\Scripts\\activate en Windows y repite el pip install."
+    ],
+    [
+      "ERROR: Error loading ASGI app. Could not import module \"api\".",
+      "uvicorn busca un archivo llamado api.py en la carpeta desde la que estás ejecutando y no lo encuentra. O el archivo se llama de otra forma, o estás en otra carpeta. Escribe dir y comprueba que api.py sale en la lista antes de repetir el comando."
+    ],
+    [
+      "{\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"texto\"],\"msg\":\"String should have at least 20 characters\"}]}",
+      "Esto no es un fallo, es tu validación funcionando. Llega con código 422 y te dice el campo exacto (loc) y la regla que se ha saltado. Manda un texto de más de 20 caracteres y desaparece."
+    ],
+    [
+      "RuntimeError: Falta ANTHROPIC_API_KEY. Ponla antes de arrancar el servidor.",
+      "Es tu propio aviso. La variable de entorno no está puesta en esa ventana de terminal. Ojo con esto: si la pones y luego abres una ventana nueva, la nueva no la tiene. Vuelve a ponerla, o guárdala de forma permanente en las variables de entorno de Windows."
+    ]
+  ],
+  "adapt": "Cambia la clase Peticion por los campos que necesites y el system por tu instrucción real: eso es el 90% de adaptarlo. Si en vez de resumir clasificas, devuelve una etiqueta en Respuesta en lugar del resumen. Para otro proveedor cambias el import y la llamada, pero la estructura (molde de entrada, try/except, molde de salida) es idéntica. AVISO: tal como está, esta API no le pide contraseña a nadie. En tu portátil da igual, pero si la subes a internet así, cualquiera que dé con la dirección gasta tu dinero sin límite y ese cargo no se puede deshacer. Antes de publicarla ponle una clave de acceso propia y un tope de peticiones."
+}

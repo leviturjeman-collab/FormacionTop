@@ -1,0 +1,63 @@
+{
+  "categoryId": "04-clases-por-herramienta-08-produccion-seguridad-evals",
+  "basico": [
+    {
+      "prompt": "Llevas dos semanas probando en tu portátil un asistente que lee correos y redacta borradores de respuesta. Funciona. Tu jefa dice: \"pásalo a producción\". ¿Qué cambia de verdad al pasar a producción?",
+      "options": [
+        { "text": "Que ya no estás tú delante mirando: hay que decidir qué pasa cuando falla, quién se entera del fallo y quién puede pararlo", "correct": true, "why": "Correcto. En tu portátil el control eres tú: ves un resultado raro y lo borras. Producción significa que corre solo, con gente real recibiendo el resultado. Todo lo que hacías con los ojos hay que convertirlo en algo automático: un registro de lo que hizo (log), un aviso cuando falla y un botón de parada." },
+        { "text": "Que hay que subirlo a un servidor en internet en vez de tenerlo en tu ordenador", "correct": false, "why": "Es lo primero que se piensa y no es mentira: normalmente sí se mueve a un servidor. Pero eso es logística. Un asistente en un servidor sin registro ni forma de pararlo sigue sin estar en producción, solo está mal puesto en otro sitio." },
+        { "text": "Nada esencial: es el mismo programa haciendo lo mismo, solo que más a menudo", "correct": false, "why": "El programa es el mismo, sí, pero el contexto es otro. En pruebas, fallar cuesta cero. En producción, un fallo sale por correo a un cliente. El mismo código con consecuencias distintas es un problema distinto." }
+      ],
+      "explain": "Producción no es un sitio: es quitarte a ti de en medio y sustituirte por controles."
+    },
+    {
+      "prompt": "Pegas en el Slack del equipo una captura de tu terminal para que un compañero te ayude con un error. Media hora después ves que en la captura, arriba, se lee ANTHROPIC_API_KEY=sk-ant-api03-Xf9k... (la clave que identifica tu cuenta y con la que se te cobra). ¿Qué haces?",
+      "options": [
+        { "text": "Entras en la consola del proveedor, revocas esa clave, creas una nueva y la pones en los sitios donde la usabas", "correct": true, "why": "Correcto, y hazlo ya. Revocar es irreversible: en cuanto le das, todo lo que usaba esa clave deja de funcionar hasta que pongas la nueva. Ese es el precio y merece la pena. La API se paga por uso y no hay plan gratis: una clave suelta con la que alguien haga miles de llamadas te aparece en la factura." },
+        { "text": "Borras el mensaje de Slack y avisas a los que estaban conectados", "correct": false, "why": "Es el reflejo natural y no hace daño, pero llega tarde. La clave ya salió: quedó en las notificaciones del móvil de cada uno, en las copias del espacio de trabajo y en cualquier captura que alguien hiciera. Una clave que se ha visto se da por quemada." },
+        { "text": "Dejas la clave y le pones un tope de gasto mensual a la cuenta para que no se dispare la factura", "correct": false, "why": "El tope es buena idea y deberías tenerlo igualmente, pero resuelve solo la mitad. Limita cuánto te pueden gastar; no impide que otro use tu cuenta ni que vea lo que se envía con ella." }
+      ],
+      "explain": "Clave vista es clave muerta: se revoca y se crea otra. Borrar el mensaje no la recupera."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tu automatización procesa 300 facturas cada noche. A las 02:14 se para con el error 429 Too Many Requests (\"demasiadas peticiones\": el proveedor te está frenando por ir muy rápido). Llevaba 120 hechas. ¿Cómo lo arreglas?",
+      "options": [
+        { "text": "Reintentas esperando cada vez más (1s, 2s, 4s, 8s) y guardas por qué factura ibas, para retomar en la 121 y no repetir las 120 hechas", "correct": true, "why": "Correcto. Esperar cada vez más se llama backoff exponencial y es justo lo que el proveedor espera de ti: el 429 no dice \"no puedes\", dice \"ahora no\". Guardar por dónde ibas es la otra mitad: sin eso, cada reintento vuelve a empezar por la factura 1 y pagas dos veces lo mismo." },
+        { "text": "Reintentas en bucle inmediatamente hasta que pase, ya que es un error temporal", "correct": false, "why": "Temporal lo es, y por eso reintentar tiene sentido. Pero reintentar sin esperar es exactamente lo que provoca el 429. Varios proveedores alargan el bloqueo si sigues golpeando, así que el bucle rápido consigue lo contrario de lo que busca." },
+        { "text": "Subes de plan para tener un límite de peticiones más alto", "correct": false, "why": "Sube el techo, y a veces es lo correcto si el volumen ha crecido de verdad. Pero no arregla el problema: el día que sean 400 facturas vuelves a chocar, y sigues sin poder retomar donde lo dejaste." }
+      ],
+      "explain": "Un 429 se responde esperando, no insistiendo. Y todo proceso largo necesita saber por dónde iba."
+    },
+    {
+      "prompt": "Cambiaste el prompt que clasifica los tickets de soporte. Probaste tres ejemplos, salieron mejor, lo dejaste. Una semana después el equipo se queja: los tickets marcados \"urgente\" están cayendo en la cola equivocada. ¿Qué te faltó?",
+      "options": [
+        { "text": "Un conjunto fijo de casos con la respuesta que esperas de cada uno (25 o 30 tickets reales, sin datos de cliente), que pasas antes y después de cada cambio", "correct": true, "why": "Correcto. Eso es un eval set, y su gracia es que es siempre el mismo: si antes acertaba 27 de 30 y ahora 21, lo ves en el momento y sabes cuáles cambiaron. Pasarlo cuesta unos céntimos; la semana de quejas cuesta bastante más." },
+        { "text": "Probar con más ejemplos a mano después de cada cambio, en vez de tres", "correct": false, "why": "Va en la dirección buena, pero tiene un vicio difícil de ver: los ejemplos que eliges después de tocar el prompt los eliges pensando en lo que acabas de mejorar. Y como cambian cada vez, no puedes comparar dos versiones entre sí." },
+        { "text": "Volver al prompt anterior y no tocarlo más, que ese funcionaba", "correct": false, "why": "Corta el sangrado, y a veces hay que hacerlo. Pero te deja congelado: no podrás mejorarlo nunca, y sigues sin saber qué se rompió ni si el prompt viejo también fallaba y nadie lo miró." }
+      ],
+      "explain": "Sin un conjunto fijo de casos no estás mejorando el prompt: lo estás cambiando a ciegas."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Vas a poner en marcha un agente que lee la bandeja de Gmail y archiva las facturas en Drive. Toca darle credenciales reales de la empresa. Tienes tres opciones sobre la mesa. ¿Cuál defiendes?",
+      "options": [
+        { "text": "Una cuenta de servicio aparte, con permiso de solo lectura en el correo y escritura únicamente en una carpeta concreta de Drive", "correct": true, "why": "Correcto, y el motivo no es desconfiar del agente: es acotar el daño. Si un correo trae instrucciones metidas a mala fe y el agente las sigue, con solo lectura no puede borrar nada, y con una sola carpeta no puede tocar el resto del Drive. La cuenta aparte además deja ver en los registros qué hizo el agente y qué hiciste tú." },
+        { "text": "Acceso completo con tu cuenta, y tú revisas los registros cada mañana", "correct": false, "why": "Suena a control porque los registros son un control de verdad, pero llegan tarde por definición: te enteras después de que pase. Y con tu cuenta, lo que borre lo borra en tu nombre, sin manera de separar lo tuyo de lo suyo." },
+        { "text": "Acceso completo, pero pidiendo confirmación humana antes de cada acción", "correct": false, "why": "El primer día es impecable. Con 200 correos al día, a la semana estás dando a \"sí\" sin leer, y entonces la confirmación no protege de nada: solo añade fricción y sensación falsa de vigilancia. La confirmación humana funciona en decisiones raras y caras, no en las repetitivas." }
+      ],
+      "explain": "Permisos mínimos no es desconfiar del agente: es decidir de antemano hasta dónde puede llegar un fallo."
+    },
+    {
+      "prompt": "Desplegaste una versión el viernes a las 18:00. El lunes a las 09:00 los clientes reportan 40 correos enviados con precios equivocados. El sistema sigue corriendo. ¿Qué haces primero?",
+      "options": [
+        { "text": "Vuelves a la versión anterior (rollback) y solo después investigas; en paralelo miras el registro para saber a cuántos clientes ha salido y qué decía cada correo", "correct": true, "why": "Correcto, y el orden importa. Volver atrás deja de sangrar en minutos; investigar tarda horas y mientras tanto siguen saliendo correos. El registro aquí no es burocracia: es lo único que te dice a quién tienes que avisar. Sin él, el fin de semana entero es un agujero negro." },
+        { "text": "Arreglas el fallo directamente y despliegas el arreglo, que es atacar la causa de verdad", "correct": false, "why": "Es lo que quieres hacer y al final habrá que hacerlo. Pero un arreglo escrito con prisa un lunes a las 09:00, con el jefe encima, es la receta del segundo incidente. Y mientras lo escribes, el sistema sigue enviando." },
+        { "text": "Paras el sistema y esperas a que el proveedor confirme si cambió algo del modelo por su lado", "correct": false, "why": "Parar es razonable; esperar al proveedor no. Puede tardar días, muchas veces no hubo tal cambio, y aunque lo hubiera, frente a tus clientes la responsabilidad sigue siendo tuya. Se investiga después de haber vuelto a un estado que funciona." }
+      ],
+      "explain": "En un incidente primero se vuelve a lo que funcionaba, luego se entiende. Y sin registro no sabes ni a quién avisar."
+    }
+  ]
+}

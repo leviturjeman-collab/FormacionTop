@@ -1,0 +1,63 @@
+{
+  "categoryId": "13-proyectos-reales-y-skills-05-repos-top-y-skills",
+  "basico": [
+    {
+      "prompt": "Buscas una librería para montar agentes y eliges la que tiene 60.000 estrellas en GitHub, porque es la que más tiene.",
+      "options": [
+        { "text": "Las estrellas miden atención, no si te sirve a ti. Mira antes la fecha del último cambio y si hay un ejemplo que puedas ejecutar hoy", "correct": true, "why": "Correcto. Un repositorio muy popular puede ser infraestructura pensada para equipos con veinte personas y hundirte una tarde en dependencias. Las dos señales que sí predicen tu tarde son: se mantiene y tiene un ejemplo mínimo que arranca." },
+        { "text": "Es el mejor criterio disponible: no hay otra forma rápida de comparar", "correct": false, "why": "Es el único visible de un vistazo, y por eso todo el mundo lo usa. Pero hay dos igual de rápidos: la fecha del último cambio y si el ejemplo de la portada cabe en veinte líneas." },
+        { "text": "Cuantas más estrellas, más fácil será de usar: habrá más tutoriales", "correct": false, "why": "Hay parte de verdad, hay más material. Y también hay más versiones incompatibles circulando: la mitad de los tutoriales serán de una versión anterior que ya no funciona." }
+      ],
+      "explain": "Las estrellas dicen que gustó. No dicen que se mantenga ni que arranque hoy en tu equipo."
+    },
+    {
+      "prompt": "Un compañero te dice que uses modelos en local con Ollama para todo, que es gratis. No sabes si tiene razón.",
+      "options": [
+        { "text": "Compensa cuando el dato no puede salir de tu equipo, o cuando haces tantas pruebas que el pago por uso se nota. A cambio va más lento y acierta menos que los grandes", "correct": true, "why": "Correcto, y ese es el intercambio real. Para clasificar, extraer campos o traducir en volumen, un modelo pequeño en local va sobrado y no cuesta nada. Para razonar sobre un problema complicado, se nota mucho la diferencia." },
+        { "text": "Siempre: es gratis y no hay motivo para pagar", "correct": false, "why": "Gratis en dinero, no en tiempo. Se rompe cuando pierdes dos horas peleándote con un resultado que un modelo de pago habría dado en el primer intento por unos céntimos." },
+        { "text": "Nunca: es un juguete comparado con los modelos de los grandes proveedores", "correct": false, "why": "Se cree si probaste un modelo pequeño en un portátil justo y viste respuestas flojas. Para tareas acotadas (clasificar, extraer, etiquetar) los modelos pequeños actuales cumplen de sobra." }
+      ],
+      "explain": "Un modelo en local gana cuando el dato no puede salir o cuando el volumen es grande y la tarea sencilla."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Montas un enrutador: las peticiones fáciles van a un modelo barato y las difíciles al caro. Al montarlo te das cuenta de que no has decidido quién clasifica cada petición.",
+      "options": [
+        { "text": "Empieza por reglas simples y medibles (longitud del texto, tipo de tarea, si el cliente es de pago). Si la clasificación la hace otra llamada al modelo, has añadido coste y un punto de fallo", "correct": true, "why": "Correcto, y es la trampa clásica de estos montajes. Una llamada extra para decidir es una llamada más que pagas siempre, aunque luego vaya al barato. Las reglas fijas son gratis, instantáneas y explicables cuando algo sale mal." },
+        { "text": "Que decida el modelo caro, que sabe más", "correct": false, "why": "Suena a delegar en quien mejor juzga y por eso convence. Se rompe en la aritmética: si el caro ya ha leído la petición para clasificarla, ya has pagado el caro y no has ahorrado nada." },
+        { "text": "Que lo elija el usuario con un selector", "correct": false, "why": "Hay productos que lo hacen y es transparente, así que no es descabellado. En la práctica el usuario elige siempre el más potente, y te quedas sin enrutador." }
+      ],
+      "explain": "Enrutar solo ahorra si decidir es gratis. Una llamada al modelo para decidir no lo es."
+    },
+    {
+      "prompt": "Tu flujo le pide al modelo datos con campos fijos y una vez de cada treinta llega mal formado y tumba el proceso entero.",
+      "options": [
+        { "text": "Valida contra un esquema antes de usar el dato y ten plan para cuando falle: un reintento y, si sigue mal, a revisión humana. Uno de cada treinta en producción son varias veces al día", "correct": true, "why": "Correcto, y el cálculo importa: con 500 ejecuciones diarias, un fallo de 1 entre 30 son 16 al día. No es un caso raro, es un caso diario, y necesita un camino previsto, no una excepción." },
+        { "text": "Mejorar el prompt hasta que deje de fallar", "correct": false, "why": "Reduce muchísimo la tasa y hay que hacerlo igual, así que parece el camino. Se rompe porque nunca llega a cero, y tú necesitas una respuesta para ese cero que no llega." },
+        { "text": "Envolverlo para que si falla el proceso continúe sin parar", "correct": false, "why": "Evita la caída, que es el síntoma más visible, y por eso se hace. Se rompe peor: el dato se pierde en silencio y nadie se entera hasta que el cliente pregunta por un pedido que no existe." }
+      ],
+      "explain": "Un fallo de 1 entre 30 no es una excepción: es rutina. Necesita camino propio, no un parche."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tienes 200 documentos internos y quieres que el asistente responda con ellos. Dudas entre montar RAG (una base que busca los fragmentos relevantes antes de responder) o meter los documentos directamente en la conversación.",
+      "options": [
+        { "text": "Si el conjunto cabe en el contexto y no cambia mucho, meterlo directo es más simple, más fiable y a veces más barato. RAG compensa cuando no cabe o cambia a diario", "correct": true, "why": "Correcto. RAG añade troceado, generación de índices y una pieza más que se puede romper, y todo eso hay que mantenerlo. Empezar por lo simple y medir es lo que evita mantener una infraestructura que no hacía falta." },
+        { "text": "RAG siempre: es lo profesional y lo que se espera de un proyecto serio", "correct": false, "why": "Es lo que se lleva y queda bien contarlo, por eso se elige tanto. Se rompe en el mantenimiento: cada documento nuevo hay que procesarlo, y cuando el asistente responde mal ahora tienes dos sospechosos, la búsqueda y el modelo." },
+        { "text": "Contexto siempre: ahora caben millones de tokens, así que no hace falta buscar", "correct": false, "why": "Con las ventanas actuales es técnicamente viable y por eso resulta tentador. Falla por dos sitios: pagas todo ese contexto en cada pregunta, y la precisión baja cuando lo relevante está enterrado entre 199 documentos que no venían al caso." }
+      ],
+      "explain": "Empieza metiendo los documentos. Monta RAG cuando dejen de caber o cambien a diario, no antes."
+    },
+    {
+      "prompt": "Tienes seis automatizaciones funcionando y la factura del mes es de 340 €. No sabes cuál se lleva el dinero.",
+      "options": [
+        { "text": "Etiqueta cada llamada con de dónde viene y guarda tokens y coste por ejecución. Sin eso, la factura es un número y no puedes decidir nada", "correct": true, "why": "Correcto, y es media hora de trabajo que se paga sola el primer mes. Con la etiqueta puedes ordenar de mayor a menor y optimizar la que importa; sin ella, cualquier cambio que hagas es una apuesta." },
+        { "text": "Mirar el panel de consumo del proveedor", "correct": false, "why": "Es el primer sitio donde mirar y hay que hacerlo. Te da el total y, con suerte, el desglose por clave de API: si las seis automatizaciones comparten clave, sigues sin saber nada." },
+        { "text": "Repartir 340 € entre seis y asumir unos 57 € cada una", "correct": false, "why": "Es una estimación honesta a falta de datos, y como primera aproximación no es absurda. En la práctica casi siempre hay una que se lleva el 70%, y esa media te lleva a optimizar cinco automatizaciones que no eran el problema." }
+      ],
+      "explain": "Sin etiquetar las llamadas, la factura es un número. Con etiquetas, es una lista ordenada por dónde actuar."
+    }
+  ]
+}

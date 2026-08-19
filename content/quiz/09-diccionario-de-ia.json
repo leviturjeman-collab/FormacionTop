@@ -1,0 +1,63 @@
+{
+  "categoryId": "09-diccionario-de-ia",
+  "basico": [
+    {
+      "prompt": "Cada vez que abres una conversación nueva escribes lo mismo: \"responde en español de España, directo, sin listas de viñetas\". Llevas semanas repitiéndolo.",
+      "options": [
+        { "text": "Eso no es un prompt, es una instrucción: una regla estable. Va una sola vez en la configuración del proyecto y se aplica a todas sus conversaciones", "correct": true, "why": "La diferencia práctica es esa: el prompt es la petición concreta de hoy, la instrucción es la regla que no cambia. Escribirla donde toca te ahorra repetirla y evita que se caiga del contexto en una conversación larga." },
+        { "text": "Es un prompt como cualquier otro y hay que repetirlo cada vez", "correct": false, "why": "Técnicamente lo estás enviando como prompt, así que la confusión tiene fundamento. Lo que se te escapa es que hay un sitio donde se pone una vez y deja de ser tu problema." },
+        { "text": "Da igual dónde lo pongas mientras esté escrito", "correct": false, "why": "Parece razonable porque el resultado inmediato es el mismo. No da igual por dos motivos: lo pagas en cada mensaje y, en una conversación larga, lo del principio se cae por el borde del contexto." }
+      ],
+      "explain": "Prompt es lo que pides hoy. Instrucción es la regla que rige siempre. No van en el mismo sitio."
+    },
+    {
+      "prompt": "Cada lunes copias los pedidos de una hoja de cálculo, escribes un resumen y lo mandas al grupo. Siempre los mismos pasos, en el mismo orden.",
+      "options": [
+        { "text": "Eso es un workflow: una secuencia fija de pasos que produce una salida repetible. No hace falta que nada decida, porque los pasos ya los sabes tú", "correct": true, "why": "Es la distinción que ahorra más dinero de todo el curso. Cuando la secuencia es conocida, meter un modelo a decidir añade coste, lentitud e imprevisibilidad a cambio de nada." },
+        { "text": "Es un caso claro de agente: hay varios pasos encadenados", "correct": false, "why": "Que haya varios pasos parece la definición de agente, y es el error más común. Un agente es lo que hace falta cuando los pasos dependen de lo que se vaya encontrando; aquí no dependen de nada." },
+        { "text": "Es un prompt largo que hay que escribir bien", "correct": false, "why": "Se puede resolver con un prompt largo, sí, y funcionará. Pero seguirás copiando y pegando cada lunes: lo que falta no es redacción, es que se dispare solo." }
+      ],
+      "explain": "Si conoces los pasos de antemano, es un workflow. Un agente solo hace falta cuando no los conoces."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Quieres que tu asistente te diga el stock real de una referencia de tu almacén cuando se lo preguntes.",
+      "options": [
+        { "text": "Eso es una tool, una herramienta: una función que el modelo puede llamar para consultar tu sistema. Una skill es un procedimiento escrito y no consulta nada por sí sola", "correct": true, "why": "La línea está en si ejecuta algo contra un sistema real. La skill dice cómo hacer una tarea; la tool va, mira y trae el dato de verdad." },
+        { "text": "Es una skill: le enseñas cómo consultar el almacén", "correct": false, "why": "Se confunden porque ambas amplían lo que el asistente puede hacer, y el nombre \"skill\" (habilidad) invita a pensar en capacidades. Pero por muy bien escrito que esté el procedimiento, sin conexión no hay dato." },
+        { "text": "Se resuelve pegando el inventario en el prompt", "correct": false, "why": "Funciona hoy si tienes 40 referencias, y por eso mucha gente empieza así. Se rompe mañana: el stock cambia cada hora y tú pegaste el de ayer, con la particularidad de que la respuesta seguirá pareciendo correcta." }
+      ],
+      "explain": "Skill es un procedimiento escrito. Tool es algo que se ejecuta contra un sistema real."
+    },
+    {
+      "prompt": "Tienes 400 páginas de documentación interna y quieres que el asistente conteste basándose en ellas.",
+      "options": [
+        { "text": "Eso es RAG: se busca el trozo relevante para cada pregunta y se le entrega como contexto. No hay que entrenar nada", "correct": true, "why": "Se recupera lo que importa y solo eso. Además tiene una ventaja que se valora tarde: puedes pedirle que cite de qué página salió, y entonces sí se puede verificar." },
+        { "text": "Hay que entrenar un modelo con tus documentos", "correct": false, "why": "Es la idea intuitiva (\"que se lo aprenda\") y la que todo el mundo propone primero. Se rompe por coste, por tiempo y porque cada vez que cambie un documento habría que repetirlo entero." },
+        { "text": "Pegar las 400 páginas en cada pregunta", "correct": false, "why": "Cabe en los modelos de contexto grande, así que técnicamente se puede, y por eso se intenta. Lo pagas entero en cada pregunta y lo relevante se diluye entre 399 páginas que no venían al caso." }
+      ],
+      "explain": "RAG es buscar el trozo que importa y dárselo. Ni entrenar, ni pegarlo todo."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tu agente tiene acceso al CRM: puede consultar clientes y también crear facturas. Funciona bien en las pruebas.",
+      "options": [
+        { "text": "Separa lectura de escritura. Consultar, automático; crear factura, con una persona aprobando. Una factura mal emitida es irreversible ante Hacienda y ante el cliente", "correct": true, "why": "Es la aplicación directa de human-in-the-loop: la persona entra justo antes de lo que no se puede deshacer. Y el permiso se quita en la herramienta, no se pide de palabra." },
+        { "text": "Le pones en las instrucciones del sistema que nunca facture sin confirmar contigo", "correct": false, "why": "Es lo que hace casi todo el mundo y da mucha tranquilidad, porque está escrito. Pero unas instrucciones del sistema son un aviso, no una medida de seguridad: los avisos se saltan, sobre todo si el texto de entrada lleva instrucciones contradictorias." },
+        { "text": "Revisas el registro de acciones cada mañana", "correct": false, "why": "Los registros hacen falta y hay que tenerlos. Pero eso es detección, no prevención: cuando lo lees, la factura ya salió y el cliente ya la ha recibido." }
+      ],
+      "explain": "Lo irreversible se bloquea con permisos, no con instrucciones pidiendo por favor."
+    },
+    {
+      "prompt": "Un compañero propone \"usar MCP en vez de la API de pago, así ahorramos en modelo\".",
+      "options": [
+        { "text": "No son alternativas. MCP es un protocolo para conectar herramientas y datos de forma estándar; el modelo lo sigues pagando por token igual", "correct": true, "why": "MCP resuelve el problema de tener que programar cada integración a mano, no el de la factura. Lo que ahorra es tiempo de desarrollo, y eso también vale dinero, pero no el mismo dinero." },
+        { "text": "Tiene razón: MCP es gratuito", "correct": false, "why": "Muchos servidores MCP son gratis y de código abierto, de ahí la confusión. Lo gratuito es el conector; el modelo que hay detrás decidiendo qué herramienta llamar sigue cobrando cada llamada." },
+        { "text": "MCP es un modelo que corre en tu propio ordenador", "correct": false, "why": "Ejecutar modelos en local existe y es gratis una vez descargados, así que la idea no sale de la nada. Pero eso son herramientas como Ollama, no MCP: MCP es un protocolo, no un modelo." }
+      ],
+      "explain": "MCP es un enchufe estándar entre modelos y herramientas. No es un modelo ni abarata el modelo."
+    }
+  ]
+}

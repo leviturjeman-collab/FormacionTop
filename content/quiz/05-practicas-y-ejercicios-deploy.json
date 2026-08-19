@@ -1,0 +1,63 @@
+{
+  "categoryId": "05-practicas-y-ejercicios-deploy",
+  "basico": [
+    {
+      "prompt": "Tu automatización funciona en tu ordenador. Quieres dejarla corriendo en serio, para el equipo. Es lunes por la mañana y tienes dos horas.",
+      "options": [
+        { "text": "Escribe primero la lista de lo que tiene que existir fuera de tu ordenador: claves, permisos, dónde se guardan los registros y quién se entera si falla", "correct": true, "why": "Correcto. Casi todos los fallos del estreno son cosas que en tu portátil ya existían y en el otro sitio no. Media hora de lista te ahorra la tarde." },
+        { "text": "Copia la carpeta al servidor y ejecútala", "correct": false, "why": "Es lo que parece natural, porque «funciona» y sólo hay que moverlo. Falla porque las claves no viven en la carpeta, viven en tu sistema, y los permisos allí son otros." },
+        { "text": "Pruébala diez veces más en local hasta estar seguro", "correct": false, "why": "Sube tu confianza pero no toca la diferencia entre tu ordenador y el sitio donde va a correr, que es exactamente de donde viene el fallo." }
+      ],
+      "explain": "Lo que falla al desplegar casi nunca es el código: es lo que había en tu ordenador y no está en el otro."
+    },
+    {
+      "prompt": "Dejas el flujo activo un viernes por la tarde y te vas de puente hasta el martes.",
+      "options": [
+        { "text": "Antes de irte, define quién lo mira si falla y por dónde le llega el aviso", "correct": true, "why": "Correcto. Sin dueño y sin aviso, un flujo parado no se nota hasta que un cliente se queja. Y entonces llevas tres días de datos sin procesar." },
+        { "text": "Ponle reintentos automáticos, así se arregla solo", "correct": false, "why": "Cubre el fallo pasajero, que es real. Pero si la causa es una clave caducada o un permiso retirado, reintenta quinientas veces, falla quinientas y no avisa a nadie." },
+        { "text": "Déjalo activo y ve mirando el móvil de vez en cuando", "correct": false, "why": "Depende de que te acuerdes, y de puente no te acuerdas. Además no verías nada: tendrías que entrar tú a mirar, porque nadie te avisa." }
+      ],
+      "explain": "Un proceso automático sin persona responsable y sin alerta es un proceso que se cae en silencio."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tu flujo procesa los correos que entran en una bandeja. Normalmente son unos 40 al día. Un lunes se envía una campaña y llegan 4.000.",
+      "options": [
+        { "text": "Ten un tope de gasto y un tope de ejecuciones por hora, con parada automática y aviso", "correct": true, "why": "Correcto. Cien veces el volumen es cien veces la factura. Ese tope convierte un susto de varios cientos de euros en un mensaje que lees y decides." },
+        { "text": "Confía en el límite del proveedor: te dará 429 y frenará solo", "correct": false, "why": "Suena a red de seguridad gratis. Pero el 429 llega cuando ya has gastado lo que va hasta el límite, y si tienes reintentos automáticos, gastas todavía más." },
+        { "text": "Procésalos todos, pero en lotes más lentos", "correct": false, "why": "Suaviza el pico y evita el 429, cierto. No suaviza el total: los 4.000 se procesan igual, sólo que tardas más en ver la factura." }
+      ],
+      "explain": "El rate limit del proveedor protege al proveedor; el tope de gasto lo tienes que poner tú."
+    },
+    {
+      "prompt": "Un compañero necesita ejecutar tu flujo mientras estás de vacaciones. Piensas mandarle por WhatsApp el archivo de configuración con tu clave dentro.",
+      "options": [
+        { "text": "Que él use su propia clave, guardada como secreto en la herramienta, no dentro del archivo", "correct": true, "why": "Correcto. Una clave se factura a quien la generó. Si la compartís, no sabrás quién gastó qué, y el día que la anules le rompes el flujo a los dos." },
+        { "text": "Mándasela y pídele que borre el mensaje después", "correct": false, "why": "Parece suficiente y es lo que se hace por prisa. Borrar en tu móvil no borra el suyo ni las copias de seguridad. Y una vez expuesta, la única salida real es anular la clave, que es irreversible para todo lo que la esté usando." },
+        { "text": "Deja la clave dentro del archivo del flujo y compártelo por la nube de la empresa", "correct": false, "why": "Cómodo y muy habitual. Ese archivo acaba en una carpeta compartida o en un repositorio y ahí se queda para siempre, visible para gente que ni sabías que tenía acceso." }
+      ],
+      "explain": "Las claves no se envían: cada persona tiene la suya y se guarda como secreto, nunca dentro del archivo."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "El jueves publicas una versión nueva del flujo. El viernes por la tarde descubres que lleva 18 horas escribiendo mal el campo «importe» en la base de datos de facturación.",
+      "options": [
+        { "text": "Necesitabas dos cosas: poder volver a la versión anterior en minutos y saber exactamente qué registros tocó la versión mala", "correct": true, "why": "Correcto. Volver atrás detiene el daño; el registro te dice qué hay que reparar. Sin lo segundo, vuelves atrás y te quedan 18 horas de datos sucios que no puedes identificar." },
+        { "text": "Con poder volver a la versión anterior es suficiente", "correct": false, "why": "Es la mitad del trabajo y la mitad que se suele preparar. Los datos ya escritos no se corrigen solos, y aquí hablamos de importes: son dinero." },
+        { "text": "Corrige el fallo y publica una versión nueva cuanto antes", "correct": false, "why": "Es el instinto del viernes por la tarde y suele empeorarlo: publicas con prisa, sin probar, y acabas con dos versiones sospechosas y ningún punto conocido bueno." }
+      ],
+      "explain": "Volver atrás para el daño; el registro de qué tocó te dice qué reparar. Hacen falta las dos."
+    },
+    {
+      "prompt": "Llevas tres meses con un clasificador de incidencias en producción. Nadie se ha quejado. Tu jefa te pide demostrar que funciona bien antes de ampliarlo a otro departamento.",
+      "options": [
+        { "text": "Prepara un conjunto fijo de casos con la respuesta correcta escrita a mano, pásalo entero cada vez que cambies algo y guarda el resultado", "correct": true, "why": "Correcto. «Nadie se queja» no es una medida. Sin un conjunto de referencia no puedes distinguir una mejora de una casualidad, ni notar que un cambio de modelo te ha bajado el acierto." },
+        { "text": "Enseña los registros de las 12.000 ejecuciones sin ningún error", "correct": false, "why": "Es lo que tienes a mano y parece contundente. Pero los registros dicen que no se rompió, no que acertara: clasificar mal no lanza ningún error." },
+        { "text": "Pide al propio modelo que se autoevalúe sobre una muestra de cien casos", "correct": false, "why": "Es rápido y te da un número con aspecto de dato. El mismo tipo de modelo tiende a validar su propio criterio, y sigues sin una verdad de referencia contra la que comparar." }
+      ],
+      "explain": "Ausencia de errores no es calidad: sin casos con respuesta correcta escrita a mano, no estás midiendo nada."
+    }
+  ]
+}

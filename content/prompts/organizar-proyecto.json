@@ -1,0 +1,135 @@
+{
+  "id": "organizar-proyecto",
+  "title": "Que la IA te organice el proyecto y te diga por dónde seguir",
+  "intro": "Tienes una idea en la cabeza y ni idea de por dónde se empieza. Estos prompts convierten esa idea en una lista de tareas ordenada, con una estimación de tiempo que no te miente y un siguiente paso concreto para cuando abras el ordenador. Úsalos antes de construir nada, y vuelve a ellos cada vez que te quedes atascado.",
+  "model": "Aquí vale cualquiera porque es todo texto y cabeza, pero si tu plan va a ser largo y quieres pegarle la descripción entera del proyecto en cada mensaje, tira de Claude, que aguanta mejor los textos largos; ChatGPT va perfecto para el día a día y Gemini si tu proyecto vive dentro de Google.",
+  "prompts": [
+    {
+      "name": "La ficha del proyecto (el texto que vas a pegar en todas partes)",
+      "when": "El primero de todos, antes de pedirle nada más a la IA. Diez minutos aquí te ahorran semanas de dar vueltas.",
+      "prompt": "Eres un jefe de proyecto técnico que trabaja con gente que no ha programado nunca. Hoy no tienes que resolver nada: tienes que entenderme y dejar mi proyecto descrito por escrito.\n\nMi idea es: [DESCRIBE TU IDEA EN TRES O CUATRO FRASES, COMO SE LA CONTARÍAS A UN AMIGO EN UN BAR].\nPara quién es: [QUIÉN LO VA A USAR].\nQué quiero que pase cuando funcione: [EL RESULTADO CONCRETO QUE BUSCAS].\nMi nivel: no he programado nunca y no pienso aprender; todo el código me lo va a dar hecho una IA y yo solo copio y pego donde me digan.\nTiempo disponible: [HORAS A LA SEMANA] horas a la semana.\nDinero que puedo gastar: [CANTIDAD] euros al mes como mucho.\n\nAntes de escribir nada, hazme como máximo seis preguntas, de una en una, esperando mi respuesta entre pregunta y pregunta. Nada de preguntas técnicas: pregúntame por lo que hace el proyecto y para quién, nunca por cómo se construye por dentro.\n\nCuando las tenga contestadas, escríbeme una FICHA DEL PROYECTO de menos de 400 palabras con estos apartados: qué es, para quién, qué tiene que hacer sí o sí, qué queda fuera por ahora, con qué herramientas se haría y cuánto costaría al mes en euros. Escríbela en un solo bloque de texto seguido que yo pueda copiar y pegar tal cual al principio de otras conversaciones. Sin tecnicismos; si tienes que usar una palabra técnica, explícala entre paréntesis la primera vez. Si algo no te lo he dicho y no es crítico, decide tú y escribe SUPUESTO al lado para que yo lo vea.",
+      "fill": [
+        ["[DESCRIBE TU IDEA EN TRES O CUATRO FRASES, COMO SE LA CONTARÍAS A UN AMIGO EN UN BAR]", "Tu idea en cristiano, sin adornos. Ejemplo real: una web donde mis clientas de la peluquería pidan cita solas, vean los huecos libres de la semana y les llegue un recordatorio el día antes."],
+        ["[QUIÉN LO VA A USAR]", "Personas concretas, no categorías. Ejemplo: mujeres de 30 a 60 años del barrio, que ahora me escriben por WhatsApp a cualquier hora."],
+        ["[EL RESULTADO CONCRETO QUE BUSCAS]", "Cómo sabrás que ha funcionado. Ejemplo: que el 70% de las citas entren solas y yo deje de contestar mensajes mientras tiño."],
+        ["[HORAS A LA SEMANA]", "Sé honesto, no optimista. Ejemplo: 5, casi todas los domingos por la tarde."],
+        ["[CANTIDAD]", "Tu tope mensual real en euros. Ejemplo: 20."]
+      ],
+      "expect": "Seis preguntas cortas, una detrás de otra, y al final un texto de una página que describe tu proyecto mejor de lo que lo tenías tú en la cabeza.",
+      "next": "Copia esa ficha y guárdala en un documento cualquiera (Notas del móvil, Google Docs, un correo a ti mismo). Es tu ficha y la vas a pegar al principio de casi todos los prompts que vienen a continuación."
+    },
+    {
+      "name": "La lista de tareas completa",
+      "when": "Justo después de tener la ficha, cuando quieres saber en qué consiste esto de verdad y dejar de imaginártelo.",
+      "prompt": "Eres un jefe de proyecto técnico. Trabajas para mí y yo no he programado nunca: no sé lo que es una terminal (esa pantalla negra con letras) ni quiero saberlo. Todo lo que haya que programar me lo va a escribir una IA y yo solo copio y pego.\n\nEste es mi proyecto:\n[PEGA AQUÍ TU FICHA DEL PROYECTO]\n\nQuiero la lista completa de tareas para llevarlo de donde está hoy, que es una idea, a estar funcionando de verdad con usuarios reales. Dámela en una tabla con estas columnas: número, nombre de la tarea en lenguaje normal, qué hay que hacer exactamente, quién lo hace (yo a mano, la IA me lo da hecho, o hay que pagar y contratar algo), y cómo sé que esa tarea está terminada.\n\nReglas que no puedes saltarte: ninguna tarea puede durar más de dos horas, y si algo dura más lo partes en varias. Nada de tareas vagas del estilo preparar el entorno o configurar la base de datos: dime qué se abre, dónde se pulsa y qué queda hecho al terminar. Incluye también las tareas aburridas que todo el mundo olvida: crear cuentas, elegir nombre, comprar la dirección de internet, escribir los textos, probarlo con una persona de verdad y publicarlo.\n\nAl final dime cuántas tareas hay en total, cuántas puedo hacer sin depender de nadie y cuántas necesitan que alguien externo me conteste. Si te falta información para describir una tarea, no te la inventes: escribe FALTA DATO y dime qué necesitas de mí.",
+      "fill": [
+        ["[PEGA AQUÍ TU FICHA DEL PROYECTO]", "El texto que te dio el prompt anterior, pegado entero. Ejemplo: es una web de citas para una peluquería de barrio, las clientas ven los huecos libres..."]
+      ],
+      "expect": "Una tabla de entre 25 y 60 tareas, cada una lo bastante pequeña como para caber en una tarde, con las aburridas incluidas.",
+      "next": "Léela entera sin agobiarte: es normal que asuste. No empieces por la primera todavía; pasa al prompt del orden, que es el que decide qué va antes."
+    },
+    {
+      "name": "El orden en el que hay que hacerlo",
+      "when": "Cuando tienes la lista delante y no sabes por dónde meterle mano sin liarte.",
+      "prompt": "Eres un jefe de proyecto técnico y me hablas como si yo no supiera nada de informática, porque efectivamente no sé nada.\n\nProyecto: [PEGA AQUÍ TU FICHA DEL PROYECTO]\nLista de tareas: [PEGA AQUÍ LA LISTA DE TAREAS QUE ME DISTE ANTES]\n\nOrdena estas tareas para que yo pueda hacerlas una detrás de otra sin quedarme bloqueado. Agrúpalas en fases y ponle a cada fase un nombre que diga qué consigo al terminarla, por ejemplo: Fase 2, ya se puede ver la web desde el móvil. Dentro de cada fase numera las tareas en el orden exacto en que hay que hacerlas.\n\nPara cada tarea dime de qué otra tarea depende, o escribe no depende de nada si se puede hacer en cualquier momento. Marca con la palabra BLOQUEANTE las tareas que, si no están hechas, dejan parado todo lo demás: esas las quiero primero. Marca con la palabra ESPERA las que dependen de terceros y tardan días por su cuenta aunque yo no haga nada, como comprar una dirección de internet, verificaciones de identidad o revisiones de tiendas de aplicaciones, porque esas hay que lanzarlas cuanto antes aunque todavía no toquen.\n\nTermina con las tres tareas que debería hacer esta misma semana y por qué esas y no otras. Y si el orden natural que se me ocurriría a mí tiene un fallo grave, dímelo en dos frases antes de la tabla, sin suavizarlo.",
+      "fill": [
+        ["[PEGA AQUÍ TU FICHA DEL PROYECTO]", "Tu ficha, otra vez entera. La IA no se acuerda de nada si abres una conversación nueva."],
+        ["[PEGA AQUÍ LA LISTA DE TAREAS QUE ME DISTE ANTES]", "La tabla del prompt anterior. Si es larguísima, pega solo las columnas de número y nombre de la tarea."]
+      ],
+      "expect": "Tres o cinco fases con nombre, las tareas numeradas dentro de cada una, y unas cuantas etiquetas BLOQUEANTE y ESPERA repartidas.",
+      "next": "Fíjate en las marcadas como ESPERA y lánzalas hoy mismo aunque no toquen: ese tiempo lo consume otro, no tú."
+    },
+    {
+      "name": "Lo mínimo que ya sirve",
+      "when": "Cuando la lista te ha dado un susto por lo larga que es y te está entrando la tentación de dejarlo.",
+      "prompt": "Eres un jefe de producto duro y con prisa. Tu trabajo hoy es recortar, no añadir. Cada cosa que quites es una victoria.\n\nProyecto: [PEGA AQUÍ TU FICHA DEL PROYECTO]\nLista de tareas: [PEGA AQUÍ LA LISTA DE TAREAS]\n\nQuiero saber cuál es la versión más pequeña de esto que ya le sirve a alguien de verdad. No un prototipo bonito para enseñar en una reunión: algo que una persona real pueda usar de principio a fin y que le resuelva el problema, aunque sea de forma tosca y fea.\n\nDame tres cosas. Primero, la lista corta de lo que SÍ entra en esa versión, con una frase por punto explicando por qué sin eso no se sostiene. Segundo, la lista de lo que SE QUEDA FUERA y, al lado de cada punto, el apaño manual que puedo hacer mientras tanto; por ejemplo, en vez de programar los cobros, cobrar por transferencia durante el primer mes. Tercero, dime en qué momento exacto sabré que esa versión mínima ha funcionado: qué tiene que hacer un usuario para que se pueda decir que ha valido la pena.\n\nSé implacable: si algo se puede hacer a mano durante las primeras semanas, fuera. Si crees que me estoy engañando y que mi versión mínima sigue siendo enorme, dímelo sin rodeos. Termina con una sola frase que empiece por La versión 1 es: y que quepa en un mensaje de móvil.",
+      "fill": [
+        ["[PEGA AQUÍ TU FICHA DEL PROYECTO]", "Tu ficha completa."],
+        ["[PEGA AQUÍ LA LISTA DE TAREAS]", "La lista de tareas, con o sin el orden puesto. Si ya tienes las fases, pega las fases."]
+      ],
+      "expect": "Una lista corta de lo imprescindible, otra de lo que se queda fuera con su apaño manual al lado, y una frase final que resume tu versión 1.",
+      "next": "Pega esa frase final en tu ficha del proyecto, sustituyendo lo que dijeras antes. A partir de ahora, todo lo que no esté en la versión 1 se aparca sin discusión."
+    },
+    {
+      "name": "Cuánto tiempo lleva esto de verdad",
+      "when": "Antes de prometerle una fecha a nadie, y sobre todo antes de prometértela a ti mismo.",
+      "prompt": "Eres un jefe de proyecto que ha visto fallar muchas estimaciones, incluidas las suyas, y ya no se cree los plazos optimistas.\n\nProyecto: [PEGA AQUÍ TU FICHA DEL PROYECTO]\nTareas ordenadas por fases: [PEGA AQUÍ EL PLAN ORDENADO]\nMi situación real: puedo dedicarle [HORAS A LA SEMANA] horas a la semana, en ratos de [DURACIÓN DE CADA RATO], y no he programado nunca; todo el código me lo da hecho una IA y yo lo copio y lo pego.\n\nEstima cuánto lleva esto. No me des horas sueltas: dime cuántas sesiones de trabajo hacen falta para cada fase y en cuántas semanas se traduce eso con mi ritmo real. Dame tres escenarios: si todo va rodado, lo probable, y si se tuerce. Explica en una frase qué cambia entre el escenario bueno y el malo.\n\nCuenta también el tiempo que no es teclear: leer, decidir, esperar a que un proveedor conteste, arreglar lo que se rompe, volver a probarlo. Como no he programado nunca, aplica un margen extra en las tareas donde suele atascarse la gente que empieza, y dime explícitamente cuáles son esas tareas para que las vea venir.\n\nTermina con dos cosas: una fecha realista para tener la versión mínima funcionando contando desde [FECHA DE HOY], y la única tarea que, si se retrasa, arrastra a todas las demás.",
+      "fill": [
+        ["[PEGA AQUÍ TU FICHA DEL PROYECTO]", "Tu ficha."],
+        ["[PEGA AQUÍ EL PLAN ORDENADO]", "Las fases con las tareas numeradas que te dio el prompt del orden."],
+        ["[HORAS A LA SEMANA]", "Las horas que de verdad vas a dedicarle, no las que te gustaría. Ejemplo: 4."],
+        ["[DURACIÓN DE CADA RATO]", "Cómo son tus sesiones. Ejemplo: dos ratos de dos horas, martes y domingo por la noche."],
+        ["[FECHA DE HOY]", "La fecha de hoy, escrita. Ejemplo: 19 de agosto de 2026."]
+      ],
+      "expect": "Un número de sesiones por fase, tres escenarios con semanas, una fecha concreta y el nombre de la tarea que puede hundir el calendario.",
+      "next": "Coge el escenario del medio y súmale un tercio: ese es tu plazo de verdad. Si la fecha que sale no te vale, vuelve al prompt de lo mínimo y recorta más."
+    },
+    {
+      "name": "Estoy perdido: dame el siguiente paso concreto",
+      "when": "Cuando abres el ordenador, miras el plan y no sabes qué tocar. Es el prompt de rescate y lo vas a usar más que ningún otro.",
+      "prompt": "Estoy perdido y necesito que me digas exactamente qué hacer ahora mismo. Un solo paso.\n\nProyecto: [PEGA AQUÍ TU FICHA DEL PROYECTO]\nLo que ya está hecho: [QUÉ HAS CONSEGUIDO YA]\nLo último que intenté: [LO ÚLTIMO QUE HICISTE Y CÓMO ACABÓ]\nTiempo que tengo ahora mismo: [MINUTOS U HORAS DE LOS QUE DISPONES].\n\nNo me des un plan. No me des opciones para que elija yo. Dame UN paso, el que más me acerque a tener algo funcionando, y que quepa en el tiempo que tengo.\n\nEscríbelo con esta estructura. Uno, el objetivo del paso en una frase y sin palabras técnicas. Dos, las instrucciones exactas, numeradas, diciéndome qué abro, dónde pulso y qué escribo, como si me lo dictaras por teléfono a alguien que nunca ha hecho esto. Tres, si hay que pegar código, dámelo escrito entero y dime en qué archivo o casilla va, en qué punto exacto lo pego y qué botón guardo después; no me pidas que escriba código yo. Cuatro, cómo sé que ha salido bien: qué tengo que ver en la pantalla, con esas mismas palabras. Cinco, qué hago si no sale, con los dos fallos más habituales y su solución.\n\nSi te falta información para darme ese paso, pregúntame una sola cosa y espera mi respuesta. No te adelantes al paso siguiente: cuando termine este, vuelvo y te cuento cómo ha ido.",
+      "fill": [
+        ["[PEGA AQUÍ TU FICHA DEL PROYECTO]", "Tu ficha. Si sigues en la misma conversación de antes, basta con poner: el proyecto de siempre."],
+        ["[QUÉ HAS CONSEGUIDO YA]", "Lo que funciona hoy, aunque sea poquísimo. Ejemplo: tengo la cuenta creada y una página en blanco que ya se ve en internet."],
+        ["[LO ÚLTIMO QUE HICISTE Y CÓMO ACABÓ]", "Tal cual pasó, con el fallo incluido. Ejemplo: pegué el código que me diste y salió un texto rojo que pone module not found."],
+        ["[MINUTOS U HORAS DE LOS QUE DISPONES]", "Tu rato real. Ejemplo: 40 minutos antes de cenar."]
+      ],
+      "expect": "Un único paso, numerado, con el código ya escrito si hace falta y con una frase del tipo: sabrás que ha ido bien cuando veas...",
+      "next": "Hazlo y vuelve a contarle cómo ha ido, aunque haya salido mal. Con el resultado en la mano, pídele el siguiente paso con este mismo prompt."
+    },
+    {
+      "name": "Las decisiones que no puedes esquivar (y lo que cuestan)",
+      "when": "Al principio, cuando la IA empieza a soltarte nombres de herramientas y no tienes ni idea de cuál elegir.",
+      "prompt": "Eres un asesor técnico al que le pago por ahorrarme disgustos, no por enseñarme catálogos de opciones.\n\nProyecto: [PEGA AQUÍ TU FICHA DEL PROYECTO]\nPresupuesto: como mucho [CANTIDAD] euros al mes.\n\nHazme la lista de decisiones que tengo que tomar sí o sí antes de ponerme a construir: dónde vive la web o la aplicación, dónde se guardan los datos, si hace falta que la gente se registre y cómo, cómo se cobra si hay que cobrar, qué nombre y qué dirección de internet, y cualquier otra que aplique a mi caso concreto.\n\nPara cada decisión dame cuatro cosas: la opción que me recomiendas y por qué en una frase; la alternativa razonable por si esa no me convence; cuánto cuesta al mes en euros, indicando gratis hasta cuánto si tiene plan gratuito; y una etiqueta de FÁCIL DE CAMBIAR o DIFÍCIL DE CAMBIAR según lo que cueste dar marcha atrás dentro de seis meses.\n\nEscribe la palabra CUIDADO delante de todo lo que se pague por adelantado, de lo que no admita devolución y de lo que al cancelar borre datos para siempre sin poder recuperarlos.\n\nTermina sumando el coste mensual total de tu recomendación y diciéndome qué línea quitaría yo primero si me quedara sin dinero. Nada de listas de veinte herramientas para que elija yo: elige tú y mójate. Y avísame de qué precios pueden estar desactualizados para que los confirme en la web del proveedor antes de pagar nada.",
+      "fill": [
+        ["[PEGA AQUÍ TU FICHA DEL PROYECTO]", "Tu ficha completa."],
+        ["[CANTIDAD]", "Tu tope mensual en euros. Ejemplo: 15."]
+      ],
+      "expect": "Entre seis y diez decisiones, cada una con su recomendación, su precio en euros al mes y su etiqueta de si se puede deshacer o no.",
+      "next": "Toma solo las decisiones marcadas como DIFÍCIL DE CAMBIAR y apúntalas en tu ficha. Las fáciles déjalas para cuando toquen. Y antes de pagar, comprueba el precio en la web del proveedor: la IA se equivoca con las tarifas y hay contratos anuales que no se devuelven."
+    },
+    {
+      "name": "Qué va a salir mal (dicho antes, no después)",
+      "when": "Cuando ya tienes el plan cerrado y justo antes de ponerte a construir.",
+      "prompt": "Vamos a hacer un ejercicio incómodo. Imagina que han pasado tres meses y este proyecto ha fracasado: o no está terminado, o está terminado y no lo usa nadie.\n\nProyecto: [PEGA AQUÍ TU FICHA DEL PROYECTO]\nPlan y fases: [PEGA AQUÍ EL PLAN ORDENADO]\n\nEscribe la explicación de por qué fracasó, como si ya hubiera ocurrido y me lo contaras a toro pasado. Dame las siete causas más probables ordenadas de más a menos probable, teniendo en cuenta que no he programado nunca, que trabajo solo y que le dedico ratos sueltos entre otras obligaciones.\n\nSepara las causas en tres grupos. Las que dependen de mí: me aburro, me atasco, lo dejo a medias, cambio de idea a mitad. Las técnicas: algo no funciona, se rompe justo al publicarlo, la IA me da algo que no entiendo y no sé arreglarlo. Y las de fuera: no lo quiere nadie, un proveedor sube el precio, cambian las reglas de una plataforma.\n\nPara cada causa dime la señal temprana que la delata, o sea, qué voy a notar dos semanas antes de que el problema se haga grande. Y dame una medida concreta que pueda tomar esta semana para que esa causa no llegue a ocurrir, en una sola frase y que se pueda hacer en menos de una hora.\n\nTermina diciéndome cuál de las siete te preocupa más en mi caso concreto y por qué.",
+      "fill": [
+        ["[PEGA AQUÍ TU FICHA DEL PROYECTO]", "Tu ficha."],
+        ["[PEGA AQUÍ EL PLAN ORDENADO]", "Las fases con sus tareas. Si no lo tienes a mano, con los nombres de las fases basta."]
+      ],
+      "expect": "Siete causas de fracaso ordenadas, cada una con la señal que la anuncia y una medida de menos de una hora para evitarla.",
+      "next": "Mete las dos o tres medidas más baratas directamente en tu lista de tareas de esta semana. Y apunta las señales tempranas donde las veas a menudo: son tu alarma."
+    },
+    {
+      "name": "Actualizar el plan cuando la realidad te desmiente",
+      "when": "Una vez por semana, o el día que algo se tuerce y el plan deja de encajar con lo que está pasando.",
+      "prompt": "Eres mi jefe de proyecto y toca revisión. Sé sincero conmigo, no me hagas la pelota ni me felicites por cosas que no he hecho.\n\nProyecto: [PEGA AQUÍ TU FICHA DEL PROYECTO]\nPlan original: [PEGA AQUÍ EL PLAN CON FASES]\nLo que he terminado desde la última revisión: [QUÉ HAS TERMINADO]\nLo que no he hecho y por qué: [LO QUE SE HA QUEDADO ATRÁS Y EL MOTIVO REAL]\nLo que me ha costado mucho más de lo previsto: [DÓNDE TE ATASCASTE]\n\nDime tres cosas. Primero, dónde estoy de verdad respecto al plan: porcentaje aproximado y semanas de adelanto o de retraso, sin dorarme la píldora. Segundo, qué hay que cambiar del plan: tareas que ya no tienen sentido y se eliminan, tareas nuevas que han aparecido y no estaban previstas, y tareas que hay que partir en trozos más pequeños porque me están bloqueando. Tercero, el plan actualizado de las próximas dos semanas, con las tareas en orden y sin meter más trabajo del que cabe en [HORAS A LA SEMANA] horas semanales.\n\nSi por lo que te cuento crees que voy camino de abandonar el proyecto, dímelo directamente y propón la versión recortada que sí terminaría. Y si algo de lo que me está atascando lo puede resolver la IA escribiéndomelo entero, señálalo y dime exactamente qué le tengo que pedir, con la frase ya redactada para que yo la copie.",
+      "fill": [
+        ["[PEGA AQUÍ TU FICHA DEL PROYECTO]", "Tu ficha."],
+        ["[PEGA AQUÍ EL PLAN CON FASES]", "El plan ordenado. Si lo has ido cambiando, pega la última versión, no la original."],
+        ["[QUÉ HAS TERMINADO]", "Lo hecho, por escueto que sea. Ejemplo: tareas 1 a 4 de la fase 1 y media tarea 5."],
+        ["[LO QUE SE HA QUEDADO ATRÁS Y EL MOTIVO REAL]", "El motivo de verdad, aunque sea que no te apetecía. Ejemplo: la tarea 6, porque me daba pereza y la fui dejando."],
+        ["[DÓNDE TE ATASCASTE]", "Lo que te comió el tiempo. Ejemplo: tres horas peleando para que se vieran las fotos en el móvil."],
+        ["[HORAS A LA SEMANA]", "Tus horas reales, ajustadas a lo que ha pasado estas semanas, no a lo que planeaste. Ejemplo: 3."]
+      ],
+      "expect": "Un diagnóstico sin anestesia de dónde estás, una lista de cambios al plan y un plan concreto para los próximos catorce días.",
+      "next": "Sustituye tu plan viejo por el nuevo y tira el viejo. Un plan que ya no encaja con la realidad no sirve de nada: solo te hace sentir mal."
+    }
+  ],
+  "canDo": [
+    "Convertir una idea vaga en una lista de tareas concreta, ordenada y con fases que se entienden.",
+    "Decirte qué es lo mínimo que ya le sirve a alguien y qué puedes aparcar sin cargarte el proyecto.",
+    "Sacarte del bloqueo con un único paso siguiente, con las instrucciones clic a clic y el código ya escrito.",
+    "Recolocar el plan cuando la realidad se desvía, sin que tengas que rehacerlo tú desde cero."
+  ],
+  "cantDo": [
+    "No sabe a qué velocidad trabajas tú: sus estimaciones salen optimistas, así que suma un tercio a lo que te diga.",
+    "No sabe si tu idea le interesa a alguien. Eso solo lo averiguas enseñándosela a personas de carne y hueso.",
+    "No se acuerda de la conversación de la semana pasada. Si no le pegas la ficha del proyecto, se inventa tu proyecto.",
+    "No se entera de que llevas cuatro días atascado ni de que lo has dejado: si no se lo cuentas, te seguirá dando el plan bonito."
+  ],
+  "tips": [
+    "Pega siempre la ficha del proyecto al principio del mensaje, aunque te dé pereza. Un prompt con ficha y otro sin ficha dan respuestas de calidad muy distinta.",
+    "Añade a cualquiera de estos prompts la frase: antes de responder, hazme las preguntas que necesites, de una en una. Tardas dos minutos más y la respuesta mejora muchísimo.",
+    "Prohíbele las tareas grandes con esta línea: ninguna tarea puede durar más de dos horas, y si dura más, pártela. Las tareas gigantes son la razón número uno por la que la gente abandona."
+  ]
+}

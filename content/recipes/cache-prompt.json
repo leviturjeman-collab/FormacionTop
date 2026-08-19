@@ -1,0 +1,69 @@
+{
+  "id": "cache-prompt",
+  "match": "cach[eé]|caching|coste|costes|precio|factura|ahorra|tokens|prompt|instrucciones|manual|repetid",
+  "stages": ["seguridad", "fundamentos"],
+  "tools": ["python"],
+  "title": "Cachea el prompt y las respuestas para no pagar dos veces",
+  "what": "Guarda el trozo fijo de tus instrucciones en el servidor de Anthropic y las respuestas completas en tu disco, para que la segunda vez no vuelvas a pagarlas.",
+  "why": "Cada llamada reenvía el mismo manual entero y lo pagas entero cada vez. Con claude-opus-5, un manual de 2.000 tokens cuesta unos 0,01 $ por llamada: 1.000 llamadas al día son 10 $ diarios solo por repetir lo mismo. El caché de prompt deja ese trozo un 90% más barato (bajas a ~1 $) y el caché local deja las preguntas repetidas en cero. Ojo: la API no tiene plan gratis, se paga por uso desde el primer token.",
+  "lang": "python",
+  "install": "pip install anthropic",
+  "code": "import hashlib\nimport json\nimport os\nimport pathlib\n\nimport anthropic\n\n# La clave nunca se escribe dentro del archivo: se lee del entorno del ordenador.\ncliente = anthropic.Anthropic(api_key=os.environ[\"ANTHROPIC_API_KEY\"])\nMODELO = \"claude-opus-5\"\n\n# El texto largo que repites en TODAS las llamadas: el manual, las normas, el catálogo.\n# Necesita 512 tokens como mínimo (unas 400 palabras) o Anthropic no lo guarda y no avisa.\nINSTRUCCIONES = pathlib.Path(\"manual.txt\").read_text(encoding=\"utf-8\")\n\nCARPETA = pathlib.Path(\"cache_respuestas\")\nCARPETA.mkdir(exist_ok=True)\n\n\ndef ruta_de(pregunta):\n    # Huella digital del trío modelo + instrucciones + pregunta.\n    huella = hashlib.sha256((MODELO + INSTRUCCIONES + pregunta).encode()).hexdigest()\n    return CARPETA / f\"{huella}.json\"\n\n\ndef preguntar(pregunta):\n    archivo = ruta_de(pregunta)\n    if archivo.exists():\n        print(\"[caché local] respuesta reutilizada, coste 0 euros\")\n        return json.loads(archivo.read_text(encoding=\"utf-8\"))[\"texto\"]\n\n    respuesta = cliente.messages.create(\n        model=MODELO,\n        max_tokens=2000,\n        system=[{\n            \"type\": \"text\",\n            \"text\": INSTRUCCIONES,\n            \"cache_control\": {\"type\": \"ephemeral\"},\n        }],\n        messages=[{\"role\": \"user\", \"content\": pregunta}],\n    )\n    uso = respuesta.usage\n    print(f\"[API] escritos: {uso.cache_creation_input_tokens} | \"\n          f\"leídos de caché: {uso.cache_read_input_tokens} | sin caché: {uso.input_tokens}\")\n\n    texto = \"\".join(b.text for b in respuesta.content if b.type == \"text\")\n    archivo.write_text(json.dumps({\"texto\": texto}, ensure_ascii=False), encoding=\"utf-8\")\n    return texto\n\n\nif __name__ == \"__main__\":\n    print(preguntar(\"¿Cuál es el horario de atención al público?\"))\n    print(preguntar(\"¿Se puede aparcar en la puerta?\"))\n    print(preguntar(\"¿Cuál es el horario de atención al público?\"))\n",
+  "lines": [
+    [
+      "cliente = anthropic.Anthropic(api_key=os.environ[\"ANTHROPIC_API_KEY\"])",
+      "Una variable de entorno es un dato guardado en el ordenador, fuera del código. La clave de la API es tu medio de pago: si la escribes aquí dentro, viaja a GitHub con el resto del archivo y cualquiera puede gastarte el saldo. Se lee de fuera, siempre."
+    ],
+    [
+      "INSTRUCCIONES = pathlib.Path(\"manual.txt\").read_text(encoding=\"utf-8\")",
+      "El texto que se repite vive en un archivo aparte, no incrustado en el código. Así lo edita quien lleva el negocio sin tocar Python, y sobre todo se queda quieto: el caché solo funciona si ese bloque no cambia ni una coma entre llamadas."
+    ],
+    [
+      "huella = hashlib.sha256((MODELO + INSTRUCCIONES + pregunta).encode()).hexdigest()",
+      "El nombre del archivo guardado sale de un resumen matemático (hash) de los tres ingredientes. Si cambias el modelo, corriges el manual o preguntas otra cosa, la huella es distinta y se pide respuesta nueva. Sin meter las instrucciones ahí dentro seguirías sirviendo respuestas basadas en un manual viejo."
+    ],
+    [
+      "if archivo.exists():",
+      "Aquí está el ahorro grande: si esa pregunta exacta ya se hizo, ni se llama a la API. Cero céntimos y respuesta instantánea en vez de esperar diez segundos. En un chat de atención al cliente, la mitad de las preguntas son las mismas cinco."
+    ],
+    [
+      "\"cache_control\": {\"type\": \"ephemeral\"},",
+      "Esta marca dice dónde acaba el trozo fijo. Anthropic guarda todo lo anterior durante 5 minutos y cada llamada dentro de ese rato lo cobra un 90% más barato. Escribirlo la primera vez lleva un recargo del 25%, así que a partir de la segunda llamada ya vas ganando."
+    ],
+    [
+      "max_tokens=2000,",
+      "Tope de tokens que puede generar la respuesta. Claude Opus 5 razona antes de contestar y ese razonamiento también gasta de este tope: si pones 300, te corta la respuesta a media frase."
+    ],
+    [
+      "uso.cache_read_input_tokens",
+      "La única forma fiable de saber si esto funciona de verdad. Si el número sigue en 0 llamada tras llamada, no estás ahorrando nada aunque el código parezca correcto. Míralo siempre antes de dar por bueno el ahorro."
+    ],
+    [
+      "texto = \"\".join(b.text for b in respuesta.content if b.type == \"text\")",
+      "La respuesta llega partida en bloques, no en una cadena suelta. Con Opus 5 el primero suele ser de razonamiento, así que coger respuesta.content[0].text a lo bruto revienta. Nos quedamos solo con los bloques de texto y los pegamos."
+    ],
+    [
+      "archivo.write_text(json.dumps({\"texto\": texto}, ensure_ascii=False), encoding=\"utf-8\")",
+      "Se guarda después de recibir la respuesta, nunca antes. Aviso serio: esto deja las respuestas en texto plano en tu disco. Si contienen datos de clientes, esa carpeta pasa a ser un fichero de datos personales y hay que protegerla o cifrarla, no dejarla en el escritorio."
+    ]
+  ],
+  "errors": [
+    [
+      "ModuleNotFoundError: No module named 'anthropic'",
+      "No has instalado la librería, o la has instalado en un Python distinto del que ejecutas. Lanza pip install anthropic en la misma terminal donde corres el script; si usas un entorno virtual, actívalo antes."
+    ],
+    [
+      "KeyError: 'ANTHROPIC_API_KEY'",
+      "La variable de entorno no existe en esta terminal. En Windows PowerShell: $env:ANTHROPIC_API_KEY=\"sk-ant-...\". En Mac o Linux: export ANTHROPIC_API_KEY=\"sk-ant-...\". Se borra al cerrar la terminal, así que repítelo o déjala fija en la configuración del sistema."
+    ],
+    [
+      "FileNotFoundError: [Errno 2] No such file or directory: 'manual.txt'",
+      "Falta el archivo con el texto largo. Créalo en la misma carpeta desde la que lanzas el script y pega dentro tus instrucciones. Con menos de unas 400 palabras el caché no se activará, así que no lo dejes en dos líneas."
+    ],
+    [
+      "[API] escritos: 0 | leídos de caché: 0 | sin caché: 1834",
+      "Se está cobrando todo a precio completo. O el bloque marcado no llega al mínimo de 512 tokens que pide claude-opus-5, o cambia entre llamadas: una fecha, el nombre del usuario o una coma distinta dentro de INSTRUCCIONES rompen el caché entero. Ese bloque tiene que ser idéntico letra por letra."
+    ]
+  ],
+  "adapt": "Cambia manual.txt por tu texto largo real: catálogo, normativa, historial médico, las reglas de tu asistente. Lo que varía en cada llamada (la fecha de hoy, el nombre del cliente) va en el mensaje del usuario, nunca dentro de INSTRUCCIONES, o se cae el caché. Si tus llamadas se separan más de 5 minutos, añade \"ttl\": \"1h\" dentro de cache_control para que el caché dure una hora (escribirlo cuesta el doble, compensa a partir de tres llamadas). El caché local de respuestas no caduca nunca: si tu manual cambia cada semana, borra la carpeta cache_respuestas al publicar la versión nueva; es una operación irreversible, pero solo pierdes respuestas que se pueden volver a pedir. Y si guardas respuestas con datos personales, mueve esa carpeta fuera del proyecto y déjala fuera de Git."
+}

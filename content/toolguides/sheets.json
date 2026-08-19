@@ -1,0 +1,67 @@
+{
+  "id": "sheets",
+  "tool": "googlesheets",
+  "plain": "Es la hoja de cálculo de Google: una tabla que se abre en el navegador y se guarda sola. Para los procesos automáticos la usamos como un archivador de fichas: cada fila es una ficha y cada columna un dato de esa ficha. Un programa puede añadir filas ahí sin que tú tengas nada abierto, y tú las ves desde el móvil un minuto después. Es donde guardas datos mientras no necesites algo más serio.",
+  "account": {
+    "url": "sheets.google.com",
+    "free": "Gratis con una cuenta normal de Gmail: hojas ilimitadas dentro de los 15 GB que compartes con el correo y con Drive. Conectarla a un proceso automático también es gratis, Google no cobra por llamada. Si quieres correo con tu propio dominio, Google Workspace cuesta unos 7 € por persona al mes, pero para el curso no hace falta.",
+    "steps": [
+      ["Crea la hoja", "Escribe sheets.new en la barra del navegador y pulsa intro. Aparece una hoja vacía al momento. Ponle nombre arriba a la izquierda, donde pone \"Hoja de cálculo sin título\". Si no lo haces, dentro de un mes tendrás quince iguales."],
+      ["Escribe las cabeceras en la fila 1", "Una palabra por columna: fecha, email, importe, estado. Sin acentos y sin espacios te ahorra líos luego. Esa primera fila es la que el proceso automático lee para saber dónde va cada dato, así que no la muevas después."],
+      ["Crea un proyecto en console.cloud.google.com", "Es el panel de Google para gente que conecta programas. Arriba a la izquierda hay un desplegable con el nombre del proyecto: púlsalo y elige \"Nuevo proyecto\" (\"New project\"). Ponle un nombre tipo automatizaciones. Tarda unos segundos en crearse."],
+      ["Activa las dos puertas de entrada", "En la barra de búsqueda de arriba escribe \"Google Sheets API\" y pulsa \"Habilitar\" (\"Enable\"). Repite con \"Google Drive API\", que hace falta para que pueda encontrar y listar tus hojas. Si te saltas esto, todo lo siguiente falla."],
+      ["Crea la cuenta de servicio", "Menú lateral → \"IAM y administración\" → \"Cuentas de servicio\" → \"Crear cuenta de servicio\". Ponle un nombre, por ejemplo n8n-bot. Al terminar verás un correo con pinta rara: n8n-bot@automatizaciones-471203.iam.gserviceaccount.com. Cópialo, lo necesitas en el último paso."],
+      ["Descarga la clave", "Entra en esa cuenta → pestaña \"Claves\" (\"Keys\") → \"Agregar clave\" → \"Crear clave nueva\" → formato JSON. Se descarga un archivo a tu carpeta de Descargas. Se descarga UNA sola vez: no hay forma de volver a bajarlo, si lo pierdes toca crear otra clave."],
+      ["Comparte la hoja con ese correo", "Vuelve a la hoja, botón azul \"Compartir\" arriba a la derecha, pega el correo de la cuenta de servicio y dale permiso de \"Editor\". Desmarca \"Notificar a las personas\": no es una persona, no hay nadie leyendo. Sin este paso la conexión falla siempre, y el error no te dirá que es esto."]
+    ],
+    "warning": "El archivo que descargas es la contraseña de esa cuenta de servicio, escrita en texto que se lee abriéndolo con el bloc de notas. Quien lo tenga puede escribir en tus hojas sin pedirte permiso a ti. No lo subas a GitHub, no lo mandes por correo y no lo dejes tirado en Descargas: pega su contenido en n8n y borra el archivo. Si se te escapa, entra en Google Cloud y elimina esa clave desde la pestaña \"Claves\"; borrar el archivo de tu disco no la anula."
+  },
+  "first": [
+    "Copia el identificador de la hoja: es el trozo largo de letras y números que hay en la dirección web, entre /d/ y /edit. Ese es el nombre real que usa el proceso automático para encontrarla.",
+    "En n8n pulsa el \"+\", busca \"Google Sheets\" y añade el nodo.",
+    "En \"Credential to connect with\" elige \"Service Account\", pega el correo de la cuenta de servicio y el contenido entero del archivo descargado en \"Private Key\". Se pega tal cual, con los saltos de línea incluidos.",
+    "Elige la operación \"Append Row\" (añadir fila al final), selecciona tu hoja y la pestaña, y pulsa \"Test step\". Si aparece una fila nueva en la hoja, ya está conectado.",
+    "Cámbialo a \"Append or Update Row\" y pon la columna email en \"Column to match on\": así actualiza la ficha si ese correo ya está, en vez de duplicarlo."
+  ],
+  "words": [
+    ["API", "La puerta por la que un programa entra en otro sin que haya una persona haciendo clic. Google Sheets tiene la suya y hay que abrirla a mano una vez."],
+    ["Cuenta de servicio", "Un usuario que no es una persona: no tiene contraseña ni entra por la pantalla de acceso normal. Existe para que un programa actúe por su cuenta. Tiene su propio correo, y la hoja hay que compartírsela igual que se la compartirías a un compañero."],
+    ["Clave JSON", "El archivo que te descargas al crear esa cuenta. Es su contraseña, guardada en un texto ordenado por parejas de nombre y valor que cualquiera puede leer si lo abre."],
+    ["ID de la hoja", "El trozo largo de letras y números de la dirección web, entre /d/ y /edit. Es la matrícula de esa hoja: dos hojas con el mismo nombre tienen matrículas distintas."],
+    ["Rango", "La forma de decir \"desde esta casilla hasta esta otra\". A1:D50 son las cuatro primeras columnas de las cincuenta primeras filas."],
+    ["Append", "Añadir al final. Escribe una fila nueva debajo de la última que haya, sin tocar nada de lo que ya estaba."],
+    ["Cuota", "El número de veces que puedes llamar a la puerta en un minuto. Google deja unas 60 por minuto y por usuario. Si te pasas, deja de abrir un rato y te devuelve un aviso de \"demasiadas peticiones\"."],
+    ["Sondeo (polling)", "Preguntar cada cierto tiempo \"¿ha cambiado algo?\" en lugar de que te avisen cuando pasa. Es lo que hace n8n con las hojas: mira cada minuto como mínimo, no se entera al instante."]
+  ],
+  "matters": [
+    "Compartir la hoja con el correo de la cuenta de servicio. Es el paso que se salta todo el mundo, y el mensaje que sale (403, \"no tienes permiso\") no menciona ni la hoja ni el correo, así que te pasas media tarde revisando la credencial, que estaba bien.",
+    "Escribir en bloque y no fila a fila. Con unas 60 peticiones por minuto, un bucle que mete 500 filas de una en una se corta a la mitad y te deja la hoja incompleta, sin saber por dónde iba.",
+    "Las operaciones \"Delete Row\" y \"Clear\" borran de verdad y no preguntan. Una hoja no tiene papelera de filas: lo único que te queda es \"Archivo → Historial de versiones\", que recupera la hoja entera tal como estaba hace un rato y se lleva por delante todo lo bueno que haya entrado desde entonces.",
+    "Dos procesos escribiendo a la vez se pisan. Una hoja no sabe hacer cola: si dos flujos añaden fila en el mismo segundo, uno puede machacar al otro y no te enteras. Si eso no puede pasar nunca en tu caso, ya no toca una hoja, toca una base de datos de verdad."
+  ],
+  "ignore": [
+    "Las fórmulas elegantes, los colores y el formato condicional. Si la hoja la rellena un proceso automático, no es un informe que alguien vaya a mirar despacio.",
+    "Google Apps Script. Es otra forma de automatizar, escribiendo dentro de la propia hoja, y no la necesitas mientras montes los flujos por fuera.",
+    "Los roles y permisos finos de Google Cloud. Para escribir en una hoja que has compartido con la cuenta de servicio no hace falta darle ningún rol: basta con el botón \"Compartir\" del archivo."
+  ],
+  "questions": [
+    {
+      "prompt": "Tienes el flujo montado, la credencial guardada sin quejas y al pulsar \"Test step\" sale: The caller does not have permission (403). ¿Qué falta?",
+      "options": [
+        {"text": "Compartir la hoja con el correo de la cuenta de servicio, con permiso de Editor", "correct": true, "why": "Correcto. La credencial solo demuestra quién es; no le da acceso a nada. Para Google ese correo es un usuario más, y una hoja que nadie le ha compartido, para él no existe. El matiz importa: con permiso de Lector podría leer, pero al escribir volvería a fallar."},
+        {"text": "Volver a descargar la clave, que estará caducada", "correct": false, "why": "Es lo primero que piensa todo el mundo, porque el error suena a credencial. Pero las claves de cuenta de servicio no caducan solas, y si la clave estuviera mal el mensaje sería de identidad (401), no de permiso (403). Ese número es la pista."},
+        {"text": "Poner la hoja como \"cualquiera con el enlace\"", "correct": false, "why": "Se cree porque a veces parece funcionar: en lectura, el enlace público deja pasar. Se rompe en dos sitios. Uno, el enlace público en modo lectura no permite escribir, que es justo lo que hace tu flujo. Dos, si lo pones en modo edición para arreglarlo, acabas de dejar tus datos abiertos a cualquiera de internet."}
+      ],
+      "explain": "Una credencial dice quién eres. Un permiso dice qué puedes tocar. Son dos cosas distintas y hay que hacer las dos."
+    },
+    {
+      "prompt": "Tienes 800 contactos y montas un bucle que añade cada uno como fila. Alrededor de la fila 60 el flujo se detiene con \"Quota exceeded\". ¿Qué haces?",
+      "options": [
+        {"text": "Mandar las 800 filas en una sola operación de añadir, en lugar de 800 llamadas", "correct": true, "why": "Sí. El nodo de Google Sheets acepta todas las filas de golpe: una petición en vez de ochocientas. El límite se cuenta en peticiones, no en filas, así que el problema no se retrasa, desaparece."},
+        {"text": "Meter una espera de un segundo entre fila y fila", "correct": false, "why": "Suena razonable porque de hecho terminaría, y por eso mucha gente se queda ahí. Pero tardas trece minutos en algo que dura dos segundos, y durante esos trece minutos cualquier otro flujo tuyo que toque Sheets comparte la misma cuota y se cae también."},
+        {"text": "Pedirle a Google que te suba el límite", "correct": false, "why": "Se puede pedir, y para volúmenes grandes de verdad es lo correcto, por eso no es una tontería. Aquí no encaja: estarías pidiendo permiso para hacer ochocientas veces algo que se hace una sola. Google pregunta para qué lo necesitas, y no tienes respuesta."}
+      ],
+      "explain": "El límite cuenta las veces que llamas a la puerta, no lo que llevas dentro. Llama una vez con mucho, no mil veces con poco."
+    }
+  ]
+}

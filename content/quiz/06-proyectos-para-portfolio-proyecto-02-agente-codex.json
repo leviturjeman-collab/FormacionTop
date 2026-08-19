@@ -1,0 +1,63 @@
+{
+  "categoryId": "06-proyectos-para-portfolio-proyecto-02-agente-codex",
+  "basico": [
+    {
+      "prompt": "Arrancas el proyecto y tu primer encargo a Codex es \"mejora mi proyecto\". Te devuelve treinta archivos cambiados y ya no reconoces tu código.",
+      "options": [
+        { "text": "El encargo no tenía frontera. Un agente de código llena todo el espacio que le dejes: se acota a un archivo y un objetivo que se pueda comprobar", "correct": true, "why": "Correcto. \"Mejora\" no significa nada verificable, así que decide él qué es mejorar: nombres, estructura, formato, dependencias. Con \"en este archivo, haz que la búsqueda no falle cuando el nombre lleve tilde\" el resultado es revisable en dos minutos." },
+        { "text": "Es que el proyecto estaba muy mal y había mucho que arreglar", "correct": false, "why": "Puede ser cierto, y por eso convence. Pero prueba el mismo encargo en un proyecto limpio: también saldrán treinta archivos. El problema está en la petición, no en el código." },
+        { "text": "Hay que usar un modelo más pequeño para que haga menos cosas", "correct": false, "why": "Suena a controlar el alcance bajando la potencia. Lo que consigues es que haga las mismas treinta cosas peor." }
+      ],
+      "explain": "Un encargo sin límites produce un cambio sin límites. El alcance lo pones tú."
+    },
+    {
+      "prompt": "Terminas el proyecto y quieres enseñarlo a alguien que podría contratarte. Tienes que decidir qué le enseñas.",
+      "options": [
+        { "text": "El problema, la decisión que tomaste y cómo comprobaste que funcionaba", "correct": true, "why": "Correcto. El código lo genera cualquiera en veinte minutos y quien te entrevista lo sabe. Lo que no se genera solo es \"elegí una cadena fija en vez de un agente porque los pasos eran siempre los mismos, y lo comprobé con estos cinco casos\"." },
+        { "text": "El número de líneas y lo complejo que quedó", "correct": false, "why": "Se cree porque el volumen parece esfuerzo. Se rompe en la práctica: nadie lo lee, y lo complejo sin justificar da mala impresión, no buena." },
+        { "text": "La conversación entera con el agente, para que se vea el proceso", "correct": false, "why": "Parece lo más transparente y honesto, y la intención es buena. Pero son ochenta páginas de idas y venidas: nadie las abre, y si las abre lo que ve son tus tanteos, no tu criterio." }
+      ],
+      "explain": "Lo que se enseña de un proyecto no es el código: es la decisión y la comprobación."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Codex ha hecho el arreglo y te dice que los tests pasan. Miras el proyecto: no había tests.",
+      "options": [
+        { "text": "Pídele que escriba primero la prueba que falla, y después el arreglo. Si la prueba no ha fallado nunca, no demuestra nada", "correct": true, "why": "Correcto, y es la única forma de que un test signifique algo. Una prueba escrita después del arreglo tiende a comprobar lo que el código hace, no lo que tú querías que hiciera: siempre pasa, y por eso siempre está verde." },
+        { "text": "Creerle: si dice que pasan, algo habrá ejecutado", "correct": false, "why": "A veces sí ejecuta, así que la afirmación no es siempre falsa y por eso engaña. Pero un agente de código describe lo que espera que ocurra tanto como lo que ocurrió: la salida real la miras tú." },
+        { "text": "Pedirle que añada tests ahora, al final", "correct": false, "why": "Es mejor que nada y mucha gente hace exactamente eso. Se rompe porque unos tests escritos mirando el código ya arreglado validan ese código, incluido el error si lo tiene." }
+      ],
+      "explain": "Un test que nunca ha estado en rojo no ha demostrado nada."
+    },
+    {
+      "prompt": "Llevas tres encargos seguidos a Codex sin usar control de versiones (el sistema que guarda una foto del proyecto cada vez que confirmas un cambio). El proyecto ya no arranca y no sabes qué se tocó.",
+      "options": [
+        { "text": "Sin control de versiones no hay marcha atrás. Una confirmación antes de cada encargo convierte \"lo he roto todo\" en \"vuelvo al punto anterior\"", "correct": true, "why": "Correcto, y es lo que hace que trabajar con un agente de código sea soportable: puedes dejarle intentar cosas agresivas porque la vuelta atrás cuesta un comando. Sin eso, cada encargo es una apuesta." },
+        { "text": "Pedirle al agente que deshaga sus cambios", "correct": false, "why": "Es lo natural: lo hizo él, que lo deshaga. Se rompe porque no lleva un registro fiable de lo que tocó; lo que llama \"deshacer\" es reconstruir de memoria, y a menudo añade cambios nuevos." },
+        { "text": "Copiar la carpeta entera antes de cada encargo", "correct": false, "why": "Es mejor que nada y funciona la primera vez. Se rompe a la tercera copia, cuando tienes proyecto, proyecto-copia y proyecto-copia-buena y no sabes cuál era cuál." }
+      ],
+      "explain": "Con un agente de código, guardar antes de cada encargo no es orden: es el botón de deshacer."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tu proyecto son cuarenta archivos. Para que el agente \"tenga contexto\", le pasas el repositorio entero en cada petición.",
+      "options": [
+        { "text": "Pagas los cuarenta archivos en cada vuelta y encima empeora: con tanto delante, lo relevante se diluye", "correct": true, "why": "Correcto, y falla en los dos ejes a la vez. En coste, porque el contexto se factura entero cada vez y un agente da varias vueltas. En precisión, porque el modelo tiene que encontrar la aguja entre cuarenta pajares que tú mismo le has puesto." },
+        { "text": "Es lo correcto: cuanto más contexto tenga, mejor responderá", "correct": false, "why": "Es la intuición general y por eso es la respuesta más elegida. Se rompe justo donde parecía más sólida: la precisión baja cuando la información relevante queda enterrada en ruido." },
+        { "text": "Da igual, la caché de contexto hace que la repetición sea gratis", "correct": false, "why": "Se cree si has leído sobre caché de contexto, que existe y ayuda de verdad. Pero abarata la repetición, no la elimina, y solo funciona si el principio del mensaje no cambia entre llamadas, que en un agente de código cambia constantemente." }
+      ],
+      "explain": "Dale lo que toca la tarea. Más contexto no es más precisión: pasado un punto, es menos."
+    },
+    {
+      "prompt": "Enseñas el proyecto en una entrevista y te preguntan qué harías distinto si esto fuera a producción.",
+      "options": [
+        { "text": "Decir dónde falla: qué pasa si el agente se equivoca, qué no está probado y cuánto costaría al mes", "correct": true, "why": "Correcto, y es la respuesta que separa a alguien que siguió un tutorial de alguien que entiende el sistema. Nombrar los límites de tu propio trabajo es la señal más difícil de fingir." },
+        { "text": "Explicar la arquitectura con detalle, pieza por pieza", "correct": false, "why": "Hace falta y hay que saber hacerlo, así que no es mala respuesta. Pero no es la que te han pedido: te han preguntado por los límites, no por el diseño." },
+        { "text": "Decir que en producción usarías el modelo más potente disponible", "correct": false, "why": "Suena a rigor y a no escatimar. Es una respuesta vacía: no dice qué se rompe, ni por qué, ni qué pasaría con la factura." }
+      ],
+      "explain": "En un proyecto de portfolio, saber dónde se rompe vale más que enseñar que funciona."
+    }
+  ]
+}

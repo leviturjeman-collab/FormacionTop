@@ -1,0 +1,63 @@
+{
+  "categoryId": "27-assets-ejecutables-y-demos-infraestructura-codigo",
+  "basico": [
+    {
+      "prompt": "Sigues las instrucciones, pegas el bloque de instalación y te dicen: «ahora abre localhost:5678». No sabes qué acabas de abrir.",
+      "options": [
+        { "text": "Es tu propio ordenador, puerta 5678: ahí está el programa que acabas de levantar, sin salir a internet", "correct": true, "why": "Correcto. «localhost» siempre significa «esta máquina», y el número de después es la puerta concreta por la que atiende ese programa. Si te quedas sin internet, sigue funcionando." },
+        { "text": "Es una dirección dentro de la web de n8n", "correct": false, "why": "Se escribe en la misma barra que una web, así que la confusión es lógica. Se comprueba en diez segundos: desconecta el wifi y verás que sigue abriendo." },
+        { "text": "Es la dirección del servidor de tu empresa", "correct": false, "why": "Un servidor tendría un nombre o una IP propia. «localhost» nunca sale de tu ordenador: es la palabra reservada para decir «aquí»." }
+      ],
+      "explain": "localhost:5678 significa «mi ordenador, puerta 5678». No hay internet de por medio."
+    },
+    {
+      "prompt": "Apagas el contenedor al terminar el día. Al volver a arrancarlo por la mañana, tus flujos han desaparecido.",
+      "options": [
+        { "text": "Faltaba declarar un volumen: sin él, los datos viven dentro del contenedor y se van con él", "correct": true, "why": "Correcto. Un contenedor es una copia en marcha de una plantilla, y al apagarlo vuelve a la plantilla. El volumen es un almacén aparte que sobrevive, y se declara una vez en el archivo de configuración." },
+        { "text": "Hay que exportar los flujos cada tarde antes de apagar", "correct": false, "why": "Es un apaño que funciona y mucha gente vive así durante meses. El volumen lo resuelve una sola vez y no depende de que te acuerdes un viernes a las ocho." },
+        { "text": "El contenedor se ha corrompido por apagarlo mal", "correct": false, "why": "Ocurre con otras cosas y suena plausible cuando pierdes datos. Aquí no hay nada roto: se ha comportado exactamente como está diseñado." }
+      ],
+      "explain": "Sin volumen, todo lo que escribas dentro de un contenedor se va cuando lo apagues."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tu compañero clona el repositorio, ejecuta el mismo comando que tú y le falla el arranque. En tu máquina va perfecto.",
+      "options": [
+        { "text": "Hay algo que tú tienes y no está declarado: se compara qué variables usa el archivo de configuración con las que él tiene definidas", "correct": true, "why": "Correcto, y es el fallo clásico. En tu equipo esa variable existe desde hace meses y ya no te acuerdas de haberla puesto. Si no está en el ejemplo de variables que va en el repositorio, para él no existe." },
+        { "text": "Tiene otra versión de Docker", "correct": false, "why": "Pasa y merece comprobarse. Suele dar un error de sintaxis al leer el archivo, no un servicio que arranca y se cae." },
+        { "text": "Que le pases tu archivo de variables y listo", "correct": false, "why": "Le arranca hoy en cinco segundos, por eso es tan tentador. Le estás pasando tus claves, y ese archivo es precisamente el único que nunca se comparte." }
+      ],
+      "explain": "«En mi máquina funciona» casi siempre significa: hay una variable tuya que no está declarada."
+    },
+    {
+      "prompt": "Quieres saber si tu montaje aguanta que se caiga la base de datos mientras un flujo está a mitad.",
+      "options": [
+        { "text": "Se apaga a propósito, en local y con todo controlado, para ver qué hace el flujo mientras no está", "correct": true, "why": "Correcto. Es el simulacro de incendio: prendes fuego tú, con el extintor en la mano, y así descubres que la salida de emergencia estaba cerrada con llave. Probar solo el caso bueno no es probar." },
+        { "text": "Revisar los registros de las últimas semanas por si ya ha pasado", "correct": false, "why": "Es información útil y gratis, así que mírala. Pero si no ha pasado todavía, no has aprendido nada sobre si aguanta." },
+        { "text": "Confiar en que Docker la levanta sola si se cae", "correct": false, "why": "La reinicia si se lo pides, y eso es real. Lo que sigues sin saber es qué hizo tu flujo durante los 40 segundos en que no había base: si perdió registros, si los duplicó o si se paró limpio." }
+      ],
+      "explain": "Probar no es ver que funciona. Es romperlo tú, a propósito, con el extintor a mano."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tienes que decidir para un cliente entre n8n en la nube, que se paga, y n8n en una máquina con Docker, que en licencia es gratis.",
+      "options": [
+        { "text": "En local no pagas licencia y no dependes de nadie; a cambio el flujo solo corre si esa máquina está encendida, y las actualizaciones y las copias son tuyas", "correct": true, "why": "Correcto: es una decisión de dónde pones el trabajo, no de cuánto pagas. Un flujo que debe atender un formulario a las tres de la mañana necesita algo encendido a las tres de la mañana." },
+        { "text": "Local siempre, que es gratis", "correct": false, "why": "La mitad es cierta y es la mitad que se ve en la factura. Gratis en licencia no es gratis en horas: actualizar, hacer copias y levantarlo cuando se cae también son dinero, solo que tuyo." },
+        { "text": "Nube siempre, que es lo profesional", "correct": false, "why": "Te quita mantenimiento de verdad y para muchos casos es la respuesta correcta. También saca los datos de la máquina del cliente, que es exactamente lo que algunos clientes no pueden permitirse." }
+      ],
+      "explain": "Local o nube no es gratis contra caro. Es quién se come el mantenimiento y dónde pueden estar los datos."
+    },
+    {
+      "prompt": "Tu configuración levanta la base de datos, un almacén en memoria y n8n. Para conectarte cómodo desde casa, publicas el puerto de la base de datos al exterior.",
+      "options": [
+        { "text": "Exponer la base de datos a internet es abrirla a todo el que escanee ese puerto: se deja dentro de la red del propio montaje y se accede por un túnel", "correct": true, "why": "Correcto, y esto es irreversible en el mal sentido: si alguien entra y se lleva los datos, no hay vuelta atrás. Los servicios que solo se hablan entre ellos no necesitan puerta a la calle." },
+        { "text": "Con una contraseña larga y rara es suficiente", "correct": false, "why": "Sube el listón, y por eso mucha gente se queda ahí. No cierra la puerta: los escaneos automáticos prueban usuarios y contraseñas por defecto a todas horas, y basta con que un servicio traiga uno." },
+        { "text": "Cambiar el puerto a un número raro para que no lo encuentren", "correct": false, "why": "Parece que lo escondes y da sensación de seguridad. Los escaneos recorren todos los puertos, no solo los famosos: tardan unos minutos más." }
+      ],
+      "explain": "Una base de datos con puerto abierto a internet la encuentran en horas. Se deja dentro y se entra por túnel."
+    }
+  ]
+}

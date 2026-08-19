@@ -1,0 +1,132 @@
+{
+  "id": "slack",
+  "tool": "slack",
+  "plain": "Slack es el chat del trabajo. En vez de un grupo enorme donde se mezcla todo, tienes salas separadas por tema: una para pedidos, otra para facturas, otra para el café. Imagina una oficina con varias mesas y te sientas en la que te interesa. Lo que lo hace distinto para nosotros es que también tiene un buzón por el que tus procesos automáticos pueden dejar mensajes solos, sin que nadie los escriba a mano.",
+  "account": {
+    "url": "slack.com",
+    "free": "Sí, hay plan gratis y te sirve de sobra para esto: personas ilimitadas, todos los canales que quieras y los avisos automáticos funcionan sin pagar un euro. Dos límites que notarás: solo puedes leer los mensajes de los últimos 90 días (los viejos no se borran, pero quedan escondidos hasta que pagues) y puedes conectar 10 programas externos como máximo; tu aviso automático cuenta como uno de esos diez. El plan de pago (Pro) ronda los 7-9 € por persona y mes, más barato si pagas el año entero de golpe.",
+    "steps": [
+      [
+        "Crea tu cuenta",
+        "Entra en slack.com y pulsa el botón morado de arriba a la derecha, PROBAR GRATIS. Pones tu correo, te llega un código de 6 cifras y lo escribes. No hace falta contraseña al principio: Slack te deja entrar con el código."
+      ],
+      [
+        "Monta el espacio de trabajo",
+        "Te aparece Crear un espacio de trabajo. Un espacio de trabajo es la casa de tu equipo: dentro viven todos los canales y todas las personas. Ponle el nombre real del negocio, por ejemplo Panadería Ruiz. Slack te crea solo un canal llamado #general."
+      ],
+      [
+        "Crea un canal solo para los avisos",
+        "En la columna de la izquierda, junto a la palabra Canales, hay un +. Pulsa Crear un canal y llámalo #avisos-facturas o #avisos-pedidos. Que sea un canal aparte, no #general: así quien no quiera los avisos se sale de ese canal y sigue leyendo el resto."
+      ],
+      [
+        "Crea la app",
+        "Ahora vete a api.slack.com/apps, que es la trastienda de Slack para programas. Pulsa Create New App (crear app nueva) y elige From scratch (desde cero, sin plantilla). Te pide dos cosas: un nombre, por ejemplo Robot Facturas, y en qué espacio de trabajo vive. Pulsa Create App."
+      ],
+      [
+        "Enciende el buzón de entrada",
+        "En el menú de la izquierda pulsa Incoming Webhooks (avisos entrantes). Verás un interruptor gris que pone Activate Incoming Webhooks. Dale y que se ponga en On. Hasta que no lo enciendas, el resto de la pantalla está vacía."
+      ],
+      [
+        "Elige el canal y copia la dirección",
+        "Baja del todo y pulsa Add New Webhook to Workspace. Sale un desplegable con la lista de canales: elige #avisos-facturas y pulsa Allow (permitir). Vuelves atrás y ahora aparece una dirección larguísima que empieza por https://hooks.slack.com/services/. A su derecha tienes el botón Copy. Esa dirección es lo único que necesita tu automatización."
+      ],
+      [
+        "Manda el mensaje de prueba",
+        "Justo debajo, Slack te enseña un ejemplo listo para copiar (Sample curl request). Si usas una herramienta de automatización, pega la dirección en el paso de tipo Slack o HTTP y manda un texto cualquiera. En dos segundos debe aparecer en #avisos-facturas. Si no aparece, casi siempre es que copiaste la dirección a medias."
+      ]
+    ],
+    "warning": "Esa dirección que acabas de copiar es una contraseña disfrazada de enlace. Cualquiera que la tenga puede escribir en tu canal, con el nombre de tu robot, sin pedirle permiso a nadie. No la pegues en un WhatsApp, ni en un documento compartido, ni en una captura de pantalla. Y ojo: no se puede cambiar. Si se filtra, la única salida es borrar ese aviso entrante y crear otro, y ese borrado es inmediato e irreversible: todo lo que usara la dirección vieja deja de publicar en ese mismo instante."
+  },
+  "first": [
+    "Crea un canal exclusivo para los avisos del robot, por ejemplo #avisos-facturas, y no dejes que nadie converse ahí dentro.",
+    "Manda un mensaje de prueba desde tu automatización y comprueba con tus ojos que llega al canal correcto.",
+    "Reescribe ese mensaje pensando en alguien mirando el móvil de pie: la primera línea tiene que decir qué ha pasado y qué hay que hacer.",
+    "Invita solo a las dos o tres personas que de verdad pueden actuar sobre ese aviso, no al equipo entero.",
+    "Mientras pruebas, entra en el canal, pulsa su nombre arriba, Notificaciones, y déjalo en Solo menciones, para no reventarte el móvil con tus propias pruebas."
+  ],
+  "words": [
+    [
+      "Espacio de trabajo",
+      "La casa entera de tu equipo en Slack. Dentro viven todas las salas y todas las personas. Si trabajas en dos sitios distintos, tendrás dos casas separadas que no se ven entre sí."
+    ],
+    [
+      "Canal",
+      "Una sala de conversación con un tema. Se escriben con almohadilla delante, como #avisos-facturas. Puedes entrar y salir de una sala cuando quieras sin perder el resto."
+    ],
+    [
+      "App",
+      "Un programa que le presentas a Slack para que tenga permiso a hacer algo, normalmente escribir mensajes. Aunque suena a aplicación de móvil, aquí es solo una ficha con un nombre y unos permisos."
+    ],
+    [
+      "Aviso entrante (incoming webhook)",
+      "Una dirección de internet secreta que Slack te da y que funciona como un buzón: quien la conozca puede dejar un mensaje en un canal concreto. No sirve para leer nada, solo para escribir, y siempre en ese único canal."
+    ],
+    [
+      "JSON",
+      "La forma ordenada en que un programa le pasa datos a otro. Es texto entre llaves con parejas de etiqueta y valor. Para lo que vas a hacer, casi siempre te basta con una sola pareja: texto y el mensaje que quieres que salga."
+    ],
+    [
+      "Hilo",
+      "Las respuestas que cuelgan de un mensaje concreto en vez de ir soltando líneas nuevas. Se abren pulsando Responder en hilo. Los avisos automáticos no lo usan por defecto: cada aviso cae como mensaje suelto."
+    ],
+    [
+      "Límite de ritmo",
+      "El tope de mensajes por segundo que Slack te acepta por cada buzón: uno por segundo. Si tu automatización intenta soltar 300 avisos de golpe, Slack empieza a rechazarlos y los pierdes."
+    ]
+  ],
+  "matters": [
+    "Un canal dedicado solo a lo automático. Si mandas los avisos a #general, tus compañeros acaban silenciando #general, y con él se pierden también los mensajes de personas. Un canal mal elegido no molesta a un canal: mata dos.",
+    "El umbral: avisa solo de lo que exige que alguien haga algo. Si el robot manda 60 mensajes al día diciendo Pedido procesado correctamente, en una semana está silenciado y el día que mande Pago rechazado no lo lee nadie. Regla dura: si al leerlo nadie va a mover un dedo, no lo mandes.",
+    "La primera línea. En el móvil se ven dos líneas y media. Factura de 4.812 € de Suministros Vega lleva 3 días sin aprobar se entiende de un vistazo; Proceso completado con éxito obliga a abrir Slack, pinchar y buscar. Lo segundo se ignora a la tercera vez.",
+    "La dirección del buzón es un secreto que no caduca ni se renueva sola. Si acaba en un correo reenviado o en una captura de pantalla, cualquiera puede publicar avisos falsos con la cara de tu robot: Transferencia autorizada, adelante. Y tu equipo se lo va a creer, porque lleva meses creyéndoselo."
+  ],
+  "ignore": [
+    "Las huddles, las videollamadas y los lienzos de Slack. Es la parte de reuniones del producto y no toca en nada a lo que estás montando; ya las descubrirás el día que las necesites.",
+    "Block Kit, el constructor de mensajes con botones, columnas y colores. Un texto plano bien escrito funciona igual de bien durante meses, y el constructor te va a comer una tarde entera para ganar un borde de color.",
+    "El directorio con cientos de aplicaciones (Drive, Zoom, Jira y compañía). Instala una cuando alguien del equipo te la pida por un motivo concreto, no por curiosidad: en el plan gratis solo caben diez."
+  ],
+  "questions": [
+    {
+      "prompt": "Montaste el aviso hace una semana apuntando a #general. El robot manda unos 60 mensajes al día del tipo Pedido 8842 procesado correctamente. Hoy te dice una compañera que ha silenciado #general porque no aguantaba el móvil, y ves que otras dos también lo han silenciado.",
+      "options": [
+        {
+          "text": "Creas un canal #avisos-pedidos, generas un buzón nuevo apuntando a ese canal, cambias la dirección en la automatización y además la ajustas para que solo escriba cuando un pedido falla o pasa de 500 €.",
+          "correct": true,
+          "why": "Correcta porque arregla los dos problemas a la vez, y hay dos: el sitio equivocado y el volumen. El matiz que casi todo el mundo se salta es el segundo: si te llevas los 60 mensajes diarios al canal nuevo, el canal nuevo estará silenciado dentro de quince días y habrás repetido el error con otro nombre. Y sí, hace falta un buzón nuevo: cada buzón nace atado a su canal."
+        },
+        {
+          "text": "Entras en la pantalla de la app y cambias el canal de destino del buzón que ya tienes, de #general a #avisos-pedidos.",
+          "correct": false,
+          "why": "Se cree porque en esa pantalla ves el nombre del canal escrito justo al lado de la dirección, así que parece un campo editable. No lo es: no hay ningún botón para cambiarlo, el canal se decide en el momento de crear el buzón y se queda ahí de por vida. Y aunque existiera ese botón, seguirías soltando 60 mensajes al día, que es lo que de verdad te ha quemado el canal."
+        },
+        {
+          "text": "Dejas todo como está pero añades @channel a cada mensaje, para asegurarte de que esta vez sí lo leen.",
+          "correct": false,
+          "why": "Es la reacción instintiva cuando notas que no te hacen caso: subir el volumen. El problema es que @channel salta al móvil de todas las personas del canal, también a las 23:40 de un sábado. Un mensaje que a nadie le importa no se vuelve importante por sonar más fuerte: lo que consigues es que te silencien más rápido o que un administrador eche a tu robot del canal."
+        }
+      ],
+      "explain": "Un aviso que nadie va a atender no es un aviso: es ruido con permiso para sonar."
+    },
+    {
+      "prompt": "Para que Marta terminara de configurar la automatización, le pasaste la dirección del buzón por el grupo de WhatsApp del trabajo, donde hay catorce personas y dos proveedores. Dos días después aparece en #avisos-facturas un mensaje que tú no has programado: Transferencia a proveedor autorizada, proceder.",
+      "options": [
+        {
+          "text": "Entras en api.slack.com/apps, borras ese buzón, creas uno nuevo y pegas la dirección nueva en la automatización.",
+          "correct": true,
+          "why": "Correcta porque en un buzón de estos la dirección ES la credencial: no hay contraseña que cambiar por detrás. Borrarlo corta el acceso al instante, para el intruso y para ti. El matiz importante: entre el borrado y el momento en que pegas la dirección nueva, tu automatización no publica nada, así que hazlo con la herramienta de automatización ya abierta y no un viernes a las ocho."
+        },
+        {
+          "text": "Cambias la contraseña de tu cuenta de Slack y cierras la sesión en todos los dispositivos.",
+          "correct": false,
+          "why": "Suena a la respuesta de manual ante cualquier filtración, y como higiene general no está mal. Pero el buzón no cuelga de tu cuenta ni de tu sesión: es una dirección independiente que funciona desde cualquier ordenador del mundo mientras exista. Puedes cambiar la contraseña diez veces y los mensajes falsos seguirán entrando igual."
+        },
+        {
+          "text": "Conviertes #avisos-facturas en canal privado y sacas de él a todo el que no sea del equipo.",
+          "correct": false,
+          "why": "Parece que estás cerrando la puerta, y para las personas es cierto. Pero el buzón no entra por la puerta: entra por la tubería que tú mismo le instalaste a ese canal, y esa tubería sigue funcionando aunque el canal sea privado. Verías exactamente los mismos mensajes falsos, ahora con menos testigos para avisarte."
+        }
+      ],
+      "explain": "La dirección de un buzón no se cambia: se tira y se hace otra."
+    }
+  ]
+}

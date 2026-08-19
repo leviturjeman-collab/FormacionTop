@@ -1,0 +1,74 @@
+{
+  "id": "lotes",
+  "match": "lote|lotes|batch|masivo|miles de|rate.?limit|l[ií]mite de peticiones|429|csv|concurren",
+  "stages": [
+    "automatizacion",
+    "calidad"
+  ],
+  "tools": [
+    "python"
+  ],
+  "title": "Procesa miles de filas sin que la API te corte",
+  "what": "Recorre un CSV de miles de filas, manda cada una a Claude repartiendo las peticiones en el tiempo y guarda el resultado según sale.",
+  "why": "Si sueltas 5.000 peticiones de golpe, la API te devuelve error 429 (demasiadas peticiones) y el programa muere a mitad. Y si guardabas todo al final, pierdes las 3.000 que ya habías pagado. Este código pone un freno al ritmo de envío, reintenta lo que falla y escribe en disco fila a fila, así que puedes cortarlo y relanzarlo sin repetir trabajo.",
+  "lang": "python",
+  "install": "pip install anthropic",
+  "code": "import csv, os, threading, time\nfrom concurrent.futures import ThreadPoolExecutor\nfrom anthropic import Anthropic, RateLimitError\n\ncliente = Anthropic(api_key=os.environ[\"ANTHROPIC_API_KEY\"])\nENTRADA, SALIDA = \"comentarios.csv\", \"clasificados.csv\"\nPETICIONES_POR_MINUTO = 50          # tu limite real esta en console.anthropic.com\nHILOS = 8\nINSTRUCCION = \"Clasifica el comentario. Responde solo POSITIVO, NEGATIVO o NEUTRO.\"\n_intervalo, _turno, _libre_en = 60 / PETICIONES_POR_MINUTO, threading.Lock(), 0.0\n\ndef esperar_turno():\n    global _libre_en                # reparte las peticiones: una cada _intervalo segundos\n    with _turno:\n        ahora = time.monotonic()\n        _libre_en = max(ahora, _libre_en)\n        espera = _libre_en - ahora\n        _libre_en += _intervalo\n    time.sleep(espera)\n\ndef clasificar(fila):\n    for intento in range(5):\n        esperar_turno()\n        try:\n            r = cliente.messages.create(\n                model=\"claude-opus-5\", max_tokens=200,\n                output_config={\"effort\": \"low\"}, system=INSTRUCCION,\n                messages=[{\"role\": \"user\", \"content\": fila[\"texto\"]}])\n            if r.stop_reason == \"refusal\":\n                return fila[\"id\"], \"REVISAR\"\n            return fila[\"id\"], \"\".join(b.text for b in r.content if b.type == \"text\").strip()\n        except RateLimitError:\n            time.sleep(2 ** intento)          # espera 1s, 2s, 4s, 8s y 16s\n    return fila[\"id\"], \"ERROR\"\n\nwith open(ENTRADA, encoding=\"utf-8\") as f:\n    filas = list(csv.DictReader(f))\nhechos = set()\nif os.path.exists(SALIDA):\n    with open(SALIDA, encoding=\"utf-8\") as f:\n        hechos = {fila[\"id\"] for fila in csv.DictReader(f)}\npendientes = [fila for fila in filas if fila[\"id\"] not in hechos]\nprint(f\"Ya hechos: {len(hechos)}. Pendientes: {len(pendientes)}\")\n\nwith open(SALIDA, \"a\", newline=\"\", encoding=\"utf-8\") as f:\n    escritor = csv.writer(f)\n    if not hechos:\n        escritor.writerow([\"id\", \"etiqueta\"])\n    with ThreadPoolExecutor(max_workers=HILOS) as pool:\n        for n, (ident, etiqueta) in enumerate(pool.map(clasificar, pendientes), 1):\n            escritor.writerow([ident, etiqueta])\n            f.flush()                         # graba ya: si se corta, no pierdes lo hecho\n            if n % 50 == 0:\n                print(f\"{n}/{len(pendientes)}\")\nprint(\"Terminado ->\", SALIDA)",
+  "lines": [
+    [
+      "cliente = Anthropic(api_key=os.environ[\"ANTHROPIC_API_KEY\"])",
+      "La clave sale de una variable de entorno (un dato guardado en tu ordenador, fuera del archivo), nunca escrita aquí. Si la pegas en el código y subes el proyecto a GitHub, cualquiera puede gastar tu saldo. En Windows: setx ANTHROPIC_API_KEY sk-ant-... y luego abre una terminal nueva."
+    ],
+    [
+      "PETICIONES_POR_MINUTO = 50",
+      "Este es el freno. Anthropic te asigna un máximo de peticiones por minuto según tu nivel de cuenta; lo ves en console.anthropic.com, apartado Limits. Pon un número por debajo del tuyo (si tu límite son 60, pon 50) para dejar margen."
+    ],
+    [
+      "_libre_en = max(ahora, _libre_en)",
+      "El truco del reparto: en vez de dormir un rato después de cada petición, se apunta el instante en que puede salir la siguiente. Cada hilo coge su turno, suma el intervalo y deja apuntado el turno del de detrás. Así los 8 hilos trabajan a la vez pero el ritmo total nunca supera el límite."
+    ],
+    [
+      "except RateLimitError:",
+      "El SDK de Anthropic (la librería que instalas con pip) ya reintenta dos veces solo cuando ve un 429. Este bloque es la red de seguridad para cuando esas dos no bastan: solo entra si la cosa está muy saturada."
+    ],
+    [
+      "time.sleep(2 ** intento)",
+      "Espera creciente: 1, 2, 4, 8 y 16 segundos. Reintentar al instante es golpear a una API que ya te está diciendo que pares, y tardas más en salir del atasco."
+    ],
+    [
+      "output_config={\"effort\": \"low\"}",
+      "Clasificar un comentario en tres categorías no necesita que el modelo se lo piense mucho. Con effort low razona menos, responde antes y gastas menos tokens. Para tareas de juicio fino (resumir un contrato, detectar contradicciones) súbelo a high."
+    ],
+    [
+      "\"\".join(b.text for b in r.content if b.type == \"text\")",
+      "La respuesta no viene en un único trozo: puede traer bloques de razonamiento antes del texto. Coger r.content[0].text a ciegas revienta el día que el primer bloque no sea texto. Filtrando por tipo funciona siempre."
+    ],
+    [
+      "hechos = {fila[\"id\"] for fila in csv.DictReader(f)}",
+      "Antes de empezar lee lo que ya está clasificado y se salta esas filas. Es lo que convierte un proceso de dos horas en algo que puedes parar con Ctrl+C, cerrar el portátil y retomar mañana sin pagar dos veces."
+    ],
+    [
+      "f.flush()",
+      "Python guarda lo escrito en memoria y lo vuelca al archivo cuando le viene bien. Con flush le obligas a escribirlo ya. Si se va la luz en la fila 3.000, en el CSV están las 2.999 anteriores."
+    ]
+  ],
+  "errors": [
+    [
+      "KeyError: 'ANTHROPIC_API_KEY'",
+      "No existe la variable de entorno con tu clave. Defínela y abre una terminal nueva (la ventana que ya tenías abierta no se entera del cambio). Windows: setx ANTHROPIC_API_KEY sk-ant-... / Mac y Linux: export ANTHROPIC_API_KEY=sk-ant-..."
+    ],
+    [
+      "anthropic.RateLimitError: Error code: 429 - {'type': 'error', 'error': {'type': 'rate_limit_error', 'message': 'Number of requests has exceeded your per-minute rate limit.'}}",
+      "Sigues yendo demasiado rápido pese al freno. Baja PETICIONES_POR_MINUTO de 50 a 25 y HILOS de 8 a 4. Si sale nada más arrancar, el número que has puesto no coincide con tu límite real: míralo en console.anthropic.com."
+    ],
+    [
+      "KeyError: 'texto'",
+      "Tu CSV no tiene ninguna columna llamada texto. Abre comentarios.csv, mira cómo se llama de verdad en la primera línea (comentario, mensaje, opinion...) y cambia fila[\"texto\"] por ese nombre. Lo mismo con fila[\"id\"]."
+    ],
+    [
+      "AttributeError: 'ThinkingBlock' object has no attribute 'text'",
+      "Sale si sustituyes la línea del join por r.content[0].text. El primer bloque de la respuesta era razonamiento, no texto. Vuelve a la versión con el filtro if b.type == \"text\"."
+    ]
+  ],
+  "adapt": "Cambia INSTRUCCION por lo que necesites (extraer el nombre de una empresa, puntuar de 1 a 5, detectar el idioma) y los nombres de columna fila[\"texto\"] y fila[\"id\"] por los de tu CSV. Ajusta PETICIONES_POR_MINUTO a tu límite real y HILOS entre 4 y 16. Cuesta dinero: con claude-opus-5, 5.000 comentarios cortos salen por unos 10-12 dólares (5 dólares por millón de tokens de entrada, 25 por millón de salida) y la API se paga siempre por uso, no hay plan gratis. Prueba primero con 20 filas añadiendo pendientes = pendientes[:20] y mira el gasto real en console.anthropic.com antes de soltar el CSV entero. Si las etiquetas salen vacías, sube max_tokens a 500."
+}

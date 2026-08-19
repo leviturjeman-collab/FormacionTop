@@ -1,0 +1,63 @@
+{
+  "categoryId": "06-proyectos-para-portfolio-proyecto-04-sistema-rag",
+  "basico": [
+    {
+      "prompt": "Tienes 300 PDFs con el manual interno de tu empresa. Un compañero te dice: «súbelos al asistente y ya se los sabrá». ¿Qué pasa de verdad cuando montas esto?",
+      "options": [
+        { "text": "El modelo no aprende nada. Lo que montas es un buscador que, antes de cada respuesta, saca los tres fragmentos que hablan de tu pregunta y se los pone delante", "correct": true, "why": "Eso es RAG. El modelo sigue sin saber nada de tu empresa: simplemente tiene la ficha encima de la mesa en el momento de responder. Por eso puedes corregir un PDF por la mañana y la respuesta cambia por la tarde, sin tocar el modelo." },
+        { "text": "Al subir los documentos el modelo los memoriza y a partir de ahí forman parte de lo que sabe", "correct": false, "why": "Es lo que parece cuando funciona bien, y por eso casi todo el mundo lo cree al principio. Se rompe en cuanto actualizas un documento: si de verdad estuviera memorizado, tendrías que rehacer el modelo entero cada vez que cambia una línea." },
+        { "text": "Hay que hacer un ajuste fino (reentrenar el modelo con tus datos) para que conozca los manuales", "correct": false, "why": "El ajuste fino sirve para fijar formato o estilo: que conteste siempre en fichas de tres líneas, por ejemplo. Para información que cambia es la herramienta equivocada, porque cada revisión del manual te obligaría a reentrenar." }
+      ],
+      "explain": "RAG no le enseña nada al modelo. Le pone el texto delante justo antes de responder."
+    },
+    {
+      "prompt": "Estás probando un buscador sobre la documentación de tu empresa. Con 3 fragmentos recuperados contesta bien. Subes a 15 «para que tenga más información» y empieza a contestar peor.",
+      "options": [
+        { "text": "Es lo esperable: los 12 fragmentos de más son los que menos se parecen a la pregunta, y meten ruido entre lo que importa y lo que no", "correct": true, "why": "El buscador te devuelve los trozos ordenados por parecido. A partir del tercero o el cuarto ya estás cogiendo material que solo roza el tema. Tres suele ir mejor que diez, y además sale más barato: cada fragmento que añades se paga en todas y cada una de las consultas." },
+        { "text": "Falta potencia. Con un modelo mayor los 15 fragmentos se aprovecharían bien", "correct": false, "why": "Un modelo mayor aguanta más texto de golpe, y por eso suena razonable. Pero el problema no es la capacidad: es que le has dado 12 trozos que no responden a la pregunta. Con más presupuesto tendrías el mismo despiste, más caro." },
+        { "text": "Los documentos están mal partidos y por eso al subir a 15 empeora", "correct": false, "why": "Partir mal los documentos es causa de muchísimos fallos, así que la sospecha es buena. Aquí no encaja: el mismo troceado funcionaba con 3. Lo único que has cambiado es cuántos coges." }
+      ],
+      "explain": "Recuperar más no es recuperar mejor. Cada fragmento de sobra es ruido que pagas dos veces: en calidad y en factura."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Ya tienes el buscador funcionando sobre los documentos de personal. Preguntas por la política de vacaciones y te contesta, muy convencido, «25 días laborables». Revisas: en ningún documento pone eso.",
+      "options": [
+        { "text": "Al prompt (las instrucciones fijas que acompañan a cada pregunta) le falta obligarle a ceñirse a los fragmentos y darle una salida para cuando no encuentre nada, del tipo «NO ESTÁ EN LA DOCUMENTACIÓN»", "correct": true, "why": "Sin esa línea el modelo rellena el hueco con lo que «sabe» de vacaciones en general, y RAG solo ha cambiado el origen de las invenciones. Ese «no está» es la respuesta más valiosa que te puede dar: te señala exactamente qué te falta por documentar." },
+        { "text": "El buscador ha fallado y no ha recuperado el fragmento correcto", "correct": false, "why": "Es lo primero que se piensa y conviene comprobarlo: mira qué tres trozos te devolvió. Pero si el dato no está en ningún documento, el buscador no puede encontrarlo. Lo que falla es que el modelo no tenía permiso para decir que no existe." },
+        { "text": "Hay que bajar la temperatura (el ajuste que decide cuánto varía la respuesta de una vez a otra) para que deje de inventar", "correct": false, "why": "Poniéndola a 0 el modelo inventa exactamente lo mismo, pero siempre igual. Reduce la sorpresa, no la invención. Es útil para poder reproducir un fallo, no para evitarlo." }
+      ],
+      "explain": "Sin «responde solo con esto» y sin una salida para el hueco, RAG solo cambia de dónde vienen las invenciones."
+    },
+    {
+      "prompt": "Tu buscador sobre el manual de producto contesta mal a «¿cuánto dura la garantía del modelo X?». Miras los fragmentos recuperados: uno termina justo en «La garantía del modelo X es de» y el siguiente empieza por «24 meses…».",
+      "options": [
+        { "text": "El troceado ha cortado la frase por la mitad. Se arregla al partir los documentos, no tocando el prompt ni cambiando de modelo", "correct": true, "why": "Es el fallo más común y se corrige de dos formas que se combinan. Una: cortar por párrafos en vez de cada N caracteres, porque un párrafo es una unidad con sentido propio y N caracteres es ciego al contenido. Dos: dejar solape, es decir, arrastrar el final del trozo anterior al principio del siguiente (unos 80 caracteres) para que una frase a caballo entre dos aparezca entera al menos en uno." },
+        { "text": "Subir el número de fragmentos recuperados para que caigan los dos trozos y el modelo junte la frase", "correct": false, "why": "A veces cuela, y por eso se prueba: si pillas los dos, la frase se recompone. Pero es una tirita. Dependes de que el trozo vecino esté entre los más parecidos, y «24 meses…» suelto no se parece a tu pregunta. Encima pagas ese ruido en todas las demás consultas." },
+        { "text": "Pedirle al modelo en las instrucciones que recomponga la información repartida entre fragmentos", "correct": false, "why": "Si le llegan los dos trozos, muchas veces lo hace. El problema es que aquí probablemente solo le llegó uno, y ningún modelo recompone lo que no tiene delante. Le estás pidiendo que adivine, que es justo lo que quieres evitar." }
+      ],
+      "explain": "La calidad de un buscador se decide al trocear. Si cortas una idea por la mitad, no la arregla nadie más adelante."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Un cliente te pide un asistente sobre sus documentos internos: 12 archivos, 40 páginas en total. Sus usuarios preguntan a menudo por referencias exactas del tipo «TRX-4471». ¿Qué montas?",
+      "options": [
+        { "text": "Con ese volumen, meter los documentos enteros en cada petición es más simple y más fiable; y para las referencias exactas, añadir búsqueda por palabras clave, que ahí gana a la búsqueda por significado", "correct": true, "why": "Es la respuesta que casi nadie da porque suena a poco proyecto. 40 páginas caben de sobra en el contexto (el texto que entra en una sola petición al modelo). Y «TRX-4471» es justo donde la búsqueda por significado falla: para ella se parece a cualquier otro código. Lo que mejor funciona en la práctica es combinar las dos, palabras clave más significado, y casi nadie lo prueba." },
+        { "text": "El sistema completo con base de datos vectorial: es lo que escala y así no hay que rehacerlo si el cliente crece", "correct": false, "why": "Es la decisión por defecto de casi todo el mundo y suena a previsión sensata. El coste real es que añades troceado, indexado, reindexado y un almacén que mantener para un problema que cabe entero en una petición. Sobre dinero: convertir 40 páginas en números cuesta céntimos y se paga una vez, pero el almacén se paga todos los meses y crece con el volumen. Y la API de OpenAI no tiene plan gratuito: pagas por uso desde la primera llamada. Si el cliente llega algún día a 4.000 páginas, lo montas entonces y con datos de uso reales." },
+        { "text": "Un ajuste fino del modelo con esos 12 documentos, para que responda sin depender de la recuperación", "correct": false, "why": "Tentador precisamente porque son pocos documentos y parecen estables. Pero el ajuste fino fija formato y estilo, no hechos consultables: pierdes la capacidad de citar de dónde sale cada dato, que es lo que le enseñas al cliente para que se fíe. Y cada corrección en un documento te obliga a reentrenar." }
+      ],
+      "explain": "RAG es un compromiso, no un objetivo. Si el documento cabe en la petición, mételo en la petición."
+    },
+    {
+      "prompt": "Montaste el buscador para una gestoría: cada cliente tiene sus propios documentos. Separas por cliente en las instrucciones, diciéndole al modelo «responde solo sobre los documentos de Martínez». Un lunes llama un cliente: ha visto datos de otro.",
+      "options": [
+        { "text": "El filtro por cliente tiene que ir en la consulta al buscador, antes de recuperar. Si recuperas de todo y filtras después, el dato ajeno ya ha entrado en el contexto", "correct": true, "why": "Y es un daño que no se deshace: en cuanto un dato de otro cliente ha aparecido en pantalla no lo puedes retirar, y en España eso es una brecha de datos personales con obligación de notificar. Los permisos son un filtro del almacén («dame solo trozos cuyo cliente sea Martínez»), nunca una instrucción en el prompt. Un modelo obedece casi siempre, y «casi» no sirve como control de acceso." },
+        { "text": "Reforzar la instrucción: repetirla al principio y al final, y en mayúsculas", "correct": false, "why": "Sube el porcentaje de aciertos, y por eso muchísima gente se queda ahí y se cree cubierta. Lo que has hecho es convertir el control de acceso en una probabilidad. Basta una pregunta formulada de forma rara, o un usuario que escriba «ignora las instrucciones anteriores», para saltárselo." },
+        { "text": "Un almacén de vectores separado por cliente, para que sea imposible mezclarlos", "correct": false, "why": "Esto sí aísla de verdad, y con pocos clientes es una decisión defendible. Se rompe al escalar: con 400 clientes tienes 400 almacenes que crear, respaldar, actualizar y facturar, y dar de alta a uno nuevo deja de ser añadir una fila para convertirse en una operación. El filtro en la consulta te da el mismo aislamiento con un solo almacén." }
+      ],
+      "explain": "Los permisos se aplican al recuperar, no al responder. Lo que entra en el contexto ya no hay forma de sacarlo."
+    }
+  ]
+}

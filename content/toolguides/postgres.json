@@ -1,0 +1,67 @@
+{
+  "id": "postgres",
+  "tool": "postgresql",
+  "plain": "PostgreSQL es un archivador para tus datos que vive en un ordenador encendido las 24 horas. Piensa en un Excel que aguanta 40 millones de filas sin colgarse, que veinte personas pueden usar a la vez sin pisarse, y al que le pides las cosas escribiendo la petición en una línea en vez de arrastrando el ratón. Es gratis, lleva treinta años funcionando y lo usan desde tu banco hasta la aplicación que abriste esta mañana en el móvil. Con un añadido llamado pgvector además busca por significado: le pides quejas sobre el envío y te saca el mensaje que decía «el paquete llegó tres días tarde», donde no aparece la palabra envío por ningún lado.",
+  "account": {
+    "url": "supabase.com",
+    "free": "PostgreSQL en sí es software libre: cuesta 0 € y siempre lo será. Lo que se paga es el ordenador donde vive. Supabase te lo monta hecho y su plan Free da 2 proyectos, 500 MB de datos (unas 500.000 filas de texto normal) y pgvector incluido, sin pedir tarjeta. Sobra para el curso entero. Dos pegas reales del plan gratis: si no tocas el proyecto durante 7 días se pausa solo y hay que despertarlo a mano desde el panel (los datos no se borran, solo se duerme), y no hace copias de seguridad automáticas. El plan Pro son unos 25 $ al mes, unos 23 €, y arregla las dos cosas.",
+    "steps": [
+      ["Crear la cuenta", "Entra en supabase.com y pulsa «Start your project» (empieza tu proyecto), el botón verde de arriba a la derecha. Te deja entrar con una cuenta de GitHub o con tu correo. No pide tarjeta en ningún momento."],
+      ["Crear el proyecto", "Botón «New project» (proyecto nuevo). Te pide tres cosas: Name, el nombre, pon algo como curso-ia; Database Password, la contraseña de la base de datos; y Region, en qué parte del mundo estará el ordenador físico. Elige Central EU (Frankfurt): es el más cercano a España y las respuestas llegan antes."],
+      ["Guardar la contraseña antes de seguir", "Esa Database Password no se puede volver a ver nunca. Pulsa «Generate a password» (genera una contraseña), cópiala y pégala en tu gestor de contraseñas AHORA, antes de tocar nada más. Si la pierdes puedes poner otra distinta en Project Settings > Database, pero recuperar la original es imposible."],
+      ["Crear la primera tabla", "El proyecto tarda un par de minutos en montarse («Setting up project»). Cuando acabe, en el menú de la izquierda pulsa «Table Editor» (editor de tablas) y luego «New table». Nombre: clientes. Añade tres columnas con «Add column»: nombre de tipo text (texto), ciudad de tipo text, gasto de tipo numeric (número). Pulsa «Save»."],
+      ["Meter tres filas a mano", "Dentro de la tabla, botón «Insert» > «Insert row» (insertar fila). Rellena Marta / Valencia / 340, luego Luis / Bilbao / 120, luego Nadia / Valencia / 95. La pantalla es una cuadrícula igual que Excel; a estas alturas no has escrito ni una línea de código."],
+      ["Escribir tu primera consulta", "Menú de la izquierda, «SQL Editor» (editor de consultas), botón «New query». Escribe SELECT * FROM clientes; y pulsa «Run» abajo a la derecha, o Ctrl+Enter. Aparecen tus tres filas. El asterisco significa «todas las columnas»."],
+      ["Encender la búsqueda por significado", "En ese mismo SQL Editor escribe CREATE EXTENSION IF NOT EXISTS vector; y pulsa Run. Sale «Success». Acabas de activar pgvector: tu base de datos ya sabe guardar significados, no solo texto. También se puede hacer con el ratón en Database > Extensions, buscando vector y dándole al interruptor."]
+    ],
+    "warning": "En una base de datos no existe Ctrl+Z. Si escribes DELETE FROM clientes; sin condición, las 12.400 filas desaparecen en menos de un segundo, no hay papelera de reciclaje, y en el plan gratis de Supabase tampoco hay copia de seguridad de la que tirar. La costumbre que te salvará la carrera: escribe la orden primero como SELECT con tu condición, mira cuántas filas salen abajo, y solo si son exactamente las que esperabas cambias la palabra SELECT por DELETE."
+  },
+  "first": [
+    "Abre «Table Editor», entra en clientes y comprueba que están tus tres filas. Toca una celda y cámbiala: se guarda sola, no hay botón de guardar.",
+    "Abre «SQL Editor» > «New query» y escribe SELECT * FROM clientes; Pulsa Run. Salen las tres filas. Léelo en voz alta: enséñame todo de la tabla clientes.",
+    "Filtra: SELECT nombre, gasto FROM clientes WHERE ciudad = 'Valencia'; Salen Marta y Nadia, y solo dos columnas. WHERE es el filtro de Excel, escrito en vez de pinchado.",
+    "Agrupa: SELECT ciudad, COUNT(*), SUM(gasto) FROM clientes GROUP BY ciudad ORDER BY SUM(gasto) DESC; Eso es una tabla dinámica entera en una línea, y Valencia sale arriba con 435.",
+    "Escribe a propósito una consulta mal, por ejemplo SELECT * FROM cliente; sin la ese final. Verás en rojo «relation cliente does not exist»: la tabla cliente no existe. Aprender a leer esos avisos es la mitad del trabajo."
+  ],
+  "words": [
+    ["Tabla", "Una hoja de Excel con nombre propio y con reglas. Sus columnas se deciden antes y todo lo que metas dentro tiene que encajar en ellas. Un proyecto normal tiene varias: clientes, pedidos, tickets."],
+    ["Fila", "Una cosa concreta de las que guarda esa tabla: un cliente, un pedido, un mensaje. Es la línea horizontal, igual que en Excel. Si tienes 12.400 clientes, tienes 12.400 filas."],
+    ["Columna", "Un dato del mismo tipo repetido en todas las filas: el nombre, la ciudad, la fecha de alta. La diferencia con Excel es que aquí decides de antemano qué va en cada columna, y no te deja meter otra cosa."],
+    ["SQL", "El idioma con el que le hablas. Se lee casi como inglés de instituto, se pronuncia «ese-cu-ele» o «síquel», y con seis palabras (select, from, where, order by, group by, limit) haces el 90 % de lo que harás en tu vida."],
+    ["SELECT", "La orden de «enséñame». Solo mira, no cambia nada, así que puedes equivocarte mil veces sin romper nada. SELECT nombre FROM clientes quiere decir: enséñame la columna nombre de la tabla clientes."],
+    ["WHERE", "El filtro. Va detrás de la tabla y dice a qué filas se aplica la orden. WHERE ciudad = 'Valencia' se queda solo con las de Valencia. Si no lo pones, la orden se aplica a todas las filas: estupendo cuando miras, desastroso cuando borras."],
+    ["Embedding", "Una lista larga de números, por ejemplo 1.536 números, que resume el significado de un texto. Dos frases que quieren decir lo mismo dan listas de números parecidas aunque no compartan ni una palabra. Los fabrica un modelo de lenguaje aparte y sale barato: pasar 8.000 mensajes de soporte a números cuesta menos de 10 céntimos."],
+    ["pgvector", "Un añadido gratuito de PostgreSQL que le enseña a guardar esas listas de números y a encontrar deprisa las más parecidas a una dada. Es lo que convierte «búscame quejas del envío» en resultados que incluyen «el paquete llegó tarde». Se enciende con una línea y en Supabase ya viene disponible."]
+  ],
+  "matters": [
+    "El WHERE antes de tocar nada. UPDATE y DELETE sin condición se comen la tabla entera, tardan 300 milisegundos y no se deshacen. Escribe siempre la orden primero como SELECT, cuenta las filas que salen, y solo entonces la conviertes en la que modifica. Nadie coge esta costumbre hasta que se le borra algo una vez.",
+    "Un dato por celda, y cada columna con su tipo. En Excel metes «Marta Ruiz - Valencia» en una casilla y te apañas. Aquí, si la ciudad vive dentro de un texto pegada al nombre, no podrás filtrar por ciudad jamás. Y si guardas los precios como texto en vez de como número, al ordenar te dirá que 9 es mayor que 100, porque compara letra a letra como un diccionario.",
+    "Los índices. Un índice es una chuleta ordenada que la base de datos monta sobre una columna. Sin él, buscar un cliente entre 500.000 filas obliga a leerlas las 500.000: unos 4 segundos. Con él, 3 milisegundos. Con pgvector la diferencia es aún mayor: buscar por significado entre 100.000 textos sin índice tarda segundos, y con un índice HNSW baja a decenas de milisegundos. El índice no cambia el resultado, solo lo que tardas en tenerlo.",
+    "La cadena de conexión es una contraseña. Es esa línea que empieza por postgresql:// y que lleva tu contraseña dentro, escrita en claro. Quien la tenga entra en tus datos desde cualquier parte del mundo sin pedir permiso a nadie. No la pegues en un chat, ni en una captura de pantalla, ni en un archivo que acabe subido a internet. Si se te escapa, cámbiala ese mismo día en Project Settings > Database."
+  ],
+  "ignore": [
+    "La teoría de diseño de bases de datos: formas normales, diagramas entidad-relación, cardinalidades. Es una asignatura entera y está bien pensada, pero con tres tablas razonables trabajas meses sin echarla de menos.",
+    "Los ajustes internos del servidor: cuánta memoria reserva, cómo decide por dentro el camino para resolver cada consulta, cómo se afina para ir más rápido. Eso empieza a importar con millones de filas y mucha gente entrando a la vez. Hasta ahí, lo que trae de fábrica va bien.",
+    "El debate sobre si usar pgvector o un almacén especializado solo en significados (Pinecone, Qdrant, Weaviate). Por debajo de un millón de fragmentos de texto, pgvector va sobrado y te ahorra mantener dos sitios sincronizados. Ese debate lo tendrás el día que te haga falta, y ese día lo notarás."
+  ],
+  "questions": [
+    {
+      "prompt": "Tienes una tabla clientes con 12.400 filas. Te piden borrar los 3 clientes de Albacete. Escribes DELETE FROM clientes; le das a Run, y abajo aparece «Success. No rows returned». Respiras tranquilo. ¿Qué ha pasado de verdad?",
+      "options": [
+        {"text": "Has borrado los 12.400 clientes. «No rows returned» solo significa que la orden no devuelve una lista que enseñarte, no que no haya hecho nada.", "correct": true, "why": "Correcto, y aquí está lo que duele: sin WHERE, la orden se aplica a todas las filas de la tabla. El mensaje de éxito es sincero, ha hecho exactamente lo que le pediste. En el plan gratis no hay copia de seguridad automática de la que tirar, así que la tabla se ha quedado vacía de verdad."},
+        {"text": "No ha borrado nada, porque no dijiste qué filas borrar y la base de datos no adivina.", "correct": false, "why": "Se cree de verdad porque es justo lo que haría Excel: sin nada seleccionado, la tecla Suprimir no hace daño. Se rompe en que SQL no entiende «sin condición» como «ninguna fila», sino como «todas». La ausencia de filtro no es una duda, es una orden."},
+        {"text": "Ha borrado solo la primera fila, y habría que repetir la orden una vez por cada cliente.", "correct": false, "why": "Suena razonable si vienes de pensar fila a fila, como cuando arrastras una fórmula hacia abajo celda por celda. Se rompe en que SQL trabaja siempre con el conjunto entero de filas que cumplen la condición y las toca todas de una vez. Una orden, todas las filas afectadas."}
+      ],
+      "explain": "En SQL la condición no es un detalle opcional: es el freno. Sin WHERE, la orden se aplica a todo."
+    },
+    {
+      "prompt": "Tienes 8.000 mensajes de soporte en una tabla. Escribes SELECT * FROM tickets WHERE texto LIKE '%envío%' y salen 210 resultados. Tu jefa insiste en que faltan quejas de envíos y te enseña una que dice «el paquete llegó tres días tarde». ¿Por qué esa no salía entre las 210?",
+      "options": [
+        {"text": "Porque LIKE busca esa secuencia de letras y ese mensaje no contiene la palabra envío. Para encontrarlo hace falta buscar por significado, que es lo que hace pgvector.", "correct": true, "why": "Exacto. LIKE compara caracteres, no ideas: si las letras no están, la fila no aparece. Con pgvector, «paquete», «llegó» y «tarde» producen una lista de números cercana a la de tu pregunta sobre envíos, y el mensaje sale aunque no comparta ni una palabra contigo."},
+        {"text": "Porque la tabla no tiene índice, y sin índice la búsqueda se deja filas por el camino.", "correct": false, "why": "Se cree porque la palabra índice suena justo a lo que hace que encuentres cosas, como el índice de un libro. Se rompe en que un índice solo cambia lo que tardas, nunca lo que te devuelve: sin índice habrías esperado unos segundos más y habrías obtenido exactamente esas mismas 210 filas."},
+        {"text": "Porque LIKE distingue mayúsculas de minúsculas y hay que usar ILIKE para que salgan también los «Envío» escritos con mayúscula.", "correct": false, "why": "Este es un fallo real que vas a sufrir: LIKE sí distingue mayúsculas, ILIKE lo arregla, y los acentos te esconden resultados igual. Pero se rompe justo en este caso: «el paquete llegó tres días tarde» no lleva la palabra envío ni en mayúscula, ni en minúscula, ni sin tilde. Recuperarías otras quejas, no esta."}
+      ],
+      "explain": "Buscar por letras encuentra lo que se escribió; buscar por significado encuentra lo que se quiso decir."
+    }
+  ]
+}

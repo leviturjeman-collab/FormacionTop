@@ -1,0 +1,63 @@
+{
+  "categoryId": "10-guias-windows-mac-linux",
+  "basico": [
+    {
+      "prompt": "Sigues la guía de instalación en tu portátil con Windows. Copias `brew install python@3.12` en PowerShell (la terminal de Windows: la ventana donde se escriben comandos) y te responde que no reconoce «brew».",
+      "options": [
+        { "text": "brew es el instalador de programas de Mac. En Windows el equivalente es winget, y la lección trae el comando de cada sistema por separado", "correct": true, "why": "Eso es. `brew install python@3.12` y `winget install --id Python.Python.3.12 -e` hacen lo mismo en máquinas distintas. Antes de pegar nada, busca la pestaña de tu sistema: Windows, Mac o Linux." },
+        { "text": "Falta instalar Homebrew primero; es un paso previo que te has saltado", "correct": false, "why": "Suena lógico porque en Mac es justo eso: Homebrew se instala una vez y a partir de ahí `brew` funciona. Pero Homebrew está hecho para Mac y Linux. En Windows no es la herramienta que toca, así que instalarlo no te acerca a nada." },
+        { "text": "Hay que abrir PowerShell como administrador", "correct": false, "why": "Es el reflejo típico y a veces arregla cosas de verdad. Aquí no: el mensaje dice que el comando no existe, no que te falten permisos. Con permisos de administrador te dirá exactamente lo mismo." }
+      ],
+      "explain": "Cada sistema operativo tiene su propio instalador. El comando no es universal; el objetivo sí."
+    },
+    {
+      "prompt": "Instalas Python, Node.js y Git con winget en PowerShell. Termina sin errores. Escribes `python --version` en esa misma ventana y te dice que no reconoce el comando.",
+      "options": [
+        { "text": "Cierras esa ventana de PowerShell, abres una nueva y lo pruebas otra vez", "correct": true, "why": "Correcto. La terminal lee la lista de programas disponibles una sola vez, al abrirse. Lo que instales después no aparece hasta que la cierras y la abres de nuevo. Es el atasco número uno del primer día." },
+        { "text": "Vuelves a ejecutar la instalación por si falló en silencio", "correct": false, "why": "Se entiende: si no aparece, será que no se instaló. Pero winget te habría avisado con un error, y al repetir en la misma ventana te dirá que ya está instalado. Sigues igual, con diez minutos menos." },
+        { "text": "Descargas Python desde la web oficial y lo instalas a mano", "correct": false, "why": "Acabas con dos versiones de Python conviviendo en la máquina, que es un lío difícil de deshacer después. Y en esa ventana ya abierta tampoco lo va a encontrar." }
+      ],
+      "explain": "Después de instalar cualquier cosa: cierra la terminal y ábrela otra vez. Antes de sospechar de nada más."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Arrancas la base de datos del proyecto con `docker compose up -d` y falla: «port is already allocated» en el 5432. Ya tenías PostgreSQL instalado de otro proyecto. En el archivo pone `ports: [\"5432:5432\"]`. ¿Qué número cambias?",
+      "options": [
+        { "text": "El de la izquierda, y queda \"5433:5432\"", "correct": true, "why": "Ese. El de la izquierda es el puerto de tu ordenador (la puerta por la que entras tú) y el de la derecha el de dentro del contenedor (la caja aislada donde corre el programa). Cambias tu lado y te conectas a localhost:5433; dentro no cambia nada." },
+        { "text": "El de la derecha, y queda \"5432:5433\"", "correct": false, "why": "La simetría engaña y esta es la confusión clásica. PostgreSQL dentro del contenedor escucha en el 5432 y no le has dicho lo contrario, así que apuntas a una puerta donde no hay nadie. Arranca sin quejarse y luego no conecta." },
+        { "text": "Ninguno: desinstalas el PostgreSQL que ya tenías", "correct": false, "why": "Libera el puerto, cierto. Pero te llevas por delante la base de datos del otro proyecto y sus datos, y eso no se deshace. Cambiar un número sí." }
+      ],
+      "explain": "En \"5433:5432\" el primer número es el tuyo. Ese es el que se toca."
+    },
+    {
+      "prompt": "En PowerShell escribes `$env:ANTHROPIC_API_KEY=\"sk-ant-...\"`, lanzas el programa y funciona. Al día siguiente lo lanzas desde la terminal de VS Code y falla con «Falta ANTHROPIC_API_KEY». La clave es la misma.",
+      "options": [
+        { "text": "Esa variable solo existía en aquella ventana de terminal. Al cerrarla desapareció, y la de VS Code es otra ventana distinta", "correct": true, "why": "Exacto. `$env:` guarda el valor mientras esa ventana viva, ni un segundo más. Para que sobreviva, la clave va en un archivo `.env` en la carpeta del proyecto y el programa lo lee al arrancar. Así funciona mañana y desde cualquier terminal." },
+        { "text": "La clave ha caducado o el proveedor la ha revocado", "correct": false, "why": "Pasa de verdad: si una clave se ve en un repositorio público, el proveedor la anula sola. Pero entonces el mensaje sería «invalid api key». El tuyo dice que falta, o sea que no encuentra nada, no que lo que encuentra sea inválido." },
+        { "text": "Hay que reiniciar el ordenador para que la variable se aplique", "correct": false, "why": "Es el arreglo universal de toda la vida y aquí hace justo lo contrario: reiniciar la borra del todo, porque solo vivía en la memoria de aquella ventana." }
+      ],
+      "explain": "Una variable escrita en la terminal muere con la ventana. Si la necesitas mañana, va en un archivo `.env`."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Montaste el proyecto en Windows y se lo pasas a una compañera que trabaja en Mac. Le mandas la carpeta y le dices «ejecuta el comando de la terminal». Media hora después te escribe: no arranca.",
+      "options": [
+        { "text": "Faltaba la ficha de compatibilidad: qué instalar, comandos para Windows y para Mac/Linux, cuentas y claves necesarias, y cómo comprobar que funciona", "correct": true, "why": "Es lo que separa una entrega de una carpeta. La prueba es simple: si alguien la abre mañana y no sabe qué instalar, dónde ejecutar, dónde poner las claves y cómo saber si está roto, no estaba lista. Y si hay Docker de por medio, dilo: Docker Desktop es gratis para uso personal y empresas pequeñas, pero a partir de unos 250 empleados hay licencia de pago, alrededor de 9 $ por persona al mes." },
+        { "text": "Un vídeo tuyo ejecutándolo paso a paso para que lo copie", "correct": false, "why": "Ayuda a ver el flujo y por eso se hace mucho. Pero tu vídeo es de PowerShell y ella está en zsh, la terminal de Mac. Verá comandos que no puede escribir y rutas tipo C:\\Users\\... que en su máquina no existen." },
+        { "text": "Nada por tu parte: debería trabajar en Windows como tú para evitar diferencias", "correct": false, "why": "En un equipo real no eliges la máquina de los demás. Y el problema no era Windows contra Mac, era que tu entrega no decía qué hacía falta: el mismo fallo saldrá con el siguiente compañero, tenga el sistema que tenga." }
+      ],
+      "explain": "Un proyecto está entregado cuando otra persona, en otro sistema, puede ejecutarlo y saber si está roto."
+    },
+    {
+      "prompt": "Cambiaste `init.sql` (las instrucciones que crean las tablas al arrancar la base de datos) y los cambios no se aplican: ese archivo solo corre la primera vez, con la base vacía. En un foro te dicen que ejecutes `docker compose down -v`.",
+      "options": [
+        { "text": "Lo ejecutas, pero solo después de confirmar que ahí dentro no hay nada que quieras conservar", "correct": true, "why": "Correcto, y no hay deshacer: la `-v` borra los volúmenes, que es donde viven los datos de la base. En local con datos de prueba es el gesto normal. Si hubiera algo que salvar, primero se exporta con `pg_dump`. En producción esto no se ejecuta jamás." },
+        { "text": "Lo ejecutas sin pensarlo: `down` solo apaga los contenedores", "correct": false, "why": "Cierto para `docker compose down` a secas: apaga y borra los contenedores, y los datos siguen en el volumen. La `-v` es justo la parte que añade el borrado de ese volumen. Dos letras separan una cosa de la otra." },
+        { "text": "Mejor borras el contenedor con `docker rm` y vuelves a arrancar", "correct": false, "why": "Suena más suave y por eso tienta. Pero el volumen es una pieza aparte que sobrevive al contenedor: al arrancar de nuevo la base ya tiene datos, sigue sin estar vacía e `init.sql` sigue sin ejecutarse. No has arreglado nada y crees que sí." }
+      ],
+      "explain": "`-v` borra los datos y no se deshace. Léela cada vez antes de pulsar intro."
+    }
+  ]
+}

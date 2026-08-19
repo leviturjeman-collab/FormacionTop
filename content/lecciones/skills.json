@@ -1,0 +1,179 @@
+{
+  "id": "skills",
+  "number": 29,
+  "stageId": "agentes",
+  "title": "Skills: procedimientos que se activan solos",
+  "promise": "Tendrás una skill tuya escrita, subida y disparándose sola cuando escribes una frase normal, sin nombrarla, y sabrás diagnosticar en dos minutos por qué una skill no se activa.",
+  "minutes": 25,
+  "why": "Rubén Pardo hace reformas de baño en Getafe y todos sus presupuestos llevan lo mismo: medidas, materiales, horas de obra, 21% de IVA, señal del 30% y validez de quince días. Cada vez que abría una conversación con la IA pegaba las mismas 900 palabras de instrucciones, y un martes de marzo se le olvidó pegarlas: el presupuesto de la señora Ortega salió sin la cláusula de validez, el precio del gres subió tres semanas después y esos 340 € los puso él. El problema no era que la IA fuese torpe. Era que su procedimiento vivía en su cabeza y en un copiar-pegar que a veces se le olvidaba. Una skill es exactamente eso: sacar el procedimiento de tu cabeza, dejarlo escrito en un archivo, y que la IA lo saque del cajón ella sola cuando toca.",
+  "theory": [
+    {
+      "title": "Qué es una skill, sin misterio",
+      "text": "Una skill es una carpeta con un archivo de texto dentro. Ese archivo se llama SKILL.md y contiene un procedimiento tuyo escrito en castellano normal: cuándo se usa, qué datos hacen falta, los pasos en orden, cómo sabes que ha quedado bien y qué no se hace nunca. No hay código, no hay programación, no hay nada que instalar en tu ordenador. Es literalmente el manual que le darías a alguien que entra a trabajar contigo el lunes. La diferencia con dárselo a una persona es que la IA no lo lee entero cada mañana: lo tiene guardado y lo abre solo cuando la conversación va de eso. Por eso el título dice «que se activan solos»: tú no la llamas, tú escribes lo que querrías escribir de todas formas, y la skill entra sola. Y esa es también la parte que falla cuando falla, porque «entrar sola» es una decisión que toma el modelo, no una regla que se cumpla siempre.",
+      "analogy": "Piensa en una cocina de restaurante con doscientas fichas de receta en un archivador. El cocinero no se sabe las doscientas de memoria: lee las pestañas de las fichas, saca la que dice «paella de marisco, 4 personas» y sigue esa. Todo el sistema depende de lo que ponga en la pestaña. Si en una pestaña pone «arroces varios», esa ficha se queda ahí para siempre.",
+      "example": "La skill de Rubén se llama presupuesto-bano-getafe. Es una carpeta con ese nombre y un archivo SKILL.md de 120 líneas dentro. Tardó 40 minutos en escribirla con ayuda de la IA. Lleva ocho meses usándola y no ha vuelto a mandar un presupuesto sin la validez de quince días."
+    },
+    {
+      "title": "El truco de fondo: solo se lee la etiqueta",
+      "text": "Aquí está el mecanismo entero, y entenderlo te ahorra semanas de dar palos de ciego: cuando abres una conversación, la IA no carga tus skills, carga solo dos líneas de cada una, el nombre y la descripción. Ese resumen de cada skill ocupa unas 60 palabras; el archivo completo puede ocupar entre 600 y 1.500. Con doce skills instaladas, lo que la IA tiene delante en todo momento son unas 700 palabras de etiquetas, y las 12.000 palabras de procedimientos se quedan en el cajón. Cuando tú escribes algo, el modelo compara lo que has escrito con esas etiquetas, decide que una encaja, y entonces —solo entonces— abre el archivo entero y lo lee. Esto se llama carga progresiva y no es un detalle técnico: es la razón de que puedas tener treinta procedimientos guardados sin atascar nada. Y tiene una consecuencia que hay que decir con todas las letras: en el momento de decidir, el modelo no ha leído tu procedimiento, solo ha leído la descripción. Tu procedimiento puede ser perfecto y no servir de nada.",
+      "analogy": "Es un trastero con cajas cerradas. Nadie abre una caja para ver si es la que busca: se leen las etiquetas de fuera y se abre una. Una caja con la mejor herramienta del mundo dentro y la etiqueta «cosas» no se abre jamás.",
+      "example": "Si pagas por uso a través de la API en vez de una suscripción, la diferencia también es dinero: arrastrar 12.000 palabras de procedimientos en cada mensaje son unos 4 o 5 céntimos por mensaje, que en un día de cien mensajes son unos 5 €. Con carga progresiva pagas eso solo el rato que de verdad usas el procedimiento."
+    },
+    {
+      "title": "La descripción: la línea que decide si existes",
+      "text": "Una descripción que funciona dice tres cosas y en este orden: qué hace, cuándo usarla y cuándo no usarla. El «cuándo usarla» es la parte que casi todo el mundo escribe mal, porque la escribe con las palabras del manual en vez de con las palabras que tú tecleas de verdad un martes con prisa. Tú no escribes «genérame un presupuesto conforme al procedimiento»; escribes «cuánto le sale a la Ortega el baño». Si esa frase no se parece a nada de tu descripción, la skill no se abre. El «cuándo no usarla» hace el trabajo contrario y es igual de necesario en cuanto tienes más de dos skills: sin exclusiones, la de presupuestos también salta cuando hablas de facturas y te contesta con el formato equivocado. Escríbela en tercera persona, como si describieras la skill a alguien de fuera, y mete dentro los nombres propios y las palabras concretas de tu oficio: gres, alicatado, fontanería, plato de ducha, señal, IVA. Ocupa menos de 1.024 caracteres, que da para unas 150 palabras, así que hay sitio de sobra para ser específico. Y no le tengas miedo a repetir sinónimos: cada palabra que metes es una puerta más por la que puede entrar.",
+      "example": "Mala: «Ayuda a hacer presupuestos». Regular: «Genera presupuestos de reforma». Buena: «Redacta presupuestos de reforma de baño para Reformas Pardo (Getafe), con desglose de materiales y horas, 21% de IVA, señal del 30% y validez de quince días. Usar cuando el usuario pida un presupuesto, una oferta, un precio, un coste o un 'cuánto le sale' para un cliente, o cuando mencione metros de alicatado, plato de ducha, gres, fontanería o horas de obra. No usar para facturas ya emitidas, pedidos a proveedor, reclamaciones ni partes de garantía»."
+    },
+    {
+      "title": "Qué va dentro del archivo",
+      "text": "El archivo tiene dos partes. Arriba del todo, entre dos líneas de tres guiones, van solo el nombre y la descripción: eso es la cabecera, la etiqueta de la caja. Debajo va el procedimiento en Markdown, que es escribir normal usando almohadillas para los títulos y guiones para las listas. La estructura que mejor aguanta el uso real tiene siete bloques: cuándo se usa esto, qué datos necesito antes de empezar, los pasos numerados, los criterios de calidad, los errores que ya he cometido, los límites que no se saltan y un ejemplo completo de entrada y salida. El bloque que la gente se salta y luego echa de menos es el de los datos que hacen falta: si no dices «si no te doy los metros, pregúntamelos, no los estimes», la IA los estima y te saca un presupuesto con números inventados que parecen buenos. El de límites es el que te protege: «no envíes nada, deja siempre borrador», «no cambies precios de la lista», «no prometas plazos que no estén escritos aquí». Y el ejemplo completo vale más que veinte frases de explicación, porque enseña el formato de salida sin tener que describirlo. Mantén el archivo por debajo de unas 300 líneas: cuando se hincha, es señal de que dentro hay dos procedimientos peleándose y toca partirlo en dos skills.",
+      "example": "El bloque de límites de Rubén tiene cuatro líneas: no aplicar descuentos por encima del 5% sin preguntar; no usar precios de material que no estén en la lista de abajo; no mandar el presupuesto, dejarlo siempre en borrador para que lo revise él; si el cliente pide obra fuera de Getafe o municipios limítrofes, avisar de que hay recargo de desplazamiento y preguntar cuál."
+    },
+    {
+      "title": "Skill, instrucciones del proyecto o prompt guardado",
+      "text": "Las tres cosas se parecen y se usan en momentos distintos, y elegir mal es la causa más común de que esto se vuelva un lío. Las instrucciones del proyecto (ese cuadro de texto donde escribes cómo quieres que se comporte la IA en un proyecto concreto) están siempre encendidas: valen para lo que aplica al 100% de las conversaciones, como tu tono, tu idioma o el nombre de tu empresa. Un prompt guardado es un texto que tú pegas cuando te acuerdas: vale para algo que haces de vez en cuando y no te importa invocar a mano. Una skill es para lo que haces muchas veces, siempre igual, pero no en todas las conversaciones. La regla práctica: si es una sola cosa y aplica siempre, instrucciones; si son doce cosas y cada una aplica a veces, skills; si es algo de una tarde, un prompt y ya está. Meter doce procedimientos en las instrucciones del proyecto es entregarle un tocho de doce páginas antes de cada frase que escribes, y eso no es que sea caro: es que diluye. Lo que le acabas de pedir compite con once procedimientos que no venían a cuento.",
+      "analogy": "Las instrucciones del proyecto son el cartel que cuelga en la pared del taller y todo el mundo ve siempre. El prompt guardado es la nota que llevas en el bolsillo y sacas cuando te acuerdas. La skill es la carpeta del archivador con la pestaña bien escrita: nadie la mira hasta que hace falta, y entonces aparece sola."
+    },
+    {
+      "title": "Cuando no se activa: los tres fallos y su diagnóstico",
+      "text": "Fallo uno, el más frecuente: la skill nunca salta, y la causa casi siempre es la descripción, no el procedimiento. La prueba es barata: abre una conversación nueva, pégale solo las descripciones de tus skills y diez frases tuyas de verdad, y pregúntale cuál elegiría con cada una; en treinta segundos ves qué frases se quedan huérfanas. Fallo dos: salta cuando no debe, y entonces te contesta un presupuesto donde pedías una factura; eso se arregla añadiendo el «no usar para» con los casos concretos que se están colando. Fallo tres, el más traicionero: tienes dos skills con descripciones que se pisan, el modelo elige una de las dos y nunca sabes cuál, así que un día va bien y otro no. Si te pasa, junta las dos descripciones, léelas seguidas y pregúntate si tú mismo sabrías cuál elegir; si no lo tienes claro tú, él tampoco. Y una verdad que conviene tragar pronto: la activación es un juicio, no un interruptor, y no existe un «si el usuario escribe X, ejecuta Y» garantizado al 100%. Si una tarea concreta tiene que salir sí o sí, puedes nombrar la skill a mano en tu mensaje; funciona siempre y no es hacer trampa.",
+      "example": "Rubén descubrió con esa prueba que su primera descripción decía «presupuesto de reforma integral» y que él, en la vida real, escribía «cuánto le cobro a». Añadió esa frase literal a la descripción y la skill pasó de saltar tres de cada diez veces a saltar diez de cada diez."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Sacarte de la cabeza el procedimiento que más repites",
+      "where": "En la app de Claude o de ChatGPT, en una conversación nueva",
+      "action": "Antes de escribir ningún archivo, elige un procedimiento: algo que hagas al menos una vez por semana, siempre con los mismos pasos, y que te fastidie repetir. Presupuestos, respuestas a reseñas malas, fichas de producto, resúmenes de reunión, respuestas al mismo tipo de correo. Elige el que más veces hayas hecho este mes, no el más vistoso. Después pega el prompt de abajo cambiando lo que va entre corchetes, y contesta a las preguntas de una en una, con cifras reales. Este paso es el que decide la calidad de todo lo demás: si aquí contestas en genérico, la skill saldrá genérica.",
+      "prompt": "Eres un consultor de procesos y me vas a entrevistar. Quiero convertir en procedimiento escrito algo que hago siempre igual: [DESCRIBE EN UNA FRASE QUÉ HACES].\n\nHazme preguntas de una en una, empezando por la primera, y no pases a la siguiente hasta que te conteste. Necesito que me saques:\n1. Qué datos necesito tener delante antes de empezar, y qué hago si me falta alguno.\n2. Los pasos exactos, en orden, tal y como los hago de verdad.\n3. Las cifras y datos fijos que uso siempre: precios, porcentajes, plazos, nombres, cláusulas.\n4. Cómo sé que ha quedado bien: qué miro antes de darlo por terminado.\n5. Los tres errores que más veces he cometido haciendo esto.\n6. Qué no se debe hacer nunca en este procedimiento.\n7. Las frases exactas con las que yo empezaría a pedirte esto un día normal, con prisa. Pídeme cinco, literales, con mis palabras.\n\nCuando lo tengas todo, escríbeme el procedimiento en pasos numerados y márcame aparte, en una lista, los huecos donde no te he dado un dato concreto. No rellenes esos huecos inventando nada.",
+      "expect": "Una conversación de diez o quince minutos que termina con un procedimiento numerado que reconoces como tuyo, y una lista corta de huecos por rellenar. Si al leerlo piensas «esto vale para cualquiera», no has terminado.",
+      "stuck": "Si te suelta las siete preguntas de golpe, contéstale «de una en una, por favor, empieza por la primera». Si te salen respuestas vagas, es que le estás dando poco: en vez de «hago un presupuesto», dile «cojo las medidas del baño, calculo metros de alicatado a 24 € el metro, sumo doce horas de mano de obra a 35 €, aplico el 21% de IVA»."
+    },
+    {
+      "title": "Convertir ese procedimiento en el archivo SKILL.md",
+      "where": "En la misma conversación de la app",
+      "action": "Con el procedimiento ya escrito, pídele que lo pase al formato del archivo. Pega el prompt de abajo justo después. Lo que te va a devolver es un bloque de texto que empieza con tres guiones, sigue con dos líneas (name y description), otros tres guiones, y debajo el procedimiento con títulos. No copies nada todavía: primero léelo entero y comprueba que las cifras son las tuyas y que no ha añadido pasos que tú no haces.",
+      "prompt": "Convierte el procedimiento anterior en un archivo SKILL.md con el formato de Agent Skills.\n\nFormato obligatorio:\n- Empieza con una línea de tres guiones. Debajo, solo dos campos: name y description. Debajo, otra línea de tres guiones. Nada más en esa cabecera.\n- name: en minúsculas, palabras separadas por guiones, sin acentos ni eñes, máximo 64 caracteres.\n- description: en tercera persona, menos de 1.024 caracteres, y tiene que decir tres cosas seguidas: qué hace, cuándo usarla (incluyendo literalmente las cinco frases con mis palabras que te di antes) y cuándo NO usarla, con casos concretos.\n- Debajo, el cuerpo en Markdown con estas secciones en este orden: Cuándo usar esta skill / Datos que necesito antes de empezar / Procedimiento paso a paso / Criterios de calidad / Errores frecuentes / Límites que no se saltan / Ejemplo completo de entrada y salida.\n- Máximo 300 líneas. Escrito en imperativo, concreto, sin adjetivos de relleno.\n- Si te falta un dato mío (un precio, un plazo, un nombre), NO te lo inventes: déjalo como [PENDIENTE: qué falta] y lístamelos todos al final del mensaje, fuera del archivo.\n\nDevuélveme el archivo entero dentro de un bloque de código, listo para copiar de una pieza.",
+      "expect": "Un bloque de código que empieza por tres guiones y contiene las siete secciones. Debajo, fuera del bloque, una lista de los datos que le faltan. Si no hay ningún [PENDIENTE], sospecha: revisa si se ha inventado algún precio o plazo.",
+      "stuck": "Si mete más cosas en la cabecera además de name y description, dile «la cabecera solo puede tener name y description, quita lo demás». Si el archivo sale de 600 líneas, pídele que lo recorte a 300 quitando explicaciones y dejando instrucciones."
+    },
+    {
+      "title": "Reescribir tú la descripción, que es la pieza que decide",
+      "where": "En la app, sobre el archivo que acabas de generar",
+      "action": "No des por buena la descripción que ha salido. Léela y comprueba una por una: ¿dice qué hace? ¿dice cuándo usarla con las palabras que tú escribes de verdad, no con las palabras del manual? ¿dice cuándo NO usarla, con casos concretos? Si falla alguna de las tres, se reescribe. Pide las alternativas con el prompt de abajo, elige la que más se parezca a cómo hablas tú, y córtala y pégala en el archivo sustituyendo la anterior. Puedes mezclar trozos de dos.",
+      "prompt": "Esta es la descripción actual de mi skill:\n\n[PEGA AQUÍ LA LÍNEA description ENTERA]\n\nEscríbeme cinco alternativas distintas entre sí. Cada una tiene que decir qué hace, cuándo usarla y cuándo no, en tercera persona y por debajo de 1.024 caracteres. Varía el enfoque: una más centrada en el resultado que produce, otra en las palabras que escribiría el usuario, otra en el tipo de documento, otra en el momento del trabajo en que aparece, otra más corta y seca.\n\nPara cada una de las cinco, dame además:\n- Tres frases reales que la dispararían.\n- Tres frases parecidas que NO deberían dispararla.\n\nY al final, dime cuál de las cinco fallaría más veces en la vida real y por qué. Sé duro, no me des la razón.",
+      "expect": "Cinco descripciones con sus ejemplos de disparo, y un veredicto final que señala la más débil. Tu descripción final debería contener al menos tres palabras que uses tú de verdad en el día a día y al menos dos exclusiones concretas.",
+      "stuck": "Si las cinco te suenan igual, es que tu procedimiento está definido en abstracto. Vuelve atrás y mete nombres propios: tu ciudad, tu empresa, tus productos, tus porcentajes. Una descripción sin ningún nombre concreto casi nunca dispara bien."
+    },
+    {
+      "title": "Probar la descripción antes de instalar nada",
+      "where": "En la app, en una conversación NUEVA y vacía",
+      "action": "Este es el ensayo barato que te ahorra el 90% de los problemas, y se hace sin subir ningún archivo a ninguna parte. Abre una conversación nueva del todo, pega el prompt de abajo con tu descripción y diez frases tuyas reales (sácalas de tu correo, de tu WhatsApp de trabajo, de lo que escribiste la semana pasada). Lo que estás simulando es exactamente la decisión que tomará la IA: leer la etiqueta y elegir. Si aquí falla, en producción falla igual.",
+      "prompt": "Te voy a dar la descripción de una skill. No la tienes instalada: quiero que decidas como si la tuvieras, leyendo SOLO esa descripción y nada más.\n\nDESCRIPCIÓN:\n[PEGA AQUÍ TU DESCRIPCIÓN]\n\nFRASES:\n1. [frase real tuya]\n2. [frase real tuya]\n3. [frase real tuya]\n4. [frase real tuya]\n5. [frase real tuya]\n6. [frase real tuya]\n7. [una frase parecida que NO debería activarla]\n8. [otra que NO debería activarla]\n9. [una frase corta y con prisa, tipo mensaje de móvil]\n10. [una frase que solo menciona el tema de pasada]\n\nPara cada frase dime: ACTIVA o NO ACTIVA, y en una línea por qué. No me des la respuesta ideal ni intentes quedar bien: dime lo que harías de verdad leyendo solo esa descripción. Al final, dime qué palabras le faltan a la descripción para que las frases que has fallado hubieran acertado.",
+      "expect": "Las frases 1 a 6 en ACTIVA, la 7 y la 8 en NO ACTIVA, y una lista de palabras que le faltan. Si la 9 (la corta y con prisa) sale NO ACTIVA, tienes trabajo: esa es la que vas a escribir tú en la vida real.",
+      "stuck": "Si todo sale ACTIVA, incluidas las que no debían, te faltan exclusiones: añade «No usar para...» con esos dos casos exactos y repite la prueba. Si sale casi todo NO ACTIVA, añade a la descripción las palabras literales de las frases que ha fallado y repite. Repetir esta prueba tres veces es normal y cuesta dos minutos."
+    },
+    {
+      "title": "Crear la carpeta, el archivo y el .zip",
+      "where": "En tu ordenador, en el Explorador de archivos (Windows) o el Finder (Mac)",
+      "action": "Ve al Escritorio y crea una carpeta nueva con el mismo nombre exacto que pusiste en name: minúsculas, con guiones, sin acentos. Por ejemplo presupuesto-bano-getafe. Entra dentro y crea el archivo: en Windows, abre el Bloc de notas, pega el contenido entero del archivo (sin las comillas del bloque de código, pero SÍ con las líneas de tres guiones), pulsa Archivo, luego «Guardar como», navega hasta esa carpeta y aquí viene la parte que falla siempre: en el desplegable «Tipo» elige «Todos los archivos (*.*)», escribe como nombre SKILL.md tal cual, y en «Codificación» elige UTF-8. Si te dejas «Documento de texto» en el desplegable, Windows te guardará un SKILL.md.txt que no vale. En Mac usa TextEdit y antes de escribir pulsa Formato, «Convertir a texto sin formato». Luego vuelve atrás, haz clic derecho sobre la carpeta y elige «Comprimir en archivo ZIP» (Windows 11) o «Enviar a, Carpeta comprimida» (Windows 10) o «Comprimir» (Mac).",
+      "expect": "Un archivo llamado presupuesto-bano-getafe.zip en tu Escritorio, de unos pocos kilobytes. Para comprobar que el archivo de dentro está bien: haz doble clic en el .zip, entra en la carpeta y mira que el archivo se llame SKILL.md a secas. En Windows, si no ves las extensiones, abre el Explorador, pestaña «Vista» y marca «Extensiones de nombre de archivo».",
+      "stuck": "Si ves SKILL.md.txt, haz clic derecho sobre él, «Cambiar nombre», borra el .txt final y acepta el aviso que te sale. Si los acentos y las eñes salen como símbolos raros al abrirlo, lo guardaste con la codificación equivocada: vuelve a «Guardar como» y elige UTF-8. Si tu procedimiento no lleva acentos ni datos delicados, también puedes saltarte esta tarea entera y pegar el texto del SKILL.md al principio de una conversación: funciona, pero tendrás que acordarte de pegarlo cada vez, que es justo lo que veníamos a evitar."
+    },
+    {
+      "title": "Subir la skill a tu cuenta y activarla",
+      "where": "En la app de Claude, en el ordenador (esto no se puede hacer desde el móvil)",
+      "action": "Pulsa tu inicial o tu foto en la esquina inferior izquierda y entra en «Ajustes» («Settings» si la tienes en inglés). Busca la sección «Capacidades» («Capabilities») y dentro, «Skills». Verás una lista con algunas que ya vienen puestas de fábrica para hacer documentos de Word, hojas de cálculo y PDF. Pulsa el botón de subir skill («Upload skill»), elige el .zip del Escritorio y espera unos segundos. Cuando aparezca en la lista, comprueba que el interruptor de su derecha está encendido. Si estás usando Claude Code en vez de la app, el equivalente es dejar la carpeta (sin comprimir) dentro de una carpeta llamada .claude/skills en tu proyecto; para crear una carpeta que empiece por punto en Windows, escribe el nombre con un punto también al final, .claude., y Windows te lo quita solo al aceptar.",
+      "expect": "Tu skill en la lista, con su nombre, su descripción debajo y el interruptor en azul. Si pulsas sobre ella, deberías poder leer el contenido que subiste.",
+      "stuck": "Si no encuentras la sección «Skills», suele ser una de dos: tu plan no la incluye (el plan gratuito no la lleva; Claude Pro son unos 20 € al mes) o tienes desactivada la ejecución de código en esa misma pantalla de Capacidades, que es de lo que dependen las skills. Actívala y vuelve a mirar. Si te rechaza el .zip, casi siempre es porque comprimiste el archivo SKILL.md suelto en vez de la carpeta que lo contiene: tiene que ser la carpeta entera."
+    },
+    {
+      "title": "Probarla sin nombrarla, que es la prueba de verdad",
+      "where": "En la app de Claude, en una conversación nueva",
+      "action": "Abre una conversación completamente nueva. No digas «usa mi skill», no digas el nombre del archivo, no des contexto. Escribe exactamente la frase que escribirías un martes con prisa, la corta, la de la tarea anterior. Por ejemplo: «cuánto le sale a la señora Ortega el baño, 6 metros de alicatado y plato de ducha». Y mira qué pasa. La app te avisa cuando usa una skill: verás una línea encima de la respuesta indicando que la ha cargado, con el nombre.",
+      "expect": "El aviso de que ha usado tu skill, y una respuesta con tu formato, tus cifras y tus cláusulas, sin que tú hayas explicado nada. Si además te pregunta por un dato que falta en vez de inventárselo, tu bloque de «datos que necesito» está bien escrito.",
+      "stuck": "Si contesta sin usar la skill, no toques el procedimiento: el problema está en la descripción, siempre. Ve a la tarea siguiente. Si la usa pero el resultado no es el que esperabas, entonces sí es el cuerpo del archivo: casi siempre falta el ejemplo completo de entrada y salida al final."
+    },
+    {
+      "title": "Romperla a propósito y arreglar la descripción",
+      "where": "En la app, dos conversaciones nuevas seguidas",
+      "action": "Haz dos pruebas hostiles. Primera: escribe algo que NO debería activarla pero se le parece mucho («mándale la factura a la Ortega») y comprueba que no salta. Segunda: escribe lo mismo de la tarea anterior pero con otras palabras, las que usarías otro día distinto. Cuando falle alguna de las dos, usa el prompt de abajo para diagnosticar, corrige la descripción en tu archivo del ordenador, vuelve a comprimir la carpeta y súbela otra vez desde Ajustes. Si la app te deja, sustituye la anterior; si no, borra la vieja primero para no acabar con dos skills casi iguales peleándose, que es el fallo más difícil de detectar después.",
+      "prompt": "Tengo una skill instalada con esta descripción:\n\n[PEGA LA DESCRIPCIÓN]\n\nLe he escrito esta frase y no se ha activado (o se ha activado cuando no debía):\n\n[PEGA LA FRASE]\n\nDiagnostícalo así, en este orden y sin saltarte ninguno:\n1. Qué palabras de mi frase deberían haber conectado con la descripción y no lo hacen.\n2. Si el problema es que falta un disparador o que sobra una exclusión.\n3. La descripción corregida, entera, lista para copiar, con el cambio mínimo necesario. No la reescribas de arriba abajo: cámbiame solo lo que hace falta y dime en una línea qué has cambiado.\n4. Cinco frases más, distintas de las que ya te he dado, que ahora deberían activarla, para que las pruebe yo.",
+      "expect": "Que la frase de factura NO active la skill, y que las variantes de la frase buena sí la activen. Después de subir la versión corregida, repite las dos pruebas en conversaciones nuevas: las conversaciones viejas no recargan las skills.",
+      "stuck": "Si después de dos rondas sigue sin saltar con una frase concreta, mete esa frase literal dentro de la descripción, entre comillas, en la parte de «usar cuando el usuario diga...». Es feo y funciona. Y si un día necesitas que salga sí o sí, nombra la skill en tu mensaje: «usa presupuesto-bano-getafe para esto»."
+    },
+    {
+      "title": "Guardar la copia y decidir cuál es la siguiente",
+      "where": "En tu ordenador y en tu cabeza",
+      "action": "Copia la carpeta de la skill a donde guardes tus cosas de trabajo, dentro de una carpeta que se llame skills, y añade la fecha al final del nombre del .zip que subiste, tipo presupuesto-bano-getafe-2026-03.zip. La versión que está subida en la app no la puedes editar allí: si un día quieres cambiarla y has perdido el archivo, te toca escribirla de nuevo. Después haz la lista de los tres procedimientos siguientes que repites, ordenados por cuántas veces los hiciste este mes, y escribe solo la descripción de cada uno, sin el cuerpo. Léelas las tres seguidas: si dudas de cuál elegirías tú para una frase, están solapadas y hay que separarlas antes de escribir nada más.",
+      "expect": "Una carpeta skills con al menos un procedimiento dentro y tres descripciones escritas que no se pisan entre sí. Cada una debería mencionar algo que las otras dos no mencionan.",
+      "stuck": "Si las tres descripciones se parecen demasiado, probablemente no son tres skills sino una con tres variantes: júntalas en un solo procedimiento con tres caminos dentro. Es mejor una skill de 200 líneas bien etiquetada que tres de 70 que se pisan."
+    }
+  ],
+  "matters": [
+    "La descripción es lo único que se lee para decidir, y por eso es donde tienes que invertir el tiempo. Ignorarlo tiene un castigo especialmente cruel: la skill existe, se ve en la lista, el interruptor está encendido, y no se activa nunca. Tú te crees cubierto y sigues mandando presupuestos sin la cláusula de validez. Un procedimiento perfecto con una etiqueta vaga es un procedimiento que no existe.",
+    "Probar con tus palabras reales, no con las del manual. La trampa es que cuando pruebas tu propia skill escribes bonito, porque estás en modo prueba, y así funciona siempre. El martes con prisa escribes «cuánto le cobro a la Ortega» y no salta. Saca las frases de prueba de tu correo enviado o de tu WhatsApp de trabajo, literales, con las faltas incluidas.",
+    "Una skill por procedimiento, y que las descripciones no se pisen. Dos etiquetas parecidas es el fallo que más tiempo te va a robar, porque no falla siempre: falla un día sí y otro no, y te pasas semanas creyendo que la IA «está rara». Antes de escribir la tercera skill, lee las tres descripciones seguidas y comprueba que tú mismo sabrías cuál elegir.",
+    "Una skill son instrucciones que la IA va a seguir con los permisos que tú le hayas dado. Instalar una skill que te ha pasado alguien sin leer el SKILL.md entero es lo mismo que ejecutar un programa de un desconocido. Y en las tuyas propias, escribe los límites dentro: no enviar nada, dejar siempre borrador, no cambiar precios de la lista, no prometer plazos que no estén escritos. Lo que no pongas ahí lo decidirá el modelo por su cuenta el día que le falte un dato."
+  ],
+  "ignore": [
+    "Meter scripts dentro de la skill (archivos de programa que se ejecutan solos). El formato lo permite y para ciertos casos es potente, pero un procedimiento en texto plano cubre la práctica totalidad de lo que necesitas escribir este año. Cuando llegue el día en que te haga falta, lo sabrás porque el paso que quieres automatizar será siempre el mismo cálculo.",
+    "El campo allowed-tools y el ajuste fino de permisos por skill. Sirve para limitar qué puede tocar cada procedimiento y tiene sentido cuando trabajas en equipo o con datos delicados. Estando tú solo y revisando lo que sale, los límites escritos en castellano dentro del archivo te dan casi la misma protección con una décima parte del lío.",
+    "Los catálogos de skills hechas por otra gente y compartirlas con un equipo. Instalar skills ajenas antes de haber escrito una tuya es como copiar apuntes de una asignatura a la que no has ido: funcionan hasta que fallan y entonces no sabes ni por dónde abrirlas. Escribe dos tuyas primero, así sabrás leer las de los demás."
+  ],
+  "canDo": [
+    "Escribirte el SKILL.md entero, con la cabecera bien puesta y las siete secciones, a partir de que le cuentes tu procedimiento hablando y en desorden. Esa parte, que es la que más pereza da, se resuelve en diez minutos de conversación.",
+    "Simular la decisión de activación antes de que instales nada: le das una descripción y diez frases, y te dice cuál abriría y por qué. Es la herramienta de diagnóstico más útil que tienes y no cuesta nada.",
+    "Detectar solapes entre varias descripciones y decirte qué frases quedarían en tierra de nadie. Pégale las tres o cuatro descripciones juntas y pregúntale cuáles se pisan.",
+    "Encontrar los huecos de tu procedimiento: los pasos que das por supuestos porque los llevas haciendo diez años y nunca has escrito. Si le pides que marque lo que no le has dicho en vez de rellenarlo, te salen a la primera."
+  ],
+  "cantDo": [
+    "Garantizar que una skill se active. Es un juicio sobre lo que has escrito, no un interruptor que se dispara con una palabra clave. Vas a acertar el 90% de las veces con una descripción trabajada, y para el 10% restante nombras la skill a mano y listo.",
+    "Saberse tus datos. Tus precios, tus plazos, tus cláusulas y el nombre de tu empresa no están en ningún sitio salvo que los escribas tú dentro del archivo. Lo que no le pongas, se lo inventará con una seguridad pasmosa: un IVA que no es, una validez de treinta días que tú nunca das.",
+    "Subir la skill a tu cuenta ni activarla por ti. Crear la carpeta, guardar el archivo, comprimirlo y darle al interruptor son tuyos. Puede darte el contenido perfecto y ahí se acaba su parte.",
+    "Ejecutarse sola sin que haya una conversación. Una skill no se dispara a las ocho de la mañana ni cuando entra un correo: se dispara cuando tú escribes algo que encaja. Que las cosas pasen solas sin ti es otra herramienta distinta y otra lección."
+  ],
+  "words": [
+    [
+      "Skill",
+      "Una carpeta con un procedimiento tuyo escrito dentro, que la IA abre ella sola cuando la conversación va de ese tema. No es un programa: es texto, escrito en castellano normal."
+    ],
+    [
+      "SKILL.md",
+      "El nombre exacto que tiene que llevar el archivo de texto que va dentro de esa carpeta. Todo en mayúsculas, con .md al final y sin nada más pegado detrás."
+    ],
+    [
+      "Cabecera",
+      "Las dos líneas de arriba del archivo, encerradas entre dos rayas de tres guiones, donde van solo el nombre y la descripción. Es lo único que se lee siempre; el resto duerme."
+    ],
+    [
+      "Descripción",
+      "La frase de la cabecera que dice qué hace el procedimiento, cuándo usarlo y cuándo no. Es la que decide si el archivo se abre o se queda en el cajón para siempre."
+    ],
+    [
+      "Markdown",
+      "Una forma de escribir texto donde pones almohadillas delante de los títulos y guiones delante de las listas, y ya está. Se lee perfectamente aunque no lo pinte nadie."
+    ],
+    [
+      "Carga progresiva",
+      "Que solo se lea la etiqueta de cada procedimiento hasta que uno haga falta, y entonces se abra ese entero. Es lo que te permite tener treinta guardados sin atascar nada."
+    ],
+    [
+      "Ventana de contexto",
+      "Todo lo que la IA tiene delante en un momento dado: tu conversación, tus archivos y las etiquetas de tus procedimientos. Tiene un tamaño máximo, y cuanto más la llenas de cosas que no vienen al caso, peor te contesta a lo que acabas de pedir."
+    ],
+    [
+      "Disparador",
+      "Una palabra o una frase de las que tú escribes de verdad y que hace que un procedimiento se abra. Cuantos más metas en la descripción, más puertas de entrada tiene."
+    ],
+    [
+      "Instrucciones del proyecto",
+      "El cuadro de texto donde escribes cómo quieres que se comporte la IA en todas las conversaciones de un proyecto. Está siempre encendido, que es su ventaja y su problema."
+    ],
+    [
+      "Carpeta comprimida",
+      "Un archivo acabado en .zip que mete una carpeta entera dentro de un solo paquete para poder subirla de una vez. Se crea con el botón derecho del ratón."
+    ]
+  ],
+  "next": "Escribe las dos skills siguientes de tu lista usando solo las tareas 1 a 4 de esta lección, y no subas ninguna hasta que las tres descripciones pasen la prueba de las diez frases sin pisarse entre ellas."
+}

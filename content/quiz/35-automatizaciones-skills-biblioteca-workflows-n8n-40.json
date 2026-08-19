@@ -1,0 +1,63 @@
+{
+  "categoryId": "35-automatizaciones-skills-biblioteca-workflows-n8n-40",
+  "basico": [
+    {
+      "prompt": "Importas uno de estos workflows en tu n8n y lo activas sin tocar nada. ¿Qué es lo más probable que pase?",
+      "options": [
+        { "text": "Falla en el primer nodo que necesita credenciales, porque el JSON no las trae", "correct": true, "why": "Exacto, y es lo correcto: un workflow exportado nunca lleva las claves dentro. Si las llevara, cualquiera que lo descargara tendría acceso a tus cuentas." },
+        { "text": "Funciona igual que en el ordenador de quien lo creó", "correct": false, "why": "Es lo que uno esperaría de un archivo «completo», pero las credenciales son propias de cada instalación y hay que volver a conectarlas." },
+        { "text": "n8n pide las claves automáticamente al importarlo", "correct": false, "why": "Marca los nodos como incompletos, pero no te guía: tienes que ir nodo a nodo. De ahí que el primer paso siempre sea revisar el lienzo entero." }
+      ],
+      "explain": "Un workflow exportado es el plano, no la casa montada. Las credenciales se ponen siempre en destino."
+    },
+    {
+      "prompt": "¿Por qué estos 40 workflows se entregan como archivos JSON y no como capturas de pantalla del flujo?",
+      "options": [
+        { "text": "Porque el JSON se importa y queda funcionando, mientras que una captura habría que reconstruirla nodo a nodo", "correct": true, "why": "Correcto. El JSON es el flujo, no una imagen del flujo. Se importa, se modifica y se vuelve a exportar." },
+        { "text": "Porque ocupa menos espacio", "correct": false, "why": "Ocupa menos, sí, pero eso no es lo que aporta. Lo que aporta es que es ejecutable." },
+        { "text": "Porque las capturas se ven mal en pantallas pequeñas", "correct": false, "why": "Un problema real de las capturas, pero secundario: lo decisivo es que una imagen no se puede importar." }
+      ],
+      "explain": "Si un material de formación se puede ejecutar, se entrega ejecutable."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Al abrir un workflow importado ves un nodo Code entre el webhook y la llamada al modelo. ¿Qué revisas primero?",
+      "options": [
+        { "text": "Qué campos espera recibir y qué devuelve cuando falta alguno", "correct": true, "why": "Correcto. El nodo Code es donde se normaliza la entrada, y es el sitio donde un campo ausente se convierte en un `undefined` que revienta tres nodos más adelante." },
+        { "text": "Si el código está bien indentado y es legible", "correct": false, "why": "Ayuda a leerlo, pero un código precioso que no contempla el campo vacío falla exactamente igual." },
+        { "text": "La versión de Node que usa n8n", "correct": false, "why": "Muy rara vez es la causa. Se comprueba cuando ya has descartado lo probable, no antes." }
+      ],
+      "explain": "En un flujo importado, mira primero los puntos donde los datos cambian de forma."
+    },
+    {
+      "prompt": "Quieres adaptar uno de estos workflows a tu caso sin romper el original. ¿Cómo lo haces?",
+      "options": [
+        { "text": "Duplicas el workflow, le pones un nombre con tu proyecto y trabajas sobre la copia", "correct": true, "why": "Sí, y el nombre importa: dentro de un mes tendrás seis workflows parecidos y «Lead Qualification CRM copy 3» no te dirá nada." },
+        { "text": "Editas el original y guardas versiones exportando el JSON cada vez", "correct": false, "why": "Funciona como copia de seguridad, pero pierdes la referencia limpia para comparar cuando algo deje de ir." },
+        { "text": "Creas uno desde cero copiando los nodos a mano", "correct": false, "why": "Aprendes mucho haciéndolo, pero para adaptar es tiempo perdido y te dejarás una conexión." }
+      ],
+      "explain": "Copia, renombra con sentido y conserva el original intacto como referencia."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Vas a poner uno de estos workflows en producción con volumen real. ¿Qué le falta al JSON de ejemplo?",
+      "options": [
+        { "text": "Rama de error con registro, control de duplicados y límites de gasto o de peticiones", "correct": true, "why": "Correcto, y es lo esperable: un ejemplo didáctico enseña el camino principal. Lo que lo convierte en producción es todo lo que se añade alrededor de ese camino." },
+        { "text": "Nada: si funciona con datos de prueba, funciona con datos reales", "correct": false, "why": "Con datos de prueba nunca llega el evento duplicado, ni el campo con emojis, ni el día que la API responde en ocho segundos." },
+        { "text": "Más nodos de transformación para cubrir todos los formatos posibles", "correct": false, "why": "Cubrir formatos infinitos es imposible. Se valida en la frontera y se rechaza lo que no encaja, con un mensaje claro." }
+      ],
+      "explain": "Un ejemplo enseña el camino feliz. Producción es el otro 80%."
+    },
+    {
+      "prompt": "Este workflow se ejecuta 5.000 veces al día y llama a un modelo en cada ejecución. ¿Cuál es la primera optimización que planteas?",
+      "options": [
+        { "text": "Filtrar antes de llamar al modelo: la mayoría de casos suelen resolverse con una regla", "correct": true, "why": "Correcto, y es la optimización más rentable y la que menos se hace. Si el 70% de las entradas son clasificables con una condición, ahí tienes el 70% del gasto eliminado sin tocar la calidad." },
+        { "text": "Cambiar a un modelo más barato para las 5.000", "correct": false, "why": "Ayuda, y es el segundo paso. Pero sigues pagando por llamadas que no hacían falta." },
+        { "text": "Aumentar el número de ejecuciones en paralelo", "correct": false, "why": "Eso mejora el tiempo total, no el coste. Y probablemente te lleve al límite de peticiones de la API." }
+      ],
+      "explain": "La llamada más barata al modelo es la que no se hace."
+    }
+  ]
+}

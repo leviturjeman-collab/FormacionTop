@@ -1,0 +1,78 @@
+{
+  "id": "logs",
+  "match": "log|logs|registro|trazabilidad|auditor|observabilidad|monitoriza|coste|costes|tokens|jsonl",
+  "stages": [
+    "calidad",
+    "seguridad"
+  ],
+  "tools": [
+    "python"
+  ],
+  "title": "Registra cada llamada al modelo en una línea de JSON",
+  "what": "Escribe en un archivo, por cada llamada al modelo, qué le mandaste, qué modelo elegiste y por qué, qué te contestó, cuántos tokens gastaste, cuánto costó en euros y cuánto tardó.",
+  "why": "Sin esto, cuando llegue la factura de 47 euros no vas a saber qué la ha provocado, y cuando un usuario diga que el programa le contestó una barbaridad no vas a poder comprobarlo. Un registro así se escribe una vez y responde para siempre a las tres preguntas que más duelen: qué pasó, cuánto cuesta y qué llamada concreta se rompió. Además te deja calcular el coste real por usuario antes de ponerle precio a nada.",
+  "lang": "python",
+  "install": "python -m pip install openai",
+  "code": "# registro.py - una línea por llamada: qué entró, qué se decidió, qué salió y cuánto costó\nimport json, os, time, uuid\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nfrom openai import OpenAI\n# La clave se lee del entorno. Nunca se escribe dentro del archivo.\ncliente = OpenAI(api_key=os.environ[\"OPENAI_API_KEY\"])\nREGISTRO = Path(\"registro.jsonl\")\n# Euros por millón de tokens (entrada, salida). Comprueba los tuyos en platform.openai.com/pricing\nPRECIOS = {\"gpt-4o-mini\": (0.14, 0.56), \"gpt-4.1-mini\": (0.37, 1.48)}\n\ndef elegir_modelo(pregunta):\n    # Esta es la decisión que querrás poder auditar dentro de un mes.\n    if len(pregunta) < 200:\n        return \"gpt-4o-mini\", \"pregunta corta -> modelo barato\"\n    return \"gpt-4.1-mini\", \"pregunta larga -> modelo grande\"\n\ndef anotar(fila):\n    # \"a\" = añadir al final. Nunca machaca lo que ya estaba escrito.\n    with REGISTRO.open(\"a\", encoding=\"utf-8\") as f:\n        f.write(json.dumps(fila, ensure_ascii=False) + \"\\n\")\n\ndef preguntar(pregunta):\n    modelo, motivo = elegir_modelo(pregunta)\n    fila = {\n        \"id\": uuid.uuid4().hex[:8],\n        \"fecha\": datetime.now(timezone.utc).isoformat(timespec=\"seconds\"),\n        \"modelo\": modelo,\n        \"decision\": motivo,\n        \"entrada\": pregunta[:500],\n    }\n    arranque = time.perf_counter()\n    try:\n        r = cliente.chat.completions.create(model=modelo, max_tokens=300,\n            messages=[{\"role\": \"user\", \"content\": pregunta}])\n        entrada_tok, salida_tok = r.usage.prompt_tokens, r.usage.completion_tokens\n        precio_e, precio_s = PRECIOS[modelo]\n        fila[\"salida\"] = r.choices[0].message.content[:500]\n        fila[\"tokens_entrada\"], fila[\"tokens_salida\"] = entrada_tok, salida_tok\n        fila[\"coste_eur\"] = round(entrada_tok / 1e6 * precio_e + salida_tok / 1e6 * precio_s, 6)\n    except Exception as e:\n        # Un fallo también se registra: si no, nunca sabrás cuántas veces se cayó.\n        fila[\"error\"] = f\"{type(e).__name__}: {e}\"\n        fila[\"coste_eur\"] = 0\n    fila[\"segundos\"] = round(time.perf_counter() - arranque, 2)\n    anotar(fila)\n    return fila\n\nif __name__ == \"__main__\":\n    resultado = preguntar(\"Dime en una frase qué es un token.\")\n    print(resultado.get(\"salida\") or resultado[\"error\"])\n    lineas = REGISTRO.read_text(encoding=\"utf-8\").splitlines()\n    total = sum(json.loads(l).get(\"coste_eur\", 0) for l in lineas if l.strip())\n    print(f\"{len(lineas)} llamadas registradas, {total:.6f} EUR en {REGISTRO.resolve()}\")\n",
+  "lines": [
+    [
+      "cliente = OpenAI(api_key=os.environ[\"OPENAI_API_KEY\"])",
+      "La clave sale de una variable de entorno (un dato que guardas en tu ordenador, fuera del código). Si te la olvidas, el programa se para en la primera línea con un error claro, en vez de fallar a mitad de un lote de 300 llamadas."
+    ],
+    [
+      "REGISTRO = Path(\"registro.jsonl\")",
+      "JSONL significa \"un objeto JSON por línea\". Se elige eso y no un JSON normal porque puedes añadir líneas al final eternamente sin releer ni reescribir el archivo, y porque si el programa se corta a media escritura solo pierdes la última línea, no las 40.000 anteriores."
+    ],
+    [
+      "PRECIOS = {\"gpt-4o-mini\": (0.14, 0.56), \"gpt-4.1-mini\": (0.37, 1.48)}",
+      "Los precios viven aquí, escritos, y no en tu cabeza. Son euros por cada millón de tokens: primero lo que cuesta lo que envías, después lo que cuesta lo que te responden. Responder es unas cuatro veces más caro que preguntar, y eso explica casi todas las facturas raras."
+    ],
+    [
+      "return \"gpt-4o-mini\", \"pregunta corta -> modelo barato\"",
+      "La función no devuelve solo el modelo: devuelve también el motivo, en texto. Ese motivo es la columna \"decisión\" del registro. Sin ella tienes el qué pasó pero no el por qué, y el por qué es justo lo que necesitas cuando algo va mal."
+    ],
+    [
+      "with REGISTRO.open(\"a\", encoding=\"utf-8\") as f:",
+      "La \"a\" es de append, añadir al final. Con \"w\" borrarías el archivo entero cada vez que arrancas el programa: perderías todo el histórico sin aviso y sin papelera. El encoding=\"utf-8\" es obligatorio en Windows si no quieres ver \"cuánto costó\" convertido en símbolos."
+    ],
+    [
+      "f.write(json.dumps(fila, ensure_ascii=False) + \"\\n\")",
+      "json.dumps convierte el diccionario de Python en texto. ensure_ascii=False deja las tildes y las eñes tal cual en vez de escribirlas como \\u00f1. El salto de línea al final es lo que separa una llamada de la siguiente."
+    ],
+    [
+      "\"entrada\": pregunta[:500],",
+      "Se guardan solo los primeros 500 caracteres de la pregunta. Guardar el texto entero multiplica el tamaño del archivo por veinte y, si tus usuarios escriben datos personales, te convierte en el guardián de un montón de información que no querías tener."
+    ],
+    [
+      "entrada_tok, salida_tok = r.usage.prompt_tokens, r.usage.completion_tokens",
+      "Los tokens los da la propia API en el campo usage, ya contados y facturados. Nunca los estimes tú dividiendo caracteres entre cuatro: te vas a equivocar entre un 10 % y un 30 %, y siempre por debajo."
+    ],
+    [
+      "fila[\"coste_eur\"] = round(entrada_tok / 1e6 * precio_e + salida_tok / 1e6 * precio_s, 6)",
+      "Aquí se traduce tokens a dinero. Se divide entre un millón porque el precio está por millón de tokens, y se redondea a seis decimales porque una llamada suelta cuesta del orden de 0,00002 euros: con dos decimales todo saldría cero."
+    ],
+    [
+      "fila[\"error\"] = f\"{type(e).__name__}: {e}\"",
+      "Los fallos también se escriben en el registro, con coste cero. Es lo más valioso del archivo: el día que el 8 % de tus llamadas devuelva error 429, lo verás contado y con hora, en vez de enterarte porque un cliente se queja."
+    ]
+  ],
+  "errors": [
+    [
+      "KeyError: 'OPENAI_API_KEY'",
+      "No has puesto la clave en esta ventana de PowerShell. Escribe $env:OPENAI_API_KEY=\"sk-...\" y pulsa Enter antes de lanzar el programa. Ojo: eso vale solo para esa ventana; si la cierras, hay que repetirlo."
+    ],
+    [
+      "ModuleNotFoundError: No module named 'openai'",
+      "El conector de OpenAI no está instalado, o lo instalaste en otro Python distinto del que estás usando. Ejecuta python -m pip install openai (con python -m delante te aseguras de que va al mismo Python que ejecuta el archivo)."
+    ],
+    [
+      "openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details.'",
+      "No es que vayas demasiado rápido: es que tu cuenta de OpenAI está a cero. La API no tiene plan gratis y la recarga mínima son 5 dólares en platform.openai.com/settings/organization/billing. Con gpt-4o-mini, mil llamadas como la del ejemplo cuestan unos 0,02 euros, así que esos 5 dólares duran meses."
+    ],
+    [
+      "openai.NotFoundError: Error code: 404 - {'error': {'message': 'The model `gpt-4.1-mini` does not exist or you do not have access to it'",
+      "Ese nombre de modelo ya no existe o tu cuenta no lo tiene activado. Los nombres caducan cada pocos meses. Mira la lista real en platform.openai.com/docs/models y cambia las dos claves del diccionario PRECIOS y los dos return de elegir_modelo por nombres que sigan vivos."
+    ]
+  ],
+  "adapt": "Cambia los dos nombres de modelo (en PRECIOS y en elegir_modelo) por los que uses tú, y ajusta los precios mirando platform.openai.com/pricing: si los dejas desfasados, el archivo te mentirá con mucha confianza. La regla de elegir_modelo es un ejemplo; sustitúyela por tu decisión real (por idioma, por tipo de cliente, por si hay respuesta en caché) y deja siempre un texto corto explicando el motivo. Si guardas datos de personas, quita la línea de \"entrada\" o recórtala a 100 caracteres. Y si el archivo pasa de 50 MB, renómbralo a registro-2026-08.jsonl a principio de mes: el programa creará uno nuevo solo, sin borrar el viejo."
+}

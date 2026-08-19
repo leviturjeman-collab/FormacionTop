@@ -1,0 +1,78 @@
+{
+  "id": "ci-github",
+  "match": "ci|cd|github actions|workflow|pipeline|pruebas|tests|pytest|desplegar|despliegue|deploy|producci[oó]n",
+  "stages": [
+    "calidad",
+    "entrega"
+  ],
+  "tools": [
+    "github"
+  ],
+  "title": "Bloquea el despliegue si las pruebas fallan",
+  "what": "Cada vez que subes código a GitHub, ejecuta tus pruebas en un ordenador de GitHub y solo lanza el despliegue si todas pasan.",
+  "why": "Sin esto dependes de acordarte de ejecutar las pruebas antes de subir, y un martes a las ocho de la tarde no te acuerdas. Un import mal escrito o una función que devuelve None llega a producción y tu API responde 500 a todo el mundo. Con este archivo, si una prueba falla, el despliegue no arranca: tus usuarios se quedan con la versión anterior, que funcionaba.",
+  "lang": "yaml",
+  "install": "pip install pytest==8.3.4",
+  "code": "# Guarda este archivo en: .github/workflows/ci.yml\n# GitHub lee esta carpeta solo y ejecuta el archivo en un ordenador suyo, gratis.\nname: Pruebas y despliegue\n\n# \"on\" = cuándo se dispara. Al subir a main y en cada propuesta de cambio.\non:\n  push:\n    branches: [main]\n  pull_request:\n\n# El robot solo puede LEER tu repositorio. No puede borrar ni reescribir nada.\npermissions:\n  contents: read\n\njobs:\n  # Primer trabajo: comprobar que el código funciona.\n  pruebas:\n    runs-on: ubuntu-latest\n    timeout-minutes: 10\n    steps:\n      # Copia tu código dentro del ordenador prestado.\n      - uses: actions/checkout@v4\n      - uses: actions/setup-python@v5\n        with:\n          python-version: \"3.12\"\n      - name: Instalar dependencias\n        run: pip install -r requirements.txt\n      - name: Ejecutar las pruebas\n        # La clave NO se escribe aquí. Se lee de Settings > Secrets del repo.\n        env:\n          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n        run: pytest -q\n\n  # Segundo trabajo: publicar. Solo se ejecuta si el primero acabó en verde.\n  desplegar:\n    # Esta línea es la barrera. Si \"pruebas\" falla, esto ni siquiera empieza.\n    needs: pruebas\n    # Y solo publicamos desde main, nunca desde una rama a medias.\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - name: Avisar a Render de que despliegue\n        env:\n          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}\n        # -f hace que curl falle si el servidor responde con un error.\n        run: curl -fsS -X POST \"$RENDER_DEPLOY_HOOK\"",
+  "lines": [
+    [
+      "branches: [main]",
+      "Limita el disparador a la rama principal. Sin esta línea, cada rama experimental que subas gasta minutos de ejecución y te llena el correo de avisos de fallos que no importan."
+    ],
+    [
+      "contents: read",
+      "Le quita permisos de escritura al robot. Si alguien mete una dependencia maliciosa en tu proyecto, no podrá borrarte el repositorio ni publicar código nuevo desde aquí."
+    ],
+    [
+      "timeout-minutes: 10",
+      "Corta la ejecución a los 10 minutos. Una prueba que se queda colgada esperando una respuesta podría correr 6 horas (el máximo de GitHub) y consumirte 360 minutos de tu cuota."
+    ],
+    [
+      "- uses: actions/setup-python@v5",
+      "Instala Python en el ordenador prestado. \"uses\" significa que reutilizas una pieza que ya escribió otra persona; el @v5 fija la versión para que no te cambie sola de un día para otro."
+    ],
+    [
+      "run: pip install -r requirements.txt",
+      "Instala las librerías de tu proyecto. El ordenador de GitHub nace vacío cada vez: nada de lo que tienes instalado en tu portátil existe ahí."
+    ],
+    [
+      "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}",
+      "Pasa la clave a las pruebas sin escribirla en el archivo. Tienes que darla de alta a mano en tu repositorio, en Settings > Secrets and variables > Actions. Si la escribieras aquí directamente, quedaría en el historial de Git para siempre, y en un repositorio público hay robots que la encuentran en menos de un minuto."
+    ],
+    [
+      "run: pytest -q",
+      "Ejecuta las pruebas. Si una falla, pytest termina con un código distinto de cero, y para GitHub eso significa trabajo fallido. Ahí se acaba todo."
+    ],
+    [
+      "needs: pruebas",
+      "La barrera. Le dice a este trabajo que espere al trabajo llamado \"pruebas\" y que solo continúe si acabó bien. Es la única línea que de verdad impide desplegar código roto; si la borras, el despliegue se lanza aunque todo esté en rojo."
+    ],
+    [
+      "if: github.ref == 'refs/heads/main'",
+      "Segundo cerrojo: publicar solo desde la rama principal. Las pruebas sí se ejecutan en las propuestas de cambio, pero el despliegue no, porque desplegar es irreversible: sustituye lo que hay en producción y no hay botón de deshacer."
+    ],
+    [
+      "run: curl -fsS -X POST \"$RENDER_DEPLOY_HOOK\"",
+      "Llama a la URL secreta que le dice a tu servidor que se actualice. El -f es importante: sin él, curl da por bueno un error 401 del servidor y el trabajo aparecería en verde sin haber desplegado nada."
+    ]
+  ],
+  "errors": [
+    [
+      "Error: Process completed with exit code 1.",
+      "Es el mensaje genérico de \"este paso ha fallado\". No te dice nada por sí solo: abre la pestaña Actions en GitHub, pincha en la ejecución roja y despliega el paso \"Ejecutar las pruebas\". Ahí arriba, encima de esa línea, está el fallo real de pytest con el nombre de la prueba y el número de línea."
+    ],
+    [
+      "bash: line 1: pytest: command not found",
+      "pytest no está instalado en el ordenador de GitHub. Casi siempre es porque lo tienes en tu portátil pero no lo has apuntado en requirements.txt. Añade la línea pytest==8.3.4 a ese archivo, súbelo, y vuelve a intentarlo."
+    ],
+    [
+      "The workflow is not valid. .github/workflows/ci.yml (Line: 34, Col: 5): Job 'desplegar' depends on unknown job 'pruebas'.",
+      "Has cambiado el nombre del primer trabajo pero no el de \"needs\". Los dos nombres tienen que coincidir letra por letra, incluidas mayúsculas. Si renombras \"pruebas\" a \"test\", el needs también pasa a ser \"needs: test\"."
+    ],
+    [
+      "curl: (22) The requested URL returned error: 401",
+      "El servidor de despliegue ha rechazado la llamada por credenciales incorrectas. O el secreto RENDER_DEPLOY_HOOK no existe en el repositorio (revisa que el nombre esté escrito igual en los dos sitios), o pegaste la URL a medias. Vuelve al panel de Render, copia el deploy hook entero y pégalo de nuevo."
+    ]
+  ],
+  "adapt": "Cambia tres cosas y ya es tuyo. Uno: la versión de Python, que tiene que ser la misma que usas en tu ordenador (mírala con python --version). Dos: el nombre del secreto de la clave, OPENAI_API_KEY, por el que uses tú; si tu proyecto no llama a ninguna IA, borra el bloque env entero. Tres: el último paso, que aquí avisa a Render; si publicas en Vercel o Fly.io, sustitúyelo por su comando (por ejemplo, npx vercel deploy --prod --token \"$VERCEL_TOKEN\"), siempre leyendo el token de un secreto, nunca escrito en el archivo. Sobre el precio: en repositorios públicos esto es gratis e ilimitado; en repositorios privados el plan Free te da 2.000 minutos al mes, y este flujo gasta entre 1 y 2 minutos por subida, así que te sobran de largo salvo que subas cien veces al día."
+}

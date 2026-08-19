@@ -1,0 +1,234 @@
+{
+  "id": "n8n-automatizacion",
+  "title": "n8n y automatización",
+  "subtitle": "Sales de aquí con un flujo funcionando y sabiendo qué se rompe",
+  "minutes": 60,
+  "slides": [
+    {
+      "kind": "portada",
+      "title": "n8n: automatiza sin escribir código",
+      "text": "Hoy montas un flujo de cuatro cajas que trabaja solo cada mañana.",
+      "notes": "Empieza sin diapositiva: pregunta quién ha programado alguna vez. Si levantan mano dos de veinte, perfecto, díselo en voz alta: hoy nadie escribe código. Promete lo concreto: en 60 minutos tienen un flujo que lee una hoja de cálculo y avisa por Slack."
+    },
+    {
+      "kind": "pregunta",
+      "title": "¿Qué tarea repites cada semana?",
+      "text": "Levanta la mano con la que más se parezca a la tuya.",
+      "items": [
+        "Copiar datos de un correo a una hoja",
+        "Descargar facturas y renombrarlas una a una",
+        "Avisar por WhatsApp de cada pedido nuevo",
+        "Contestar el mismo correo veinte veces"
+      ],
+      "notes": "Pide tres respuestas en voz alta y apúntalas en la pizarra con nombre y propietario: 'las facturas de Ana'. No las borres en toda la clase. En la diapositiva del caso vuelves a ellas y calculáis las horas juntos."
+    },
+    {
+      "kind": "idea",
+      "title": "Automatizar es enchufar programas entre sí",
+      "text": "Cuando pasa X, haz Y. Sin ti delante del ordenador.",
+      "items": [
+        "Tú ya lo haces a mano: mirar, copiar, pegar, avisar",
+        "La máquina hace lo mismo, siempre igual, sin cansarse",
+        "Lo aburrido y repetido se automatiza. Lo que exige criterio, no"
+      ],
+      "notes": "Insiste en la última línea. Automatizar una decisión difícil sale mal; automatizar 'copiar la columna C a Slack' sale bien. La regla práctica: si puedes explicarle la tarea a un becario en dos minutos, se automatiza."
+    },
+    {
+      "kind": "idea",
+      "title": "Qué es n8n, en cristiano",
+      "text": "Un tablero donde dibujas el flujo con cajas y flechas.",
+      "items": [
+        "Arrastras cajas, las unes, le das a ejecutar",
+        "Más de 400 servicios ya conectados: Gmail, Sheets, Slack, Notion",
+        "Ves el flujo correr en pantalla, caja por caja",
+        "Se pronuncia 'eneteocho'. Es alemán, de 2019"
+      ],
+      "notes": "Si tienes n8n abierto, enseña el lienzo diez segundos antes de seguir. Que vean cajas y flechas, no un editor de texto. Aclara ya que 'nodo' y 'caja' son la misma palabra: lo van a oír de las dos formas."
+    },
+    {
+      "kind": "lista",
+      "title": "Cuatro palabras y ya hablas n8n",
+      "items": [
+        "Workflow: el flujo entero, el dibujo completo",
+        "Nodo (node): cada caja, un paso",
+        "Disparador (trigger): el nodo que arranca todo",
+        "Ejecución (execution): una vez que el flujo corre entero",
+        "Credencial: la llave para entrar en Gmail o Slack"
+      ],
+      "notes": "Escríbelas en la pizarra y no las borres. Cada vez que uses una en inglés durante la clase, señálala. La única que confunden es 'ejecución': una ejecución es el flujo entero corriendo una vez, aunque tenga veinte cajas. Eso importa luego para el precio."
+    },
+    {
+      "kind": "codigo",
+      "title": "El dato que viaja se llama JSON",
+      "text": "Se pronuncia 'yeisón'. Es una ficha con etiquetas y valores.",
+      "code": "{\n  \"nombre\": \"Marta Ruiz\",\n  \"email\": \"marta@clinica.es\",\n  \"asunto\": \"No puedo cancelar mi cita\",\n  \"importe\": 640,\n  \"urgente\": true\n}",
+      "notes": "Léelo en voz alta como una ficha: 'etiqueta nombre, valor Marta Ruiz'. Señala las tres reglas que rompen todos: comillas en las etiquetas, coma entre líneas, sin coma en la última. El texto lleva comillas, los números no. Un buen 80% de los fallos del primer día son una coma."
+    },
+    {
+      "kind": "idea",
+      "title": "Entra JSON, sale JSON. Siempre",
+      "text": "Cada caja recibe la ficha, la cambia y se la pasa a la siguiente.",
+      "items": [
+        "n8n te enseña la entrada y la salida de cada caja",
+        "Si la caja 3 falla, mira qué salió de la caja 2",
+        "Depurar es leer esas dos columnas. Nada más"
+      ],
+      "notes": "Esta es la diapositiva clave de la clase. Si se llevan una sola idea, que sea esta. Depurar significa buscar el fallo: tradúcelo. Diles que cuando algo no funcione, la respuesta no está en Google, está en la columna de salida del nodo anterior."
+    },
+    {
+      "kind": "lista",
+      "title": "Tres formas de arrancar un flujo",
+      "items": [
+        "Horario: cada día a las 8:00. El más seguro",
+        "Webhook: una dirección web que se queda escuchando",
+        "Evento: llega un correo, se rellena un formulario",
+        "Manual: le das al botón. Solo para probar"
+      ],
+      "notes": "Webhook significa 'gancho web': una URL que le das a otro programa para que te avise. Rebaja expectativas: el 90% de sus flujos serán 'cada día a las 8' y está perfectamente bien. El horario es el más fácil de controlar y el que menos sustos da."
+    },
+    {
+      "kind": "pregunta",
+      "title": "¿Qué disparador usarías aquí?",
+      "text": "Quieres un resumen de las ventas del día en Slack a las 19:00.",
+      "items": [
+        "Un webhook",
+        "Horario, a las 19:00",
+        "Cada vez que entra un pedido",
+        "Manual, le doy yo al botón"
+      ],
+      "notes": "La correcta es la b. La trampa es la c: si disparas con cada pedido, mandas 300 mensajes al día en vez de uno, y encima gastas 300 ejecuciones. Pregunta '¿qué pasa con la c?' antes de dar la respuesta y deja que lo digan ellos."
+    },
+    {
+      "kind": "codigo",
+      "title": "Expresiones: coger un dato de antes",
+      "text": "Dos llaves y n8n va a buscar el valor a la ficha.",
+      "code": "Para:    {{ $json.email }}\nAsunto:  Sobre tu mensaje: {{ $json.asunto }}\n\nHola {{ $json.nombre.split(' ')[0] }},\nhemos recibido tu consulta de {{ $json.importe }} €.",
+      "notes": "$json quiere decir 'la ficha que llega a esta caja'. El punto baja un nivel: $json.email es el email de esa ficha. split(' ')[0] parte el nombre por el espacio y coge el primer trozo: Marta, no Marta Ruiz. Escríbelo en vivo si puedes: n8n enseña el valor real debajo mientras tecleas."
+    },
+    {
+      "kind": "caso",
+      "title": "Caso: 140 recordatorios de cita",
+      "text": "Una consulta con 140 citas al mes, recordando cada una a mano.",
+      "items": [
+        "Antes: 6 horas al mes de recepción llamando, 18 ausencias",
+        "Flujo: leer la agenda a las 9:00, enviar SMS 24h antes",
+        "Cuatro nodos. Se monta en una tarde",
+        "Después: 7 ausencias. 11 citas recuperadas al mes",
+        "Coste: unos 25 € al mes más los SMS"
+      ],
+      "notes": "Haz la cuenta con ellos en la pizarra: 11 citas a 60 € son 660 € al mes que antes se perdían. Sé honesto sobre el origen: son números de un cálculo razonable, no de un estudio. Si tienes un caso tuyo con facturas de verdad, cuenta el tuyo y tira esta diapositiva."
+    },
+    {
+      "kind": "idea",
+      "title": "La llave se guarda una vez",
+      "text": "Conectas Gmail una vez y todos tus flujos reutilizan esa credencial.",
+      "items": [
+        "n8n la guarda cifrada. No aparece dentro del dibujo",
+        "Nunca escribas una contraseña a mano en un campo",
+        "Al exportar un flujo, las credenciales no viajan dentro"
+      ],
+      "notes": "Aviso serio: si pegan una clave de API a mano en un campo de texto y luego comparten el flujo, esa clave se va con el archivo. Es el fallo de seguridad número uno de los novatos. Si pasa, la clave se anula y se genera otra; no se 'despega'."
+    },
+    {
+      "kind": "lista",
+      "title": "Lo que se rompe el primer día",
+      "items": [
+        "401: la llave está mal o ha caducado",
+        "429: vas demasiado rápido y el servicio te frena",
+        "El flujo funciona en el editor pero está desactivado",
+        "Una coma de más en el JSON",
+        "El nodo no recibe nada porque el anterior devolvió cero filas"
+      ],
+      "notes": "El de 'está desactivado' pasa siempre: prueban en el editor, funciona, cierran, y nunca vuelve a saltar. El interruptor Active está arriba a la derecha. Para el 429, la solución no es reintentar más: es esperar entre llamadas."
+    },
+    {
+      "kind": "codigo",
+      "title": "Dos direcciones: prueba y producción",
+      "text": "Un webhook te da dos URLs y no hacen lo mismo.",
+      "code": "Prueba:      https://tu-n8n.app/webhook-test/nueva-cita\nProducción:  https://tu-n8n.app/webhook/nueva-cita\n\nPrueba     -> solo escucha si has pulsado \"Listen for test event\"\nProducción -> solo funciona si el flujo está Activo",
+      "notes": "Fíjate en el guion de 'webhook-test': es la única diferencia y cuesta una tarde entera de frustración. Si pegan la de prueba en un servicio real, no llega nada y no hay error visible en ningún sitio. Enséñales dónde se copia cada una."
+    },
+    {
+      "kind": "pregunta",
+      "title": "¿Lo activas un viernes a las 18:00?",
+      "text": "Flujo recién hecho: manda un correo a cada cliente. 4.200 contactos.",
+      "items": [
+        "Sí, así corre durante el fin de semana",
+        "No, primero me lo envío a mí mismo",
+        "Sí, pero limitando la lista a 10 contactos",
+        "Da igual, si sale mal lo deshago"
+      ],
+      "notes": "La d) es la importante y es falsa: no hay deshacer. La secuencia correcta es b y luego c. Cuenta el clásico: un bucle mal cerrado que se dispara a sí mismo y saca 5.000 ejecuciones en tres minutos, con 5.000 correos detrás."
+    },
+    {
+      "kind": "idea",
+      "title": "Lo que no se puede deshacer",
+      "text": "n8n no tiene botón de deshacer sobre el mundo real.",
+      "items": [
+        "Correos y mensajes enviados: no vuelven",
+        "Filas borradas en Sheets o Notion: no vuelven",
+        "Pagos, facturas y pedidos disparados: no vuelven",
+        "Regla fija: primero envíatelo a ti, siempre"
+      ],
+      "notes": "Dilo despacio, es la parte de la clase que les evita un disgusto real. Añade dos costumbres: pon un nodo de límite mientras pruebas, y usa un canal de Slack o un correo tuyo como destinatario hasta que el flujo salga bien tres veces seguidas."
+    },
+    {
+      "kind": "lista",
+      "title": "Cuánto cuesta esto de verdad",
+      "items": [
+        "En tu propio servidor: gratis. Pagas el alquiler, 5-10 € al mes",
+        "n8n Cloud: desde unos 20-25 € al mes",
+        "Hay prueba gratis de 14 días para empezar",
+        "n8n cobra por ejecución, no por paso: 20 nodos = 1",
+        "Si metes IA, el modelo se paga aparte"
+      ],
+      "notes": "El cuarto punto es el argumento comercial de n8n: en Zapier un flujo de 20 pasos consume 20 tareas, aquí consume una ejecución. Avisa de que los precios cambian y que miren la web el día que contraten. Montarlo en tu servidor es gratis en licencia, pero te lo mantienes tú."
+    },
+    {
+      "kind": "lista",
+      "title": "n8n, Zapier o Make: cuál",
+      "items": [
+        "Zapier: el más fácil de empezar, se encarece rápido",
+        "Make: muy visual y barato, menos control fino",
+        "n8n: más curva, control total, puedes alojarlo tú",
+        "Datos sensibles que no pueden salir de casa: n8n"
+      ],
+      "notes": "No vendas n8n como superior en todo. Si alguien necesita dos automatizaciones simples y odia la técnica, Zapier es la respuesta honesta. n8n gana cuando hay volumen, lógica rara o datos que por contrato no pueden estar en un servidor ajeno."
+    },
+    {
+      "kind": "idea",
+      "title": "Meter IA dentro del flujo",
+      "text": "Una caja más: le pasas texto, te devuelve texto ordenado.",
+      "items": [
+        "Clasificar 300 tickets: ¿esto es factura, queja o spam?",
+        "Resumir una llamada de 40 minutos en cinco líneas",
+        "Sacar nombre e importe de un PDF de factura",
+        "Que lea y proponga. Que no borre ni envíe solo"
+      ],
+      "notes": "Empieza sin agente: un nodo de modelo, entrada y salida, y a mirar el resultado. El nodo de agente puede usar herramientas por su cuenta y ahí es donde la gente se mete en líos. Deja siempre una persona aprobando antes de que salga algo hacia un cliente."
+    },
+    {
+      "kind": "lista",
+      "title": "Tu primer flujo: cuatro nodos",
+      "items": [
+        "Schedule: cada día a las 8:00",
+        "Google Sheets: leer las filas nuevas",
+        "IF: ¿el importe pasa de 500 €?",
+        "Slack: avisar al canal de ventas"
+      ],
+      "notes": "Este es el flujo que montan ahora, tienen 15 minutos. IF significa 'si': si se cumple la condición, sale por arriba; si no, por abajo. Pásate por las mesas y busca dos fallos concretos: hoja sin compartir y el interruptor Active sin tocar."
+    },
+    {
+      "kind": "cierre",
+      "title": "Qué te llevas, qué haces mañana",
+      "text": "Una idea, una tarea y una regla de seguridad.",
+      "items": [
+        "La idea: entra JSON, sale JSON. Eso es todo n8n",
+        "La tarea: monta tu flujo de cuatro nodos antes del jueves",
+        "La regla: pruébalo contigo antes de soltarlo al mundo",
+        "Trae el flujo que se te rompa a la próxima clase"
+      ],
+      "notes": "Cierra pidiendo un compromiso concreto en voz alta: cada uno dice qué tarea suya va a automatizar primero, de las que apuntaste en la pizarra al principio. Recuérdales que traer un flujo roto vale más que traerlo perfecto: la clase siguiente va de arreglar."
+    }
+  ]
+}

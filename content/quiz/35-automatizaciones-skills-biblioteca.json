@@ -1,0 +1,63 @@
+{
+  "categoryId": "35-automatizaciones-skills-biblioteca",
+  "basico": [
+    {
+      "prompt": "Tienes una tarea que repites cada lunes y tres formas de automatizarla: un flujo visual en n8n, un programa que escribes, o una skill para el asistente. No sabes cuál toca.",
+      "options": [
+        { "text": "Flujo visual si necesitas ver el proceso y conectar varias aplicaciones; programa si necesitas repetirlo exacto y guardar versiones; skill si lo que se repite es el criterio, no los pasos", "correct": true, "why": "Correcto, y la última distinción es la que cuesta ver. Si cada lunes haces los mismos cinco pasos, es un flujo. Si cada lunes tomas la misma decisión sobre datos distintos, es una skill." },
+        { "text": "La que mejor domines de las tres", "correct": false, "why": "A corto plazo funciona y no es mal criterio para empezar. Se rompe cuando se convierte en el único: acabas montando en un flujo visual cosas que eran tres líneas de programa, y al revés." },
+        { "text": "Siempre la skill: es lo más moderno de las tres", "correct": false, "why": "Es lo que más se oye ahora mismo, y por eso tienta. Una skill no ejecuta nada por sí sola: si lo que necesitas es que algo pase a las 8:00 sin que tú abras nada, necesitas un flujo o un programa." }
+      ],
+      "explain": "Flujo para conectar cosas. Programa para repetir exacto. Skill para repetir criterio."
+    },
+    {
+      "prompt": "Vas a probar una automatización que escribe fichas en el CRM (el programa donde tu cliente guarda sus contactos y ventas) de un cliente real.",
+      "options": [
+        { "text": "Primero con datos inventados. Un flujo a medio montar que escribe en el CRM real deja fichas que hay que borrar a mano, y algunas ya han disparado avisos a comerciales", "correct": true, "why": "Correcto, y el detalle de los avisos es el que más duele: no basta con borrar la ficha, porque el correo automático de \"nuevo lead\" ya salió. Cinco fichas inventadas cuestan dos minutos y te ahorran esa llamada." },
+        { "text": "Con datos reales pero configurando el flujo en modo solo lectura", "correct": false, "why": "Es más seguro que la alternativa y por eso parece suficiente. Basta un nodo mal conectado, o pulsar el botón equivocado mientras pruebas, para que deje de ser solo lectura." },
+        { "text": "Con una copia del CRM del cliente", "correct": false, "why": "Es lo ideal y si la tienes, úsala. El problema es práctico: casi ningún cliente pequeño tiene entorno de pruebas, y montarlo cuesta más que inventarse cinco fichas." }
+      ],
+      "explain": "Datos inventados hasta que el flujo esté entero. Lo que escribe en un sistema real no se prueba a medias."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tu flujo funciona perfectamente cuando lo pruebas paso a paso. Lo conectas al formulario de la web real y no llega absolutamente nada: ni un error, ni una ejecución, silencio.",
+      "options": [
+        { "text": "La dirección de escucha de pruebas y la de producción son distintas, y hasta que no activas el flujo la de producción no escucha", "correct": true, "why": "Correcto, y es el fallo número uno de n8n, con diferencia. Copiar la dirección de pruebas a un formulario real es tan habitual que conviene comprobarlo antes que nada: si no hay ni una ejecución registrada, es esto." },
+        { "text": "El formulario envía los datos con nombres que el flujo no reconoce", "correct": false, "why": "Pasa muchísimo y hay que comprobarlo después. Pero produciría una ejecución con un error dentro, no silencio: si no aparece nada en el historial, la petición no llegó nunca." },
+        { "text": "Faltan credenciales en algún nodo", "correct": false, "why": "Es una causa frecuente de que un flujo no funcione, así que la sospecha es sana. Con credenciales mal verías una ejecución en rojo señalando el nodo, que es información. Aquí no hay ni eso." }
+      ],
+      "explain": "Si no aparece ninguna ejecución, el problema es anterior al flujo: es la dirección o que no está activo."
+    },
+    {
+      "prompt": "Un nodo del flujo falla con el registro número 12 de una lista de 50 y el flujo se detiene. Los 38 restantes no se procesan.",
+      "options": [
+        { "text": "Decide a propósito qué quieres: parar todo o apartar el fallido y seguir. Las dos son válidas, pero lo apartado tiene que dejar rastro", "correct": true, "why": "Correcto, y depende del caso: si estás cobrando, parar es lo correcto; si estás etiquetando contactos, seguir y apartar es mejor. Lo que no es una opción es que se aparte en silencio y nadie lo mire nunca." },
+        { "text": "Configurar todos los nodos para que continúen siempre ante un error", "correct": false, "why": "Evita el bloqueo, que es el síntoma molesto, y por eso se activa a la ligera. Se rompe porque los fallos pasan sin que nadie se entere: así se pierden pedidos durante semanas." },
+        { "text": "Poner reintento automático en el nodo que falla", "correct": false, "why": "Es lo correcto cuando el fallo es pasajero, como un servicio que no responde un segundo. Se rompe si el fallo es del dato: reintentas cinco veces el mismo dato malo con el mismo resultado, y si el nodo enviaba correos, has mandado cinco." }
+      ],
+      "explain": "Ante un fallo a mitad, elige: parar o apartar. Lo que no vale es apartar sin dejar rastro."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Vas a entregar una automatización a un cliente y a cobrarla. Tienes el flujo terminado y funcionando.",
+      "options": [
+        { "text": "Entrega el flujo, el caso que falla, cómo se apaga y a nombre de quién están las cuentas de cada servicio", "correct": true, "why": "Correcto, y lo último es lo que hunde estas entregas. Lo que rompe la relación no es que el flujo falle: es que a los dos meses caduca una credencial, nadie sabe de quién era la cuenta y el cliente descubre que dependía de tu tarjeta." },
+        { "text": "El flujo exportado y un manual de uso bien escrito", "correct": false, "why": "Es la entrega habitual y parece profesional. El manual explica cómo se usa cuando va bien; la llamada del cliente siempre llega cuando va mal, y para eso no hay página." },
+        { "text": "Dejarlo funcionando en tu cuenta y cobrar una cuota de mantenimiento", "correct": false, "why": "Es un modelo de negocio legítimo y hay quien trabaja así. Un cliente con criterio no lo acepta porque es una dependencia total de ti, y si tú desapareces el negocio se le para." }
+      ],
+      "explain": "Entregar una automatización incluye decir cómo falla, cómo se apaga y de quién son las cuentas."
+    },
+    {
+      "prompt": "Tienes que decidir si n8n va instalado en un equipo tuyo o en la versión de nube que ofrece la empresa.",
+      "options": [
+        { "text": "Instalado no cuesta licencia, pero cuesta que alguien lo mantenga encendido, actualizado y con copia de seguridad. La nube (desde unos 20-25 € al mes) compra ese trabajo", "correct": true, "why": "Correcto, y de ahí sale la regla práctica: para aprender y para tus cosas, instalado; para un cliente que factura con ese flujo, casi siempre nube. La diferencia de precio es pequeña comparada con una noche que el servidor se apague." },
+        { "text": "Instalado siempre: es gratis y tienes el control", "correct": false, "why": "Gratis en licencia, y esa parte es cierta. No es gratis en tu tiempo, y sobre todo: el día que el equipo se apague o se actualice el sistema, el flujo del cliente deja de existir y te enteras por él." },
+        { "text": "En la nube siempre: es lo profesional", "correct": false, "why": "Para trabajo de cliente suele ser la respuesta correcta, por eso convence como norma. Como norma absoluta falla: pagar 25 € al mes por un flujo que corre una vez al día en tu propio ordenador es pagar por nada." }
+      ],
+      "explain": "Instalado no cuesta licencia, cuesta responsabilidad. La nube compra esa responsabilidad por unos 25 € al mes."
+    }
+  ]
+}

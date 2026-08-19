@@ -1,0 +1,119 @@
+{
+  "id": "arreglar-errores",
+  "title": "Cuando algo no funciona y no sabes por qué",
+  "intro": "Aquí tienes los prompts para el momento en que te sale un texto rojo, una pantalla en blanco o simplemente algo que no hace lo que debería. Sirven para que la IA te traduzca el problema a español normal, te diga qué probar primero y te pregunte lo que necesita saber en vez de inventárselo. Úsalos en cuanto te bloquees, sin intentar entender nada por tu cuenta antes.",
+  "model": "Claude va mejor para pegar errores largos, ficheros enteros y conversaciones de diagnóstico que se alargan; ChatGPT es más cómodo para el día a día, capturas de pantalla y problemas con herramientas de oficina; Gemini gana cuando el fallo está en algo de Google (Drive, Sheets, Gmail, Apps Script) o cuando quieres enseñarle un vídeo de lo que ves.",
+  "prompts": [
+    {
+      "name": "Tradúceme el error a español",
+      "when": "Te ha salido un texto rojo, una ventana con letras raras o un aviso que no entiendes. Es el primero al que tienes que ir.",
+      "prompt": "Actúa como un profesor de informática con mucha paciencia que explica las cosas a alguien que nunca ha programado y que no sabe lo que es una terminal. Te voy a pegar un mensaje de error tal y como me aparece en pantalla. No entiendo ni una palabra, así que no des por sabido nada y traduce cada término técnico la primera vez que lo uses.\n\nContexto: estoy usando [HERRAMIENTA O PROGRAMA]. Lo que intentaba hacer era [QUÉ ESTABAS HACIENDO]. El error apareció [CUÁNDO APARECIÓ].\n\nEste es el error completo, copiado sin tocar nada:\n\n[PEGA AQUÍ EL ERROR ENTERO]\n\nRespóndeme exactamente en este orden y con estos títulos:\n1. QUÉ TE ESTÁ DICIENDO: una sola frase, en lenguaje de bar, sin tecnicismos.\n2. QUÉ PARTE IMPORTA: señálame la línea concreta que hay que mirar y dime qué partes son ruido que puedo ignorar.\n3. POR QUÉ PASA: las tres causas más probables, ordenadas de la más frecuente a la menos.\n4. QUÉ HAGO AHORA: solo la primera cosa que debo probar, explicada paso a paso, diciéndome dónde hago clic y qué escribo. Nada de suponer que sé abrir menús ocultos.\n5. CÓMO SÉ QUE HA FUNCIONADO: qué debería ver en pantalla si el arreglo ha ido bien.\n\nSi el error que te he pegado no es suficiente para responder, no adivines: dime exactamente qué información más necesitas y cómo la consigo.",
+      "fill": [
+        ["[HERRAMIENTA O PROGRAMA]", "El sitio donde te ha pasado. Ejemplo: la web que estoy montando en Lovable, el ordenador con Windows 11, la hoja de cálculo de Google"],
+        ["[QUÉ ESTABAS HACIENDO]", "La acción concreta, sin adornos. Ejemplo: le he dado al botón de Publicar, he pegado el código que me diste en el archivo index.html"],
+        ["[CUÁNDO APARECIÓ]", "El momento exacto. Ejemplo: nada más darle a Guardar, después de esperar unos 20 segundos, al recargar la página"],
+        ["[PEGA AQUÍ EL ERROR ENTERO]", "Todo el texto, incluidas las líneas que parecen basura. No lo resumas ni cortes: lo importante suele estar en la parte que tú descartarías"]
+      ],
+      "expect": "Una explicación en una frase de qué ha pasado, tres sospechas ordenadas por probabilidad y una única acción concreta para probar ahora, no una lista de diez.",
+      "next": "Haz solo el paso 4 y nada más. Vuelve a la misma conversación y cuenta qué ha pasado, aunque no haya cambiado nada. No abras un chat nuevo: la IA pierde todo el contexto."
+    },
+    {
+      "name": "No hay error, pero no funciona",
+      "when": "Nada se ha puesto rojo, no hay aviso de ningún tipo, pero el resultado no es el que esperabas.",
+      "prompt": "Actúa como un técnico de soporte que atiende a una persona sin conocimientos técnicos y que no puede ver su pantalla. No hay ningún mensaje de error, así que tendrás que trabajar solo con lo que yo te describa. No des por hecho que sé la diferencia entre que algo esté roto y que esté mal configurado.\n\nLO QUE ESPERABA QUE PASARA: [LO QUE DEBERÍA PASAR]\nLO QUE PASA DE VERDAD: [LO QUE VES]\nDÓNDE PASA: [HERRAMIENTA O PROGRAMA]\nQUÉ HICE JUSTO ANTES: [ÚLTIMA ACCIÓN]\nCUÁNTAS VECES PASA: [SIEMPRE O A VECES]\n\nAntes de darme ninguna solución, quiero que hagas esto:\n1. Repíteme con tus palabras lo que has entendido que está pasando. Si me he explicado mal, lo veré ahí.\n2. Dime si esto suena a que la cosa no llega a hacerse, a que se hace pero mal, o a que se hace bien y yo estoy mirando en el sitio equivocado. Son tres problemas distintos.\n3. Dame como máximo tres comprobaciones rápidas, en orden, cada una de menos de un minuto, y para cada una dime qué resultado significaría que vamos por buen camino y qué resultado lo descartaría.\n\nNo me des la solución todavía. Primero quiero saber dónde está el problema. Si con esta descripción no puedes orientarte, pídeme la información que te falte en forma de preguntas cerradas de sí o no.",
+      "fill": [
+        ["[LO QUE DEBERÍA PASAR]", "Descríbelo como se lo contarías a tu madre. Ejemplo: al rellenar el formulario y darle a Enviar, me debería llegar un correo"],
+        ["[LO QUE VES]", "Lo literal, sin interpretar. Ejemplo: la página se queda igual, el botón se pone gris un segundo y vuelve a la normalidad, no llega ningún correo"],
+        ["[HERRAMIENTA O PROGRAMA]", "Dónde estás. Ejemplo: mi web hecha con Wix, la app de ChatGPT en el móvil"],
+        ["[ÚLTIMA ACCIÓN]", "Lo último que tocaste antes de que dejara de ir. Ejemplo: cambié el color de los botones, pegué un texto que me dio la IA"],
+        ["[SIEMPRE O A VECES]", "Ejemplo: siempre, lo he probado seis veces; o solo desde el móvil, en el ordenador va bien"]
+      ],
+      "expect": "Un resumen de tu problema con sus palabras (para que veas si te has explicado bien), una hipótesis de en qué punto se rompe y dos o tres comprobaciones cortas.",
+      "next": "Haz las comprobaciones en orden y responde con el resultado de cada una, aunque sea aburrido. Ese aburrimiento es exactamente el dato que necesita para descartar cosas."
+    },
+    {
+      "name": "Pregúntame tú en vez de adivinar",
+      "when": "La IA te está dando soluciones a lo loco que no funcionan, o notas que se está inventando cómo es tu situación.",
+      "prompt": "Cambio de método. Hasta ahora me estás dando soluciones basadas en suposiciones sobre mi situación y ninguna funciona. Vamos a hacerlo al revés.\n\nA partir de ahora: no me propongas ninguna solución, ningún arreglo y ningún código hasta que estés al menos un 90 por ciento seguro de cuál es la causa. Tu único trabajo ahora mismo es interrogarme.\n\nReglas del interrogatorio:\n- Hazme las preguntas de UNA EN UNA. No me sueltes una lista de ocho, me bloqueo.\n- Cada pregunta tiene que poder responderse mirando la pantalla o haciendo un clic. Nada de preguntarme qué versión tengo de algo si no me explicas dónde se mira.\n- Si una pregunta necesita que yo busque un dato, dime clic a clic dónde encontrarlo.\n- Empieza por la pregunta que más posibilidades descarte de golpe, no por la más obvia.\n- Después de cada respuesta mía, dime en una línea qué acabas de descartar y cuánto te queda para tener claro el problema.\n- Cuando llegues a ese 90 por ciento, para de preguntar y dime: la causa, por qué encaja con todo lo que te he contado, y el arreglo en pasos.\n\nEl problema es este: [DESCRIBE EL PROBLEMA EN DOS FRASES]. Empieza con tu primera pregunta.",
+      "fill": [
+        ["[DESCRIBE EL PROBLEMA EN DOS FRASES]", "Sin tecnicismos y sin teorías tuyas sobre la causa. Ejemplo: mi web se ve bien en el ordenador pero en el móvil las fotos salen gigantes y tapan el texto. Llevo tres intentos y sigue igual"]
+      ],
+      "expect": "Una sola pregunta, corta y concreta, con instrucciones de dónde mirar. Nada de soluciones todavía.",
+      "next": "Responde solo a esa pregunta y espera. Si vuelve a soltarte una lista de soluciones, escríbele: te has saltado el método, vuelve a preguntarme de una en una."
+    },
+    {
+      "name": "Pantalla en blanco",
+      "when": "Abres la página o la app y no aparece absolutamente nada. Ni error, ni contenido, ni nada.",
+      "prompt": "Actúa como un técnico que diagnostica pantallas en blanco. No aparece nada en pantalla: ni contenido, ni mensaje de error, solo blanco. Yo no sé programar ni sé abrir herramientas de desarrollador, así que si necesitas que mire algo escondido tienes que guiarme tecla a tecla.\n\nDATOS:\n- Dónde lo veo en blanco: [DÓNDE]\n- Qué debería aparecer: [QUÉ DEBERÍA VERSE]\n- La última vez que funcionó: [CUÁNDO FUNCIONABA]\n- Qué toqué desde entonces: [QUÉ CAMBIASTE]\n- La pestaña del navegador: [SI CARGA O NO]\n\nQuiero que me lo trabajes así:\n1. Explícame en dos frases por qué una pantalla en blanco casi siempre significa que algo se ha roto antes de llegar a dibujar nada, y qué implica eso.\n2. Dame las cuatro causas típicas de esto, cada una en una línea y en español llano.\n3. Guíame para ver el mensaje oculto: dime paso a paso cómo abro la consola del navegador (dime la tecla exacta en Windows y en Mac), qué pestaña tengo que pulsar y qué texto tengo que copiarte. Avísame de que ahí veré cosas amarillas que no importan y cuáles sí.\n4. Cuando te pegue ese texto, tradúcemelo y dime qué hacer.\n\nSi antes de todo esto necesitas algún dato mío, pídemelo ahora en vez de suponerlo.",
+      "fill": [
+        ["[DÓNDE]", "Ejemplo: la web que acabo de publicar en Vercel, la vista previa de Lovable, la app en el móvil"],
+        ["[QUÉ DEBERÍA VERSE]", "Ejemplo: la portada con el logo y tres botones"],
+        ["[CUÁNDO FUNCIONABA]", "Ejemplo: hace diez minutos, ayer por la noche, nunca ha llegado a funcionar"],
+        ["[QUÉ CAMBIASTE]", "Todo lo que tocaste, aunque te parezca sin importancia. Ejemplo: pegué un bloque de código que me diste y cambié el nombre de una imagen"],
+        ["[SI CARGA O NO]", "Ejemplo: la ruedecita de cargar ya ha parado y el fondo es blanco; o sigue girando eternamente"]
+      ],
+      "expect": "Una explicación de por qué el blanco es blanco, y sobre todo instrucciones tecla a tecla para sacar el mensaje de error que hay escondido detrás.",
+      "next": "Sigue las instrucciones, copia el texto rojo que salga en la consola y pégaselo. Ahí ya tienes un error normal y puedes seguir con el primer prompt de esta familia."
+    },
+    {
+      "name": "Antes funcionaba y ahora no",
+      "when": "Algo iba bien, has tocado cosas, y ahora está roto. No sabes cuál de los cambios lo rompió.",
+      "prompt": "Actúa como un investigador de averías. Algo que funcionaba ha dejado de funcionar y no sé cuál de los cambios que hice es el culpable. No quiero que me des un arreglo genérico: quiero que encontremos el cambio concreto que lo rompió.\n\nQUÉ FUNCIONABA ANTES: [LO QUE IBA BIEN]\nQUÉ HACE AHORA: [LO QUE HACE AHORA]\nCAMBIOS QUE HICE ENTRE MEDIAS, EN ORDEN: [LISTA DE CAMBIOS]\n\nHaz esto:\n1. Mira mi lista de cambios y ordénalos de más sospechoso a menos, explicándome en una línea por qué cada uno es o no es candidato.\n2. Dime cuál deshacemos primero y cómo se deshace exactamente, paso a paso. Si deshacer algo puede borrar trabajo mío para siempre, avísame en mayúsculas ANTES de los pasos y dime cómo hago una copia de seguridad primero.\n3. Después de deshacerlo, dime qué tengo que comprobar y qué significa cada resultado posible: si vuelve a funcionar, hemos encontrado al culpable; si no, seguimos por el siguiente.\n4. No me hagas deshacer varias cosas a la vez. Una, comprobar, contarte, y decidimos.\n\nSi mi lista de cambios está incompleta o es confusa, pregúntame por lo que falte antes de empezar.",
+      "fill": [
+        ["[LO QUE IBA BIEN]", "Ejemplo: el formulario de contacto enviaba el correo y salía un mensaje de gracias"],
+        ["[LO QUE HACE AHORA]", "Ejemplo: al darle a Enviar no pasa nada, el botón ni siquiera se hunde"],
+        ["[LISTA DE CAMBIOS]", "Todo lo que tocaste desde que iba bien, en orden y sin filtrar. Ejemplo: 1) cambié el texto del botón, 2) pegué un código que me diste para el aviso de cookies, 3) subí una foto nueva"]
+      ],
+      "expect": "Tu lista de cambios ordenada por sospecha, con motivos, y un único cambio para deshacer primero con sus pasos.",
+      "next": "Deshaz solo ese cambio y comprueba. Si vuelve a ir, ya sabes el culpable: pide entonces cómo hacer ese mismo cambio pero bien. Antes de deshacer nada, haz una copia del archivo: hay cosas que no se pueden recuperar."
+    },
+    {
+      "name": "Un cambio cada vez",
+      "when": "Te han dado una lista de cinco cosas que probar y no sabes por dónde empezar sin liarla más.",
+      "prompt": "Necesito que conviertas lo que me acabas de decir en un plan de un solo paso cada vez, porque cuando cambio varias cosas a la vez luego no sé qué fue lo que arregló o rompió algo.\n\nReescríbeme el diagnóstico como una secuencia de pruebas con estas reglas:\n- Cada paso cambia UNA sola cosa. Nunca dos.\n- Cada paso empieza por el que menos riesgo tiene y más información aporta.\n- Para cada paso me das: qué hago exactamente (clic a clic), qué debería ver si funciona, qué debería ver si no funciona, y cómo lo dejo como estaba si no funciona.\n- Si algún paso es irreversible o puede borrar algo mío, escríbelo en mayúsculas al principio de ese paso y dime cómo hacer una copia antes.\n- Si algún paso implica pagar algo (una suscripción, un dominio, créditos), dime el precio aproximado en euros antes de que lo haga.\n- Máximo cinco pasos. Si hacen falta más, dame los cinco primeros y ya seguiremos.\n\nDame también una frase al principio: qué esperas descubrir con esta tanda de pruebas. Así sé para qué las estoy haciendo.\n\nMi situación sigue siendo la misma que te he contado: [RESUME TU PROBLEMA EN UNA FRASE].",
+      "fill": [
+        ["[RESUME TU PROBLEMA EN UNA FRASE]", "Repítelo aunque ya se lo hayas dicho, para que no se despiste. Ejemplo: las imágenes de mi tienda no se ven en el móvil"]
+      ],
+      "expect": "Una lista corta y numerada, cada paso con su prueba y su marcha atrás, y avisos claros de lo que no tiene vuelta.",
+      "next": "Haz el paso 1 y solo el paso 1. Cuenta el resultado. Resistir la tentación de hacer tres pasos seguidos es lo que separa arreglarlo de romperlo del todo."
+    },
+    {
+      "name": "Llevo tres intentos y sigue igual",
+      "when": "La conversación se ha atascado: la IA repite variantes de lo mismo y tú vas dando vueltas.",
+      "prompt": "Para. Llevamos [NÚMERO DE INTENTOS] intentos y el problema sigue exactamente igual. Eso quiere decir que la teoría de partida está mal, así que no me des otra variante de lo mismo.\n\nHaz esto y solo esto:\n1. Resume en cinco líneas todo lo que hemos probado y qué resultado dio cada cosa. Quiero verlo escrito.\n2. Di en voz alta qué estabas dando por supuesto sobre mi situación y que a lo mejor no es cierto. Sé concreto: qué suposición y por qué la hiciste.\n3. Proponme una explicación completamente distinta del problema. Distinta de verdad, no una versión maquillada de la anterior.\n4. Dime qué prueba única separaría tu teoría vieja de la nueva: algo que yo pueda hacer en dos minutos y cuyo resultado deje claro cuál de las dos es.\n5. Si crees que este problema no se puede resolver por chat y necesito otra cosa (empezar el archivo de cero, usar otra herramienta, pedir ayuda a alguien), dímelo sin rodeos. Prefiero oír que esto no tiene arreglo por aquí antes que seguir dando vueltas.\n\nSé directo. No hace falta que suavices nada ni que me animes.",
+      "fill": [
+        ["[NÚMERO DE INTENTOS]", "El número real de veces que has probado algo y ha fallado. Ejemplo: cuatro"]
+      ],
+      "expect": "Un resumen honesto de lo probado, las suposiciones que estaba haciendo puestas por escrito y una teoría alternativa con una prueba para decidir.",
+      "next": "Haz la prueba del punto 4. Si además te dice que por chat no se arregla, hazle caso: guarda una copia de lo que tengas y empieza esa parte de cero suele salir más barato en tiempo que insistir."
+    },
+    {
+      "name": "Comprobar que está arreglado de verdad",
+      "when": "Parece que ya funciona. Antes de celebrarlo, asegúrate de que no has roto otra cosa por el camino.",
+      "prompt": "Parece que el problema está resuelto, pero no me fío: quiero comprobarlo bien y asegurarme de que el arreglo no ha estropeado nada más.\n\nLO QUE ESTABA ROTO: [EL PROBLEMA ORIGINAL]\nLO QUE HICIMOS PARA ARREGLARLO: [EL ARREGLO]\n\nDame tres cosas:\n1. UNA LISTA DE COMPROBACIÓN de cinco a ocho puntos, cada uno escrito como una acción que yo hago y el resultado exacto que debo ver. Incluye el problema original, pero también las partes que tocamos de refilón y que podrían haberse roto sin que yo me dé cuenta.\n2. LAS TRAMPAS: dos o tres situaciones en las que esto podría volver a fallar aunque ahora parezca que va (desde el móvil, con la sesión cerrada, con muchos datos, en otro navegador). Dime cómo probar cada una.\n3. EL RESUMEN PARA EL FUTURO: escríbeme en cinco líneas qué pasaba, por qué pasaba y cómo se arregló, en español llano y sin tecnicismos, para que lo guarde en una nota y lo pueda pegar aquí si me vuelve a ocurrir.\n\nSi crees que el arreglo es un parche que aguantará poco, dímelo claramente y explícame qué haría falta para arreglarlo bien.",
+      "fill": [
+        ["[EL PROBLEMA ORIGINAL]", "En una frase. Ejemplo: el botón de comprar no llevaba a ningún sitio"],
+        ["[EL ARREGLO]", "Lo que hiciste, aunque no lo entendieras. Ejemplo: pegué un bloque de código que me diste en el archivo que me indicaste y le di a Guardar"]
+      ],
+      "expect": "Una lista de comprobación marcable, un par de escenarios donde podría volver a romperse y un resumen corto guardable en una nota.",
+      "next": "Pasa la lista entera, incluidos los puntos que te parezcan absurdos. Después guarda el resumen del punto 3 en un documento de notas: es el material que te ahorrará la próxima hora perdida."
+    }
+  ],
+  "canDo": [
+    "Traducir cualquier mensaje de error a español normal y decirte qué línea importa y cuál es paja",
+    "Sacar el problema a partir de una descripción tuya en lenguaje corriente, sin que sepas ni un término técnico",
+    "Guiarte tecla a tecla para ver mensajes que están escondidos, como la consola del navegador",
+    "Escribirte el código de arreglo entero y decirte dónde pegarlo, para que tú solo copies"
+  ],
+  "cantDo": [
+    "No ve tu pantalla: si no le describes o le pegas lo que sale, se lo inventa con mucha seguridad",
+    "No sabe qué has cambiado tú desde ayer, así que cualquier diagnóstico que dé sin preguntártelo es una apuesta",
+    "No puede deshacer lo que ya has borrado ni recuperar un archivo que has sobrescrito: eso no tiene marcha atrás",
+    "No acierta a la primera casi nunca en problemas raros; el valor está en la conversación de ida y vuelta, no en la primera respuesta"
+  ],
+  "tips": [
+    "Pega el error entero, incluidas las líneas feas que parecen basura. Justo ahí suele estar el dato que resuelve el caso, y es lo primero que la gente recorta",
+    "Sigue en el mismo chat mientras dure el problema. Abrir uno nuevo borra todo lo que ya habíais descartado y volvéis a empezar de cero",
+    "Cuenta también los intentos fallidos, con lo que pasó exactamente. Decir eso no funcionó no sirve; decir hice el paso 2 y el botón siguió sin hacer nada descarta media docena de causas"
+  ]
+}

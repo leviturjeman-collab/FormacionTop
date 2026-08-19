@@ -1,0 +1,91 @@
+{
+  "id": "supabase",
+  "tool": "supabase",
+  "plain": "Supabase es un sitio donde guardas los datos de tu aplicación y viven en internet, no en tu portátil. Imagina un archivador de oficina con carpetas ordenadas, pero en vez de estar en tu casa está en un ordenador siempre encendido al que tu aplicación pregunta cosas desde cualquier parte del mundo. Además trae ya montado el sistema de registro y entrada: correo, contraseña, botón de entrar con Google. Tú decides qué se guarda y quién puede mirar cada carpeta; ellos ponen la máquina y el mantenimiento.",
+  "account": {
+    "url": "supabase.com",
+    "free": "Sí, hay plan gratis y es de verdad usable: 2 proyectos activos, 500 MB de datos, 1 GB de archivos, 5 GB de tráfico al mes y hasta 50.000 personas distintas entrando al mes. Dos pegas del gratis: si nadie toca el proyecto en una semana se pausa (lo reactivas con un clic, no se borra) y no hay copias de seguridad automáticas. El plan Pro cuesta 25 dólares al mes, unos 23 € al mes, y quita la pausa, sube a 8 GB de datos y guarda copias de seguridad de los últimos 7 días.",
+    "steps": [
+      ["Entrar y crear cuenta", "En supabase.com pulsa el botón verde de arriba a la derecha, 'Start your project' (empieza tu proyecto). Te ofrece entrar con GitHub o con tu correo. Si no sabes qué es GitHub, elige el correo: funciona igual."],
+      ["Crear la organización", "Te pide 'New organization' (nueva organización). Es solo una etiqueta para agrupar tus proyectos, pon tu nombre o el de tu negocio. En 'Plan' deja marcado 'Free' (gratis). No te pide tarjeta."],
+      ["Crear el proyecto", "Botón 'New project' (nuevo proyecto). Tres campos: 'Name' (nombre, por ejemplo notas-clientes), 'Database Password' (contraseña de la base de datos) y 'Region' (región, el país donde estará la máquina). Si tus usuarios están en España elige 'Central EU (Frankfurt)' o 'West EU (Ireland)': cuanto más cerca, más rápido responde. Tarda unos 2 minutos en montarse."],
+      ["Copiar la contraseña ANTES de seguir", "Pulsa 'Generate a password' (generar contraseña) y luego cópiala y pégala en tu gestor de contraseñas ahora mismo. Cuando cierres esa pantalla no vuelve a mostrarse nunca. Si la pierdes puedes ponerle una nueva desde los ajustes, pero cualquier cosa que ya estuviera conectada con la vieja deja de funcionar hasta que la actualices."],
+      ["Crear tu primera tabla con el editor visual", "Menú izquierdo, 'Table Editor' (editor de tablas), botón 'New table' (nueva tabla). Ponle nombre, por ejemplo notas. Debajo verás una casilla marcada: 'Enable Row Level Security (RLS)' (activar seguridad por filas). Viene marcada. NO la desmarques, aunque la web te avise de que así no verás datos todavía. Es correcto que no los veas."],
+      ["Guardar las dos claves y saber cuál es cuál", "Menú izquierdo abajo, 'Project Settings' (ajustes del proyecto), luego 'API Keys' o 'API'. Verás la URL del proyecto y dos claves: 'anon public' (anónima, pública) y 'service_role secret' (rol de servicio, secreta). La primera es la que usará tu aplicación. La segunda no la copies todavía; ya sabrás cuándo la necesitas, y probablemente sea nunca."],
+      ["Escribir la primera regla de acceso", "Menú 'Authentication' (autenticación), apartado 'Policies' (políticas). Elige tu tabla y pulsa 'New Policy' (nueva política). Supabase te ofrece plantillas listas; la que quieres casi siempre se llama 'Enable read access for users based on user_id' (permitir leer solo lo tuyo). Sin este paso tu tabla existe pero no devuelve nada a nadie."]
+    ],
+    "warning": "La clave 'service_role secret' se salta todas las reglas de seguridad que escribas, sin excepción. Quien la tenga puede leer, cambiar y borrar todo lo de todos tus usuarios en segundos, y borrar datos en una base de datos no tiene papelera: si no tienes copia de seguridad, se han ido para siempre. Esa clave no se pone jamás en el código que llega al navegador ni en una aplicación de móvil ni se sube a GitHub. Si alguna vez sospechas que se ha escapado, entra en los ajustes y genera una nueva ese mismo día."
+  },
+  "first": [
+    "Abre 'Table Editor' y crea una tabla llamada notas con tres columnas tuyas: titulo (texto), contenido (texto) y user_id (tipo uuid), dejando marcada la casilla de seguridad por filas.",
+    "Ve a 'Authentication' > 'Users' > 'Add user' y crea un usuario de prueba con un correo tuyo y una contraseña cualquiera; copia el identificador largo que aparece en la columna UID.",
+    "Abre 'SQL Editor' y añade dos o tres notas a mano poniendo ese identificador en la columna user_id, para tener datos reales con los que probar.",
+    "Vuelve a 'Authentication' > 'Policies', pulsa 'New Policy', elige la plantilla de lectura y comprueba que la condición dice auth.uid() = user_id.",
+    "Crea un segundo usuario de prueba, entra con él desde tu aplicación y comprueba que ve cero notas. Ese cero es la señal de que la seguridad funciona."
+  ],
+  "words": [
+    ["Base de datos", "El almacén donde tu aplicación guarda cosas que tienen que seguir ahí mañana: usuarios, pedidos, mensajes. Se parece a una hoja de cálculo, pero pensada para que miles de personas escriban a la vez sin pisarse."],
+    ["Tabla", "Una lista de cosas del mismo tipo, con las mismas casillas para todas. La tabla 'clientes' tiene nombre, correo y teléfono en cada línea. Igual que una hoja con cabeceras arriba."],
+    ["Fila", "Una línea concreta de esa lista: un cliente, una nota, un pedido. Cuando alguien dice 'Ana ha creado un registro', quiere decir que se ha añadido una fila."],
+    ["Row Level Security (RLS)", "Seguridad por filas. Es una lista de reglas que dice, línea por línea, quién puede verla y quién no. Sin ella el permiso es de todo o nada: o ves la lista entera o no ves ninguna. Con ella, Ana ve las tres notas de Ana y ni una de Javier."],
+    ["Política (policy)", "Cada una de esas reglas, escrita como una frase con condición: 'puede leer esta línea quien haya iniciado sesión y sea el dueño de la línea'. Escribes una por acción: una para mirar, otra para añadir, otra para cambiar, otra para borrar."],
+    ["Clave anon", "Un código largo que tu aplicación enseña para identificarse ante Supabase. Es pública a propósito: viaja dentro de la página web y cualquiera puede verla con clic derecho y 'Inspeccionar'. No es un secreto y no pasa nada porque se vea, siempre que las reglas por filas estén puestas."],
+    ["Clave service_role", "El código de mando total. Ignora todas las reglas que hayas escrito y entra en todo. Su sitio es un ordenador tuyo o un servicio que ejecute tu código donde el visitante no puede mirar, nunca la página que se abre en el móvil de tu cliente."],
+    ["Autenticación", "El trámite de comprobar que alguien es quien dice ser: registrarse, poner correo y contraseña, recibir el enlace de confirmación, entrar con Google. Supabase te lo da hecho para que no lo construyas tú."]
+  ],
+  "matters": [
+    "Sin seguridad por filas activada, tu base de datos es pública aunque tú no lo sepas. Cualquier visitante puede abrir tu web, pulsar F12, encontrar la clave anon en dos minutos y pedirle a Supabase la tabla entera de clientes con correos y teléfonos. Esto no es un ataque sofisticado: es copiar y pegar, y le ha pasado a empresas con inversión de millones. Es el fallo número uno de Supabase, con diferencia.",
+    "La clave service_role no vive en el navegador. En cuanto la pegas en el código de tu web, se descarga con la página en el ordenador de cada visitante. Quien la lea no solo ve tus datos: puede vaciar tablas enteras. Borrar filas es inmediato y sin papelera, y en el plan gratis no hay copia de seguridad automática que rescate nada.",
+    "Cuando activas la seguridad por filas y de golpe tu aplicación devuelve una lista vacía, no está rota: está haciendo justo lo que debe. El comportamiento por defecto es negar todo hasta que escribas una regla que permita algo. Añade las reglas una a una y prueba después de cada una; si te da vacío, casi siempre es que tu aplicación no está mandando la sesión del usuario.",
+    "Las tablas que creas escribiendo SQL a mano NO llevan la seguridad activada. La casilla marcada por defecto solo existe en el editor visual. Si en 'SQL Editor' escribes create table pedidos (...), esa tabla nace abierta de par en par y nadie te avisa. Después de crearla, ejecuta siempre: alter table pedidos enable row level security;"
+  ],
+  "ignore": [
+    "Las Edge Functions (trozos de código tuyo que se ejecutan en los servidores de Supabase). Son útiles el día que necesites cobrar con tarjeta o llamar a otro servicio en secreto. Ese día llegará; hoy no.",
+    "Realtime, la función que hace que la pantalla se actualice sola cuando otro usuario cambia algo, estilo Google Docs. Es vistoso y se activa con un interruptor, pero complica la depuración cuando aún estás peleándote con lo básico.",
+    "La pestaña 'Database' > 'Extensions', con más de cincuenta añadidos para mapas, búsquedas y colas de tareas. Están apagados por defecto y así están bien. Volverás a esa lista cuando quieras buscar por significado con inteligencia artificial: el añadido se llama pgvector."
+  ],
+  "questions": [
+    {
+      "prompt": "Has montado una aplicación de notas y funciona: guardas notas, las lees, todo bien. La tabla la creaste escribiendo create table notas (...) en el SQL Editor porque te lo dictó una IA. Publicas la web y se la enseñas a un amigo. Él pulsa F12, ve la clave anon en el código, la pega en una herramienta y en treinta segundos te lee las notas de todos los usuarios registrados, incluidas las tuyas. ¿Qué ha fallado?",
+      "options": [
+        {
+          "text": "La tabla se creó por SQL y nació sin seguridad por filas. Hay que ejecutar alter table notas enable row level security; y después crear la política que limite cada nota a su dueño.",
+          "correct": true,
+          "why": "Correcta, y el matiz importa: la casilla que activa la seguridad solo aparece en el editor visual de tablas. Al crear la tabla con SQL nadie te avisa de que está abierta, y como tu aplicación funciona perfectamente, no tienes ninguna señal de que algo va mal. La clave anon hizo exactamente su trabajo: identificarse. El problema es que no había ninguna regla que le dijera qué filas puede ver."
+        },
+        {
+          "text": "Se te ha filtrado la clave anon. Hay que generar una nueva desde los ajustes y no volver a dejarla en el código de la web.",
+          "correct": false,
+          "why": "Se cree de verdad porque suena a filtración clásica: un código secreto acaba a la vista y se cambia. Pero la clave anon está diseñada para ir en el navegador, no hay forma de que tu web funcione sin enseñarla. Se rompe justo ahí: generas una nueva, tu amigo pulsa F12 otra vez y la ve igual de rápido. El agujero no es la clave, es que nadie escribió las reglas."
+        },
+        {
+          "text": "Deberías haber usado la clave service_role en la aplicación, que es la clave de administrador y controla mejor quién entra.",
+          "correct": false,
+          "why": "Se cree porque en casi todos los programas la cuenta de administrador es la más protegida, y el nombre suena serio. Se rompe de la peor manera posible: esa clave ignora todas las reglas y da mando total. Ponerla en la web convierte un problema de 'me leen las notas' en 'cualquiera borra la base de datos entera', sin papelera y sin copia de seguridad en el plan gratis."
+        }
+      ],
+      "explain": "La clave anon no es el candado, es el timbre. El candado son las reglas por filas, y las tablas creadas con SQL nacen sin ellas."
+    },
+    {
+      "prompt": "Activas la seguridad por filas en la tabla clientes. Recargas tu aplicación y la lista sale vacía: cero clientes, sin ningún mensaje de error rojo, solo vacío. Antes salían 47. Tienes una demo con un cliente real dentro de dos horas. ¿Qué haces?",
+      "options": [
+        {
+          "text": "Nada está roto: sin políticas escritas, el comportamiento correcto es no devolver nada. Creas una política de lectura con la condición auth.uid() = user_id y compruebas que tu aplicación está enviando la sesión del usuario que ha entrado.",
+          "correct": true,
+          "why": "Correcta, y el matiz es que el vacío sin error es la firma de este problema, no una casualidad. Supabase no te devuelve un fallo porque técnicamente la consulta se ejecutó bien: simplemente ninguna fila pasó el filtro. Los dos culpables habituales son que no hay política, o que sí la hay pero tu aplicación consulta sin sesión iniciada, así que auth.uid() está vacío y no coincide con ningún user_id."
+        },
+        {
+          "text": "Desactivas la seguridad por filas para que la demo salga bien y la vuelves a activar antes de publicar de verdad.",
+          "correct": false,
+          "why": "Se cree porque es cierto: funciona en diez segundos, la demo sale bien y suena razonable como algo temporal. Se rompe en la palabra 'después'. La demo va bien, el cliente pide una URL para enseñársela a su equipo, se la das, y esa URL ya es pública con la tabla abierta. Este es literalmente el fallo de seguridad más repetido en proyectos con Supabase, y casi siempre empezó como un apaño de dos horas."
+        },
+        {
+          "text": "Cambias la clave anon por la service_role en el código, porque esa sí ve los 47 clientes.",
+          "correct": false,
+          "why": "Se cree porque funciona al instante y confirma que 'los datos siguen ahí', lo cual tranquiliza mucho cuando vas con prisa. Se rompe en el motivo por el que funciona: ve los 47 porque se salta la seguridad entera. Y si ese código llega al navegador, acabas de repartir el mando total de tu base de datos a cualquiera que abra la página."
+        }
+      ],
+      "explain": "Una lista vacía después de activar la seguridad es la buena noticia: significa que ahora manda la regla, no la casualidad. Escribe la regla."
+    }
+  ]
+}

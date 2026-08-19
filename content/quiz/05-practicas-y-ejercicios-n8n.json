@@ -1,0 +1,63 @@
+{
+  "categoryId": "05-practicas-y-ejercicios-n8n",
+  "basico": [
+    {
+      "prompt": "Primer día de laboratorio. Lienzo en blanco y un botón que pone «Add first step». Tú lo que quieres es montar el nodo que escribe en la hoja de cálculo.",
+      "options": [
+        { "text": "El primer nodo es siempre el disparador; para practicar, elige «Trigger manually» y así ejecutas tú cuando quieras", "correct": true, "why": "Correcto. El disparador responde a «¿cuándo se ejecuta esto?», y sin respuesta el flujo no tiene por dónde entrar. El manual es el de prácticas: arranca solo si le das al botón." },
+        { "text": "Poner primero el nodo que hace el trabajo y añadir el disparador al final", "correct": false, "why": "Es como se piensa el proceso, empezando por lo importante. El problema es práctico: hasta que no haya disparador no puedes ejecutar nada, así que construyes a ciegas." },
+        { "text": "Empezar con un Webhook, que es lo realista", "correct": false, "why": "Es lo realista, sí, y acabarás usándolo. Pero te obliga a montar quién le manda datos antes de haber probado un solo nodo, y te pasas la tarde en eso." }
+      ],
+      "explain": "El disparador va primero, siempre. En prácticas, el manual: arranca cuando tú lo dices."
+    },
+    {
+      "prompt": "Has encadenado tres nodos y le das a ejecutar el flujo entero. Se pone rojo y no sabes cuál de los tres tiene la culpa.",
+      "options": [
+        { "text": "Se trabaja nodo a nodo con «Test step»: ejecuta solo ese nodo y te enseña lo que sale", "correct": true, "why": "Correcto, y es la forma de trabajar en n8n, no un truco de depuración. Miras la salida de cada uno antes de montar el siguiente, y el error nunca puede venir de más de un nodo." },
+        { "text": "Ir a Executions y leer el registro del fallo", "correct": false, "why": "Ahí está el registro y es donde mirarás cuando el flujo ya esté en marcha. Mientras construyes es más lento: te enteras después, en vez de mientras." },
+        { "text": "Ir quitando nodos hasta que deje de fallar", "correct": false, "why": "Acaba funcionando y por eso mucha gente lo hace. Terminas sin saber cuál era ni por qué, y lo vuelves a montar igual la semana que viene." }
+      ],
+      "explain": "Nodo a nodo, mirando la salida de cada uno. Encadenar a ciegas convierte un error pequeño en una hora de búsqueda."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Metes un nodo Code para validar los datos. Le entran diez elementos y devuelve uno solo.",
+      "options": [
+        { "text": "Está en modo «Run Once for Each Item»; para tratar la lista entera tiene que estar en «Run Once for All Items»", "correct": true, "why": "Correcto. n8n trabaja siempre con listas, y ese ajuste decide si tu código se ejecuta una vez con los diez delante o diez veces con uno cada vez. Es lo primero que hay que mirar cuando las cuentas no salen." },
+        { "text": "Falta un bucle dentro del código para recorrerlos", "correct": false, "why": "En cualquier otro sitio sería la respuesta. Aquí el bucle ya está o no hace falta según el modo: es el modo del nodo el que decide qué te llega." },
+        { "text": "Los datos llegan mal del nodo anterior", "correct": false, "why": "Merece comprobarse siempre, y se descarta en dos segundos: si en el panel INPUT ves diez elementos, llegan diez." }
+      ],
+      "explain": "El nodo Code tiene dos modos. Si las cuentas de entrada y salida no cuadran, empieza por ahí."
+    },
+    {
+      "prompt": "Tu validación funciona: los datos malos ya no pasan y el flujo va limpio. Una semana después nadie sabe cuántos leads se están rechazando ni por qué.",
+      "options": [
+        { "text": "El nodo Code devuelve dos salidas: por la primera siguen los válidos y por la segunda van los rechazados a un nodo que los registre", "correct": true, "why": "Correcto. Sin esa segunda salida los datos malos desaparecen sin dejar rastro, y un formulario con un campo mal puesto puede estar tirando la mitad de tus leads sin que nadie lo note." },
+        { "text": "Que el nodo se ponga rojo cuando llegue un dato malo, así te enteras", "correct": false, "why": "Te enteras, cierto. Y paras el flujo entero por un solo registro con el teléfono raro, con los otros 49 buenos esperando detrás." },
+        { "text": "Mandar un aviso a Slack cada vez que se rechace algo", "correct": false, "why": "Va bien la primera semana. Con volumen, avisar de todo consigue que dejen de mirarlo, y entonces es igual que no avisar." }
+      ],
+      "explain": "Validar es separar, no tirar. Lo rechazado va a algún sitio donde se pueda contar."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "En tu validación tienes que comprobar el consentimiento. El formulario a veces manda el texto «false» en lugar del valor falso.",
+      "options": [
+        { "text": "Se compara con === true, que exige valor y tipo: así el texto «false» no cuela", "correct": true, "why": "Correcto, y no es una manía de estilo. Este descuido exacto ha enviado muchos correos comerciales a gente que había dicho que no, con la multa que eso implica." },
+        { "text": "Da igual: el texto «false» se entiende como falso", "correct": false, "why": "Es lo que dicta la intuición del idioma, y es justo al revés. En JavaScript cualquier texto que no esté vacío cuenta como verdadero, y «false» tiene cinco letras." },
+        { "text": "Mejor convertirlo con Boolean(dato.consentimiento) y así no hay dudas", "correct": false, "why": "Parece la conversión limpia y por eso se elige. Hace exactamente lo que causa el problema: Boolean(«false») devuelve verdadero." }
+      ],
+      "explain": "El texto «false» es verdadero en JavaScript. Con consentimientos, eso se paga."
+    },
+    {
+      "prompt": "El flujo del laboratorio ya te funciona con datos de prueba. Vas a conectarlo al formulario real de la web y darle a Active.",
+      "options": [
+        { "text": "Antes de activar se prueba entero con datos inventados: en cuanto está activo envía correos reales y escribe en sistemas reales", "correct": true, "why": "Correcto. No hay modo simulación. El primer lead que entre a las once de la noche va a recibir su correo, y ese correo no se retira." },
+        { "text": "Activarlo y vigilar Executions las primeras horas", "correct": false, "why": "Es responsable y algo ayuda a reaccionar rápido. Pero cuando lo ves en Executions el correo ya salió: estás mirando el registro de algo que no puedes deshacer." },
+        { "text": "Activarlo un viernes por la tarde, que hay poco tráfico", "correct": false, "why": "Menos volumen es menos daño, y de ahí que parezca prudente. También es cuando menos gente hay para arreglarlo, y el fin de semana entero por delante." }
+      ],
+      "explain": "Un flujo activo actúa de verdad desde el primer segundo. Los datos inventados van antes, no después."
+    }
+  ]
+}

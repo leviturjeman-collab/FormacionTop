@@ -1,0 +1,190 @@
+{
+  "id": "crear-web",
+  "title": "Que la IA te construya una página web desde cero",
+  "intro": "Le describes la web que tienes en la cabeza y te devuelve el código terminado. Tú lo copias, lo pegas en un archivo y lo abres con doble clic: ya tienes una página funcionando en tu ordenador. Todo desde la caja de texto del chat, sin instalar nada y sin ventanas negras de comandos.",
+  "model": "Claude, porque aguanta archivos largos de código sin cortarse a mitad y te devuelve la página entera de una vez; ChatGPT hace lo mismo bastante bien y sirve para el día a día, y Gemini déjalo para cosas de Google y vídeo.",
+  "prompts": [
+    {
+      "name": "El plano: sacarte la web de la cabeza",
+      "when": "Lo primero de todo, antes de pedir una sola línea de código. Diez minutos aquí te ahorran veinte mensajes después.",
+      "prompt": "Eres diseñador y desarrollador web con veinte años haciendo páginas para negocios pequeños. Yo no he programado nunca y no pienso aprender: quiero contarte lo que tengo en la cabeza y que tú lo conviertas en un plan claro.\n\nMi idea es esta: [DESCRIBE TU IDEA EN TRES O CUATRO FRASES]. Va dirigida a [A QUIÉN VA DIRIGIDA]. Lo que quiero que haga la persona que entre en la web es [QUÉ QUIERES QUE HAGA QUIEN ENTRE].\n\nAntes de escribir nada de código, hazme como mucho ocho preguntas, todas juntas en un solo mensaje y numeradas, para entender el negocio, el tono, las secciones que necesito y lo que me sobra. Pregunta solo lo que de verdad cambie el resultado; nada de preguntas de manual. Si algo puedes suponerlo tú de forma razonable, supónlo, dímelo y marca esa suposición con la palabra SUPUESTO para que yo la corrija o la deje pasar.\n\nCuando te conteste, devuélveme un documento titulado PLANO DE LA WEB con: el objetivo en una frase, a quién va dirigida, la lista ordenada de secciones de arriba abajo explicando qué va en cada una, los textos concretos que llevará (escríbelos tú, terminados, nada de «aquí tu texto»), la paleta de colores con nombres normales y sus códigos, y el tipo de letra.\n\nEscríbelo todo en español de España y sin tecnicismos; si tienes que usar alguna palabra técnica, tradúcela entre paréntesis la primera vez. No escribas código todavía.",
+      "fill": [
+        [
+          "[DESCRIBE TU IDEA EN TRES O CUATRO FRASES]",
+          "Cuéntalo como se lo contarías a un amigo en un bar. Ejemplo: «Soy fisioterapeuta en Valencia, trabajo sola, quiero una web sencilla que explique qué hago, qué precios tengo y que la gente pueda pedirme cita»."
+        ],
+        [
+          "[A QUIÉN VA DIRIGIDA]",
+          "Las personas concretas que entrarán. Ejemplo: «Gente de mi barrio, entre 35 y 70 años, que llega buscando en Google después de una lesión y entra casi siempre desde el móvil»."
+        ],
+        [
+          "[QUÉ QUIERES QUE HAGA QUIEN ENTRE]",
+          "La única acción que te importa. Ejemplo: «Que me llame por teléfono o me escriba por WhatsApp para pedir cita». Si pones tres cosas, la web pierde fuerza: elige una."
+        ]
+      ],
+      "expect": "Una tanda de preguntas numeradas, cortas y con sentido para tu caso. Cuando contestes, un documento con las secciones de la web ordenadas y los textos ya escritos.",
+      "next": "Léelo entero y corrige lo que no te encaje diciéndolo con tus palabras («la sección de precios fuera», «el tono más cercano»). No pases al código hasta que el plano te guste: cambiarlo ahora cuesta un mensaje, cambiarlo luego cuesta cinco."
+    },
+    {
+      "name": "Pedir la página entera en un solo archivo",
+      "when": "Con el plano ya aprobado. Este es el mensaje que te devuelve la web hecha.",
+      "prompt": "Eres desarrollador web y vas a escribirme la página entera. Yo no sé programar: voy a copiar y pegar lo que me des sin tocar nada.\n\nEste es el plan acordado: [PEGA AQUÍ EL PLANO]. El proyecto se llama [NOMBRE DEL NEGOCIO O PROYECTO] y el color principal que quiero es [COLOR PRINCIPAL].\n\nReglas del archivo, sin excepciones:\n1. Un único archivo, con absolutamente todo dentro: la estructura, los colores y el comportamiento en el mismo sitio. Nada de archivos sueltos ni de descargas por mi parte.\n2. Nada que se cargue desde internet: ni tipos de letra externos, ni librerías, ni iconos de terceros. La página tiene que verse igual con el ordenador sin conexión.\n3. Las fotos, de momento, resuélvelas con bloques de color o dibujos hechos con el propio código, y deja junto a cada uno un comentario que diga qué foto mía irá ahí.\n4. Antes de cada sección, pon un comentario en mayúsculas y en español diciendo qué empieza ahí, por ejemplo INICIO DE LA SECCIÓN PRECIOS, para que yo pueda localizarla de un vistazo.\n5. Escribe tú todos los textos, terminados y creíbles. Nada de relleno ni de «Lorem ipsum».\n6. Que se vea bien tanto en ordenador como en móvil.\n7. Dámelo completo, de la primera línea a la última. Nunca escribas «el resto igual» ni resumas partes.\n\nSi no cabe en una sola respuesta, pártelo en trozos numerados, dime que escriba SIGUE y continúa exactamente donde lo dejaste, sin repetir nada.\n\nDespués del código, resúmeme en tres líneas qué acabo de recibir y qué voy a ver al abrirlo.",
+      "fill": [
+        [
+          "[PEGA AQUÍ EL PLANO]",
+          "El documento PLANO DE LA WEB del prompt anterior, tal cual, con tus correcciones ya metidas. Si estás en la misma conversación, puedes escribir «el plano que acabamos de cerrar»."
+        ],
+        [
+          "[NOMBRE DEL NEGOCIO O PROYECTO]",
+          "Cómo se llama. Ejemplo: «Fisioterapia Marta Ruiz»."
+        ],
+        [
+          "[COLOR PRINCIPAL]",
+          "Descríbelo en palabras y ya te lo traduce él. Ejemplo: «verde oscuro tirando a bosque, con detalles en crema». Si tienes un código de color de tu logo, pégalo."
+        ]
+      ],
+      "expect": "Un bloque grande de código con un botón de copiar en la esquina, y debajo un resumen corto de lo que verás. Si es muy largo, te lo dará en dos o tres partes.",
+      "next": "No lo leas ni intentes entenderlo: no es para eso. Cópialo entero (si vino en partes, pégalas seguidas en el mismo archivo, en orden) y pasa al prompt siguiente para guardarlo y verlo."
+    },
+    {
+      "name": "Guardar el código y verlo en tu ordenador",
+      "when": "Justo después de recibir el código, cuando tienes un montón de texto copiado y no sabes dónde meterlo.",
+      "prompt": "Acabas de darme el código de mi página web. Ahora cambia de papel: eres el profesor de informática más paciente del mundo y yo no he creado un archivo de este tipo en mi vida. Tengo [WINDOWS O MAC] y no quiero instalar programas nuevos ni abrir ninguna ventana negra de comandos.\n\nExplícame en pasos numerados, con los nombres exactos de los menús y botones tal y como aparecen en mi pantalla:\n1. Con qué programa que ya tengo instalado abro un documento en blanco donde pegar el código.\n2. Cómo lo guardo con el nombre correcto y en qué carpeta me conviene dejarlo, dicho como un camino que yo pueda seguir con el ratón.\n3. Qué tengo que vigilar para que no acabe guardado como un simple documento de texto, que tengo entendido que es el fallo típico, y cómo compruebo que se ha guardado bien.\n4. Cómo lo abro para verlo como una página de verdad, no como un montón de letras.\n5. Cómo hago un cambio más adelante: abrirlo, cambiarlo, guardarlo y volver a mirarlo.\n\nTermina con un apartado titulado SI ALGO VA MAL con los tres problemas más frecuentes y su solución, empezando por «veo el código escrito en la pantalla en lugar de la página».\n\nY avísame expresamente de cualquier paso en el que pueda perder o sobrescribir el archivo sin poder recuperarlo.",
+      "fill": [
+        [
+          "[WINDOWS O MAC]",
+          "Lo que tengas. Ejemplo: «Windows 11». Si no lo sabes, escribe «un portátil normal de Windows, no sé qué versión» y que te lo diga por los dos caminos."
+        ]
+      ],
+      "expect": "Instrucciones paso a paso con nombres reales de botones, el nombre exacto que debes ponerle al archivo, y una lista de qué hacer si algo falla.",
+      "next": "Sigue los pasos y abre el archivo. Deberías estar viendo tu página en el navegador. Aviso: cuando guardas encima del archivo, la versión anterior desaparece y no hay deshacer. Antes de cada cambio grande, haz una copia y numérala (web-01, web-02...)."
+    },
+    {
+      "name": "El botón más grande y azul: cambios concretos",
+      "when": "Cuando ya ves la página en el navegador y hay cosas que no te gustan.",
+      "prompt": "Seguimos con la página que me diste. Ya la tengo abierta en el navegador y quiero estos cambios, ni uno más:\n\n[LISTA DE CAMBIOS]\n\nTrabaja así:\n- Antes de tocar nada, repíteme con tus palabras qué has entendido de cada punto, una línea por punto. Si alguno se puede entender de dos maneras, quédate con la más probable y dímelo, pero no te pares a preguntar.\n- Cambia solo lo que te pido. Todo lo demás (textos, colores, orden de las secciones, espacios) se queda exactamente igual que está.\n- Devuélveme el archivo completo otra vez, de la primera línea a la última, para que yo pueda borrar todo lo anterior y pegar lo nuevo sin pensar. No me des trozos sueltos ni me expliques dónde encajarlos: no sabría hacerlo.\n- Si alguno de mis cambios va a estropear algo (se sale por el lado en el móvil, el texto deja de leerse sobre ese fondo, tapa un botón), no lo hagas a ciegas: hazlo de la manera más parecida que sí funcione y explícame en una línea qué has ajustado y por qué.\n- Termina con una lista corta titulada QUÉ HE CAMBIADO, en lenguaje normal, para que yo lo compruebe uno a uno mirando la pantalla.\n\nSi algo de lo que te pido no se entiende, dímelo claramente en vez de inventarte qué quería decir.",
+      "fill": [
+        [
+          "[LISTA DE CAMBIOS]",
+          "Una línea por cambio, describiendo lo que ves y lo que quieres, sin tecnicismos. Ejemplo: «1. El botón que pone Pide cita, más grande y en azul oscuro, con las esquinas redondeadas. 2. El título de arriba es enorme, bájalo un poco. 3. Entre la foto y el texto de abajo hay demasiado hueco.»"
+        ]
+      ],
+      "expect": "Primero un repaso de lo que ha entendido, luego el archivo completo otra vez, y al final la lista de cambios en cristiano.",
+      "next": "Guarda una copia del archivo anterior, borra todo el contenido del actual, pega el nuevo, guarda y actualiza la página en el navegador (F5). Si algo no ha quedado como querías, díselo señalando qué punto de la lista y sigue en la misma conversación."
+    },
+    {
+      "name": "Añadir una sección sin romper lo que ya funciona",
+      "when": "Cuando la web ya te gusta pero le falta algo: precios, opiniones, preguntas frecuentes, un mapa.",
+      "prompt": "Seguimos con mi página. Quiero añadirle una sección nueva.\n\nQué sección: [QUÉ SECCIÓN QUIERES AÑADIR]. Dónde va: [DÓNDE VA, ENTRE QUÉ Y QUÉ]. Qué tiene que aparecer dentro: [QUÉ CONTIENE].\n\nInstrucciones:\n- Escribe tú los textos de la sección, terminados y creíbles para mi caso, en español de España. Nada de relleno ni de «aquí tu contenido».\n- Que la sección parezca de la misma casa que el resto: los mismos colores, el mismo tipo de letra, los mismos tamaños y la misma separación entre bloques que ya usa la página. No me metas un estilo nuevo que desentone.\n- Si la página tiene menú arriba, añade la entrada que le corresponde y haz que al pulsarla se baje suavemente hasta la sección.\n- Marca el principio y el final de lo nuevo con comentarios en mayúsculas, para que yo pueda quitarla entera si al final no me convence.\n- Devuélveme el archivo completo, de la primera línea a la última, listo para pegar de una vez. No me des solo el trozo nuevo.\n- Al final, dime en dos líneas en qué punto exacto de la página la veré al abrirla y cómo se verá en el móvil.\n\nSi te falta algún dato para escribirla bien, invéntalo de forma razonable, márcalo con la palabra SUPUESTO y sigue adelante en vez de pararte.",
+      "fill": [
+        [
+          "[QUÉ SECCIÓN QUIERES AÑADIR]",
+          "El nombre normal de la sección. Ejemplo: «Preguntas frecuentes, con las preguntas que se despliegan al pulsarlas»."
+        ],
+        [
+          "[DÓNDE VA, ENTRE QUÉ Y QUÉ]",
+          "Sitúala mirando tu propia página. Ejemplo: «Después de los precios y justo antes del pie de página con el teléfono»."
+        ],
+        [
+          "[QUÉ CONTIENE]",
+          "El contenido real, aunque sea a medias. Ejemplo: «Seis preguntas: si hace falta receta, cuánto dura la sesión, si hay parking, si atiendo los sábados, si trabajo con mutuas y qué pasa si no puedo ir»."
+        ]
+      ],
+      "expect": "El archivo completo con la sección nueva integrada, marcada con comentarios, y con la entrada de menú puesta si tu web tiene menú.",
+      "next": "Pégalo, guarda y mira. Si la sección canta respecto al resto, díselo tal cual: «la sección nueva parece de otra web, iguala los tamaños y el espacio a los del resto»."
+    },
+    {
+      "name": "Que se vea bien en el móvil",
+      "when": "Antes de enseñársela a nadie. La mayoría de la gente la abrirá desde el teléfono.",
+      "prompt": "Revisa mi página pensando solo en el móvil. Te pego el archivo completo: [PEGA AQUÍ TODO EL CÓDIGO]\n\nPrimero, dime en lenguaje normal, sin tecnicismos, qué cosas se van a ver mal en la pantalla de un teléfono: textos demasiado grandes o demasiado pequeños, botones que cuesta pulsar con el dedo, imágenes que se salen por el lado, columnas que deberían ponerse una debajo de otra, menús que no caben. Ordénalas de la más molesta a la menos.\n\nDespués arréglalas todas y devuélveme el archivo completo, de la primera línea a la última. Condición importante: en ordenador la página tiene que seguir viéndose exactamente igual que ahora. Solo cambia lo que afecta a las pantallas pequeñas.\n\nTen en cuenta que quien entra desde el móvil usa el pulgar y va con prisa: los botones tienen que ser cómodos de pulsar y lo importante debe verse sin tener que bajar mucho.\n\nPor último, explícame cómo compruebo yo mismo el resultado sin necesidad de coger el teléfono: cómo estrechar la ventana del navegador hasta el ancho de un móvil y qué debería ver en cada sección cuando lo haga. Dímelo en pasos numerados y con los nombres exactos de los botones o teclas.",
+      "fill": [
+        [
+          "[PEGA AQUÍ TODO EL CÓDIGO]",
+          "El texto entero que te dio la IA. Abre tu archivo con el Bloc de notas (o TextEdit en Mac), selecciona todo (Ctrl+E en Windows en español, Cmd+A en Mac), copia y pega. Si sigues en la misma conversación de siempre, con escribir «usa el archivo que me diste antes» suele bastar."
+        ]
+      ],
+      "expect": "Una lista de problemas explicados en cristiano, el archivo completo arreglado, y las instrucciones para comprobarlo estrechando la ventana.",
+      "next": "Pega el archivo, guárdalo y estrecha la ventana del navegador hasta que quede como un móvil. Recorre la página entera. Si algo sigue saliéndose, haz una captura, pégasela y dile en qué sección pasa."
+    },
+    {
+      "name": "Un formulario cuyos mensajes te lleguen de verdad",
+      "when": "Cuando quieres que la gente te escriba desde la web y no solo que te llame.",
+      "prompt": "Quiero que mi página tenga un formulario de contacto y que los mensajes me lleguen de verdad a mi correo. Te pego el archivo completo: [PEGA AQUÍ TODO EL CÓDIGO] Mi correo es [TU CORREO] y quiero pedir estos datos: [QUÉ CAMPOS QUIERES].\n\nEmpieza explicándome en cuatro o cinco líneas, sin tecnicismos, por qué un formulario metido sin más en una página no envía nada a ninguna parte y qué hace falta para que llegue a mi bandeja de entrada.\n\nLuego dame las dos o tres formas más sencillas de conseguirlo sin instalar nada ni tocar servidores, comparadas en una tabla con estas columnas: qué tengo que hacer, cuánto cuesta al mes en euros, cuántos mensajes admite gratis al mes y qué pega tiene. Recomiéndame una y di en una frase por qué.\n\nDespués, los pasos exactos y numerados, con los nombres de los botones tal y como salen en pantalla, para crear la cuenta de ese servicio y llegar hasta el dato que tengo que copiar.\n\nY por último, el archivo completo con el formulario ya montado, señalando con un comentario en mayúsculas el único sitio donde debo pegar ese dato.\n\nAvísame también de qué datos personales no conviene pedir nunca en un formulario público y de cómo evitar que se me llene el correo de publicidad basura.",
+      "fill": [
+        [
+          "[PEGA AQUÍ TODO EL CÓDIGO]",
+          "El texto entero que te dio la IA. Abre tu archivo con el Bloc de notas (o TextEdit en Mac), selecciona todo (Ctrl+E en Windows en español, Cmd+A en Mac), copia y pega. Si sigues en la misma conversación de siempre, con escribir «usa el archivo que me diste antes» suele bastar."
+        ],
+        [
+          "[TU CORREO]",
+          "La dirección donde quieres recibir los mensajes. Ejemplo: «marta@fisiomartaruiz.es». Si prefieres no darla en el chat, escribe «MI CORREO» y lo sustituyes tú luego en el archivo."
+        ],
+        [
+          "[QUÉ CAMPOS QUIERES]",
+          "Lo mínimo imprescindible: cada campo de más hace que menos gente lo rellene. Ejemplo: «nombre, teléfono y un mensaje corto; nada más»."
+        ]
+      ],
+      "expect": "Una explicación de por qué hace falta un servicio externo, una tabla comparando opciones con precios en euros, los pasos para darte de alta y el archivo completo con el formulario listo.",
+      "next": "Crea la cuenta siguiendo los pasos, pega tu dato en el sitio marcado y prueba a enviarte un mensaje a ti mismo. Si no llega, mira la carpeta de correo no deseado antes de dar por hecho que está roto. Casi todos los planes gratuitos aguantan entre 50 y 100 mensajes al mes; pasar de ahí suele costar entre 8 y 20 euros al mes."
+    },
+    {
+      "name": "Arreglar lo que se ve raro o no funciona",
+      "when": "Cuando algo se ha descolocado, un botón no responde o la página aparece en blanco.",
+      "prompt": "Algo de mi página no está bien y no sé decirlo en lenguaje técnico, así que te lo cuento como lo veo.\n\nLo que veo: [DESCRIBE LO QUE VES, TAL CUAL]. Lo que esperaba ver: [QUÉ ESPERABAS]. Me pasa en: [ORDENADOR, MÓVIL O LOS DOS], con el navegador [NAVEGADOR QUE USAS]. Te adjunto una captura de pantalla y te pego el archivo completo: [PEGA AQUÍ TODO EL CÓDIGO]\n\nHaz esto, en este orden:\n1. Dime en una o dos frases, en lenguaje normal, cuál es la causa más probable. Nada de listarme cinco posibles culpables: mójate con la más probable.\n2. Dime si es un fallo del código, algo que he hecho yo al guardar o pegar el archivo, o simplemente cómo se ve en ese navegador. Cada una se arregla de forma distinta y quiero saber en cuál estoy.\n3. Arréglalo y devuélveme el archivo completo, de la primera línea a la última, listo para pegar de una vez.\n4. Dime exactamente qué tengo que mirar en pantalla para saber que está resuelto, y en qué parte de la página tengo que mirarlo.\n\nSi con lo que te he dado no te llega para estar seguro, pídeme lo que te falte antes de cambiar nada. Prefiero contestarte una pregunta a que adivines y me devuelvas la página peor de lo que estaba.",
+      "fill": [
+        [
+          "[DESCRIBE LO QUE VES, TAL CUAL]",
+          "Como se lo contarías a alguien por teléfono. Ejemplo: «La foto de la cabecera aparece gigante y tapa el menú, y debajo hay una franja blanca enorme antes del texto»."
+        ],
+        [
+          "[QUÉ ESPERABAS]",
+          "Ejemplo: «Que la foto ocupara solo la parte de arriba y se viera el menú encima»."
+        ],
+        [
+          "[ORDENADOR, MÓVIL O LOS DOS]",
+          "Dónde ocurre. Es la pista más útil que puedes dar: si solo pasa en el móvil, el problema es otro."
+        ],
+        [
+          "[NAVEGADOR QUE USAS]",
+          "Chrome, Safari, Edge o Firefox. Si no lo sabes, describe el icono que pulsas para entrar en internet."
+        ],
+        [
+          "[PEGA AQUÍ TODO EL CÓDIGO]",
+          "El texto entero que te dio la IA. Abre tu archivo con el Bloc de notas (o TextEdit en Mac), selecciona todo (Ctrl+E en Windows en español, Cmd+A en Mac), copia y pega. Si sigues en la misma conversación de siempre, con escribir «usa el archivo que me diste antes» suele bastar."
+        ]
+      ],
+      "expect": "Una causa clara en una o dos frases, el archivo completo corregido y una forma concreta de comprobar que ya está.",
+      "next": "Antes de pegar nada, guarda una copia del archivo que tienes ahora. Si el arreglo empeora las cosas, con esa copia vuelves atrás en diez segundos; sin ella, no."
+    },
+    {
+      "name": "Poner la web en internet con una dirección real",
+      "when": "Cuando la página ya te gusta en tu ordenador y quieres poder mandarla por WhatsApp.",
+      "prompt": "Tengo mi página terminada en un archivo dentro de mi ordenador y quiero que esté en internet, con una dirección que pueda mandar por WhatsApp. No sé programar, no quiero ventanas de comandos y quiero pagar lo mínimo posible. Me gustaría que la dirección incluyera [NOMBRE QUE QUIERES PARA LA DIRECCIÓN].\n\nDame primero una tabla con las dos o tres formas más sencillas de publicar un archivo así, comparando: lo difícil que es para alguien que no lo ha hecho nunca, el precio al mes en euros, si permite subir el archivo arrastrándolo sin más, y qué pinta tendrá la dirección gratuita que me den. Recomiéndame una y di en una frase por qué esa.\n\nDespués, los pasos exactos y numerados, con los nombres de los botones tal y como aparecen en pantalla, desde crear la cuenta hasta ver mi página funcionando en internet. Incluye también qué tengo que hacer después, cada vez que cambie el archivo, para que se vea actualizada.\n\nLuego explícame en dos frases qué es tener un dominio propio, cuánto cuesta al año en euros, dónde se compra y si en mi caso merece la pena o puedo esperar.\n\nY termina con un apartado titulado AVISOS: qué pasos no tienen vuelta atrás, qué deja de ser privado en cuanto publique y qué gastos podrían aparecerme más adelante.",
+      "fill": [
+        [
+          "[NOMBRE QUE QUIERES PARA LA DIRECCIÓN]",
+          "Las palabras que quieres que salgan en la dirección. Ejemplo: «fisiomartaruiz». Cuanto más corto y fácil de dictar por teléfono, mejor."
+        ]
+      ],
+      "expect": "Una comparativa con precios, los pasos para publicar con nombres de botones reales, qué cuesta un dominio al año y una lista de avisos.",
+      "next": "Publica y ábrela desde tu móvil con los datos móviles, no con el wifi de casa: así compruebas que está de verdad en internet. Ten presente que publicar es un cambio de estado real: a partir de ese momento cualquiera con el enlace la ve, y los buscadores pueden empezar a mostrarla. Un dominio propio ronda los 10-15 euros al año y normalmente no se devuelve el dinero."
+    }
+  ],
+  "canDo": [
+    "Escribirte la página entera (estructura, colores, textos, animaciones) en un solo archivo que abres con doble clic y funciona sin conexión.",
+    "Rehacerte ese mismo archivo veinte veces seguidas con los cambios que le pidas, sin cansarse ni cobrarte de más.",
+    "Traducir lo que tú ves («esto se ve apretado», «el botón no se nota») al ajuste técnico que lo arregla.",
+    "Explicarte con nombres de botones reales cómo guardar el archivo, verlo, arreglarlo y publicarlo en internet."
+  ],
+  "cantDo": [
+    "No ve tu pantalla. Si no le pegas una captura o se lo describes, no tiene ni idea de cómo ha quedado la página.",
+    "No monta por sí sola cobros con tarjeta, usuarios con contraseña ni un almacén de pedidos: eso necesita servicios externos y, casi siempre, una cuota mensual.",
+    "No recuerda tu archivo si abres una conversación nueva. Cada chat empieza en blanco: tendrás que volver a pegarle el código.",
+    "No crea las cuentas ni compra el dominio por ti. Te da los pasos, pero los clics y el pago los haces tú."
+  ],
+  "tips": [
+    "Pide siempre el archivo completo, nunca «solo la parte que cambia». Si te da un trozo suelto tendrías que saber dónde encaja, y ahí es exactamente donde se rompe todo.",
+    "Antes de pegar cualquier versión nueva, guarda la anterior con otro nombre: web-01, web-02, web-03. Sobrescribir un archivo no tiene deshacer, y algún cambio saldrá peor que el anterior.",
+    "Haz una captura de pantalla y pégala en el chat. Describir con palabras «ese hueco raro de arriba» cuesta tres mensajes; la captura lo resuelve en uno."
+  ]
+}

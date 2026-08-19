@@ -1,0 +1,118 @@
+{
+  "id": "pedir-cambios",
+  "title": "Pedir cambios sin romper lo que ya funciona",
+  "intro": "Cuando algo tuyo ya funciona, cada cambio es un riesgo. Esta familia sirve para pedir mejoras de una en una, enterarte de qué te ha tocado la IA y poder volver atrás cuando la cosa empeore. Úsala a partir del momento en que tengas una primera versión viva, no antes.",
+  "model": "Claude para esto, porque aguanta archivos largos sin perder el hilo y es el más fino comparando dos versiones y explicando qué cambió; ChatGPT te vale para los retoques del día a día y Gemini si tu proyecto vive dentro de Google (Documentos, Hojas de cálculo, Drive).",
+  "prompts": [
+    {
+      "name": "El contrato: lo que no se toca",
+      "when": "Nada más abrir un chat nuevo para hacer cambios, antes de pedir el primero.",
+      "prompt": "Actúa como el desarrollador responsable de mantener un proyecto que YA FUNCIONA y que no se puede romper. El proyecto es: [QUÉ ES TU PROYECTO EN UNA FRASE]. Antes de que hagamos ningún cambio quiero fijar las reglas de trabajo de esta conversación, y quiero que las respetes en todas tus respuestas siguientes.\n\nReglas:\n1. Estas partes son intocables. No las puedes modificar, ni renombrar, ni \"mejorar de paso\": [LISTA DE COSAS QUE FUNCIONAN Y NO SE TOCAN].\n2. Cada vez que te pida un cambio, cambias solo eso. Si para conseguirlo hace falta tocar algo más, me lo dices ANTES y esperas mi respuesta.\n3. Nunca me devuelvas un archivo recortado con \"...aquí sigue igual...\". O me das el archivo entero, o me das solo el trozo exacto y me dices dónde va.\n4. No cambies nombres, textos visibles, colores ni estructura si no te lo he pedido explícitamente.\n5. Si algo de lo que te pido choca con estas reglas, dímelo en vez de obedecer.\n6. No soy programador. Cualquier palabra técnica que uses, me la explicas entre paréntesis la primera vez.\n\nResponde ahora solo con dos cosas: (a) estas reglas repetidas con tus palabras, para que yo confirme que las has entendido, y (b) las preguntas que necesites hacerme sobre el proyecto antes de empezar. No escribas nada de código todavía.",
+      "fill": [
+        ["[QUÉ ES TU PROYECTO EN UNA FRASE]", "Una frase de persona normal. Por ejemplo: \"una web de una página para mi estudio de yoga, con horarios y un botón de reservar por WhatsApp\"."],
+        ["[LISTA DE COSAS QUE FUNCIONAN Y NO SE TOCAN]", "Lo que ya te funciona y te dolería perder. Por ejemplo: \"el botón de reservar, el formulario de contacto que me llega al correo, los textos de la página de precios y que se vea bien en el móvil\"."]
+      ],
+      "expect": "Las reglas repetidas con sus palabras y dos o tres preguntas sobre tu proyecto. Cero código.",
+      "next": "Contesta a sus preguntas y ya puedes pedir el primer cambio en ese mismo chat. Este contrato solo vale dentro de esta conversación: si abres una nueva, vuelve a pegarlo."
+    },
+    {
+      "name": "Punto de guardado antes de tocar",
+      "when": "Justo antes de pedir un cambio que te da respeto.",
+      "prompt": "Vamos a cambiar algo que ahora mismo funciona y quiero poder volver atrás si sale mal. Antes de tocar nada, prepárame el punto de guardado.\n\nEsto es lo que tengo funcionando ahora mismo:\n[PEGA AQUÍ EL CONTENIDO COMPLETO DE LA VERSIÓN QUE FUNCIONA]\n\nHaz esto, en este orden y sin cambiar ni una coma:\n1. Devuélveme ese mismo contenido tal cual, sin ninguna mejora, sin corregir nada, dentro de un bloque para copiar, encabezado con el título \"VERSIÓN [NOMBRE PARA ESTA VERSIÓN] — NO TOCAR\".\n2. Escríbeme en tres líneas y en español llano qué hace esta versión y qué tiene que seguir funcionando igual después del cambio.\n3. Dime en qué archivo o pantalla vive esto y cómo debería llamar yo a la copia que voy a guardar en mi ordenador.\n4. Dame entre 4 y 6 comprobaciones que yo pueda hacer con el ratón para verificar que ahora mismo funciona. Nada técnico: del tipo \"abro tal cosa, pulso tal botón y veo tal otra\". Estas mismas comprobaciones las repetiré después del cambio.\n\nNo hagas todavía ningún cambio, ni siquiera pequeño. Si lo que te he pegado parece incompleto o cortado, dímelo y no rellenes por tu cuenta las partes que falten.",
+      "fill": [
+        ["[PEGA AQUÍ EL CONTENIDO COMPLETO DE LA VERSIÓN QUE FUNCIONA]", "Todo el texto o código que te dio la IA la última vez que aquello iba bien. Entero, desde la primera línea hasta la última. Si es muy largo, pégalo en dos mensajes seguidos avisando de que va por partes."],
+        ["[NOMBRE PARA ESTA VERSIÓN]", "Algo que te sirva a ti para reconocerla. Por ejemplo: \"v1-funciona-14-marzo\"."]
+      ],
+      "expect": "Tu contenido devuelto intacto y etiquetado, un resumen de tres líneas y una lista de comprobaciones sin jerga.",
+      "next": "Copia ese bloque en un archivo de texto de tu ordenador con la fecha en el nombre. Esa copia es tu marcha atrás. Aviso: si pegas la versión nueva encima de la vieja sin haber guardado copia, lo antiguo se pierde y no hay forma de recuperarlo."
+    },
+    {
+      "name": "Cambiar una sola cosa",
+      "when": "El cambio de cada día: quieres tocar algo concreto y que lo demás siga exactamente igual.",
+      "prompt": "Eres el desarrollador que mantiene este proyecto y tu prioridad número uno es no romper nada de lo que ya funciona.\n\nEsto es lo que hay ahora mismo:\n[PEGA AQUÍ EL CONTENIDO ACTUAL COMPLETO]\n\nQuiero un único cambio: [DESCRIBE EL CAMBIO EN UNA FRASE, COMO SE LO CONTARÍAS A UN AMIGO].\n\nEsto tiene que seguir funcionando exactamente igual que ahora: [LISTA LO QUE NO SE PUEDE ROMPER].\n\nCondiciones del encargo:\n- Cambia lo mínimo imprescindible. Si por el camino ves otras cosas mejorables, apúntalas al final en una lista de \"para otro día\", pero no las toques.\n- No renombres nada, no reordenes nada y no reescribas trozos que ya funcionan aunque a ti te gusten de otra forma.\n- Si el cambio obliga a tocar algo de la lista de intocables, no lo hagas: explícame por qué y proponme dos alternativas.\n- Si te falta información para hacerlo bien, pregúntame antes en vez de suponer.\n\nDevuélveme la respuesta en este orden exacto:\n1. En una frase, qué vas a cambiar.\n2. El contenido completo y actualizado, listo para copiar y pegar entero.\n3. La lista de zonas que has tocado, una por una.\n4. Tres comprobaciones concretas que yo pueda hacer con el ratón para saber si ha salido bien.\n5. Qué señales me indicarían que algo se ha roto.",
+      "fill": [
+        ["[PEGA AQUÍ EL CONTENIDO ACTUAL COMPLETO]", "La versión que tienes viva ahora mismo, entera. No la de hace tres cambios: la de ahora."],
+        ["[DESCRIBE EL CAMBIO EN UNA FRASE, COMO SE LO CONTARÍAS A UN AMIGO]", "Por ejemplo: \"quiero que el botón de reservar sea verde y ponga RESERVAR CLASE en vez de Enviar\"."],
+        ["[LISTA LO QUE NO SE PUEDE ROMPER]", "Por ejemplo: \"que al pulsar el botón me siga llegando el mensaje al WhatsApp y que la página siga viéndose bien en el móvil\"."]
+      ],
+      "expect": "Un cambio pequeño, el archivo entero para pegar, la lista de lo tocado y cómo comprobarlo. Y, si te has pasado de ambicioso, una advertencia en vez del cambio.",
+      "next": "Pega la versión nueva, haz las tres comprobaciones y guarda esta versión como la nueva buena si pasa. Si no pasa, tira del prompt de volver atrás."
+    },
+    {
+      "name": "Cuéntame qué has cambiado",
+      "when": "Cuando la IA te suelta una versión nueva y no tienes ni idea de qué le ha hecho por dentro.",
+      "prompt": "Acabas de darme una versión nueva de esto. Antes de pegarla en mi proyecto quiero entender qué le has hecho. No soy programador, así que explícamelo sin jerga.\n\nDame la explicación con esta estructura:\n\n1. TITULAR: una frase, qué es distinto ahora desde el punto de vista de quien usa esto. Nada de detalles internos.\n2. CAMBIOS UNO A UNO: para cada cambio, tres líneas — qué había antes, qué hay ahora y por qué lo has hecho así. Escríbelo como si me lo contaras en una cafetería. Si tienes que usar una palabra técnica, la explicas entre paréntesis la primera vez.\n3. LO QUE NO HE TOCADO: la lista de las cosas que siguen exactamente igual, para que yo me quede tranquilo.\n4. RIESGOS: qué es lo más probable que se rompa por culpa de este cambio y cómo lo notaría yo desde fuera.\n5. CÓMO LO COMPRUEBO: pasos numerados que yo pueda seguir con el ratón. Cada paso con lo que debería ver si va bien.\n6. VUELTA ATRÁS: qué tengo que hacer exactamente para dejarlo como estaba si no me convence.\n\nNo repitas el contenido completo otra vez, solo la explicación. Y si has cambiado algo que yo no te había pedido, dímelo en primer lugar y con todas las letras.",
+      "fill": [
+        ["(sin corchetes)", "Este prompt no lleva huecos: se pega tal cual justo después de que la IA te dé la versión nueva, en el mismo chat. Si lo usas en un chat distinto, pégale antes la versión vieja y la nueva."]
+      ],
+      "expect": "Una explicación en cristiano, la lista de lo que sigue intacto, los riesgos y unos pasos de comprobación que puedes seguir sin saber nada.",
+      "next": "Haz las comprobaciones del punto 5 antes de dar el cambio por bueno. Si en el punto 2 aparece algo que tú no pediste, dile que lo quite y te devuelva la versión sin ese extra."
+    },
+    {
+      "name": "Volver atrás",
+      "when": "Has aplicado un cambio, no te gusta o ha empeorado, y quieres la versión de antes.",
+      "prompt": "Quiero deshacer el último cambio y volver exactamente a la versión que funcionaba. Ojo: no quiero una versión \"mejorada\" de la anterior ni una mezcla de las dos. Quiero la anterior, tal cual.\n\nVERSIÓN QUE FUNCIONABA, a la que quiero volver:\n[PEGA AQUÍ LA VERSIÓN GUARDADA QUE FUNCIONABA]\n\nVERSIÓN ACTUAL, la que quiero descartar:\n[PEGA AQUÍ LA VERSIÓN QUE TENGO AHORA]\n\nHaz esto:\n1. Devuélveme la versión que funcionaba, completa y sin tocar ni una coma, lista para copiar y pegar entera. Aunque veas errores o cosas mejorables, no las arregles.\n2. Dime qué voy a perder al volver atrás, en una lista corta y en español llano, para que yo decida con los ojos abiertos.\n3. Avísame si la versión actual ha dejado algo por fuera que no se arregla pegando este contenido: ajustes que cambié, archivos nuevos, datos guardados, cuentas creadas. Dime cuáles y qué hago con ellos.\n4. Dame los pasos exactos para dejarlo como estaba: qué pego, dónde y en qué orden.\n5. Dime cómo comprobar, después de volver, que efectivamente funciona otra vez.\n\nSi lo que te he pegado como versión buena parece incompleto o cortado, no lo completes por tu cuenta: dime qué falta y paramos ahí.",
+      "fill": [
+        ["[PEGA AQUÍ LA VERSIÓN GUARDADA QUE FUNCIONABA]", "El archivo de texto que guardaste con el punto de guardado. Si no lo guardaste, búscalo hacia arriba en el propio chat: la IA no lo recuerda, pero la conversación sigue ahí."],
+        ["[PEGA AQUÍ LA VERSIÓN QUE TENGO AHORA]", "La versión rota o que no te gusta. Sirve para que te diga qué pierdes y si dejó algo suelto por fuera."]
+      ],
+      "expect": "Tu versión buena devuelta intacta, la lista de lo que pierdes y los pasos para dejarlo como estaba.",
+      "next": "Aplica los pasos, comprueba que vuelve a funcionar y solo entonces vuelve a intentar el cambio, esta vez más pequeño. Aviso: si nunca guardaste la versión buena y ya la pisaste, esto no se puede hacer; la IA no tiene tu archivo, solo lo que le pegas."
+    },
+    {
+      "name": "Comparar dos versiones y decidir",
+      "when": "Tienes dos opciones encima de la mesa y no sabes con cuál quedarte.",
+      "prompt": "Tengo dos versiones de lo mismo y necesito decidir cuál me quedo. No las mezcles ni te inventes una tercera: quiero una comparación honesta.\n\nVERSIÓN A:\n[PEGA AQUÍ LA VERSIÓN A]\n\nVERSIÓN B:\n[PEGA AQUÍ LA VERSIÓN B]\n\nLo que a mí me importa, por orden de prioridad: [QUÉ VALORAS TÚ].\n\nDame:\n1. Una tabla con las diferencias reales, fila por fila: qué hace A, qué hace B y por qué esa diferencia me importa a mí. Solo diferencias de verdad, no de estilo ni de cómo está escrito por dentro.\n2. Qué hace A que B no hace, y qué hace B que A no hace.\n3. Riesgos de cada una: qué es más probable que se rompa con cada una y por qué.\n4. Tu recomendación, con una razón, según lo que te he dicho que me importa. Mójate, no me contestes \"depende\".\n5. Si la respuesta buena fuera \"quédate con A pero cógele una cosa concreta a B\", dime exactamente qué cosa y por qué, pero no me la apliques todavía.\n\nSi las dos versiones hacen prácticamente lo mismo, dímelo claramente en vez de inventarte diferencias para rellenar. Y no soy programador: explícame cada diferencia por lo que se nota desde fuera, no por cómo está hecha por dentro.",
+      "fill": [
+        ["[PEGA AQUÍ LA VERSIÓN A]", "Una de las dos versiones, entera. Por ejemplo la que te dio la IA el lunes."],
+        ["[PEGA AQUÍ LA VERSIÓN B]", "La otra, entera. Por ejemplo la que te dio hoy después de pedirle un rediseño."],
+        ["[QUÉ VALORAS TÚ]", "Ordénalo de más a menos importante. Por ejemplo: \"1) que yo la pueda entender y retocar, 2) que cargue rápido en el móvil, 3) que no me obligue a pagar ningún servicio extra\"."]
+      ],
+      "expect": "Una tabla de diferencias reales, los riesgos de cada opción y una recomendación con nombre y apellidos.",
+      "next": "Elige una, guárdala como tu versión buena y borra la otra de tu cabeza. Si te ha propuesto el híbrido del punto 5, pídelo como un cambio único con el prompt de cambiar una sola cosa."
+    },
+    {
+      "name": "Se ha roto y no sé por qué",
+      "when": "Funcionaba, ya no funciona, y no tienes ni idea de qué ha pasado.",
+      "prompt": "Algo que funcionaba ha dejado de funcionar y no sé por qué. No soy programador, así que necesito que hagas de detective y me lleves de la mano, paso a paso.\n\nQué hacía cuando funcionaba: [QUÉ HACÍA ANTES]\nQué hace ahora: [QUÉ PASA AHORA, CON TODO EL DETALLE QUE PUEDAS]\nMensaje que aparece, si aparece alguno: [COPIA EL MENSAJE ENTERO, AUNQUE NO LO ENTIENDAS]\nLo último que cambié antes de que se rompiera: [LO ÚLTIMO QUE TOCASTE, AUNQUE TE PAREZCA UNA TONTERÍA]\nContenido actual:\n[PEGA AQUÍ EL CONTENIDO ACTUAL COMPLETO]\n\nHazlo así, y respeta el orden:\n1. Dime en una frase, sin jerga, qué crees que está pasando.\n2. Dame las tres causas más probables, de más a menos probable, con un porcentaje aproximado de confianza en cada una.\n3. Para la primera causa, dame UNA comprobación de menos de dos minutos que yo pueda hacer con el ratón. Dime qué veré si la causa es esa y qué veré si no lo es.\n4. Para ahí y espera mi respuesta. No toques nada todavía.\n5. No me des cinco cambios de golpe: uno, comprobamos, y seguimos. Si me das varios a la vez y funciona, no sabremos cuál era.\n\nSi necesitas ver algo que no te he pegado, pídemelo y explícame dónde encontrarlo, con el nombre de los botones o menús que tengo que buscar.",
+      "fill": [
+        ["[QUÉ HACÍA ANTES]", "Por ejemplo: \"al pulsar Reservar se abría WhatsApp con el mensaje ya escrito\"."],
+        ["[QUÉ PASA AHORA, CON TODO EL DETALLE QUE PUEDAS]", "Por ejemplo: \"pulso Reservar y no pasa nada, la página se queda quieta. En el móvil igual\". Cuanto más concreto, mejor diagnóstico."],
+        ["[COPIA EL MENSAJE ENTERO, AUNQUE NO LO ENTIENDAS]", "El texto rojo o la ventanita de error, copiado entero y tal cual. Si no aparece ninguno, escribe \"no aparece ningún mensaje\"."],
+        ["[LO ÚLTIMO QUE TOCASTE, AUNQUE TE PAREZCA UNA TONTERÍA]", "Por ejemplo: \"cambié el color del botón\" o \"pegué una versión nueva que me diste ayer\". Esto es la pista más valiosa de todas."],
+        ["[PEGA AQUÍ EL CONTENIDO ACTUAL COMPLETO]", "Lo que hay ahora mismo, roto y todo. Entero."]
+      ],
+      "expect": "Una hipótesis en una frase, tres sospechosos ordenados por probabilidad y una sola comprobación rápida para hacer tú.",
+      "next": "Haz solo esa comprobación y cuéntale el resultado, aunque sea \"no veo nada\". Repite hasta dar con la causa. Si tienes guardada la versión buena, probar a volver atrás es la vía más rápida de todas."
+    },
+    {
+      "name": "Trocear un cambio grande",
+      "when": "Lo que quieres es gordo y sabes que si lo pides de golpe se va a liar.",
+      "prompt": "Quiero hacer un cambio grande en algo que ya funciona, y no quiero pedírtelo de golpe: si se rompe, no sabré qué ha sido. Ayúdame a partirlo en pasos pequeños.\n\nLo que hay ahora: [DESCRIBE O PEGA LO QUE TIENES]\nAdónde quiero llegar: [DESCRIBE EL RESULTADO FINAL QUE QUIERES]\nLo que no se puede romper por el camino: [LISTA DE COSAS QUE TIENEN QUE SEGUIR FUNCIONANDO]\n\nDevuélveme un plan con estas condiciones:\n- Entre 3 y 7 pasos, cada uno lo bastante pequeño como para que, si falla, yo sepa exactamente qué lo ha roto.\n- Después de cada paso el proyecto tiene que seguir funcionando y yo tengo que poder verlo con mis ojos. Nada de \"esto queda a medias hasta el paso 5\".\n- Para cada paso, dime: qué se toca, qué NO se toca, cómo compruebo con el ratón que ha salido bien, y cómo lo deshago si sale mal.\n- Marca cuál es el paso más arriesgado y explícame por qué.\n- Ordénalos para que lo arriesgado no caiga al final, cuando ya haya montado todo lo demás encima.\n- Dime en qué paso conviene que yo guarde una copia de seguridad antes de seguir.\n\nDame solo el plan. No escribas nada de código todavía: iremos paso a paso y yo te iré diciendo \"vamos con el paso 1\", \"vamos con el paso 2\".",
+      "fill": [
+        ["[DESCRIBE O PEGA LO QUE TIENES]", "Si cabe, pega el contenido entero. Si no, descríbelo: \"una web de una página con horarios, precios y un botón de WhatsApp\"."],
+        ["[DESCRIBE EL RESULTADO FINAL QUE QUIERES]", "Por ejemplo: \"que además se pueda reservar y pagar la clase desde la propia web, sin salir a WhatsApp\"."],
+        ["[LISTA DE COSAS QUE TIENEN QUE SEGUIR FUNCIONANDO]", "Por ejemplo: \"los horarios, el formulario de contacto y que se vea bien en el móvil\"."]
+      ],
+      "expect": "Un plan numerado de 3 a 7 pasos, cada uno con su comprobación y su marcha atrás, y el paso peligroso señalado.",
+      "next": "Guarda el plan en un archivo de texto y ve pidiendo un paso por mensaje con el prompt de cambiar una sola cosa. No adelantes pasos aunque tengas prisa."
+    }
+  ],
+  "canDo": [
+    "Hacer un cambio concreto y decirte después, zona por zona, qué ha tocado y qué ha dejado igual.",
+    "Comparar dos versiones que le pegues y señalar las diferencias que de verdad se notan al usarlo.",
+    "Devolverte intacta una versión anterior si tú se la pegas, para que puedas volver atrás.",
+    "Sacar las causas más probables de una avería a partir del mensaje de error y de lo último que tocaste."
+  ],
+  "cantDo": [
+    "No recuerda tu proyecto. Solo conoce lo que le has pegado en esa conversación; en un chat nuevo empieza de cero.",
+    "No ve tu pantalla ni prueba nada. Cuando dice \"ahora ya funciona\" es una predicción suya, no una comprobación.",
+    "No puede deshacer nada por ti. Si no guardaste la versión buena, no hay marcha atrás: la copia la tienes que tener tú.",
+    "No sabe qué cambiaste tú en otro chat, ni qué tocó otra persona. Si no se lo cuentas, para él no ha pasado."
+  ],
+  "tips": [
+    "Un cambio por mensaje. Si pides tres a la vez y algo se rompe, no sabrás cuál de los tres fue, y volver atrás te costará el triple.",
+    "Antes de pegar nada nuevo, guarda la versión que funciona en un archivo de texto con la fecha en el nombre (por ejemplo \"web-2026-03-14-funciona.txt\"). Son diez segundos y es lo único que te salva cuando se tuerce.",
+    "Cuando el chat se alarga, la IA empieza a olvidar el principio y reescribe cosas que ya estaban bien. Abre uno nuevo, pega la versión actual y vuelve a pegar el contrato de intocables. Los planes de pago (unos 20-23 euros al mes) aguantan conversaciones más largas, pero abrir chat nuevo funciona igual de bien en el gratuito."
+  ]
+}

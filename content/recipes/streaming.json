@@ -1,0 +1,75 @@
+{
+  "id": "streaming",
+  "match": "streaming|stream|tiempo real|chat|chatbot|latencia|espera|se cuelga|interfaz|asistente",
+  "stages": [
+    "asistentes",
+    "fundamentos"
+  ],
+  "tools": [
+    "python",
+    "anthropic"
+  ],
+  "title": "Muestra la respuesta mientras se está escribiendo",
+  "what": "Imprime el texto del modelo trozo a trozo según va llegando, en vez de esperar a tenerlo entero.",
+  "why": "Sin esto tu programa se queda mudo entre 5 y 40 segundos y luego suelta la respuesta de golpe. El usuario cree que se ha colgado: recarga, pulsa dos veces o se va. Con streaming ve las primeras palabras en un par de segundos y la espera deja de doler, aunque el total tarde lo mismo.",
+  "lang": "python",
+  "install": "pip install anthropic",
+  "code": "import os\nimport sys\nfrom anthropic import Anthropic, APIStatusError\n\n# La clave nunca se escribe dentro del código: se lee del entorno del ordenador.\nclave = os.environ.get(\"ANTHROPIC_API_KEY\")\nif not clave:\n    sys.exit(\"Falta ANTHROPIC_API_KEY. Ponla en el entorno y vuelve a ejecutar.\")\n\ncliente = Anthropic(api_key=clave)\npregunta = \"Explica en 6 frases por qué sube el pan con levadura.\"\n\ntry:\n    # stream() deja el canal abierto: el texto va llegando a trozos.\n    with cliente.messages.stream(\n        model=\"claude-opus-5\",\n        max_tokens=1000,\n        output_config={\"effort\": \"low\"},\n        messages=[{\"role\": \"user\", \"content\": pregunta}],\n    ) as flujo:\n        # text_stream entrega solo los trozos de texto, ya limpios.\n        for trozo in flujo.text_stream:\n            print(trozo, end=\"\", flush=True)\n        print()\n        # Cuando acaba, aquí tienes el mensaje entero y las cuentas.\n        final = flujo.get_final_message()\nexcept APIStatusError as e:\n    print()\n    sys.exit(f\"La API ha respondido con un error {e.status_code}: {e.message}\")\n\nentrada = final.usage.input_tokens\nsalida = final.usage.output_tokens\ncoste = entrada / 1_000_000 * 5 + salida / 1_000_000 * 25\nprint()\nprint(f\"--- {entrada} tokens de entrada, {salida} de salida ---\")\nprint(f\"--- Coste aproximado de esta respuesta: {coste:.4f} $ ---\")\n",
+  "lines": [
+    [
+      "clave = os.environ.get(\"ANTHROPIC_API_KEY\")",
+      "Una variable de entorno es un dato guardado en el ordenador, fuera del código. La clave vale dinero real: si la escribes dentro del archivo acaba en tu repositorio y cualquiera puede gastarte el saldo. Se lee de fuera, siempre."
+    ],
+    [
+      "sys.exit(\"Falta ANTHROPIC_API_KEY. Ponla en el entorno y vuelve a ejecutar.\")",
+      "Si no hay clave, el programa para aquí con un mensaje que se entiende. Sin esta comprobación reventaría más abajo con un error del SDK que no dice qué has olvidado."
+    ],
+    [
+      "with cliente.messages.stream(",
+      "stream() es la versión que va entregando el texto por partes. La palabra with es la que garantiza que la conexión se cierra sola al terminar, incluso si algo falla en medio. Sin ella dejas conexiones abiertas colgando."
+    ],
+    [
+      "output_config={\"effort\": \"low\"},",
+      "El esfuerzo controla cuánto piensa el modelo antes de escribir. Con esfuerzo bajo empieza a soltar texto casi enseguida, que es justo lo que quieres en un chat. Súbelo a \"high\" cuando la respuesta tenga que ser buena y no rápida."
+    ],
+    [
+      "for trozo in flujo.text_stream:",
+      "Aquí está todo el truco: el bucle da una vuelta cada vez que llega un pedazo de texto, normalmente unas pocas letras. No espera a que termine el modelo. text_stream ya te filtra solo el texto, sin la fontanería del protocolo."
+    ],
+    [
+      "print(trozo, end=\"\", flush=True)",
+      "end=\"\" evita que Python meta un salto de línea detrás de cada trozo y te parta la frase. flush=True obliga a pintarlo en pantalla ya; sin eso Python acumula texto en memoria y verías la respuesta a bloques, matando el efecto."
+    ],
+    [
+      "final = flujo.get_final_message()",
+      "Cuando el bucle acaba, esto te devuelve la respuesta completa ya montada, con el texto entero y el recuento de tokens. Sin esta línea has pintado el texto pero no te queda nada guardado para el historial ni para las cuentas."
+    ],
+    [
+      "except APIStatusError as e:",
+      "Recoge cualquier respuesta de error de la API: clave mala, saldo agotado, demasiadas peticiones. Sin esto el usuario ve un vomitado de 30 líneas rojas en vez de una frase clara."
+    ],
+    [
+      "coste = entrada / 1_000_000 * 5 + salida / 1_000_000 * 25",
+      "Un token es un trozo de palabra, unas 4 letras. Con claude-opus-5 pagas 5 $ por cada millón de tokens que envías y 25 $ por cada millón que recibes. Una respuesta como esta cuesta menos de un céntimo. Ojo: la API no tiene plan gratis, tienes que meter saldo en console.anthropic.com."
+    ]
+  ],
+  "errors": [
+    [
+      "ModuleNotFoundError: No module named 'anthropic'",
+      "No has instalado la librería, o la has instalado en un Python distinto del que estás ejecutando. Ejecuta pip install anthropic en la misma terminal donde lanzas el script."
+    ],
+    [
+      "Falta ANTHROPIC_API_KEY. Ponla en el entorno y vuelve a ejecutar.",
+      "Es tu propio mensaje: la variable de entorno no existe en esta terminal. En Linux o Mac: export ANTHROPIC_API_KEY=\"sk-ant-...\". En Windows PowerShell: $env:ANTHROPIC_API_KEY=\"sk-ant-...\". Se pierde al cerrar la terminal, así que hay que repetirlo o dejarlo fijo en la configuración del sistema."
+    ],
+    [
+      "La API ha respondido con un error 401: invalid x-api-key",
+      "La clave existe pero no vale: está mal copiada, le sobra un espacio, o la has borrado desde la consola. Genera una nueva en console.anthropic.com y cópiala entera, empieza por sk-ant-."
+    ],
+    [
+      "La API ha respondido con un error 400: Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+      "Te has quedado sin saldo. La API se paga por uso y no tiene plan gratis: entra en console.anthropic.com, apartado Billing, y carga crédito. Con 5 $ tienes para miles de pruebas como esta."
+    ]
+  ],
+  "adapt": "Cambia el texto de pregunta por lo que quiera tu usuario; para probar en tu terminal, pon pregunta = input(\"Pregunta: \"). Si lo montas en una web, sustituye el print por enviar cada trozo al navegador (el patrón se llama SSE, eventos enviados por el servidor) y el bucle se queda exactamente igual. Sube output_config a \"high\" si prefieres respuestas más cuidadas y te da igual esperar unos segundos más antes de ver la primera palabra."
+}

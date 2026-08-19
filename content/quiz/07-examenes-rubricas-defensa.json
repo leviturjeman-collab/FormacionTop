@@ -1,0 +1,63 @@
+{
+  "categoryId": "07-examenes-rubricas-defensa",
+  "basico": [
+    {
+      "prompt": "En la evaluación diagnóstica, la primera pregunta es: \"¿qué datos no deberías compartir con un modelo?\". Tú has estado pegando actas de reunión con nombres y teléfonos de clientes.",
+      "options": [
+        { "text": "Datos que identifican a una persona (nombres, teléfonos, DNI, historiales) y credenciales; para practicar se sustituyen por inventados", "correct": true, "why": "La regla práctica: si la fila identifica a alguien real, no entra. Cambiar \"Marta Ruiz, 655...\" por \"Cliente A, 600000001\" cuesta un minuto y quita el problema entero. Y lo ya enviado no se puede recuperar: eso no tiene deshacer." },
+        { "text": "Nada, mientras uses la versión de pago no se entrena con tus datos", "correct": false, "why": "Media verdad muy extendida: en los planes de empresa y en la API, efectivamente, no se usa para entrenar por defecto. Pero eso no borra que el dato ha salido de tu organización hacia un tercero, que es lo que te pueden reclamar." },
+        { "text": "Solo contraseñas y números de tarjeta", "correct": false, "why": "Es lo que primero viene a la cabeza porque el daño se ve claro. Pero un teléfono y un nombre juntos ya son dato personal, y ahí es donde se mete casi todo el mundo sin darse cuenta." }
+      ],
+      "explain": "Si la fila identifica a alguien real, no entra. Se cambia por ficticio antes."
+    },
+    {
+      "prompt": "Te dicen que el programa evalúa de cinco formas: diagnóstico inicial, evaluación por laboratorio, evaluación de proyecto, defensa oral y auditoría final. Tú crees que con hacer bien el proyecto ya está.",
+      "options": [
+        { "text": "El proyecto demuestra que construiste algo; la defensa oral demuestra que entiendes lo que construiste, y son cosas distintas", "correct": true, "why": "Es justo el hueco que la defensa existe para tapar. Se puede llegar a un sistema que funciona a base de copiar y pegar sin saber por qué funciona. En cuanto te preguntan \"¿y si falla la API?\" se ve enseguida." },
+        { "text": "Son cinco formas de medir lo mismo, así que basta con destacar en una", "correct": false, "why": "Tiene sentido si piensas en un examen tradicional, donde todo mide memoria. Aquí cada una mide algo que las otras no ven: el laboratorio mide ejecución, el proyecto integración y la defensa criterio." },
+        { "text": "La auditoría final es un trámite administrativo", "correct": false, "why": "El nombre suena a papeleo y por eso se subestima. Es donde se comprueba que lo entregado es reproducible por otra persona, que es exactamente lo que separa un trabajo de una demo." }
+      ],
+      "explain": "Construir y entender no son lo mismo. Por eso hay defensa además de proyecto."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Preparas la defensa final. La estructura pide, entre otras cosas, \"qué parte es determinista y qué parte depende del modelo\". Tu sistema recoge un formulario, clasifica la petición con IA y crea una tarea. No sabes qué contestar.",
+      "options": [
+        { "text": "Determinista es lo que siempre da el mismo resultado con la misma entrada (recoger el formulario y crear la tarea); lo que depende del modelo es la clasificación", "correct": true, "why": "Ese corte es la respuesta y además te dice dónde poner las pruebas: la parte determinista se prueba una vez y confías; la del modelo hay que revisarla con casos raros porque un día clasificará distinto." },
+        { "text": "Todo depende del modelo, porque el modelo es el que decide qué pasa después", "correct": false, "why": "Se piensa así porque la IA es la parte llamativa. Pero el formulario recoge los mismos campos siempre y la tarea se crea igual siempre: eso son reglas fijas. Confundirlo hace que revises de más donde no hace falta y de menos donde sí." },
+        { "text": "Nada es determinista si hay IA por medio en algún punto", "correct": false, "why": "Suena riguroso y es un error caro. Si aceptas que nada es fiable, no puedes garantizar nada al cliente. Y sí puedes: la parte de reglas la garantizas entera." }
+      ],
+      "explain": "Separa lo que siempre sale igual de lo que decide el modelo. Se prueban de forma distinta."
+    },
+    {
+      "prompt": "Entregas el proyecto y la rúbrica te devuelve un suspenso con el motivo: \"no hay error provocado ni reparación documentada\". Tu sistema funcionaba perfectamente en las cinco pruebas que hiciste.",
+      "options": [
+        { "text": "Solo probaste el camino feliz: falta romperlo a propósito (un campo vacío, una API caída) y escribir el síntoma, la causa y el arreglo", "correct": true, "why": "Cinco pruebas con datos buenos demuestran poco: los datos buenos siempre pasan. Lo que el evaluador busca es si sabes diagnosticar, y eso solo se ve cuando algo se rompe. Es también la parte que más impresiona en una demo." },
+        { "text": "Es injusto: un sistema que no falla es mejor que uno que falla", "correct": false, "why": "Es lo que se siente al leer ese comentario, y la intuición es buena. Pero no falló porque no lo empujaste. Con un formulario sin email, o el mismo envío dos veces, se rompe. Lo que no probaste no está demostrado." },
+        { "text": "Bastaba con anotar los errores que te salieron mientras lo construías", "correct": false, "why": "Es un buen punto de partida y mucho mejor que nada. Pero los errores de construcción suelen ser tuyos (una comilla, un nombre mal escrito). El evaluador busca los fallos de uso: dato ausente, duplicado, permiso insuficiente." }
+      ],
+      "explain": "El camino feliz no demuestra nada. Rompe tu sistema a propósito y documenta el arreglo."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Eres tú quien evalúa. Dos proyectos: el A es un agente con seis herramientas conectadas que hace cosas espectaculares pero el alumno no sabe explicar qué permisos tiene. El B es un flujo sencillo con logs, una aprobación humana y un fallo documentado.",
+      "options": [
+        { "text": "Aprueba el B; el A no se puede certificar porque no puede explicar qué está autorizado a hacer su propio sistema", "correct": true, "why": "El criterio es explícito: no se certifica a quien no pueda explicar qué ocurre cuando el sistema falla. Un agente con seis herramientas y permisos desconocidos puede borrar o enviar algo sin que su autor sepa por qué. Eso no es un proyecto avanzado, es uno peligroso." },
+        { "text": "El A, con nota más baja: hizo más trabajo y eso debe contar", "correct": false, "why": "Es el instinto humano de premiar el esfuerzo visible, y es tentador porque el A impresiona. Pero la nota mide criterio, no horas. Seis herramientas sin control son seis formas de que algo salga mal en casa del cliente." },
+        { "text": "Los dos aprueban: miden cosas distintas y cada uno destaca en la suya", "correct": false, "why": "Es la salida diplomática y por eso se elige mucho. El problema es que certificar el A dice que un sistema sin permisos entendidos es aceptable, y en el momento en que ese alumno toque datos de un cliente real, esa firma es tuya." }
+      ],
+      "explain": "No se certifica a quien no sabe explicar qué hace su sistema cuando falla."
+    },
+    {
+      "prompt": "En la defensa te preguntan: \"¿cómo controlas el coste?\". Tu flujo procesa unos 300 correos al mes con una API de pago y hasta ahora no has mirado la factura.",
+      "options": [
+        { "text": "Se controla midiendo el coste por ejecución y poniendo un límite de gasto en el panel del proveedor antes de que el sistema toque volumen real", "correct": true, "why": "Los proveedores serios dejan fijar un tope mensual: son dos minutos y te salva de un bucle que se dispare de madrugada. Y saber que te cuesta unos 0,004 € por correo, es decir poco más de 1 € al mes, convierte una respuesta vaga en un número que se puede defender." },
+        { "text": "Se controla eligiendo el modelo más barato disponible", "correct": false, "why": "Baja la factura, sí, y es lo primero que se prueba. Pero un modelo más flojo clasifica peor, y cada error mal clasificado cuesta tiempo humano de corregir. Ahorrar 2 € y perder dos horas al mes no es control de coste." },
+        { "text": "No hace falta control mientras el volumen sea pequeño", "correct": false, "why": "Es razonable con 300 correos y por eso se pospone eternamente. Lo que rompe el razonamiento es un fallo en bucle: un flujo mal montado que reintenta sin parar puede multiplicar por cien el volumen en una noche, y no lo ves hasta la factura." }
+      ],
+      "explain": "Coste por ejecución más tope de gasto configurado. Antes del volumen, no después."
+    }
+  ]
+}

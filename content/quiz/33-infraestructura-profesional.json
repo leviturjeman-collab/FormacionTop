@@ -1,0 +1,63 @@
+{
+  "categoryId": "33-infraestructura-profesional",
+  "basico": [
+    {
+      "prompt": "Escribiste tu clave de API (la contraseña que identifica tu cuenta ante el proveedor de IA) dentro del código y subiste el proyecto a un repositorio público de GitHub. Te das cuenta dos horas después.",
+      "options": [
+        { "text": "Entras al panel del proveedor, creas una clave nueva y anulas la vieja. Después limpias el código", "correct": true, "why": "Ese es el orden. Borrar la línea no vale: un repositorio guarda todas las versiones anteriores y la clave sigue ahí, legible. Solo anularla la deja inservible. Y da por hecho que alguien ya la tiene: hay bots recorriendo repositorios públicos que encuentran claves en minutos, y el gasto lo pagas tú." },
+        { "text": "Borras la línea, guardas otra versión y listo", "correct": false, "why": "Es lo que hace casi todo el mundo, porque en pantalla ya no se ve. Pero cualquiera puede pedir la versión de hace dos horas y leer la clave entera. En el historial no se borra nada solo por escribir encima." },
+        { "text": "Pones el repositorio en privado y lo dejas así", "correct": false, "why": "Tapa la vista de hoy, no las dos horas que estuvo público. Si ya la copiaron, sigue funcionando igual de bien para quien la tenga." }
+      ],
+      "explain": "Una clave que se ha visto en público está quemada. Se rota, no se esconde."
+    },
+    {
+      "prompt": "Un compañero se descarga tu proyecto y te pregunta qué claves tiene que rellenar. En la carpeta hay tres archivos con nombres parecidos: `.env`, `.env.example` y `.gitignore`. ¿Cuál le sirve?",
+      "options": [
+        { "text": "`.env.example`: la lista de variables con los valores vacíos, y ese sí se sube al repositorio", "correct": true, "why": "Justo. Dice qué hace falta sin revelar nada: `ANTHROPIC_API_KEY=` y punto. Él lo copia como `.env`, mete sus propias claves y arranca. El `.gitignore` es la lista de archivos que git debe ignorar, y ahí dentro está `.env` para que no se suba nunca." },
+        { "text": "Le mandas tu `.env` por chat, que es más rápido", "correct": false, "why": "Rápido sí, y se hace en media empresa. Pero le estás dando tus claves, no las suyas: lo que gaste lo pagas tú y no podrás distinguir su consumo del tuyo. Además ese mensaje se queda en el historial del chat para siempre." },
+        { "text": "Le dices que mire el código y vaya viendo qué variables se piden", "correct": false, "why": "Funciona a medias, y por eso se hace. Se te escapará alguna, y él la descubrirá cuando el programa reviente a mitad con un mensaje que no explica nada." }
+      ],
+      "explain": "`.env` tus valores reales, `.env.example` la lista vacía que sí se comparte, `.gitignore` lo que no debe subirse jamás."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tu web hecha con Next.js no encuentra la clave de Supabase desde el navegador. Pruebas a renombrarla de `SUPABASE_SERVICE_ROLE_KEY` a `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY` y de repente funciona.",
+      "options": [
+        { "text": "Acabas de publicar la llave maestra de tu base de datos: el prefijo `NEXT_PUBLIC_` incrusta el valor en la página que se descarga cualquier visitante", "correct": true, "why": "Y la service role no es una clave cualquiera: se salta todas las reglas de permisos y puede leer, cambiar o borrar cualquier tabla. Se ve abriendo el código de la página. Anúlala hoy y genera otra. Lo que va al navegador es la anon key, que está pensada para verse." },
+        { "text": "Has arreglado la configuración: si el navegador la necesita, hay que marcarla como pública", "correct": false, "why": "El razonamiento es correcto salvo en la premisa. El navegador no necesita esa clave: necesita la anon key, limitada por las reglas de acceso que tú defines. Lo que fallaba era usar la clave equivocada, no cómo se llamaba." },
+        { "text": "No es grave mientras el proyecto no esté publicado en internet", "correct": false, "why": "Es la excusa que hace que se quede así hasta el día del despliegue, y ese día nadie se acuerda de revisarlo. Además el nombre y el valor ya viajan en el repositorio y en su historial." }
+      ],
+      "explain": "`NEXT_PUBLIC_` significa «que lo vea todo el mundo». Si el valor es un secreto, ese prefijo sobra."
+    },
+    {
+      "prompt": "En tu ordenador la app funciona. La despliegas en Vercel y devuelve error 500. En los registros del servidor pone que la clave de API vale `undefined`, es decir, que no tiene ningún valor.",
+      "options": [
+        { "text": "Falta meter las variables en el panel de Vercel, y por separado para cada entorno: el de pruebas y el de producción", "correct": true, "why": "Eso es. Tu `.env` está en el `.gitignore` y no se sube: es lo correcto y a la vez el motivo del fallo. La plataforma tiene su propio almacén de variables y se rellena a mano. Ojo: después de añadirlas hay que volver a desplegar, porque el despliegue viejo sigue sin verlas. Vercel tiene plan gratis para proyectos personales; el de pago ronda los 20 $ por persona al mes." },
+        { "text": "Quitar `.env` del `.gitignore` para que suba con el proyecto", "correct": false, "why": "Resuelve el error en cinco segundos y es exactamente así como se filtran las claves. Ese archivo tiene tus valores reales y acabaría en el repositorio y en su historial, que ya no se limpia solo." },
+        { "text": "La clave está mal copiada o ha caducado", "correct": false, "why": "Es lo primero que uno mira, pero el registro dice `undefined`: no es que el valor sea inválido, es que no hay valor. Una clave mal copiada daría un error de autenticación del proveedor, con otro texto." }
+      ],
+      "explain": "Lo que hay en tu `.env` no viaja con el despliegue. Se vuelve a escribir en el panel de la plataforma, entorno por entorno."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tienes 800 PDFs de manuales internos y quieres un asistente que responda preguntas citando el manual correcto. Tu app ya usa PostgreSQL. Hay tres caminos sobre la mesa.",
+      "options": [
+        { "text": "pgvector: activas la extensión de búsqueda por significado en el PostgreSQL que ya tienes y guardas ahí los fragmentos", "correct": true, "why": "Una pieza menos que instalar, vigilar y pagar, y puedes filtrar por permisos o por fecha en la misma consulta. Con 800 documentos va sobradísimo. Convertir el texto a números que capturan su significado cuesta poco: con text-embedding-3-small son unos 0,02 $ por millón de tokens (los trozos en que el modelo parte el texto), o sea céntimos para este volumen." },
+        { "text": "Montar Qdrant, una base de datos dedicada solo a búsqueda por similitud", "correct": false, "why": "Es buena herramienta y a partir de millones de fragmentos compensa de verdad. A esta escala añades un servicio más que mantener y que se puede caer, para ganar una velocidad que nadie va a notar. Tiene plan gratis de 1 GB en su nube, así que la tentación es real." },
+        { "text": "Pegar los 800 manuales enteros en cada pregunta al modelo", "correct": false, "why": "Es lo más directo y por eso se intenta primero. Pero no cabe en el contexto del modelo, y si cupiera pagarías el manual completo en cada pregunta: pasarías de céntimos a decenas de euros al día con solo veinte consultas." }
+      ],
+      "explain": "La búsqueda por significado se guarda donde ya guardas los datos, salvo que la escala te obligue a separarla."
+    },
+    {
+      "prompt": "Tu agente lleva tres semanas en producción atendiendo consultas de clientes. Llega la factura del proveedor de IA: 340 €, esperabas 40. Nadie sabe qué consultas costaron eso ni si las respuestas eran buenas.",
+      "options": [
+        { "text": "Un registro por ejecución: identificador, modelo usado, tokens consumidos, coste estimado y si lo revisó una persona", "correct": true, "why": "Sin eso estás adivinando. Una línea por ejecución basta para responder en diez minutos qué se disparó y cuándo, y casi siempre sale una única causa: un reintento en bucle, un usuario pegando documentos enormes, o un modelo caro donde bastaba uno pequeño. Para errores y uso, Sentry y PostHog tienen plan gratis suficiente; el registro de coste por ejecución lo escribes tú, no viene de serie." },
+        { "text": "Tests automáticos con Playwright que comprueben que la web responde", "correct": false, "why": "Hacen falta y detectan que la página no carga, que es un fallo real. Pero aquí la página cargaba perfectamente: el problema era el coste y la calidad de las respuestas, y eso Playwright no lo mira." },
+        { "text": "Cambiar a un modelo más barato y volver a mirar la factura el mes que viene", "correct": false, "why": "Puede que baje el número y sigues sin saber por qué. Si la causa era un bucle, con el modelo barato pagas menos por el mismo fallo. Y esperar treinta días para enterarte, a este ritmo, son otros 340 €." }
+      ],
+      "explain": "Antes de optimizar el coste hay que poder verlo. El registro por ejecución es la primera pieza de infraestructura, no la última."
+    }
+  ]
+}

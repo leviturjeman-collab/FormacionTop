@@ -1,0 +1,63 @@
+{
+  "categoryId": "13-proyectos-reales-y-skills-02-anthropic",
+  "basico": [
+    {
+      "prompt": "Tienes las notas de un módulo entero y necesitas una presentación de ocho diapositivas para el viernes.",
+      "options": [
+        { "text": "Hay skills ya preparadas para documentos (presentaciones, hojas de cálculo, Word y PDF): no tienes que escribir tú el procedimiento de cómo se construye el archivo", "correct": true, "why": "Correcto. Son skills que vienen de fábrica y saben producir el archivo de verdad, no un texto que describe las diapositivas. Tú pones el contenido y la narrativa; el formato lo pone la skill." },
+        { "text": "Exportar las notas a PDF y pedirle que lo maquete bonito", "correct": false, "why": "Suena a atajo razonable porque el PDF es un formato \"serio\". Se rompe conceptualmente: el PDF es el resultado final, no el material de partida, y maquetar un PDF es mucho más difícil que generar la presentación desde el contenido." },
+        { "text": "Hacerla a mano, que para ocho diapositivas es más rápido", "correct": false, "why": "La primera vez probablemente sí lo sea, y por eso es una respuesta honesta. Deja de serlo a la tercera, y estos materiales siempre llegan a la tercera." }
+      ],
+      "explain": "Para documentos hay skills de fábrica. Lo que tienes que aportar es el contenido, no el formato."
+    },
+    {
+      "prompt": "Le encargas a Claude Code una tarea larga y ves en pantalla que lanza \"subagentes\".",
+      "options": [
+        { "text": "Son ayudantes con su propia mesa de trabajo: se llevan una parte del encargo aparte y devuelven solo la conclusión, para que tu conversación principal no se llene de ruido", "correct": true, "why": "Correcto, y esa es exactamente la razón de existir. Explorar veinte archivos genera muchísimo texto; si todo eso entrara en tu conversación, lo que dijiste al principio se caería por el borde. El subagente lee, resume y solo vuelve el resumen." },
+        { "text": "Son varias copias del modelo respondiendo a la vez para votar la mejor respuesta", "correct": false, "why": "Suena a una técnica que existe de verdad en otros contextos, por eso resulta creíble. Aquí no es eso: cada subagente hace una parte distinta, no la misma en paralelo." },
+        { "text": "Es el modo de facturación por uso, frente al de suscripción", "correct": false, "why": "Se confunde porque aparece en momentos de trabajo intenso, y el trabajo intenso se asocia al gasto. Son cosas independientes: la facturación no cambia por usar subagentes." }
+      ],
+      "explain": "Un subagente trabaja en su mesa y te trae la conclusión. Sirve para no llenar la tuya."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Quieres que cada vez que el asistente vaya a ejecutar un comando en tu ordenador se compruebe antes una condición tuya, sin excepciones.",
+      "options": [
+        { "text": "Eso es un hook: código tuyo que se dispara en un momento fijo del ciclo y puede bloquear. No depende de que el modelo se acuerde", "correct": true, "why": "Correcto, y la diferencia es de naturaleza: una instrucción es una petición que el modelo puede interpretar; un hook es una puerta que se abre o no se abre. Para \"sin excepciones\", solo sirve lo segundo." },
+        { "text": "Ponerlo en las instrucciones del proyecto", "correct": false, "why": "Ayuda de verdad y hay que hacerlo igualmente, por eso parece suficiente. Pero una instrucción se cumple casi siempre, y \"casi siempre\" no es \"sin excepciones\"." },
+        { "text": "Revisar cada comando propuesto antes de aceptarlo", "correct": false, "why": "Es lo que haces al principio y es lo correcto mientras coges confianza. Se rompe por agotamiento: a la vigésima confirmación del día dejas de leerlas, que es peor que no tener el control." }
+      ],
+      "explain": "Una instrucción se puede interpretar. Un hook se ejecuta. Para lo que no admite excepciones, hook."
+    },
+    {
+      "prompt": "Instalas cuatro servidores MCP (los enchufes que conectan al asistente con herramientas externas) y notas que va más lento y que empieza a elegir la herramienta equivocada.",
+      "options": [
+        { "text": "Cada servidor mete todas sus herramientas en el contexto de cada petición. Cuatro servidores completos pueden ser cincuenta herramientas entre las que elegir: deja activo solo lo que use este proyecto", "correct": true, "why": "Correcto, y explica los dos síntomas a la vez. Más herramientas es más texto en cada llamada (más lento y más caro) y más candidatos parecidos entre los que decidir (más equivocaciones). No es un fallo, es aritmética." },
+        { "text": "Es un problema de red: los servidores tardan en responder", "correct": false, "why": "Explicaría la lentitud, así que la mitad cuadra y por eso se elige. No explica la otra mitad: la latencia de red no hace que elija la herramienta equivocada." },
+        { "text": "Hay que reiniciar el asistente", "correct": false, "why": "Arregla muchísimas cosas en informática y es un reflejo sano. Aquí no: al reiniciar vuelven a cargarse los cuatro servidores y las cincuenta herramientas." }
+      ],
+      "explain": "Cada servidor MCP que enchufas ocupa sitio y añade candidatos. Enchufa solo lo del proyecto."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Claude Code te pide confirmación para cada comando y llevas media hora dándole a aceptar. Estás a punto de darle permiso permanente para todo.",
+      "options": [
+        { "text": "Ese modo tiene sentido dentro de un contenedor o una carpeta aislada, donde lo peor que puede pasar se queda dentro. En tu carpeta de trabajo real, no", "correct": true, "why": "Correcto, y es la única forma de tener las dos cosas: velocidad y sueño tranquilo. Aviso: hay comandos que borran archivos o descartan cambios sin pasar por la papelera y sin deshacer posible. Si el agente puede lanzarlos solo, un malentendido se lleva tu trabajo del día." },
+        { "text": "Dárselo: es mucho más rápido y tú siempre revisas lo que ha hecho después", "correct": false, "why": "Es exactamente lo que hace la mayoría, y el 99% de las veces no pasa nada, lo que refuerza la costumbre. El problema es que el borrado no espera a tu revisión." },
+        { "text": "No dárselo nunca y confirmar todos los comandos, uno a uno", "correct": false, "why": "Es la respuesta prudente y parece la segura. Se rompe por el mismo agotamiento que quieres evitar: a las doscientas confirmaciones aceptas sin leer, y eso es lo peor de los dos mundos, la lentitud sin la seguridad." }
+      ],
+      "explain": "El permiso amplio se da donde el daño se queda dentro. Fuera de ahí, no compensa."
+    },
+    {
+      "prompt": "Claude Code te está costando bastante más de lo que esperabas y no entiendes por qué, si escribes pocos mensajes.",
+      "options": [
+        { "text": "El gasto va con el contexto que arrastra la sesión, no con el número de mensajes. Diez mensajes en una sesión de tres horas cuestan más que cuarenta en sesiones limpias", "correct": true, "why": "Correcto. Cada mensaje reenvía todo lo acumulado: archivos leídos, salidas de comandos, intentos fallidos. Abrir sesión nueva para tarea nueva es la medida que más ahorra. Y ojo a qué estás pagando: hay planes de suscripción con uso incluido hasta un tope, y está el pago por API, que factura cada token; con sesiones largas, el segundo se dispara." },
+        { "text": "Va con el número de peticiones que haces", "correct": false, "why": "Es la intuición evidente y es la forma en que pensamos el consumo de casi todo. Se rompe aquí porque las peticiones no son iguales entre sí: la última de una sesión larga puede costar veinte veces la primera." },
+        { "text": "Hay que usar el modelo pequeño para todo", "correct": false, "why": "Reduce el precio por token, así que la lógica es correcta. Falla en la cuenta total cuando se trata de editar código: un modelo pequeño se equivoca más, hay que corregirlo, y tres vueltas baratas salen más caras que una buena." }
+      ],
+      "explain": "Sesión larga es factura larga. Tarea nueva, sesión nueva."
+    }
+  ]
+}

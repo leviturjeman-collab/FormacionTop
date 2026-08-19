@@ -1,0 +1,63 @@
+{
+  "categoryId": "04-clases-por-herramienta-02-codex",
+  "basico": [
+    {
+      "prompt": "Llevas media hora con el asistente y te ha acertado quince sugerencias seguidas. En la dieciséis ya no miras el diff (la lista de líneas que ha cambiado) y aceptas directo. ¿Qué acabas de hacer mal?",
+      "options": [
+        { "text": "Has dejado de revisar justo cuando más confiado estabas, que es cuando un error pasa desapercibido", "correct": true, "why": "Acierta muchísimo, y por eso el día que falla no lo ves venir. Revisar el diff es lo único que separa usar la herramienta de firmar a ciegas lo que ha escrito otro." },
+        { "text": "Nada: si va acertando, se ha ganado que le dejes ir más rápido", "correct": false, "why": "Lo piensa todo el mundo al principio y suena razonable, porque la tasa de acierto es alta de verdad. Se rompe porque los errores no llegan repartidos: llegan de golpe cuando cambia algo del contexto y tú ya no estás mirando." },
+        { "text": "El problema es llevar media hora seguida; deberías haber cortado la sesión antes", "correct": false, "why": "El cansancio influye, pero el fallo aquí no es de duración sino de proceso. Con quince minutos y sin mirar el diff, el resultado es el mismo." }
+      ],
+      "explain": "El diff se revisa siempre, y sobre todo el día que ya te fías."
+    },
+    {
+      "prompt": "Vas a dejar que el asistente toque por primera vez la carpeta de tu proyecto. Antes de escribir la primera petición, ¿qué haces?",
+      "options": [
+        { "text": "Compruebas que el proyecto está en git y creas una rama nueva para el experimento", "correct": true, "why": "git es el historial de cambios de tu proyecto: el botón de deshacer. Una rama es una copia paralela donde probar sin tocar lo que funciona. Sin las dos cosas, un cambio que no te guste no se puede revertir." },
+        { "text": "Haces una copia de la carpeta en el escritorio por si acaso", "correct": false, "why": "Es el instinto correcto y algo protege, pero se queda corto: la copia no te dice qué líneas cambiaron, y a la tercera copia ya no sabes cuál era la buena. git te da el deshacer y además el detalle." },
+        { "text": "Nada especial: si algo sale mal, le pides que lo deshaga él", "correct": false, "why": "Suena lógico porque él hizo el cambio. El problema es que reconstruye de memoria lo que cree que había, no lo que había. El deshacer fiable está en git, no en el asistente." }
+      ],
+      "explain": "Sin git detrás, equivocarse cuesta. Con git detrás, equivocarse es gratis."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Le has pedido que refactorice el proyecto entero, o sea que reordene el código sin cambiar lo que hace. Vuelve con veinte archivos tocados y no sabes por dónde empezar a revisar.",
+      "options": [
+        { "text": "Descartas el cambio y se lo vuelves a pedir en trozos: un archivo o una función por petición", "correct": true, "why": "Un cambio que no puedes revisar no puedes aceptarlo, aunque esté bien. Troceado lo revisas de verdad, y cada trozo queda guardado por separado: puedes tirar uno sin perder los demás." },
+        { "text": "Lees el resumen que te da él y aceptas si el resumen tiene sentido", "correct": false, "why": "Tienta porque el resumen suele estar bien escrito. Pero describe lo que pretendía hacer, no lo que hizo. Lo que rompe no sale en el resumen: sale en el diff." },
+        { "text": "Ejecutas las pruebas y, si pasan todas, lo das por bueno", "correct": false, "why": "Las pruebas ayudan mucho, pero solo comprueban lo que alguien pensó en comprobar. Y si las escribió él, puede haberlas ajustado al código en vez de al problema." }
+      ],
+      "explain": "Si no cabe en tu revisión, no cabe en tu proyecto. Pide menos por petición."
+    },
+    {
+      "prompt": "El asistente te propone usar una función de una librería que resuelve justo tu problema. Buscas ese nombre en la documentación oficial y no aparece por ningún lado.",
+      "options": [
+        { "text": "Se la ha inventado: genera nombres plausibles cuando no sabe, y suenan exactamente a lo que esperabas leer", "correct": true, "why": "Es el fallo más habitual y el más traicionero, porque el nombre encaja con tu problema. Una función que no conoces se comprueba en la documentación o se ejecuta antes de aceptarla." },
+        { "text": "Es una función nueva y la documentación va con retraso", "correct": false, "why": "Pasa alguna vez y por eso la excusa cuela. Es mucho más raro que la explicación simple, y la comprobación es la misma en los dos casos: ejecutarlo. Si no existe, falla al instante." },
+        { "text": "Tienes instalada una versión antigua de la librería", "correct": false, "why": "Hipótesis razonable y merece treinta segundos de comprobación. Aun así, con la versión al día lo normal es que siga sin existir." }
+      ],
+      "explain": "Un nombre que suena perfecto no es prueba de que exista. Compruébalo o ejecútalo."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Tu equipo va a meter un asistente de código en el día a día. Alguien propone dejarlo desde el primer día en modo agente, editando archivos y ejecutando comandos por su cuenta, en todos los proyectos a la vez.",
+      "options": [
+        { "text": "El modo agente da la mayor ganancia y el mayor riesgo: solo entra con control de versiones limpio y alcance acotado", "correct": true, "why": "No es un no, es un orden. El autocompletado en el editor y el chat con contexto dan ganancia constante con riesgo bajo desde el minuto uno. El agente pide rama propia, carpeta acotada y revisión del diff antes de generalizarlo." },
+        { "text": "Mejor prohibirlo: en código serio hay que hacerlo todo a mano", "correct": false, "why": "Es la postura prudente, y en sistemas muy delicados o donde tú eres el experto es la correcta. Como regla general se paga cara: renuncias también a la parte de bajo riesgo, que es donde la ganancia es constante." },
+        { "text": "No pasa nada mientras todo el mundo revise bien lo que salga", "correct": false, "why": "Es lo que se dice en la reunión y lo que deja de cumplirse a la tercera semana. La revisión sostenida no se consigue pidiéndola: se consigue haciendo los cambios pequeños y dejando la marcha atrás disponible." }
+      ],
+      "explain": "El modo agente no se prohíbe ni se abre del todo: se acota."
+    },
+    {
+      "prompt": "Vas a defender ante tu jefe lo que os ahorra el asistente. Habéis calculado unos 20 € al mes por persona de suscripción y ahí acaba la cuenta.",
+      "options": [
+        { "text": "La suscripción es lo de menos: el coste real es el tiempo de revisión y la deuda del código aceptado sin entenderlo", "correct": true, "why": "El tiempo de revisión crece con el tamaño del cambio, así que se controla troceando. La deuda no se ve el primer mes: aparece entera el día que hay que modificar ese código y nadie sabe por qué está así." },
+        { "text": "Falta sumar el consumo por uso de la API, que puede multiplicar la factura", "correct": false, "why": "Es un coste real y hay que medirlo desde el primer día. Pero sigue siendo dinero pequeño y bastante predecible al lado de las horas de una persona." },
+        { "text": "El fallo es medir en dinero en vez de en velocidad de entrega", "correct": false, "why": "La velocidad importa y es lo que se nota. El problema es que medida sin contar la revisión es velocidad prestada: se devuelve más adelante." }
+      ],
+      "explain": "Lo que cuesta un asistente no está en la factura, está en las horas de revisión."
+    }
+  ]
+}

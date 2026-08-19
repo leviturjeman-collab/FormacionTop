@@ -1,0 +1,63 @@
+{
+  "categoryId": "27-assets-ejecutables-y-demos-automatizaciones-codigo",
+  "basico": [
+    {
+      "prompt": "Dejaste corriendo un script que llama a un modelo y tenía un bucle mal cerrado. Estuvo toda la noche dando vueltas. Por la mañana miras la factura.",
+      "options": [
+        { "text": "Se paga cada palabra que entró y salió del modelo: el bucle es un taxi dando vueltas a la manzana con el taxímetro en marcha", "correct": true, "why": "Correcto. No hay tarifa plana por proceso: cada llamada que llegó a hacerse se cobra, y un bucle hace miles en una noche. Por eso todo lo que llame a un modelo necesita un tope de vueltas." },
+        { "text": "Como el proceso nunca terminó, no se cobra", "correct": false, "why": "Se razona por analogía con una compra cancelada, y aquí no aplica: cada llamada individual sí terminó y sí se cobró. Lo que no terminó es tu bucle." },
+        { "text": "El límite de la API lo habría cortado antes de que fuera grave", "correct": false, "why": "Existe un límite y por eso parece una red de seguridad. Corta por ritmo, no por gasto: te frena las peticiones por minuto y sigues pagando todas las que sí pasan, toda la noche." }
+      ],
+      "explain": "Todo lo que llame a un modelo lleva tope de vueltas y condición de parada. El taxímetro no se apaga solo."
+    },
+    {
+      "prompt": "Te bajas uno de estos scripts. Escribe en una base de datos. Quieres verlo funcionar.",
+      "options": [
+        { "text": "Primero en tu ordenador y con datos inventados: no se conecta nada real hasta comprobar qué formato saca", "correct": true, "why": "Correcto. Hasta que no has visto la salida con tus propios ojos, no sabes si escribe lo que crees. Y en local, si se equivoca, no pasa nada." },
+        { "text": "Probarlo en producción con un solo registro, para que sea realista", "correct": false, "why": "«Solo uno» suena inofensivo y por eso se hace. Ese uno es exactamente el que se queda mal escrito, y luego hay que encontrarlo entre 40.000." },
+        { "text": "Si el script es corto se puede probar directamente", "correct": false, "why": "La longitud parece un indicador de riesgo y no lo es en absoluto. Tres líneas vacían una tabla igual de bien que trescientas." }
+      ],
+      "explain": "Local, con datos inventados, y mirando la salida. Después se conecta lo real."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tu script funciona a mano y quieres dejarlo programado para que corra cada noche a las tres.",
+      "options": [
+        { "text": "Antes hay que convertir los mensajes de pantalla en registros que se guarden, sacar las claves fuera del archivo y decidir cómo se deshace si sale mal", "correct": true, "why": "Correcto. A las tres de la mañana no hay nadie mirando la pantalla donde salían los mensajes, y sin registro guardado no hay forma de saber qué pasó. El plan de vuelta atrás se escribe antes, no durante." },
+        { "text": "Programarlo y ver mañana cómo ha ido", "correct": false, "why": "Tienta porque hoy funciona delante de ti. Mañana lo que vas a tener es un resultado raro y ninguna pista de dónde se torció." },
+        { "text": "Envolverlo todo en un try/except general para que no se pare nunca", "correct": false, "why": "Evita que se caiga, que era el miedo. A cambio falla en silencio: sigue corriendo cada noche sin hacer nada y nadie se entera hasta que alguien reclama a las tres semanas." }
+      ],
+      "explain": "Antes de programar algo para que corra solo: registros que se guarden, claves fuera y plan de vuelta atrás."
+    },
+    {
+      "prompt": "Un script tuyo se cae con «Cannot read property of undefined», pero solo algunos días.",
+      "options": [
+        { "text": "Hay un campo que no viene siempre: se accede con un valor por defecto y se valida al entrar, antes de tocar nada", "correct": true, "why": "Correcto. «undefined» significa que ese nombre no existe en el dato. Los días que falla son los días que llega un registro sin ese campo, y esa es la información valiosa: pasa de verdad." },
+        { "text": "Es un fallo intermitente de la API: hay que reintentar", "correct": false, "why": "Encaja perfectamente con «solo algunos días» y por eso convence. Reintentar con el mismo dato incompleto da exactamente el mismo error, las veces que haga falta." },
+        { "text": "Meter ese acceso en un try y seguir adelante", "correct": false, "why": "Deja de romperse, que es lo que pedías. También deja de procesar ese registro sin decírselo a nadie, así que el dato se pierde igual pero ahora sin aviso." }
+      ],
+      "explain": "«undefined» no es un fallo intermitente: es un campo que a veces no viene. Se valida en la frontera."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Un script tuyo llama al modelo una vez por cada uno de 5.000 documentos, una vez al mes. El aviso de gasto salta a mitad de proceso.",
+      "options": [
+        { "text": "Se mira qué parte del gasto es evitable: guardar en caché lo que se repite, agrupar en lotes y usar un modelo menor para la parte fácil", "correct": true, "why": "Correcto, y en ese orden. La caché suele ser la que más recorta, porque en 5.000 documentos hay mucho texto repetido, y lo repetido se paga dos veces si no lo guardas." },
+        { "text": "Subir el tope de gasto de la cuenta y dejar que termine", "correct": false, "why": "Termina el proceso de este mes, que es lo urgente. No toca la causa: el mes que viene son 10.000 documentos y la conversación se repite con el doble de factura." },
+        { "text": "Pasarlo todo al modelo más barato", "correct": false, "why": "Ahorra de verdad en la parte fácil y es media respuesta buena. Si la parte difícil empieza a fallar, el ahorro se te va entero en las horas de revisar a mano lo que salió mal." }
+      ],
+      "explain": "Antes de pagar más, mira qué parte del gasto es evitable. Casi siempre hay texto repetido que estás pagando dos veces."
+    },
+    {
+      "prompt": "Te vas de la empresa dentro de un mes y dejas seis automatizaciones corriendo. ¿Qué tiene que quedar escrito de cada una?",
+      "options": [
+        { "text": "Quién es el responsable a partir de ahora, qué variables necesita, cómo se sabe que ha fallado y cómo se para o se deshace", "correct": true, "why": "Correcto. Son las cuatro que se preguntan a las tres de la mañana. Sin dueño, un aviso de fallo es un mensaje que no lee nadie." },
+        { "text": "El código comentado línea a línea", "correct": false, "why": "Es lo que la mayoría entiende por documentar, y ayuda a quien tenga que tocarlo. Explica el cómo funciona; no dice a quién hay que llamar ni cómo se apaga." },
+        { "text": "Un vídeo tuyo explicando cada flujo antes de irte", "correct": false, "why": "Va bien para el traspaso de la primera semana. A los seis meses nadie va a rebobinar 40 minutos de vídeo para averiguar qué variable falta." }
+      ],
+      "explain": "Una automatización sin dueño escrito es una automatización huérfana. Y las huérfanas fallan en silencio."
+    }
+  ]
+}

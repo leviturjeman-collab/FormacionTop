@@ -1,0 +1,63 @@
+{
+  "categoryId": "35-automatizaciones-skills-biblioteca-automatizaciones-codigo-40",
+  "basico": [
+    {
+      "prompt": "Abres el primero de los 40, el que puntúa leads. Son treinta líneas. Te parece poco para llamarlo automatización.",
+      "options": [
+        { "text": "El valor no está en el número de líneas, sino en que separa entrada, proceso, salida y errores", "correct": true, "why": "Correcto. Esas cuatro partes separadas son lo que te deja cambiar de dónde vienen los datos sin tocar la lógica, o meterlo dentro de otro flujo. Un bloque de 300 líneas mezcladas no se puede reutilizar en ningún sitio." },
+        { "text": "Cuantas más líneas, más completa es una automatización", "correct": false, "why": "Es lo que sugiere el precio de cualquier otro producto. En código pasa lo contrario: más líneas suelen ser más sitios donde equivocarse y más rato para entenderlo dentro de seis meses." },
+        { "text": "Treinta líneas son un ejemplo de clase, no algo que se pueda usar", "correct": false, "why": "Se cree porque los ejemplos suelen ser de juguete. Este ya distingue la entrada buena de la mala y deja constancia de lo que rechaza, que es justo lo que separa un ejemplo de una herramienta." }
+      ],
+      "explain": "Entrada, proceso, salida y errores, separados. Eso es lo que convierte un script en una pieza reutilizable."
+    },
+    {
+      "prompt": "En la colección hay un archivo .sql que limpia registros duplicados. Quieres probarlo.",
+      "options": [
+        { "text": "Se ejecuta en una base de prueba, nunca directamente en producción", "correct": true, "why": "Correcto, y aquí no hay matices: una consulta que borra o modifica no tiene deshacer. En una base de prueba te equivocas gratis las veces que haga falta." },
+        { "text": "Si solo lee datos no pasa nada por lanzarlo en producción", "correct": false, "why": "Leer suele ser inofensivo y por eso se relaja uno. Una consulta pesada sobre una tabla grande puede dejar la base arrastrándose media hora, en plena mañana de trabajo." },
+        { "text": "Con hacer una copia de seguridad antes es suficiente", "correct": false, "why": "Te deja restaurar, que ya es mucho, y por eso parece la red definitiva. Restaurar significa parar el servicio y perder todo lo que se escribió desde que hiciste la copia." }
+      ],
+      "explain": "SQL en una base de prueba. Borrar y modificar no tienen botón de deshacer."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Coges el script que puntúa leads y le pasas tu CSV de 800 filas. Revienta en la fila 40 y se para.",
+      "options": [
+        { "text": "Se prueba antes con una entrada vacía y una incompleta a propósito, y se añade la validación que falte antes de pasarle el archivo entero", "correct": true, "why": "Correcto. Si con dos filas inventadas ya sabes qué hace ante un campo que falta, no necesitas descubrirlo con 800. Y la validación que le añadas te sirve para siempre." },
+        { "text": "Quitar la fila 40 y volver a lanzarlo", "correct": false, "why": "Sale adelante y por eso es lo primero que hace casi todo el mundo. Mañana llega otra fila con el mismo problema y estás donde estabas, pero con una hora menos." },
+        { "text": "Envolverlo en un try que se salte las filas que fallen", "correct": false, "why": "Está muy cerca de lo correcto y le falta la mitad: hay que dejar registrado qué filas se saltaron y por qué. Si no, procesas 780 de 800 y crees que las procesaste todas." }
+      ],
+      "explain": "Primero la fila rota inventada, después el archivo entero. Y lo que se salta, se anota."
+    },
+    {
+      "prompt": "El script escribe su resultado con mensajes por pantalla. Quieres meterlo dentro de un flujo que corre solo y que el paso siguiente use ese resultado.",
+      "options": [
+        { "text": "Los mensajes de pantalla pasan a registros guardados, y la salida a un formato estructurado que el paso siguiente pueda leer", "correct": true, "why": "Correcto. Son dos cosas distintas mezcladas en el mismo sitio: lo que un humano lee para entender qué pasó, y el dato que la máquina necesita. Separarlas es lo que permite encadenar." },
+        { "text": "Redirigir todo lo que sale por pantalla a un archivo de texto", "correct": false, "why": "Guarda lo que se veía, cierto, y es mejor que nada. Guarda revuelto los mensajes para humanos con el dato que el flujo necesita, así que el paso siguiente tiene que adivinar cuál es cuál." },
+        { "text": "Dejarlo como está: los mensajes se ven en la consola", "correct": false, "why": "Se ven mientras hay alguien delante mirando. En un proceso programado para las tres de la mañana no lo hay, y esos mensajes no existen para nadie." }
+      ],
+      "explain": "Mensajes para personas y datos para el paso siguiente son cosas distintas. No van por el mismo sitio."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Para clasificar tickets puedes usar uno de estos scripts o montar la misma lógica con nodos dentro de n8n.",
+      "options": [
+        { "text": "El nodo se ve y se depura mirando; el script gana cuando la lógica es compleja o el volumen alto, y a cambio te lo mantienes tú", "correct": true, "why": "Correcto, y ese «a cambio» es la parte que se olvida: dependencias, versión del lenguaje, dónde corre. La plataforma visual es el punto dulce para la mayoría de casos precisamente por eso." },
+        { "text": "El script siempre, porque da más control", "correct": false, "why": "Da más control, es verdad, y ahí acaba la ventaja. También da más superficie que mantener, y en un equipo donde solo tú lo entiendes eso es un problema el día que te coges vacaciones." },
+        { "text": "El nodo siempre, porque así no hay que programar", "correct": false, "why": "Es la respuesta correcta la mayoría de las veces, de ahí que convenza. Deja de serlo cuando el flujo acumula veinte nodos de lógica encadenados que ya nadie es capaz de leer de un vistazo." }
+      ],
+      "explain": "Visual mientras se pueda depurar mirando. Código cuando la lógica ya no cabe en el lienzo."
+    },
+    {
+      "prompt": "Revisando uno de los scripts adaptados por un compañero ves que ha escrito la clave de la API directamente dentro del archivo, y ese archivo lleva dos semanas en el repositorio.",
+      "options": [
+        { "text": "Hay que dar la clave por quemada y cambiarla: si el archivo ha estado en un repositorio, la clave sigue en el historial aunque la borres ahora", "correct": true, "why": "Correcto, y es urgente. Un repositorio guarda todas las versiones anteriores: borrar la línea hoy no borra el archivo de hace dos semanas. Generar una clave nueva es lo único que cierra la puerta." },
+        { "text": "Borrar la línea y hacer un commit nuevo", "correct": false, "why": "Es exactamente lo que parece que arregla el problema, y deja el repositorio limpio a la vista. La versión anterior sigue guardada con la clave dentro, a un clic de distancia." },
+        { "text": "Poner el repositorio en privado", "correct": false, "why": "Limita quién entra a partir de ahora, que algo es. No sabes quién la copió durante estas dos semanas, y hay programas que rastrean repositorios públicos buscando claves justo para eso." }
+      ],
+      "explain": "Una clave que ha pasado por un repositorio está quemada. Se rota, no se borra."
+    }
+  ]
+}

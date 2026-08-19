@@ -1,0 +1,255 @@
+{
+  "id": "productizacion-negocio",
+  "title": "Productización y negocio",
+  "subtitle": "Sales de aquí con el precio, el alcance y la demo de tu primer trabajo cobrado",
+  "minutes": 60,
+  "slides": [
+    {
+      "kind": "portada",
+      "title": "Productización y negocio",
+      "text": "Hoy le ponemos precio a lo que ya sabes hacer.",
+      "notes": "Abre con la promesa en voz alta: hoy no hay herramienta nueva, hoy hay tres números, una propuesta y una demo que no depende del wifi del cliente. Pregunta a mano alzada quién ha pasado alguna vez un presupuesto a alguien. Si casi nadie levanta la mano, mejor: al final de la hora escriben el primero."
+    },
+    {
+      "kind": "idea",
+      "title": "Nadie compra IA. Compran horas",
+      "text": "El cliente no paga por un modelo. Paga por recuperar diez horas al mes de su gente.",
+      "items": [
+        "Tu demo le impresiona treinta segundos",
+        "Tu factura le duele todo el mes",
+        "Entre las dos hay una resta",
+        "Esa resta es la clase de hoy"
+      ],
+      "notes": "Aquí se cae casi todo el mundo: enseñan la herramienta funcionando y esperan que el cliente ate solo los cabos. No los ata. Cuenta la reunión típica en la que enseñas algo brillante, el cliente asiente encantado y luego no te llama: le gustó, pero no supo qué línea de su cuenta baja gracias a ti."
+    },
+    {
+      "kind": "pregunta",
+      "title": "¿Qué le vendes a una gestoría?",
+      "text": "Cuatro frases para la misma herramienta. Solo una vende.",
+      "items": [
+        "Un chatbot con inteligencia artificial",
+        "Un clasificador automático de correo entrante",
+        "Diez horas de administración de vuelta al mes",
+        "Acceso a la última tecnología del mercado"
+      ],
+      "notes": "Que voten a mano alzada antes de que digas nada. La c) es la única que el cliente entiende sin traducción; las otras describen cómo lo haces tú, no qué gana él. Regla para el resto de sus vidas: si tu frase de venta tiene una palabra que el cliente tendría que buscar en internet, no es tu frase de venta."
+    },
+    {
+      "kind": "caso",
+      "title": "Gestoría Arriaga, Zaragoza, tres personas",
+      "text": "420 correos al mes clasificados a mano. Catorce horas. 252 € de sueldo cada mes.",
+      "items": [
+        "A mano: 14,0 horas al mes",
+        "Con la herramienta: 3,5 horas al mes",
+        "Acierto medido: 11 aciertos de 12 correos",
+        "Ahorro neto: 143,94 € al mes",
+        "900 € de implantación: se pagan en 6,3 meses"
+      ],
+      "notes": "Insiste en dos detalles. Uno: esas 3,5 horas ya incluyen 1,2 horas de arreglar los fallos de la propia herramienta, porque un caso de estudio que no resta sus fallos es publicidad. Dos: 11 de 12, no 12 de 12; quien ha trabajado con software alguna vez desconfía del pleno. Pregunta a la sala cuál de los cinco números pondrían en el asunto del correo de propuesta."
+    },
+    {
+      "kind": "idea",
+      "title": "El precio se defiende con una resta",
+      "text": "Tres números y punto: ahorro neto al mes, meses hasta recuperarlo, saldo del primer año.",
+      "items": [
+        "189 € de horas ahorradas al mes",
+        "Menos 45 € de mantenimiento",
+        "Menos 0,06 € de factura del modelo",
+        "Ahorro neto: 143,94 € al mes",
+        "Primer año: 827,28 € a favor del cliente"
+      ],
+      "notes": "Restar tus propios costes delante del cliente es lo que te separa del que va a vender humo. Nadie se cree un ahorro bruto; todo el mundo se cree un ahorro al que le has quitado ya tu factura. Haz que copien los tres números en el cuaderno: ahorro neto, meses de retorno y saldo a doce meses."
+    },
+    {
+      "kind": "codigo",
+      "title": "Todos los números en un archivo",
+      "text": "Si un número vive en dos sitios, tarde o temprano uno estará mal.",
+      "code": "{\n  \"cliente\": \"Gestoria Arriaga (Zaragoza, 3 personas)\",\n  \"correos_al_mes\": 420,\n  \"minutos_a_mano_por_correo\": 2.0,\n  \"segundos_revision_por_correo\": 20,\n  \"minutos_corregir_un_fallo\": 2.0,\n  \"coste_hora_admin_eur\": 18.0,\n  \"precio_implantacion_eur\": 900,\n  \"precio_mantenimiento_mes_eur\": 45,\n  \"acierto_prometido\": 0.85,\n  \"plazo_semanas\": 3\n}",
+      "notes": "Esto es un archivo JSON: etiquetas con su valor, nada más, y se lee sin saber programar. El fallo clásico es que el informe diga 12 horas, la propuesta diga 10 y tú digas 14 en la reunión; ahí se acabó tu credibilidad y no vuelve. Con los números en un solo sitio, cambias 420 por 600 y la propuesta entera se recalcula sola. Aviso: JSON no admite comas colgando ni comentarios, y protesta."
+    },
+    {
+      "kind": "codigo",
+      "title": "Del acierto a los euros",
+      "text": "Doce líneas. Esto es todo lo que hay detrás de la cifra que enseñas.",
+      "code": "# cuanto_ahorra.py - traduce el acierto en horas y en euros.\nCORREOS = 420        # contados en su bandeja, no estimados\nMIN_A_MANO = 2.0     # cronometrado con la persona que lo hace\nSEG_REVISION = 20    # revisar lo que propone la herramienta\nMIN_ARREGLAR = 2.0   # corregir cada fallo de la herramienta\nEUR_HORA = 18.0      # coste real de una hora de administracion\nACIERTO = 11 / 12    # 11 de 12 correos, etiquetados a mano\n\nhoras_mano = CORREOS * MIN_A_MANO / 60\nhoras_revisar = CORREOS * SEG_REVISION / 3600\nhoras_arreglar = CORREOS * (1 - ACIERTO) * MIN_ARREGLAR / 60\nahorro_h = horas_mano - horas_revisar - horas_arreglar\n\nprint(round(horas_mano, 1), \"h al mes a mano\")\nprint(round(ahorro_h, 1), \"h ahorradas =\", round(ahorro_h * EUR_HORA, 2), \"EUR/mes\")",
+      "notes": "Lee en voz alta las siete primeras líneas: son datos medidos, no inventados, y ese es el único motivo por el que la cifra final se sostiene. Al ejecutarlo sale «14.0 h al mes a mano» y «10.5 h ahorradas = 189.0 EUR/mes». Señala la línea de horas_arreglar: es la que casi nadie escribe y la que hace creíble todo lo demás."
+    },
+    {
+      "kind": "pregunta",
+      "title": "¿Cuánto cobras por esto?",
+      "text": "10,5 horas al mes recuperadas. Tres semanas de trabajo tuyo.",
+      "items": [
+        "300 €, para que no se asuste",
+        "900 € y 45 € al mes de mantenimiento",
+        "3.000 €, que es un sistema a medida",
+        "El 20 % de lo que ahorre cada año"
+      ],
+      "notes": "Que voten y que defiendan su opción en una frase. La b) es la del caso real: se paga en 6,3 meses y deja 827 € a favor del cliente el primer año. La a) te condena, porque al proyecto barato le llegan las mismas llamadas de soporte que al caro. La d) suena elegante y es una pesadilla: acabas discutiendo cada mes cuánto ahorró de verdad."
+    },
+    {
+      "kind": "lista",
+      "title": "Tres formas de cobrar lo mismo",
+      "text": "El modelo de precio depende de cuánto sabes antes de empezar.",
+      "items": [
+        "Precio fijo cuando el entregable está claro",
+        "Bolsa de horas cuando hay que explorar",
+        "Cuota mensual para mantener lo ya entregado",
+        "Auditoría de entrada para conocerse sin riesgo",
+        "Por fases cuando el sistema es grande"
+      ],
+      "notes": "La regla es sencilla: precio fijo solo cuando puedes escribir en una línea qué entregas. Si no puedes, es bolsa de horas o auditoría, nunca precio fijo con los dedos cruzados. Pregunta a la sala qué usarían para «quiero automatizar la atención al cliente»: eso es bolsa de horas disfrazada de precio fijo, y ahí se pierde dinero."
+    },
+    {
+      "kind": "lista",
+      "title": "Qué lleva dentro una propuesta",
+      "text": "Cinco bloques en dos folios. Ni uno más.",
+      "items": [
+        "Problema y objetivo, con las cifras del cliente",
+        "Alcance: qué sistemas, qué datos, qué accesos",
+        "Fuera de alcance: la lista más importante",
+        "Precio, plazo y qué tiene que aportar él",
+        "Cómo se mide el resultado y quién aprueba"
+      ],
+      "notes": "Haz que copien estos cinco bloques: son el esqueleto de todas las propuestas que van a escribir. El que casi nadie pone es el cuarto, «qué aporta él»: accesos, una persona de contacto con nombre y datos de ejemplo. Sin eso escrito, cualquier retraso acaba siendo culpa tuya."
+    },
+    {
+      "kind": "idea",
+      "title": "Fuera de alcance: escríbelo o pagarás",
+      "text": "Lo que no escribes que no harás, acabarás haciéndolo gratis.",
+      "items": [
+        "No incluye conectar su programa de clientes",
+        "No incluye responder correos sin revisión humana",
+        "No incluye migrar el histórico de 2019",
+        "No incluye formación más allá de dos horas",
+        "No incluye soporte fuera de horario laboral"
+      ],
+      "notes": "Cuenta el patrón: entregas el clasificador y a la semana llega el «ya que estamos, que conteste solo». Si no está escrito, esa discusión la pierdes tú siempre. Truco práctico: que escriban el fuera de alcance antes que el alcance, porque sale mucho más rápido y de paso les aclara qué están vendiendo."
+    },
+    {
+      "kind": "idea",
+      "title": "La demo funciona en modo avión",
+      "text": "Guardas las respuestas del modelo y las reproduces. Sin red, sin gastar, idéntico cada vez.",
+      "items": [
+        "El wifi del cliente fallará. Cuenta con ello",
+        "Respuestas guardadas en disco: cero red, cero euros",
+        "Mismo resultado en cada pase, sin sorpresas",
+        "Tres minutos cronometrados y ensayados dos veces"
+      ],
+      "notes": "Cuenta la escena: sala de reuniones, invitado sin contraseña de wifi y tu demo colgada de internet. Se acabó la reunión. Guardar las respuestas y reproducirlas también elimina la ruleta de que el modelo conteste distinto justo delante del cliente. Y sale gratis, que no es poco cuando repites la demo veinte veces."
+    },
+    {
+      "kind": "pregunta",
+      "title": "¿Y si el modelo se equivoca?",
+      "text": "Has medido un 91,7 % de acierto. ¿Qué escribes en la propuesta?",
+      "items": [
+        "Que acierta siempre, que suena mejor",
+        "Nada, total falla poco",
+        "Un 85 %, y enseño el fallo en la demo",
+        "Un 95 %, y ya lo ajustamos sobre la marcha"
+      ],
+      "notes": "La c), y explica por qué: prometes por debajo de lo medido para tener margen el día malo, y enseñar tú mismo el correo que falla desarma al escéptico de la sala antes de que abra la boca. Añade siempre quién revisa los fallos y en cuánto tiempo. Prometer un 100 % es la forma más rápida de perder un cliente en el segundo mes."
+    },
+    {
+      "kind": "lista",
+      "title": "Lo que no puedes prometer",
+      "text": "Aquí se pierden clientes y se ganan multas. Léelo dos veces.",
+      "items": [
+        "Nada que envíe correos a clientes sin revisión",
+        "Nada que borre datos: eso no se deshace",
+        "Datos personales al modelo sin contrato firmado",
+        "Un acierto que no hayas medido con sus datos",
+        "Guardar sus datos en tu portátil mientras tanto"
+      ],
+      "notes": "Dos avisos serios y dilos despacio. Uno: enviar, publicar y borrar son acciones que no se deshacen, así que ponte siempre a una persona dando al botón, como mínimo durante el primer mes entero. Dos: si tratas datos personales de sus clientes necesitas un contrato de encargado del tratamiento firmado, y todo lo que enseñes en demos o portfolio va anonimizado. Un nombre real en tu caso de estudio es una denuncia esperando turno."
+    },
+    {
+      "kind": "lista",
+      "title": "Lo que te cuesta a ti",
+      "text": "La API es la puerta por la que tu programa habla con el modelo. Se paga por uso.",
+      "items": [
+        "El caso entero: 0,06 € de modelo al mes",
+        "Recarga mínima de la API: 5 $, sin plan gratis",
+        "La web de Claude sí es gratis, pero no automatiza",
+        "Automatizador en su nube: unos 20 € al mes",
+        "Ese mismo automatizador en tu ordenador: 0 €"
+      ],
+      "notes": "El susto de la factura de IA casi nunca llega: seis céntimos al mes con un modelo pequeño para 420 correos. Lo que sí cuesta dinero son las suscripciones que se acumulan sin mirar; n8n en su nube ronda los 20 € al mes y la versión que instalas tú es gratis. Aviso: no dejes la clave de la API escrita dentro de un archivo del proyecto, porque los archivos se copian y se suben, y la factura sería tuya."
+    },
+    {
+      "kind": "lista",
+      "title": "Banderas rojas del cliente",
+      "text": "Cinco señales de que ese proyecto se va a torcer.",
+      "items": [
+        "Quiere automatizarlo todo y no sabe qué",
+        "No hay un responsable con nombre y apellidos",
+        "Urgencia sin fecha y sin motivo real",
+        "No te deja ver los datos, pero exige garantías",
+        "No acepta que un humano revise nada"
+      ],
+      "notes": "Cuenta un caso tuyo que salió mal, aunque duela: es el momento en el que la sala más aprende. Estas cinco señales no significan «no aceptes», significan «auditoría corta primero y luego hablamos». Pregunta cuántos han estado ya en una reunión con tres de las cinco a la vez."
+    },
+    {
+      "kind": "idea",
+      "title": "Empieza por una auditoría de 300 €",
+      "text": "Dos días, un informe con cifras, cero riesgo para los dos.",
+      "items": [
+        "Miras el proceso y cuentas el volumen real",
+        "Entregas un informe con horas y euros",
+        "Si no hay caso, se lo dices. Y cobras",
+        "Si lo hay, la propuesta ya está escrita"
+      ],
+      "notes": "Es la mejor puerta de entrada cuando nadie te conoce: 300 € es un importe que un dueño de negocio firma sin pedirle permiso a nadie. Te paga por medir, que es justo lo que necesitas para poner precio al proyecto grande sin inventarte nada. Y decirle que no hay caso te da más credibilidad que cualquier venta."
+    },
+    {
+      "kind": "lista",
+      "title": "El maletín que entregas",
+      "text": "Sin estas piezas has hecho un experimento, no una entrega.",
+      "items": [
+        "Instrucciones que entiende quien no estuvo allí",
+        "Demo de tres minutos que arranca sin internet",
+        "Informe con las cifras medidas de verdad",
+        "Propuesta con alcance, precio y fuera de alcance",
+        "Cómo revocar tus accesos cuando termines"
+      ],
+      "notes": "El último punto sorprende siempre y es el que más confianza genera: tú mismo explicas cómo quitarte los permisos que te dieron. Los otros cuatro son lo que separa a quien sabe de IA de quien cobra por ella. Todo esto cabe en una carpeta comprimida de menos de 100 kB que se envía por correo."
+    },
+    {
+      "kind": "idea",
+      "title": "Tu portfolio son tres casos",
+      "text": "Un caso de estudio: problema, qué hiciste, cifras medidas y qué falló.",
+      "items": [
+        "Cliente y datos anonimizados, siempre",
+        "Cifras medidas, nunca estimadas",
+        "Incluye lo que falló y cómo lo arreglaste",
+        "Demo que arranca sin ti delante"
+      ],
+      "notes": "Tres casos con cifras valen más que diez certificados, y esto sirve igual para buscar clientes que para buscar trabajo. El apartado de lo que falló es el que hace que te crean: nadie con experiencia se traga un proyecto sin sustos. Si aún no tienes cliente, tu primer caso es el negocio de un conocido, medido de verdad y a coste cero."
+    },
+    {
+      "kind": "lista",
+      "title": "Qué cubren esos 45 € al mes",
+      "text": "El mantenimiento se define, o se convierte en soporte gratis infinito.",
+      "items": [
+        "Que siga funcionando si cambian de correo",
+        "Una revisión de las cifras al mes",
+        "Dos horas de ajustes pequeños",
+        "Respuesta en 48 horas laborables",
+        "No cubre funciones nuevas: eso es fase dos"
+      ],
+      "notes": "Sin este cuadro escrito, el mantenimiento se convierte en trabajar gratis por WhatsApp durante dos años. Las dos horas de ajustes son el amortiguador: caben los cambios pequeños y no cabe una función nueva. Pregunta qué harían si el cliente pide algo que claramente es fase dos; la respuesta correcta es un presupuesto de una línea, no un favor."
+    },
+    {
+      "kind": "cierre",
+      "title": "Qué te llevas y qué haces mañana",
+      "text": "Una propuesta se sostiene sobre tres números y una lista de lo que no harás.",
+      "items": [
+        "Traduce siempre a horas y a euros",
+        "Mide antes de prometer, y promete por debajo",
+        "El fuera de alcance vale más que el alcance",
+        "Esta semana: cronometra el proceso de un conocido",
+        "Escribe su auditoría de 300 € en un folio"
+      ],
+      "notes": "Cierra pidiendo un compromiso concreto: un nombre de negocio real, apuntado ahora en el cuaderno, con el proceso que van a cronometrar esta semana. Recuérdales que un cronómetro y una hoja de cálculo bastan para la primera medición, sin gastar un euro. La próxima sesión empieza con cada uno leyendo en voz alta sus tres números."
+    }
+  ]
+}

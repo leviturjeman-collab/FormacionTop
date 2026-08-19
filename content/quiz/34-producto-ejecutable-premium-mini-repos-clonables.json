@@ -1,0 +1,63 @@
+{
+  "categoryId": "34-producto-ejecutable-premium-mini-repos-clonables",
+  "basico": [
+    {
+      "prompt": "Te descargas el starter de Docker con Postgres y Qdrant para montar un buscador sobre tus documentos. Nunca has usado la terminal. Lo abres y ves un archivo lleno de texto con puertos y volúmenes.",
+      "options": [
+        { "text": "Es una receta: describe qué servicios se levantan y con qué configuración, y con una sola orden Docker los arranca todos en tu ordenador", "correct": true, "why": "Ese archivo no es código que tengas que entender línea a línea: es la lista de la compra. Docker es gratis para uso personal, y el valor del starter es justo ese: no tienes que decidir qué versiones ni qué puertos, ya está resuelto." },
+        { "text": "Es un programa que hay que compilar antes de poder usarlo", "correct": false, "why": "Es la asociación natural cuando ves un archivo técnico. Pero aquí no se compila nada: es configuración, no programa. Se lee, se ajustan dos valores y se arranca." },
+        { "text": "Es la base de datos en sí, con los datos dentro", "correct": false, "why": "Se confunde porque menciona Postgres. El archivo dice qué base de datos levantar y cómo, pero está vacío de datos: los tuyos los metes tú después." }
+      ],
+      "explain": "Un starter no es un programa que estudiar. Es configuración ya decidida por ti."
+    },
+    {
+      "prompt": "Cada starter dice su objetivo: el de permisos de MCP sirve para documentar qué herramientas están permitidas y cuáles bloqueadas. Tú quieres montar un flujo que clasifique leads y te descargas ese.",
+      "options": [
+        { "text": "Ese no es: para clasificar leads con un flujo el que corresponde es el de triaje de leads en n8n, que importa un flujo, recibe datos y clasifica prioridad", "correct": true, "why": "Cada starter tiene un objetivo escrito de una línea justo para esto. Leerlo antes de descargar ahorra la tarde de intentar doblar una herramienta para algo que no hace." },
+        { "text": "Sirve igual: los permisos hacen falta en cualquier sistema con IA", "correct": false, "why": "Los permisos sí importan en cualquier sistema, así que el razonamiento no es absurdo. Pero ese starter no clasifica nada: te da la estructura para documentar autorizaciones, que es un problema distinto al tuyo." },
+        { "text": "Sirve como base y luego se le añade la clasificación encima", "correct": false, "why": "Es lo que se piensa cuando ya lo has descargado y da pena empezar de nuevo. Acabarás escribiendo desde cero la parte que hace el trabajo, con la estructura de otra cosa estorbando." }
+      ],
+      "explain": "Lee el objetivo de una línea antes de descargar. Está escrito justo para esto."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Usas el starter de Supabase con autenticación. En el archivo de ejemplo hay dos claves: una llamada \"anon\" y otra \"service role\". Para que tu prueba funcione rápido pones la de service role en la página web.",
+      "options": [
+        { "text": "La de service role salta todas las reglas de seguridad y nunca va en el navegador: ahí va la anon, y las reglas de acceso deciden qué puede ver cada usuario", "correct": true, "why": "Todo lo que pones en una página web es público: cualquiera abre el inspector y lo lee. Con la clave de service role expuesta, esa persona puede leer y borrar toda tu base de datos. Si ya la has publicado, hay que regenerarla, y eso invalida lo que estuviera usándola." },
+        { "text": "Está bien mientras sea una prueba y la base de datos no tenga datos reales", "correct": false, "why": "Es el razonamiento que la mete en producción tres semanas después, cuando el proyecto de prueba se convierte en el bueno y nadie se acuerda de cambiarla. Y una clave publicada ya está en el historial y en las cachés." },
+        { "text": "Está bien si además configuras las reglas de acceso de las tablas", "correct": false, "why": "Suena a llevar cinturón y tirantes, y las reglas de acceso hay que configurarlas de todos modos. El problema es que la clave de service role existe precisamente para saltárselas: con ella puesta, las reglas no se aplican." }
+      ],
+      "explain": "La clave anon va en el navegador. La de service role, jamás: se salta la seguridad entera."
+    },
+    {
+      "prompt": "Montas el starter de observabilidad con Sentry y PostHog para ver errores, eventos y coste de IA. Funciona, pero a los tres días tienes 4.000 avisos y nadie los mira.",
+      "options": [
+        { "text": "Registrarlo todo es lo mismo que no registrar nada: hay que separar lo que exige acción (errores que rompen el flujo, coste por encima de un umbral) de lo que solo es información", "correct": true, "why": "El valor de un panel no es cuánto captura, es cuántas veces al día te hace mirar algo que importa. Tres alertas útiles a la semana valen más que 4.000 avisos que se aprenden a ignorar, y ese hábito es el que hace que se cuele el error grave." },
+        { "text": "Es normal al principio: cuando el sistema se estabilice bajarán solos", "correct": false, "why": "Algunos bajan, es verdad, y por eso se espera. Pero mientras tanto el equipo ya ha aprendido a no mirar el canal de avisos, y ese hábito no se revierte cuando el volumen baja." },
+        { "text": "Hay que subir a un plan de pago que permita filtrar mejor", "correct": false, "why": "Ambos tienen planes gratuitos generosos y filtrado suficiente, así que el gasto no compra nada aquí. Lo que falta es decidir qué merece una alerta, y esa decisión es tuya, no del plan." }
+      ],
+      "explain": "Un panel vale por lo que te hace mirar, no por lo que captura. Separa alerta de información."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "Estás decidiendo si usar el starter del enrutador multimodelo, que llama a varios proveedores de IA con recambio automático si uno falla, o llamar directamente al proveedor que ya usas.",
+      "options": [
+        { "text": "Depende de si tu sistema puede estar caído: el enrutador añade una pieza que mantener a cambio de no depender de un proveedor, y en un flujo interno que puede esperar una hora eso no compensa", "correct": true, "why": "Es la decisión de fondo del starter y su objetivo lo dice: no casarse con un proveedor. Para un asistente de atención al cliente de cara al público, el recambio vale su complejidad. Para clasificar tus correos por la noche, es una pieza más que puede romperse." },
+        { "text": "Siempre el enrutador: depender de un solo proveedor es un riesgo que no se debe asumir", "correct": false, "why": "Suena a buena práctica y en sistemas críticos lo es. Pero cada modelo responde con un estilo distinto: si el de recambio devuelve el resultado en otro formato, el recambio automático te rompe el paso siguiente en silencio, que es peor que estar caído." },
+        { "text": "Siempre directo: menos piezas es siempre mejor y el proveedor casi nunca cae", "correct": false, "why": "La preferencia por lo simple es sana y acierta la mayoría de las veces. Pero \"casi nunca cae\" es una apuesta que en un servicio de cara al cliente se pierde el peor día posible, y ahí sí duele." }
+      ],
+      "explain": "El recambio entre modelos se paga con una pieza más y formatos distintos. Solo donde no puedas estar caído."
+    },
+    {
+      "prompt": "Vas a publicar tus starters para que los use gente que nunca ha programado. Te planteas si dejarlos con la configuración mínima que funciona o añadir todas las opciones por si acaso.",
+      "options": [
+        { "text": "Configuración mínima que arranca, con un archivo de ejemplo comentado y las pruebas incluidas: lo que decide si un starter sirve es si alguien lo levanta a la primera", "correct": true, "why": "Alguien que no programa abandona en el segundo error, y cada opción extra es un error potencial más. Las pruebas incluidas importan porque son la única forma de que sepa si arrancó bien o solo eso parece." },
+        { "text": "Todas las opciones documentadas: así sirve para más casos y no hay que mantener varias versiones", "correct": false, "why": "Es la decisión que evita trabajo futuro y por eso convence. Pero un archivo con cuarenta opciones comentadas paraliza a quien empieza: no sabe cuáles tocar, toca las que no debe y el starter no arranca." },
+        { "text": "Mínima y sin pruebas: las pruebas son para proyectos grandes y aquí solo añaden ruido", "correct": false, "why": "La primera mitad es correcta. La segunda es justo al revés: sin una comprobación que diga \"esto está funcionando\", quien no programa no tiene forma de distinguir un arranque correcto de uno a medias." }
+      ],
+      "explain": "Un starter se juzga por si arranca a la primera. Cada opción de más es un abandono."
+    }
+  ]
+}

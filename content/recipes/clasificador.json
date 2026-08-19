@@ -1,0 +1,74 @@
+{
+  "id": "clasificador",
+  "match": "clasific|categor|etiquet|triaje|intenci[oó]n|sentimiento|enrutar",
+  "stages": [
+    "prompting",
+    "automatizacion"
+  ],
+  "tools": [
+    "python"
+  ],
+  "title": "Clasifica textos en categorías fijas y deja que diga «no sé»",
+  "what": "Coloca cada texto que le pases en una de tus categorías, con un número de confianza, y responde no_se cuando no lo tiene claro.",
+  "why": "Si pides categorías en texto libre, un día te contesta «Factura», otro «facturas» y otro «parece una factura, aunque también podría ser soporte». Tu programa se rompe, o peor, guarda basura sin avisar. Aquí el esquema obliga a que la respuesta sea una de tus etiquetas exactas, y el umbral de confianza convierte las dudas en un no_se explícito en vez de en una etiqueta inventada que nadie revisa.",
+  "lang": "python",
+  "install": "pip install anthropic",
+  "code": "# Clasifica un texto en una de tus categorías. Si duda, dice \"no_se\".\nimport json\nimport os\nfrom anthropic import Anthropic\n\ncliente = Anthropic(api_key=os.environ[\"ANTHROPIC_API_KEY\"])  # la clave nunca se escribe aquí\n\n# Tus categorías. Es la única lista que tocas para cambiar el clasificador.\nCATEGORIAS = [\"factura\", \"soporte_tecnico\", \"devolucion\", \"comercial\"]\nUMBRAL = 0.7  # por debajo de esto preferimos admitir que no lo sabemos\n\nESQUEMA = {\n    \"type\": \"object\",\n    \"properties\": {\n        \"categoria\": {\"type\": \"string\", \"enum\": CATEGORIAS + [\"no_se\"]},\n        \"confianza\": {\"type\": \"number\"},\n        \"motivo\": {\"type\": \"string\"},\n    },\n    \"required\": [\"categoria\", \"confianza\", \"motivo\"],\n    \"additionalProperties\": False,\n}\n\nINSTRUCCIONES = (\n    \"Clasificas correos de clientes en UNA categoría de esta lista: \"\n    + \", \".join(CATEGORIAS)\n    + \". Si el correo no encaja claramente en ninguna, responde no_se. \"\n    \"confianza va de 0 a 1 y motivo es una frase corta en español.\"\n)\n\n\ndef clasificar(texto):\n    respuesta = cliente.messages.create(\n        model=\"claude-opus-5\",\n        max_tokens=1024,\n        system=INSTRUCCIONES,\n        output_config={\"effort\": \"low\", \"format\": {\"type\": \"json_schema\", \"schema\": ESQUEMA}},\n        messages=[{\"role\": \"user\", \"content\": texto}],\n    )\n    if respuesta.stop_reason == \"refusal\":\n        return {\"categoria\": \"no_se\", \"confianza\": 0.0, \"motivo\": \"el modelo no quiso responder\"}\n    # La respuesta puede traer delante bloques de razonamiento: cogemos el de texto.\n    datos = json.loads(next(b.text for b in respuesta.content if b.type == \"text\"))\n    if datos[\"categoria\"] not in CATEGORIAS or datos[\"confianza\"] < UMBRAL:\n        return {\"categoria\": \"no_se\", \"confianza\": datos[\"confianza\"], \"motivo\": datos[\"motivo\"]}\n    return datos\n\nif __name__ == \"__main__\":\n    for ejemplo in [\n        \"No me llega la factura de marzo y la necesito para Hacienda.\",\n        \"La app se cierra sola al abrir el listado de pedidos.\",\n        \"Hola, ¿sabéis qué tiempo hará el sábado en Valencia?\",\n    ]:\n        salida = clasificar(ejemplo)\n        print(salida[\"categoria\"], round(salida[\"confianza\"], 2), \"|\", ejemplo[:45])",
+  "lines": [
+    [
+      "os.environ[\"ANTHROPIC_API_KEY\"]",
+      "Lee la clave de una variable del sistema. Si la escribes dentro del archivo, viaja con el archivo: a un repositorio, a un correo, a la carpeta compartida. Una clave filtrada la puede gastar cualquiera y el gasto lo pagas tú."
+    ],
+    [
+      "CATEGORIAS = [\"factura\", \"soporte_tecnico\", \"devolucion\", \"comercial\"]",
+      "La lista vive en un solo sitio y alimenta a la vez el esquema, las instrucciones y la comprobación final. Cuando añadas una categoría, tocas esta línea y ya está: no hay tres sitios donde se te olvide."
+    ],
+    [
+      "\"enum\": CATEGORIAS + [\"no_se\"]",
+      "Enum quiere decir «solo estos valores». Es lo que impide que el modelo devuelva «Factura» con mayúscula o «factura pendiente». El no_se va aquí dentro a propósito: admitir la duda tiene que ser una respuesta legal, no un fallo."
+    ],
+    [
+      "\"additionalProperties\": False",
+      "Prohíbe campos extra. Sin esto el modelo puede colar un \"comentario\" o un \"nota\" que tu código no espera, y esas sorpresas aparecen en producción, no en las pruebas."
+    ],
+    [
+      "\"format\": {\"type\": \"json_schema\", \"schema\": ESQUEMA}",
+      "Esto no es una súplica en el prompt, es una restricción del servidor: la respuesta sale con esa forma o no sale. Es la diferencia entre «por favor devuélveme JSON» y JSON garantizado."
+    ],
+    [
+      "UMBRAL = 0.7",
+      "El punto donde dejas de fiarte. Con 0.7 mandas a revisión manual lo dudoso. Súbelo a 0.85 si un error cuesta caro (una devolución mal enrutada), bájalo a 0.5 si prefieres que casi todo salga clasificado y ya lo corregirás."
+    ],
+    [
+      "if respuesta.stop_reason == \"refusal\":",
+      "El modelo puede negarse a responder por sus filtros de seguridad. Cuando pasa, devuelve un 200 normal con el contenido vacío, así que si lees el texto directamente te llevas un error raro. Aquí lo tratamos como un no_se más."
+    ],
+    [
+      "next(b.text for b in respuesta.content if b.type == \"text\")",
+      "La respuesta llega en bloques y delante puede haber bloques de razonamiento. Coger el primero a ciegas falla el día que el modelo piensa antes de contestar; buscar el bloque de texto no falla nunca."
+    ],
+    [
+      "if datos[\"categoria\"] not in CATEGORIAS or datos[\"confianza\"] < UMBRAL:",
+      "La segunda red. El esquema ya limita las respuestas, pero aquí conviertes en no_se tanto lo imposible como lo que el propio modelo dice que no tiene claro. Una etiqueta con 0.4 de confianza no es una etiqueta, es una apuesta."
+    ]
+  ],
+  "errors": [
+    [
+      "ModuleNotFoundError: No module named 'anthropic'",
+      "La librería no está instalada, o la instalaste en un Python y estás ejecutando otro (pasa mucho con los entornos virtuales). Ejecuta pip install anthropic desde la misma terminal donde lanzas el archivo."
+    ],
+    [
+      "KeyError: 'ANTHROPIC_API_KEY'",
+      "La variable de entorno no existe en esta terminal. En Windows PowerShell: $env:ANTHROPIC_API_KEY = \"sk-ant-...\". En Mac o Linux: export ANTHROPIC_API_KEY=\"sk-ant-...\". Ojo: solo dura mientras esa ventana esté abierta; si cierras la terminal, hay que repetirlo."
+    ],
+    [
+      "anthropic.AuthenticationError: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}}",
+      "La clave existe pero no vale: mal copiada (le sobra un espacio o le falta el final), o la borraste desde la consola de Anthropic. Genera una nueva en console.anthropic.com y vuelve a definir la variable."
+    ],
+    [
+      "anthropic.NotFoundError: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-opus-5'}}",
+      "El nombre del modelo está mal escrito o tu cuenta no tiene acceso a ese modelo. Los nombres van con guiones y sin puntos. Prueba con claude-haiku-4-5, que está disponible en todas las cuentas."
+    ]
+  ],
+  "adapt": "Cambia CATEGORIAS por las tuyas, en minúscula y con guion bajo, y reescribe INSTRUCCIONES para que describa tus correos y no unos genéricos: cuanto más concreto («devolucion es cuando el cliente ya ha recibido el pedido y quiere devolverlo»), menos no_se te salen. Ajusta UMBRAL después de probar con 30 o 40 textos reales tuyos, no antes. Para procesar un archivo, sustituye la lista de ejemplos del final por la lectura de un CSV y llama a clasificar una vez por fila. Sobre el dinero: la API de Anthropic no tiene plan gratis, hay que cargar saldo (el mínimo son unos 5 $) y con claude-opus-5 cada correo sale por medio céntimo aproximadamente, unos 3 € por cada mil. Si vas a clasificar decenas de miles, cambia model a claude-haiku-4-5: es unas cinco veces más barato y para meter textos en cuatro cajones suele sobrar. Prueba primero los dos con los mismos 40 textos y compara antes de decidir."
+}

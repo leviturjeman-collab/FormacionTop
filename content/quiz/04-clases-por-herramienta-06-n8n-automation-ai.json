@@ -1,0 +1,63 @@
+{
+  "categoryId": "04-clases-por-herramienta-06-n8n-automation-ai",
+  "basico": [
+    {
+      "prompt": "Montas tu primer flujo, copias la dirección del webhook que ves en pantalla y la pegas en el formulario de tu web. Envías el formulario y en n8n no aparece nada.",
+      "options": [
+        { "text": "Copiaste la dirección de Test; la de Production es otra y solo escucha con el flujo activado", "correct": true, "why": "Correcto, y es el error número uno de todo el que empieza. Son dos direcciones distintas para el mismo nodo: la de prueba solo escucha mientras tú tienes el botón de escuchar pulsado." },
+        { "text": "Falta configurar la credencial del nodo Webhook", "correct": false, "why": "Todos los nodos que tocan una app piden credencial, así que se asume que este también. El Webhook no: solo recibe, no entra en ningún sitio." },
+        { "text": "El formulario está mandando los datos con un formato que n8n no entiende", "correct": false, "why": "Pasa de verdad y es lo siguiente que se mira. Pero entonces verías una ejecución marcada en rojo. Aquí no hay ninguna ejecución: no ha llegado nada." }
+      ],
+      "explain": "Webhook de Test y de Production son direcciones distintas. La de producción no escucha hasta que activas el flujo."
+    },
+    {
+      "prompt": "Un compañero te pasa el JSON de su flujo, lo importas y los nodos de Gmail y Slack aparecen marcados como incompletos.",
+      "options": [
+        { "text": "Las credenciales se guardan dentro de n8n, no dentro del flujo: hay que volver a conectarlas en tu instalación", "correct": true, "why": "Correcto, y está hecho a propósito. Si las claves viajaran en el archivo, cualquiera que lo descargara tendría su Gmail. El precio es que cada import pide reconectar." },
+        { "text": "El export salió incompleto, que lo repita", "correct": false, "why": "Es lo lógico si crees que el archivo lo lleva todo. No falta nada: falta lo que nunca se exporta." },
+        { "text": "Tenéis versiones distintas de n8n", "correct": false, "why": "Puede dar problemas reales de compatibilidad. Pero eso no marca justo los nodos que llevan cuenta conectada y deja bien los demás." }
+      ],
+      "explain": "Un flujo exportado es el plano, no la casa. Las claves se ponen siempre en destino."
+    }
+  ],
+  "intermedio": [
+    {
+      "prompt": "Tu flujo recorre 50 leads de una hoja. En el número 21 el nodo del CRM se pone rojo y todo se detiene. Los 20 primeros ya se crearon.",
+      "options": [
+        { "text": "Por defecto un nodo en rojo para el flujo entero; en Settings del nodo → On Error → Continue, y llevas el fallido a una rama que lo registre", "correct": true, "why": "Correcto. Así los 29 restantes siguen y el que falló queda anotado con su motivo, en vez de perderse. Sin la rama que registra, «continuar» significa que los malos desaparecen sin rastro." },
+        { "text": "Volver a lanzarlo entero desde el principio", "correct": false, "why": "Es el reflejo, y funciona… hasta que miras el CRM. Sin una clave que identifique cada evento, vuelves a crear los 20 primeros por segunda vez." },
+        { "text": "Es cosa del CRM: reintentar dentro de un rato", "correct": false, "why": "Puede que la causa fuera suya, y esperar a veces basta. Pero dejas el flujo exactamente igual de frágil para el próximo martes." }
+      ],
+      "explain": "Un flujo sin rama de error no es un flujo terminado. Continuar sin registrar es peor que pararse."
+    },
+    {
+      "prompt": "Escribes a mano {{ $json.Email }} en un nodo para usar el correo que llegó del formulario. En la vista previa sale «undefined».",
+      "options": [
+        { "text": "El nombre del campo distingue mayúsculas: míralo en la vista JSON del panel INPUT y arrástralo en vez de escribirlo", "correct": true, "why": "Correcto. Si el campo llega como «email», «Email» no existe y devuelve undefined, que en cristiano es «ese nombre no está». Arrastrar desde INPUT elimina la errata de raíz." },
+        { "text": "El campo llega vacío desde el formulario", "correct": false, "why": "En pantalla se parecen mucho, de ahí la confusión. Un campo vacío te da una cadena vacía; undefined significa que el nombre no existe en absoluto." },
+        { "text": "Hace falta un nodo Set antes para crear el campo", "correct": false, "why": "Normalizar antes es buena práctica y a veces hace falta. Aquí el dato ya está ahí: lo que falla es cómo lo estás llamando." }
+      ],
+      "explain": "Arrastra los campos desde el panel INPUT. Escribirlos a mano es la principal fuente de erratas."
+    }
+  ],
+  "avanzado": [
+    {
+      "prompt": "El flujo lleva un mes funcionando. Cada pocos días aparece el mismo lead duplicado en el CRM: dos contactos idénticos, con segundos de diferencia.",
+      "options": [
+        { "text": "El evento llegó dos veces por un reintento de red: se genera una clave única por evento y se comprueba antes de crear nada", "correct": true, "why": "Correcto. Quien te manda el webhook reintenta si no recibe respuesta a tiempo, y eso es normal. La defensa es tuya: un id de evento (por ejemplo, correo + fecha) que se consulta antes de escribir." },
+        { "text": "Añadir un nodo que busque el email en el CRM justo antes de crear el contacto", "correct": false, "why": "Reduce muchísimo el problema y es lo primero que se prueba con razón. Pero si las dos llegadas van casi a la vez, las dos buscan antes de que ninguna haya escrito, y las dos crean." },
+        { "text": "Pedir a quien envía el formulario que no reintente", "correct": false, "why": "Suena a atacar la causa. No depende de él ni de ti: los reintentos son como funciona la red, y un sistema que asume que no los habrá se rompe siempre." }
+      ],
+      "explain": "Los duplicados no se evitan mirando después. Se evitan con una clave de evento comprobada antes de actuar."
+    },
+    {
+      "prompt": "Tu flujo llama al modelo una vez por registro. Llega un pico de 800 registros de golpe y empiezan a caer errores 429.",
+      "options": [
+        { "text": "Has pasado el límite de peticiones por minuto: se procesa por tandas, con una espera que crece a cada 429", "correct": true, "why": "Correcto. El 429 significa «vas demasiado rápido», no «esto está roto». Esperar cada vez un poco más deja que la cola se vacíe, y el lote termina, tarde pero entero." },
+        { "text": "Subir de plan para tener un límite más alto", "correct": false, "why": "Quita el síntoma hoy y cuesta dinero todos los meses. El pico siguiente será de 2.000 y volverás al mismo punto con una factura mayor." },
+        { "text": "Reintentar inmediatamente todo lo que falle", "correct": false, "why": "Es lo intuitivo: si falló, se repite. Reintentar al instante añade más peticiones justo cuando ya estás por encima del límite, y cada llamada que sí pasa se paga: un flujo que reintenta tres veces cuesta el triple los días de mucho volumen." }
+      ],
+      "explain": "Ante un 429 se espera más, no se insiste más. Y los reintentos también van en la factura."
+    }
+  ]
+}
