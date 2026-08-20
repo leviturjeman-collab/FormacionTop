@@ -1,80 +1,20 @@
-/**
- * Generador del curso.
- *
- * Lee el vault de Obsidian, extrae la señal de cada documento y produce
- * public/course.json: la Ruta, la Biblioteca y cada lección en tres niveles
- * con sus piezas interactivas.
- *
- * El vault NO se modifica nunca. Este script solo lee.
- *
- * Ruta del vault, por orden de prioridad:
- *   1. variable de entorno VAULT_DIR
- *   2. course.config.json en la raíz del proyecto  { "vaultDir": "…" }
- *   3. rutas candidatas conocidas
- */
-
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { STAGES, stageFor, KINDS, TOOLS } from './lib/taxonomy.mjs'
-import { extract } from './lib/extract.mjs'
-import { analyzeSections, isMetaDocument } from './lib/sections.mjs'
-import { registerGuides, toolGuideFor } from './lib/toolguides.mjs'
-import { registerRecipes } from './lib/recipes.mjs'
-import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
-import { buildInteractive } from './lib/interactive.mjs'
-import { buildCategories, buildGlossaryIndex, categoryKeyFor, sectionFor, SECTIONS } from './lib/categories.mjs'
-
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
-const projectDir = path.resolve(scriptDir, '..')
-const publicDir = path.join(projectDir, 'public')
+const portalDir = path.resolve(scriptDir, '..')
+const vaultDir = path.resolve(portalDir, '..')
+const publicDir = path.join(portalDir, 'public')
 const generatedDir = path.join(publicDir, 'generated')
 
-const IGNORED = new Set(['node_modules', 'dist', '.git', '.obsidian', '.vscode', '36_PORTAL_WEB_FORMACION'])
-
-async function exists(target) {
-  try { await fs.access(target); return true } catch { return false }
-}
-
-async function resolveVaultDir() {
-  if (process.env.VAULT_DIR) {
-    const dir = path.resolve(process.env.VAULT_DIR)
-    if (await exists(dir)) return dir
-    throw new Error(`VAULT_DIR apunta a una carpeta que no existe: ${dir}`)
-  }
-
-  const configPath = path.join(projectDir, 'course.config.json')
-  if (await exists(configPath)) {
-    const config = JSON.parse(await fs.readFile(configPath, 'utf8'))
-    if (config.vaultDir) {
-      const dir = path.resolve(projectDir, config.vaultDir)
-      if (await exists(dir)) return dir
-      throw new Error(`course.config.json apunta a una carpeta que no existe: ${dir}`)
-    }
-  }
-
-  const candidates = [
-    path.resolve(projectDir, '..', 'Formacion', 'Formacion'),
-    path.resolve(projectDir, '..', 'Formacion'),
-    path.resolve(projectDir, '..'),
-  ]
-  for (const candidate of candidates) {
-    if (await exists(path.join(candidate, '00_EMPIEZA_AQUI'))) return candidate
-  }
-
-  throw new Error(
-    'No encuentro el vault de Obsidian.\n' +
-      'Crea course.config.json en la raíz del proyecto con:\n' +
-      '  { "vaultDir": "../Formacion/Formacion" }\n' +
-      'o define la variable de entorno VAULT_DIR.',
-  )
-}
+const normalize = (value) => value.split(path.sep).join('/')
+const titleFromName = (name) => name.replace(/\.md$/i, '').replace(/^\d+[-_ ]*/, '').replace(/[_-]+/g, ' ').trim()
 
 async function walk(directory, output = []) {
   const entries = await fs.readdir(directory, { withFileTypes: true })
   for (const entry of entries) {
-    if (IGNORED.has(entry.name)) continue
+    if (['node_modules', 'dist', '.git', '.obsidian', '36_PORTAL_WEB_FORMACION'].includes(entry.name)) continue
     const absolute = path.join(directory, entry.name)
     if (entry.isDirectory()) await walk(absolute, output)
     else output.push(absolute)
@@ -82,407 +22,345 @@ async function walk(directory, output = []) {
   return output
 }
 
-const toPosix = (value) => value.split(path.sep).join('/')
-
-function slugify(value) {
-  return value
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 70) || 'leccion'
+function stripFrontmatter(content) {
+  return content.replace(/^\uFEFF/, '').replace(/^---\s*[\s\S]*?\s*---\s*/m, '').trim()
 }
 
-/** Nombre legible de una carpeta del vault. */
-function folderLabel(name) {
-  return name
-    .replace(/^\d+_?/, '')
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/^\w/, (char) => char.toUpperCase())
-    .trim()
+function getTitle(content, fileName) {
+  const match = stripFrontmatter(content).match(/^#\s+(.+)$/m)
+  return match?.[1]?.trim() || titleFromName(fileName)
 }
 
-/**
- * Tipo de lección. El orden importa: las señales más específicas primero.
- * Lo que sea índice, resumen o listado de fuentes se marca como referencia
- * para que no abra una etapa por delante del material que sí enseña.
- */
-function kindFor(relativePath, title) {
-  if (/workflows_n8n_40/.test(relativePath)) return 'workflow'
-  if (/skills_40|skills\//i.test(relativePath)) return 'skill'
-  if (/^(?:fuentes|readme|resumen|[ií]ndice|mapa|documento maestro|changelog|decisiones|inicio|qu[eé] es cada|estructura)/i.test(title)) return 'referencia'
-  if (/diccionario|glosario|plantilla|matriz|r[uú]brica|checklist|solucionario|importables/i.test(title)) return 'referencia'
-  if (/proyecto|capstone|caso[_ ]/i.test(title)) return 'proyecto'
-  if (/gu[ií]a|setup|instal|configur/i.test(title)) return 'guia'
-  if (/laboratorio|sesi[oó]n|clase|lecci[oó]n|pr[aá]ctica|ejercicio|evaluaci[oó]n|examen/i.test(title)) return 'practica'
-  return 'concepto'
-}
-
-/* ------------------------------------------------------------------ */
-
-const vaultDir = await resolveVaultDir()
-console.log(`Vault: ${vaultDir}`)
-
-
-/* --- Contenido escrito por fuera del código ------------------------ */
-
-/**
- * Carga todos los .json de una carpeta de `content/`. Es el mecanismo con el
- * que se amplía el curso sin tocar el generador: guías de herramienta, recetas
- * de código, proyectos de área y presentaciones.
- */
-async function loadContent(folder) {
-  const dir = path.join(projectDir, 'content', folder)
-  if (!(await exists(dir))) return []
-  const out = []
-  for (const name of (await fs.readdir(dir)).filter((file) => file.endsWith('.json'))) {
-    try {
-      out.push(JSON.parse(await fs.readFile(path.join(dir, name), 'utf8')))
-    } catch (error) {
-      console.warn(`  aviso: ${folder}/${name} no es JSON válido (${error.message}). Se ignora.`)
-    }
-  }
-  return out
-}
-
-const extraGuides = await loadContent('toolguides')
-const extraRecipes = await loadContent('recipes')
-const areaProjects = await loadContent('projects')
-const deckFiles = await loadContent('decks')
-const promptFiles = await loadContent('prompts')
-const guideFiles = await loadContent('guias')
-const cursoFiles = await loadContent('lecciones')
-
-registerGuides(extraGuides)
-registerRecipes(extraRecipes)
-
-await fs.mkdir(generatedDir, { recursive: true })
-const allFiles = await walk(vaultDir)
-const markdownFiles = allFiles.filter((file) => file.toLowerCase().endsWith('.md'))
-
-if (!markdownFiles.length) {
-  throw new Error(`No hay archivos .md en ${vaultDir}. ¿Es la carpeta correcta?`)
-}
-
-// Workflows de n8n: se leen para construir los diagramas reales.
-const workflowJson = new Map()
-for (const file of allFiles) {
-  if (!file.toLowerCase().endsWith('.json')) continue
-  if (!/workflows_n8n_40|workflows[\\/]/.test(file)) continue
-  try {
-    workflowJson.set(path.basename(file), JSON.parse(await fs.readFile(file, 'utf8')))
-  } catch {
-    console.warn(`  aviso: ${path.basename(file)} no es JSON válido, se ignora en los diagramas.`)
-  }
-}
-
-const lessons = []
-const usedSlugs = new Set()
-
-for (const absolute of markdownFiles) {
-  const relativePath = toPosix(path.relative(vaultDir, absolute))
-  const raw = await fs.readFile(absolute, 'utf8')
-  const signal = extract(raw, relativePath)
-
-  // Documentos vacíos o casi vacíos no llegan a ser lección.
-  if (signal.words < 60) continue
-
-  // Los archivos que solo sirven para navegar por el material no se enseñan.
-  if (isMetaDocument(signal.title, relativePath)) continue
-
-  // Secciones clasificadas y los tres casos, para el simulador.
-  signal.analysis = analyzeSections(signal.sections)
-
-  const title = signal.title
-    .replace(/^Desarrollo completo\s*[-–—]\s*/i, '')
-    .replace(/^Documentaci[oó]n\s*[-–—]\s*/i, '')
+function getExcerpt(content) {
+  return stripFrontmatter(content)
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/<!--([\s\S]*?)-->/g, '')
+    .replace(/[`*_>\[\]#|]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
-
-  const stageId = stageFor(relativePath, title)
-  const kind = kindFor(relativePath, title)
-  const { levels, tools } = buildLevels(signal, stageId)
-
-  // Cuánto contenido REAL tiene, ya sin la plantilla repetida. Es lo que decide
-  // si esto es una lección de verdad o una ficha de consulta.
-  const realWords = levels.intermedio.blocks
-    .filter((block) => block.kind === 'seccion')
-    .reduce((sum, block) => sum + (block.parts || []).reduce(
-      (acc, part) => acc + `${part.text || ''} ${(part.items || []).join(' ')}`.split(/\s+/).filter(Boolean).length, 0), 0)
-  const format = realWords < 400 ? 'ficha' : 'leccion'
-
-  // Una ficha es consulta rápida: se queda con su contenido propio y nada más.
-  // Sin instaladores, sin recetas y sin el andamiaje de una lección larga.
-  if (format === 'ficha') {
-    const CONSULTA = new Set(['idea', 'seccion', 'tabla', 'herramientas'])
-    const compacto = levels.intermedio.blocks
-      .filter((block) => CONSULTA.has(block.kind))
-      // Los títulos genéricos de lección no pintan nada en una ficha.
-      .filter((block) => !/^(?:lo que vas a construir|referencia de la lecci[oó]n|herramientas de esta pr[aá]ctica)$/i.test(block.title))
-      .map((block) => (block.kind === 'herramientas' ? { ...block, title: 'Herramientas' } : block))
-    for (const level of LEVELS) {
-      levels[level] = {
-        ...levels[level],
-        headline: `${title}, en una pantalla`,
-        hook: 'Ficha de consulta: lo esencial de este tema, para mirarlo cuando lo necesites.',
-        blocks: compacto,
-        objectives: [],
-        pitfalls: [],
-        minutes: Math.max(3, Math.round(realWords / 190)),
-      }
-    }
-  }
-
-  let slug = slugify(title)
-  if (usedSlugs.has(slug)) {
-    const folder = slugify(relativePath.split('/')[0])
-    slug = usedSlugs.has(`${folder}-${slug}`) ? `${slug}-${usedSlugs.size}` : `${folder}-${slug}`
-  }
-  usedSlugs.add(slug)
-
-  const workflowFile = path.basename(relativePath).replace(/\.md$/i, '.json')
-  const interactive = buildInteractive({
-    signal,
-    stageId,
-    workflow: workflowJson.get(workflowFile),
-    workflowFile,
-    slug,
-  })
-
-  lessons.push({
-    id: slug,
-    slug,
-    title,
-    stageId,
-    kind,
-    kindLabel: KINDS[kind].label,
-    folder: relativePath.split('/')[0],
-    folderLabel: folderLabel(relativePath.split('/')[0]),
-    sourcePath: relativePath,
-    sourceWords: signal.words,
-    realWords,
-    format,
-    categoryKey: categoryKeyFor(relativePath),
-    sectionId: sectionFor(relativePath),
-    tools,
-    tags: Array.isArray(signal.front.tags) ? signal.front.tags.slice(0, 6) : [],
-    search: `${title} ${signal.keyTerms.join(' ')} ${signal.intro}`.slice(0, 900).toLowerCase(),
-    levels,
-    interactive,
-    relatedTitles: signal.links,
-    // Alimenta el indice A-Z: definiciones con significado y terminos destacados.
-    indexTerms: [
-      ...signal.definitions.filter((item) => item.meaning.length > 30).slice(0, 12),
-      ...signal.keyTerms.map((term) => ({ term, meaning: '' })),
-    ],
-    authored: false,
-  })
+    .slice(0, 210)
 }
 
-/* --- Contenido escrito a mano, que pisa al generado ---------------- */
+function categoryFor(relativePath) {
+  const root = relativePath.split('/')[0] || 'General'
+  return root.replace(/^\d+_?/, '').replace(/_/g, ' ').toLowerCase()
+}
 
-const authoredDir = path.join(projectDir, 'content', 'authored')
-let authoredCount = 0
-if (await exists(authoredDir)) {
-  for (const name of (await fs.readdir(authoredDir)).filter((file) => file.endsWith('.json'))) {
-    const override = JSON.parse(await fs.readFile(path.join(authoredDir, name), 'utf8'))
-    const target = lessons.find(
-      (lesson) => lesson.sourcePath === override.sourcePath || lesson.slug === override.slug,
-    )
-    if (!target) {
-      console.warn(`  aviso: ${name} no encaja con ninguna lección (${override.sourcePath || override.slug}).`)
-      continue
-    }
-    for (const level of LEVELS) {
-      if (override.levels?.[level]) target.levels[level] = { ...target.levels[level], ...override.levels[level] }
-    }
-    if (override.interactive) target.interactive = override.interactive
-    if (override.title) target.title = override.title
-    target.authored = true
-    authoredCount += 1
+const moduleDefinitions = [
+  { id: 'fundamentos', number: '01', title: 'Pensar antes de automatizar', description: 'Define el problema, la entrada, la salida y cómo sabrás que funciona.', milestone: 'Mapa del problema y criterio de éxito' },
+  { id: 'herramientas', number: '02', title: 'Preparar el entorno de trabajo', description: 'Instala, conecta y verifica las herramientas mínimas del proyecto.', milestone: 'Entorno reproducible y documentado' },
+  { id: 'diseno', number: '03', title: 'Diseñar el sistema', description: 'Convierte la idea en un flujo con datos, decisiones y responsabilidades claras.', milestone: 'Arquitectura y contrato de datos' },
+  { id: 'construccion', number: '04', title: 'Construir una primera versión', description: 'Implementa el camino principal con datos ficticios y una salida comprobable.', milestone: 'Prototipo ejecutable' },
+  { id: 'calidad', number: '05', title: 'Probar y reparar', description: 'Provoca errores, mide calidad y documenta cómo recuperar el sistema.', milestone: 'Pruebas, logs y caso roto resuelto' },
+  { id: 'seguridad', number: '06', title: 'Operar con seguridad', description: 'Protege datos, credenciales, permisos, costes y acciones sensibles.', milestone: 'Checklist de producción y riesgos' },
+  { id: 'entrega', number: '07', title: 'Convertirlo en una entrega profesional', description: 'Prepara documentación, demostración y traspaso para otra persona.', milestone: 'Paquete de entrega y demo' },
+  { id: 'defensa', number: '08', title: 'Medir y defender el proyecto', description: 'Explica decisiones, evidencia resultados y propone la siguiente versión.', milestone: 'Caso de estudio y defensa final' },
+]
+
+function moduleForPath(relativePath, documentTitle = '') {
+  const normalizedTitle = documentTitle.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  if (/setup terminal|homebrew|github cli|vercel|docker|supabase auth|environment|variables de entorno|deploy plataformas/.test(normalizedTitle)) return 'herramientas'
+  if (/arquitectura|api contract|json schema|contrato de datos|human approval|vector db/.test(normalizedTitle)) return 'diseno'
+  if (/playwright|testing|observabilidad|postmortem|regression|health monitor|evaluador|evaluator/.test(normalizedTitle)) return 'calidad'
+  if (/seguridad|gdpr|rgpd|pii|secret|permission|consent|safety/.test(normalizedTitle)) return 'seguridad'
+  if (/entrega cliente|propuesta a cliente|onboarding cliente|portfolio|documentacion de entrega/.test(normalizedTitle)) return 'entrega'
+  if (/capstone|rubrica|defensa|certificacion/.test(normalizedTitle)) return 'defensa'
+  const prefix = Number(relativePath.match(/^(\d+)/)?.[1] || 0)
+  if ([0, 1, 2, 3, 9, 12, 14].includes(prefix)) return 'fundamentos'
+  if ([4, 10, 15].includes(prefix)) return 'herramientas'
+  if ([8, 11, 13, 18].includes(prefix)) return 'diseno'
+  if ([5, 27, 34, 35].includes(prefix)) return 'construccion'
+  if ([7, 21, 23, 25, 33].includes(prefix)) return 'calidad'
+  if ([28].includes(prefix)) return 'seguridad'
+  if ([6, 16, 19, 22, 26, 29, 30].includes(prefix)) return 'entrega'
+  if ([17, 20, 24].includes(prefix)) return 'defensa'
+  return 'construccion'
+}
+
+function cleanMarkdown(value) {
+  return value
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/<!--([\s\S]*?)-->/g, ' ')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+    .replace(/[`*_>|#]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function extractSection(content, names) {
+  const escaped = names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+  const pattern = new RegExp(`^#{1,4}\\s+(?:${escaped})[^\\n]*\\n([\\s\\S]*?)(?=^#{1,4}\\s+|$)`, 'im')
+  const match = stripFrontmatter(content).match(pattern)
+  return match ? cleanMarkdown(match[1]).slice(0, 520) : ''
+}
+
+const fallbackSteps = {
+  fundamentos: ['Escribe el problema sin mencionar ninguna herramienta.', 'Define una entrada realista y la salida que necesita el usuario.', 'Fija una métrica y un ejemplo que demostrarán que funciona.', 'Anota una decisión que todavía no puedes tomar.'],
+  herramientas: ['Instala únicamente las dependencias necesarias para esta práctica.', 'Crea variables de entorno con valores ficticios.', 'Ejecuta una comprobación mínima desde la terminal.', 'Documenta el comando y el resultado que otra persona debe obtener.'],
+  diseno: ['Dibuja el flujo desde la entrada hasta el resultado.', 'Define los campos obligatorios del payload.', 'Marca qué decisiones son automáticas y cuáles requieren una persona.', 'Revisa el diseño contra el objetivo de tu proyecto.'],
+  construccion: ['Prepara un caso de prueba con datos ficticios.', 'Implementa primero el camino principal.', 'Guarda la entrada, la decisión y la salida.', 'Ejecuta el flujo y captura una evidencia reproducible.'],
+  calidad: ['Define el comportamiento esperado antes de probar.', 'Ejecuta un caso correcto y registra el resultado.', 'Provoca un fallo concreto y localiza su causa.', 'Repara el fallo y añade una prueba que evite su regreso.'],
+  seguridad: ['Identifica datos personales, secretos y acciones sensibles.', 'Reduce permisos y elimina datos que no sean necesarios.', 'Añade límite de coste, aprobación o rate limit donde corresponda.', 'Escribe cómo detener y recuperar el sistema.'],
+  entrega: ['Ordena código, configuración y documentación.', 'Prepara una demo que otra persona pueda repetir.', 'Explica instalación, uso, límites y solución de errores.', 'Realiza un traspaso usando únicamente el paquete entregado.'],
+  defensa: ['Resume el problema y el resultado en una frase.', 'Muestra una evidencia antes y después.', 'Defiende dos decisiones y un descarte.', 'Propón la siguiente versión con coste y criterio de éxito.'],
+}
+
+const moduleApplications = {
+  fundamentos: 'Utiliza este recurso para decidir qué parte de tu proyecto merece construirse y cuál debes dejar fuera.',
+  herramientas: 'Aplícalo al entorno real de tu proyecto hasta que otra persona pueda repetir la instalación.',
+  diseno: 'Conviértelo en una decisión concreta de arquitectura, datos o interacción dentro de tu proyecto.',
+  construccion: 'Úsalo para producir una parte ejecutable de tu proyecto con datos de prueba y salida visible.',
+  calidad: 'Aplícalo a un fallo probable de tu proyecto y conserva la evidencia de diagnóstico y reparación.',
+  seguridad: 'Revísalo contra los datos, permisos, costes y acciones externas que utiliza tu proyecto.',
+  entrega: 'Incorpóralo al paquete que recibiría un cliente, profesor o miembro nuevo del equipo.',
+  defensa: 'Úsalo como evidencia para explicar por qué tu proyecto funciona y qué límites todavía tiene.',
+}
+
+function extractCodeBlocks(content) {
+  return [...stripFrontmatter(content).matchAll(/```(?:[a-zA-Z0-9_-]+)?\s*\r?\n([\s\S]*?)```/g)]
+    .map((match) => match[1].trim())
+    .filter((block) => block.length > 3 && block.length < 650 && !/BEGIN (?:RSA|OPENSSH) PRIVATE KEY/.test(block))
+    .filter((block) => /(?:^|\s)(?:npm|npx|pnpm|yarn|pip|python|node|brew|git|gh|docker|vercel|curl|ffmpeg|whisper|export|setx|powershell|bash)(?:\s|$)/im.test(block))
+    .slice(0, 3)
+}
+
+function walkthroughFor(document, kind, moduleId, title, workflowData) {
+  const codeBlocks = extractCodeBlocks(document.content)
+  const module = moduleDefinitions.find((item) => item.id === moduleId)
+  const commonStart = {
+    id: 'prepare', phase: 'Preparar', title: 'Abre tu proyecto y define el punto de partida',
+    where: 'En la ficha Mi proyecto de esta academia',
+    action: `Escribe qué parte de tu proyecto vas a mejorar con “${title}”. Limita el trabajo a una sola entrada y una sola salida.`,
+    expected: 'Una frase concreta que conecte esta práctica con una necesidad del usuario.',
+    evidenceLabel: 'Decisión que aplicarás al proyecto', projectField: 'decision',
   }
+  const commonFinish = {
+    id: 'document', phase: 'Documentar', title: 'Guarda la evidencia y actualiza el proyecto',
+    where: 'En el panel Evidencia de este walkthrough',
+    action: 'Describe qué cambió, pega el resultado obtenido y anota un límite que aún no has resuelto.',
+    expected: 'Una evidencia comprensible sin necesidad de ver tu pantalla o preguntarte qué hiciste.',
+    evidenceLabel: 'Resultado, límite y siguiente acción', projectField: 'evidence',
+  }
+
+  if (kind === 'Workflow guiado' && workflowData) {
+    const fileName = document.path.split('/').at(-1).replace(/\.md$/i, '.json')
+    const nodeSteps = (workflowData.nodes || []).slice(0, 8).map((node, index) => ({
+      id: `node-${index + 1}`, phase: 'Construir', title: `Configura el nodo ${index + 1}: ${node.name}`,
+      where: `n8n > workflow “${workflowData.name || title}” > nodo “${node.name}”`,
+      action: node.type?.includes('webhook') ? 'Abre el nodo, usa la URL de prueba y copia el payload de ejemplo antes de escuchar el evento.' : node.type?.includes('function') || node.type?.includes('code') ? 'Abre el código del nodo, identifica qué campos recibe y comprueba que siempre devuelve un objeto estructurado.' : node.type?.includes('respond') ? 'Define el código HTTP y devuelve únicamente los campos que necesita quien llamó al webhook.' : 'Abre el nodo, selecciona credenciales de prueba y revisa cada campo obligatorio antes de ejecutarlo.',
+      expected: `El nodo “${node.name}” termina en verde y muestra una salida que puede utilizar el siguiente nodo.`,
+      evidenceLabel: `Salida del nodo ${node.name}`, projectField: index === 0 ? 'input' : index === (workflowData.nodes || []).length - 1 ? 'output' : 'implementation',
+    }))
+    return [
+      commonStart,
+      { id: 'import', phase: 'Preparar', title: 'Importa el workflow de trabajo', where: 'n8n > Workflows > menú de tres puntos > Import from File', action: `Descarga “${fileName}”, impórtalo y cambia el nombre añadiendo el nombre de tu proyecto. No actives todavía el workflow.`, expected: `El lienzo muestra ${(workflowData.nodes || []).length} nodos conectados y no aparecen credenciales reales.`, evidenceLabel: 'Nombre de tu copia del workflow', projectField: 'asset', downloadPath: `/generated/workflows/${fileName}` },
+      ...nodeSteps,
+      { id: 'test-happy', phase: 'Verificar', title: 'Ejecuta el caso correcto de principio a fin', where: 'n8n > Execute workflow', action: 'Usa un payload ficticio completo. Recorre cada nodo y compara su salida con la entrada del siguiente.', expected: 'Todos los nodos terminan en verde y la respuesta final contiene estado, decisión y siguiente acción.', evidenceLabel: 'Resultado del caso correcto', projectField: 'test' },
+      { id: 'test-broken', phase: 'Verificar', title: 'Provoca y controla un fallo', where: 'El mismo workflow, con datos ficticios', action: 'Elimina un campo obligatorio o utiliza una credencial de prueba inválida. Añade una rama que detenga el proceso y explique el error.', expected: 'El workflow no ejecuta una acción externa y devuelve un error que indica qué debe corregirse.', evidenceLabel: 'Fallo provocado y reparación', projectField: 'risk' },
+      commonFinish,
+    ]
+  }
+
+  const exactCommandSteps = codeBlocks.map((command, index) => ({
+    id: `command-${index + 1}`, phase: 'Construir', title: `Ejecuta la comprobación ${index + 1}`,
+    where: 'Terminal abierta en la carpeta de tu proyecto',
+    action: 'Revisa rutas y nombres antes de ejecutar. Sustituye únicamente los valores de ejemplo; no pegues secretos en el comando.',
+    command,
+    expected: 'El comando termina sin errores y puedes explicar qué archivo, servicio o salida ha creado.',
+    evidenceLabel: `Salida del comando ${index + 1}`, projectField: 'implementation',
+  }))
+  const genericSteps = kindStepsForWalkthrough(kind, moduleId, title)
+  const middleSteps = exactCommandSteps.length ? [...exactCommandSteps, ...genericSteps].slice(0, 4) : genericSteps
+  return [commonStart, ...middleSteps, {
+    id: 'verify', phase: 'Verificar', title: 'Comprueba el resultado con un criterio observable',
+    where: 'En la aplicación, terminal o herramienta donde acabas de trabajar',
+    action: `Repite la acción principal de “${title}” con datos ficticios y compárala con el resultado esperado de tu proyecto.`,
+    expected: module.milestone,
+    evidenceLabel: 'Comprobación y resultado obtenido', projectField: 'test',
+  }, commonFinish]
 }
 
-/* --- Relaciones entre lecciones ------------------------------------ */
-
-const byTitle = new Map(lessons.map((lesson) => [lesson.title.toLowerCase(), lesson.slug]))
-for (const lesson of lessons) {
-  lesson.related = (lesson.relatedTitles || [])
-    .map((title) => byTitle.get(title.toLowerCase()))
-    .filter((slug) => slug && slug !== lesson.slug)
-    .slice(0, 5)
-  delete lesson.relatedTitles
+function kindStepsForWalkthrough(kind, moduleId, title) {
+  const steps = kindStepsTemplate(kind, moduleId)
+  return steps.map((action, index) => ({
+    id: `apply-${index + 1}`,
+    phase: index < 2 ? 'Construir' : 'Aplicar',
+    title: `${index + 1}. ${action.replace(/[.!]$/, '')}`,
+    where: index === 0 ? 'En tu documento de proyecto' : 'En la herramienta o repositorio de tu proyecto',
+    action: `${action} Hazlo utilizando “${title}” como referencia, pero conserva únicamente lo que responda al objetivo de tu proyecto.`,
+    expected: index === steps.length - 1 ? 'Una salida lista para revisar y no solo una nota teórica.' : 'Un cambio pequeño, visible y reversible dentro del proyecto.',
+    evidenceLabel: index === steps.length - 1 ? 'Salida aplicada' : `Resultado del paso ${index + 1}`,
+    projectField: index === 0 ? 'decision' : index === steps.length - 1 ? 'output' : 'implementation',
+  }))
 }
 
-/* --- Ruta: etapas ordenadas ---------------------------------------- */
+function kindStepsTemplate(kind, moduleId) {
+  const templates = {
+    'Procedimiento': ['Define la señal que activa el procedimiento.', 'Ejecuta el procedimiento sobre una tarea pequeña.', 'Compara la salida con un criterio escrito previamente.', 'Anota cuándo debes detenerlo o pedir revisión humana.'],
+    'Proyecto': ['Compara el caso con el problema de tu proyecto.', 'Selecciona dos decisiones reutilizables y una que debes cambiar.', 'Construye la versión más pequeña que produzca una salida.', 'Prueba un caso correcto y un límite del diseño.'],
+    'Guía': ['Comprueba requisitos y versiones en la terminal.', 'Realiza la configuración con datos ficticios.', 'Ejecuta una prueba mínima reproducible.', 'Documenta el comando y la reparación del error más probable.'],
+    'Lección': fallbackSteps[moduleId],
+  }
+  return templates[kind] || fallbackSteps[moduleId]
+}
 
-const KIND_ORDER = { concepto: 0, guia: 1, practica: 2, workflow: 3, skill: 4, proyecto: 5, referencia: 6 }
-
-const baseStages = STAGES.map((stage) => {
-  const inStage = lessons
-    .filter((lesson) => lesson.stageId === stage.id)
-    .sort((a, b) =>
-      (KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) ||
-      (b.sourceWords - a.sourceWords) ||
-      a.title.localeCompare(b.title, 'es'),
-    )
+function adaptDocument(document, workflowJsonByName) {
+  const source = document.content
+  const purpose = extractSection(source, ['Para qué sirve', 'Para que sirve', 'Objetivo', 'Propósito', 'Proposito'])
+  const deliverableSource = extractSection(source, ['Entregable final', 'Entregable', 'Salida esperada', 'Resultado'])
+  const title = document.title
+    .replace(/^Desarrollo completo\s*-\s*/i, '')
+    .replace(/^Documentacion\s*-\s*/i, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  const moduleId = moduleForPath(document.path, title)
+  const module = moduleDefinitions.find((item) => item.id === moduleId)
+  const kind = document.type === 'workflow' ? 'Workflow guiado' : document.type === 'skill' ? 'Procedimiento' : /proyecto|caso/i.test(title) ? 'Proyecto' : /instal|setup|gu[ií]a/i.test(title) ? 'Guía' : 'Lección'
+  const kindSummaries = {
+    'Workflow guiado': `Construirás una versión controlada de “${title}”, definirás su payload y comprobarás un caso correcto y otro roto.`,
+    'Procedimiento': `Aprenderás cuándo utilizar “${title}”, cómo aplicarlo con límites claros y qué salida debes conservar como evidencia.`,
+    'Proyecto': `Usarás “${title}” como caso de trabajo: adaptarás sus decisiones a tu proyecto y justificarás qué mantienes o descartas.`,
+    'Guía': `Prepararás “${title}” dentro de tu entorno y dejarás una comprobación que otra persona pueda repetir.`,
+    'Lección': `Entenderás la idea central de “${title}” y la convertirás en una decisión concreta para tu proyecto.`,
+  }
+  const kindSteps = {
+    'Workflow guiado': ['Define el evento que inicia el flujo y crea un payload ficticio.', 'Dibuja los nodos necesarios antes de importar o programar nada.', 'Configura credenciales de prueba y ejecuta el camino principal.', 'Provoca un error, añade su manejo y conserva el registro.'],
+    'Procedimiento': ['Escribe la situación exacta que debería activar este procedimiento.', 'Aplícalo a una tarea pequeña de tu proyecto.', 'Revisa la salida contra un criterio observable.', 'Anota cuándo no debería utilizarse y guarda una evidencia.'],
+    'Proyecto': ['Compara el caso con tu proyecto y marca diferencias importantes.', 'Elige dos decisiones que puedes reutilizar y una que debes cambiar.', 'Construye una versión pequeña con datos ficticios.', 'Documenta resultado, límite y siguiente mejora.'],
+    'Guía': ['Comprueba requisitos y versiones antes de instalar.', 'Ejecuta la instalación con variables ficticias.', 'Realiza una prueba mínima y captura el resultado.', 'Escribe la reparación del error más probable.'],
+    'Lección': fallbackSteps[moduleId],
+  }
+  const summary = kindSummaries[kind]
+  const context = purpose && !/b[oó]veda|carpeta|archivo existe/i.test(purpose) ? purpose.split(/(?<=[.!?])\s+/)[0].slice(0, 240) : module.description
+  const deliverable = deliverableSource ? deliverableSource.split(/(?<=[.!?])\s+/)[0].slice(0, 180) : module.milestone
+  const workflowFileName = document.path.split('/').at(-1).replace(/\.md$/i, '.json')
+  const workflowData = workflowJsonByName.get(workflowFileName)
   return {
-    ...stage,
-    lessonSlugs: inStage.map((lesson) => lesson.slug),
-    // Las esenciales abren la etapa; el resto queda como ampliacion.
-    coreSlugs: inStage.filter((lesson) => lesson.kind !== 'referencia').slice(0, 8).map((lesson) => lesson.slug),
-    minutes: inStage.reduce((sum, lesson) => sum + lesson.levels.intermedio.minutes, 0),
+    id: document.id,
+    title,
+    moduleId,
+    kind,
+    duration: Math.min(45, Math.max(15, document.minutes)),
+    summary,
+    studentOutcome: `Al terminar habrás aplicado “${title}” a una decisión o parte verificable de tu proyecto.`,
+    projectApplication: moduleApplications[moduleId],
+    context,
+    steps: kindSteps[kind],
+    deliverable,
+    checks: [
+      'La salida está vinculada a una necesidad concreta del proyecto.',
+      'Existe una evidencia que otra persona puede revisar.',
+      'Has anotado al menos un límite, riesgo o caso que todavía falla.',
+    ],
+    walkthrough: walkthroughFor(document, kind, moduleId, title, workflowData),
+    sourcePath: document.path,
+    sourceWords: document.words,
   }
+}
+
+await fs.mkdir(generatedDir, { recursive: true })
+const files = await walk(vaultDir)
+const markdownFiles = files.filter((file) => file.endsWith('.md'))
+const documents = []
+
+for (const absolutePath of markdownFiles) {
+  const content = await fs.readFile(absolutePath, 'utf8')
+  const relativePath = normalize(path.relative(vaultDir, absolutePath))
+  const plain = stripFrontmatter(content)
+  const id = Buffer.from(relativePath).toString('base64url')
+  documents.push({
+    id,
+    title: getTitle(content, path.basename(absolutePath)),
+    path: relativePath,
+    folder: relativePath.split('/')[0],
+    category: categoryFor(relativePath),
+    excerpt: getExcerpt(content),
+    words: plain.split(/\s+/).filter(Boolean).length,
+    minutes: Math.max(1, Math.ceil(plain.split(/\s+/).filter(Boolean).length / 210)),
+    content,
+    type: relativePath.includes('workflows_n8n_40') ? 'workflow' : relativePath.includes('skills_40') ? 'skill' : 'document',
+  })
+}
+
+documents.sort((a, b) => a.path.localeCompare(b.path, 'es'))
+const workflows = documents.filter((doc) => doc.type === 'workflow' && !doc.path.endsWith('/README.md'))
+const skills = documents.filter((doc) => doc.type === 'skill' && !doc.path.endsWith('/README.md'))
+const workflowJsonByName = new Map()
+for (const file of files.filter((file) => file.endsWith('.json') && file.includes('workflows_n8n_40'))) {
+  try { workflowJsonByName.set(path.basename(file), JSON.parse(await fs.readFile(file, 'utf8'))) } catch { /* Invalid workflows are reported by validation. */ }
+}
+const studentResources = documents.map((document) => adaptDocument(document, workflowJsonByName))
+const curationQueries = {
+  fundamentos: ['mapa de la formacion', 'fase 00 orientacion y diagnostico', 'matriz por objetivo de alumno', 'roadmap 30 dias fundamentos', 'onboarding mapa de boveda diagnostico', 'prompting profesional formatos fuentes'],
+  herramientas: ['setup terminal', 'docker bases de datos y apis', 'deploy por plataforma', 'starter next vercel env', 'starter supabase auth', 'starter docker stack'],
+  diseno: ['arquitecturas y mini repos', 'api contract writer', 'json schema', 'human approval designer', 'vector db rag y mcp', 'workflow designer'],
+  construccion: ['01 lead qualification crm', 'proyecto 04 sistema rag', 'starter multi llm router', 'starter video remotion', 'browser research agent', 'starter n8n lead triage'],
+  calidad: ['starter playwright e2e', 'ci cd testing y observabilidad', 'prompt regression eval', 'postmortem', 'api health monitor', 'rag answer evaluator'],
+  seguridad: ['rgpd gdpr', 'pii redaction pipeline', 'mcp permission auditor', 'consent checker gdpr', 'env secret auditor', 'agent safety reviewer'],
+  entrega: ['entrega cliente', 'plantilla de propuesta a cliente', 'onboarding cliente', 'demos casos de estudio y portfolio', 'contrato alcance', 'pagina oferta'],
+  defensa: ['capstone final sistema completo', 'rubrica capstone', 'defensa final', 'guion de defensa oral', 'portfolio caso de estudio propuesta capstone', 'certificacion'],
+}
+
+function normalizeForCuration(value) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, ' ').toLowerCase().trim()
+}
+
+const studentModules = moduleDefinitions.map((module) => {
+  const candidates = studentResources
+    .filter((resource) => resource.moduleId === module.id)
+    .map((resource) => {
+      const title = resource.title.toLowerCase()
+      let score = resource.sourceWords >= 900 ? 3 : 0
+      if (/gu[ií]a|skill|workflow|proyecto|caso|automatiza|seguridad|entrega|defensa/.test(title)) score += 3
+      if (/readme|solucionario|documentacion|decisiones/.test(title)) score -= 3
+      return { resource, score }
+    })
+    .sort((a, b) => b.score - a.score || a.resource.title.localeCompare(b.resource.title, 'es'))
+    .slice(0, 6)
+    .map((item) => item.resource.id)
+  const selected = []
+  for (const query of curationQueries[module.id]) {
+    const normalizedQuery = normalizeForCuration(query)
+    const match = studentResources.find((resource) => !selected.includes(resource.id) && normalizeForCuration(resource.title).includes(normalizedQuery))
+    if (match) selected.push(match.id)
+  }
+  for (const candidate of candidates) {
+    if (selected.length >= 6) break
+    if (!selected.includes(candidate)) selected.push(candidate)
+  }
+  return { ...module, lessonIds: selected.slice(0, 6) }
 })
 
-/* --- Categorias: el nivel intermedio del arbol --------------------- */
-
-const { categories, stages } = buildCategories(lessons, baseStages)
-
-/* --- Preguntas escritas a mano por categoria ----------------------- */
-
-const quizDir = path.join(projectDir, 'content', 'quiz')
-let categoryQuizCount = 0
-if (await exists(quizDir)) {
-  const byCategory = new Map()
-  for (const name of (await fs.readdir(quizDir)).filter((file) => file.endsWith('.json'))) {
-    const pack = JSON.parse(await fs.readFile(path.join(quizDir, name), 'utf8'))
-    const id = pack.categoryId || name.replace(/\.json$/, '')
-    if (!categories.some((category) => category.id === id)) {
-      console.warn(`  aviso: ${name} no encaja con ninguna categoria (${id}).`)
-      continue
-    }
-    byCategory.set(id, pack)
-  }
-
-  // Los quiz quedan fuera del curso: el alumno avanza haciendo tareas.
-  // Los archivos se conservan en content/quiz por si vuelven a hacer falta.
-  categoryQuizCount = 0
-  console.log(`  Preguntas por categoria: ${byCategory.size} archivos en reserva (no se muestran).`)
-}
-
-/* --- Indice alfabetico de conceptos -------------------------------- */
-
-// El glosario escrito a mano (content/glosario/) sustituye por completo al
-// automático: el automático recogía nombres de archivo sin definición.
-const glosarioManual = (await loadContent('glosario'))[0]
-const glossaryIndex = glosarioManual?.terms?.length
-  ? glosarioManual.terms.map((entry) => ({
-      term: entry.term,
-      letter: entry.letter || entry.term[0].toUpperCase(),
-      meaning: entry.short,
-      long: entry.long,
-      analogy: entry.analogy || null,
-      confusion: entry.confusion || null,
-      seeAlso: entry.seeAlso || [],
-      lessons: [],
-    }))
-  : buildGlossaryIndex(
-      lessons.map((lesson) => ({ slug: lesson.slug, title: lesson.title, terms: lesson.indexTerms || [] })),
-    )
-for (const lesson of lessons) delete lesson.indexTerms
-
-/* --- Paginas por herramienta --------------------------------------- */
-
-const toolPages = TOOLS
-  .map((tool) => {
-    const inTool = lessons.filter((lesson) => lesson.tools.includes(tool.id))
-    return {
-      id: tool.id,
-      label: tool.label,
-      icon: tool.icon,
-      count: inTool.length,
-      lessonSlugs: inTool.map((lesson) => lesson.slug),
-      stageIds: [...new Set(inTool.map((lesson) => lesson.stageId))],
-      guide: toolGuideFor(tool.id),
-    }
-  })
-  // Una herramienta con guía escrita siempre tiene página, aunque el material
-  // no la mencione (Higgsfield, por ejemplo, entra por su guía).
-  .filter((tool) => tool.count > 0 || tool.guide)
-  .sort((a, b) => b.count - a.count)
-
-/* --- Biblioteca: carpetas del vault -------------------------------- */
-
-const folders = [...new Set(lessons.map((lesson) => lesson.folder))]
-  .sort((a, b) => a.localeCompare(b, 'es'))
-  .map((folder) => ({
-    id: slugify(folder),
-    folder,
-    label: folderLabel(folder),
-    count: lessons.filter((lesson) => lesson.folder === folder).length,
-    lessonSlugs: lessons.filter((lesson) => lesson.folder === folder).map((lesson) => lesson.slug),
-  }))
-
-/* --- Workflows importables ----------------------------------------- */
-
-let copiedWorkflows = 0
+const workflowSource = path.join(vaultDir, '35_AUTOMATIZACIONES_SKILLS_BIBLIOTECA', 'workflows_n8n_40')
 const workflowTarget = path.join(generatedDir, 'workflows')
 await fs.mkdir(workflowTarget, { recursive: true })
-for (const file of allFiles) {
-  if (!file.toLowerCase().endsWith('.json')) continue
-  if (!/workflows_n8n_40/.test(file)) continue
-  await fs.copyFile(file, path.join(workflowTarget, path.basename(file)))
-  copiedWorkflows += 1
+try {
+  const workflowFiles = (await fs.readdir(workflowSource)).filter((name) => name.endsWith('.json'))
+  for (const name of workflowFiles) await fs.copyFile(path.join(workflowSource, name), path.join(workflowTarget, name))
+} catch {
+  // The portal still works when the optional workflow library is absent.
 }
 
-/* --- Escritura ------------------------------------------------------ */
-
-const course = {
+const payload = {
   generatedAt: new Date().toISOString(),
-  vaultName: path.basename(vaultDir),
-  levels: LEVELS.map((id) => ({ id, ...LEVEL_META[id] })),
-  kinds: KINDS,
-  sections: SECTIONS.map(({ id, label, hint }) => ({ id, label, hint })),
-  tools: TOOLS.map(({ id, label, icon }) => ({ id, label, icon })),
   stats: {
-    lessons: lessons.filter((lesson) => lesson.format === 'leccion').length,
-    fichas: lessons.filter((lesson) => lesson.format === 'ficha').length,
-    stages: stages.length,
-    categories: categories.length,
-    folders: folders.length,
-    workflows: copiedWorkflows,
-    authored: authoredCount,
-    terms: glossaryIndex.length,
-    projects: areaProjects.length,
-    decks: deckFiles.length,
-    sourceWords: lessons.reduce((sum, lesson) => sum + lesson.sourceWords, 0),
-    quizQuestions: lessons.reduce(
-      (sum, lesson) => sum + LEVELS.reduce((acc, level) => acc + lesson.levels[level].quiz.length, 0),
-      0,
-    ),
-    blocks: lessons.reduce(
-      (sum, lesson) => sum + LEVELS.reduce((acc, level) => acc + lesson.levels[level].blocks.length, 0),
-      0,
-    ),
-    interactivePieces: lessons.reduce((sum, lesson) => sum + lesson.interactive.length, 0),
+    documents: documents.length,
+    workflows: workflows.length,
+    skills: skills.length,
+    words: documents.reduce((sum, doc) => sum + doc.words, 0),
   },
-  stages,
-  categories,
-  projects: areaProjects,
-  decks: deckFiles,
-  prompts: promptFiles,
-  guides: guideFiles,
-  curso: cursoFiles.sort((a, b) => (a.number || 0) - (b.number || 0)),
-  toolPages,
-  glossaryIndex,
-  folders,
-  lessons,
+  documents,
+  workflows,
+  skills,
 }
 
-await fs.writeFile(path.join(publicDir, 'course.json'), JSON.stringify(course), 'utf8')
-
-console.log(
-  `Curso generado: ${lessons.length} lecciones x 3 niveles en ${categories.length} categorias.
-` +
-    `  ${course.stats.blocks} bloques de contenido, ${course.stats.quizQuestions} preguntas, ` +
-    `${course.stats.interactivePieces} piezas interactivas, ${glossaryIndex.length} terminos indexados.`,
-)
-for (const stage of stages) {
-  console.log(
-    `  ${stage.number} ${stage.title.padEnd(40)} ${String(stage.categoryIds.length).padStart(3)} categorias  ` +
-      `${String(stage.lessonSlugs.length).padStart(3)} lecciones`,
-  )
-}
+await fs.writeFile(path.join(publicDir, 'catalog.json'), JSON.stringify(payload), 'utf8')
+await fs.writeFile(path.join(publicDir, 'student-catalog.json'), JSON.stringify({
+  generatedAt: payload.generatedAt,
+  stats: { resources: studentResources.length, lessons: studentModules.reduce((sum, module) => sum + module.lessonIds.length, 0), modules: studentModules.length },
+  modules: studentModules,
+  resources: studentResources,
+}), 'utf8')
+console.log(`Catalogo generado: ${documents.length} documentos, ${workflows.length} workflows y ${skills.length} skills.`)

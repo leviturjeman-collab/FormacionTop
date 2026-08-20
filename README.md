@@ -1,146 +1,177 @@
-# AI Professional Academy
+---
+title: Portal web de AI Professional Academy
+type: aplicacion
+status: listo_para_validacion
+updated: 2026-08-18
+---
 
-Curso web interactivo para formar a gente que **nunca ha programado** hasta que
-construye y entrega sus propios proyectos de IA.
+# Portal web de AI Professional Academy
 
-Se genera desde una carpeta de notas en Markdown, y sobre ese material se
-construye todo lo que unas notas técnicas no traen: cómo crear cada cuenta, qué
-significa cada palabra, qué código copiar, qué importa y qué no.
+## Versión 3.0: formación aplicada al proyecto
 
-La carpeta de origen **no se modifica nunca**. Solo se lee.
+La web ya no presenta los archivos de Obsidian como lecciones ni abre Markdown completo. Obsidian funciona únicamente como fuente editorial interna. Durante el build, `scripts/build-content-index.mjs` transforma las 466 fuentes en recursos para el alumno con propósito, aplicación al proyecto, entregable, criterios de revisión y walkthrough ejecutable.
 
-## Arranque
+El programa obligatorio se ha reducido a 48 lecciones curadas organizadas en ocho módulos. Los 418 materiales restantes permanecen disponibles como apoyo adaptado y buscable, sin convertir toda la bóveda en una ruta automática.
 
-```bash
+Cada alumno crea una ficha de proyecto con problema, usuario, resultado y herramientas. Las prácticas utilizan esa ficha para contextualizar la acción. Una lección no se completa por leer: exige recorrer todos los pasos y guardar una evidencia en el registro del proyecto.
+
+### Walkthroughs
+
+Cada recurso contiene al menos cinco pasos estructurados con:
+
+- fase del trabajo;
+- lugar exacto donde realizar la acción;
+- instrucción concreta;
+- comando o archivo cuando existe;
+- resultado observable esperado;
+- evidencia obligatoria;
+- área del proyecto que actualiza.
+
+Los 40 workflows n8n leen su JSON real durante el build. El recorrido resultante explica cómo importar el archivo, identifica los nodos por nombre, indica qué revisar en cada nodo y termina con caso correcto, caso roto y documentación. Las guías con bloques de terminal convierten los comandos en pasos ejecutables con resultado esperado.
+
+### Espacios del alumno
+
+- `Inicio`: próxima práctica, proyecto y progreso por módulos.
+- `Programa`: 48 lecciones curadas en ocho etapas.
+- `Mi proyecto`: brief editable, hitos y registro automático de evidencias.
+- `Taller`: validación local de payloads antes de conectar servicios.
+- `Recursos`: 466 materiales adaptados con búsqueda y filtros.
+- `Walkthrough`: ejecución guiada paso a paso con bloqueo por evidencia.
+
+### Privacidad
+
+La ficha, el progreso y las evidencias se guardan en `localStorage`. No se envían a ningún servicio externo. La exportación del proyecto produce un JSON local con brief y evidencias.
+
+## Versión 2.0
+
+La segunda versión convierte el portal en un sistema personalizado. En el primer acceso se pide nombre, objetivo, nivel y horas disponibles. Con esos datos se genera una ruta de 12 hitos extraída de los documentos reales, con duración estimada, progreso y entregable por etapa.
+
+Se han añadido cinco objetivos: automatización de procesos, trabajo multi-LLM, creación de vídeo, programación de productos IA y venta/entrega de servicios. El perfil se puede cambiar en cualquier momento desde `Mi ruta`.
+
+El nuevo Mentor realiza búsqueda ponderada dentro de la academia. No usa un modelo externo y no envía contenido fuera del navegador. Cada respuesta muestra fuentes concretas que se pueden abrir en el lector.
+
+La demo ofrece ahora dos modos. `Simulación` mantiene todo en el navegador y permite enseñar aprobación humana. `Conectar n8n` envía un payload ficticio al webhook indicado y registra respuesta HTTP o errores de CORS, red y workflow. La URL no se persiste. Las últimas ocho ejecuciones se guardan localmente como centro de evidencias.
+
+Las automatizaciones tienen filtros funcionales por área, complejidad y número orientativo de nodos. Las skills pueden copiarse completas y muestran una ruta de instalación compatible con la estructura de skills de Codex.
+
+Esta carpeta contiene la aplicación web de la formación. No es una landing page: es el espacio de trabajo del alumno y del profesor. Lee el contenido real de la bóveda, crea un catálogo navegable y añade progreso, favoritos, búsqueda, mapas visuales, descarga de workflows y una demo funcional de automatización.
+
+## Qué incluye
+
+- Centro de mando con progreso, métricas, ruta recomendada y accesos rápidos.
+- Onboarding profesional y rutas personalizadas por objetivo.
+- Actividad de aprendizaje de los últimos siete días.
+- Biblioteca con los documentos Markdown de la formación, búsqueda, filtros y lector integrado.
+- Catálogo de 40 workflows n8n con explicación y descarga del JSON importable.
+- Catálogo de 40 skills con contrato visual de activación, proceso y salida.
+- Laboratorio con arquitecturas visuales para multi-LLM, RAG, vídeo y operaciones seguras.
+- Demo funcional de cualificación de leads con validación, consentimiento, clasificación, aprobación humana, CRM, email y logs.
+- Persistencia local de favoritos y documentos completados mediante `localStorage`.
+- Buscador global con `Ctrl+K`.
+- Mentor local con resultados respaldados por documentos de la academia.
+- Impresión limpia de cualquier documento.
+- Generador automático del catálogo y validador de contenido.
+- Diseño responsive para escritorio, tableta y móvil.
+- Historial local de evidencias de la demo y conexión opcional con n8n real.
+
+## Arranque local
+
+```powershell
+cd "C:\Users\Leviç\OneDrive\Desktop\Formacion\Formacion\36_PORTAL_WEB_FORMACION"
 npm install
-```
-
-```bash
 npm run dev
 ```
 
-## Qué hay dentro
+La aplicación se abre en `http://127.0.0.1:4173`. Cada vez que se ejecuta `npm run dev`, el script `scripts/build-content-index.mjs` vuelve a leer la bóveda y regenera `public/catalog.json`. Por tanto, los documentos nuevos aparecen sin editar componentes React.
 
-| | |
-|---|---|
-| Lecciones | **449**, cada una en 3 niveles |
-| Bloques de contenido | **24.514** |
-| Preguntas de autoevaluación | **6.219** |
-| Categorías con preguntas propias | **72 de 72** |
-| Piezas interactivas | **1.161**, de 15 tipos |
-| Herramientas con guía completa | **22 de 25** |
-| Lecciones con código copiable | **449 de 449** |
-| Proyectos finales clonables | **10**, uno por área |
-| Presentaciones con notas del ponente | **4** |
-| Workflows de n8n importables | **40** |
+## Validación y compilación
 
-## Para quien empieza de cero
+```powershell
+npm run validate
+npm run test
+npm run build
+npm run preview
+```
 
-Cada lección que menciona una herramienta (434 de 449) abre con tres bloques
-antes de cualquier cosa técnica:
+`npm run validate` comprueba que existen al menos 400 documentos, 40 workflows y 40 skills; también abre cada JSON de n8n, verifica que se pueda interpretar y exige un array `nodes`. `npm run test` añade comprobación TypeScript y compilación de producción.
 
-1. **Cómo crear tu cuenta, paso a paso.** Con el enlace oficial, si hay plan
-   gratuito y cuánto cuesta el de pago, y qué va a ver en pantalla: el nombre
-   exacto del botón, dónde está y qué significa en español.
-2. **Las palabras que vas a leer, en cristiano.** Prompt, token, contexto,
-   commit, volumen, PATH, webhook… explicadas sin usar otra palabra técnica.
-3. **Lo primero que tienes que hacer dentro.** Cuatro o cinco acciones en orden.
+## Arquitectura del contenido
 
-Y después: **qué importa y qué puedes ignorar**, en dos columnas enfrentadas.
+```text
+Bóveda Markdown
+      │
+      ▼
+build-content-index.mjs
+      │
+      ├── catalog.json ──► biblioteca / buscador / lector
+      │
+      └── workflows/*.json ──► descargas importables
+                               
+React App ──► progreso local / favoritos / demo / mapas
+```
 
-## Los tres niveles
+La aplicación no modifica los documentos fuente. El índice generado contiene su contenido para poder leerlo en el navegador, pero la fuente de verdad sigue siendo la bóveda. Si se cambia un archivo, se vuelve a ejecutar `npm run index`.
 
-| | Básico | Intermedio | Avanzado |
-|---|---|---|---|
-| Pregunta | ¿Qué es y por qué importa? | ¿Cómo se hace? | ¿Cuándo NO, y qué se rompe? |
-| Duración media | 28 min | 48 min | 54 min |
-| Práctica | Aterrizarlo a un caso propio | Ejecutarlo entero con datos de prueba | Diseñarlo y romperlo a propósito |
-| Se da por hecha | Sabes explicarlo sin leer | Puedes repetirlo mañana solo | Defiendes la decisión y su alternativa |
+## Demo funcional
 
-## Los 15 tipos de pieza interactiva
+La demo reproduce un vertical slice completo sin necesitar credenciales externas. Esto permite enseñar el proceso y sus estados antes de conectar servicios de pago. El flujo es:
 
-Se eligen según lo que tiene cada lección dentro, y rotan para que dos lecciones
-seguidas de la misma categoría no lleven lo mismo.
+1. El formulario crea un payload de lead.
+2. Se comprueban campos obligatorios y consentimiento.
+3. Un clasificador determinista simula la salida estructurada de un LLM.
+4. El flujo se detiene en una puerta de aprobación humana.
+5. Al aprobar, se simulan alta en CRM, email y registro de observabilidad.
+6. La evidencia se exporta como JSON.
 
-- **Anatomía del código** — el código real con las líneas numeradas; al pasar por
-  una anotación se resalta su línea.
-- **Tubería de trabajo** — el dato entra arriba y baja cambiando en cada estación.
-- **Simulador de casos** — caso correcto, datos incompletos y entrada rota.
-- **Diagrama de workflow** — los nodos reales del JSON de n8n, descargable.
-- **Árbol de archivos**, **checklist**, **barras comparativas**, **tarjetas de
-  repaso**, **conversación**, **terminal simulada**, **laboratorio de prompts**,
-  **calculadora de coste por tokens**, **simulador de troceado para RAG**,
-  **línea de tiempo** y **comparativa ordenable**.
+Para provocar un caso roto, se puede borrar el email o desactivar el consentimiento. Para probar el control humano, se puede rechazar la propuesta. La demo no envía datos fuera del navegador.
 
-## Código para copiar y pegar
+## Conexión real con n8n
 
-- **19 recetas** con el código completo, qué instalar, **qué hace cada línea**,
-  los errores que va a ver con su mensaje literal y cómo adaptarlo.
-- **5 instaladores** con pestaña de **Windows, Mac y Linux** (detecta el sistema
-  solo): entorno, IA y claves, n8n con base de datos, proyecto de Python y
-  despliegue.
-- **10 proyectos finales**, uno por área, con 8-9 pasos, 8 archivos y código que
-  funciona de principio a fin.
+La versión de producción sustituye cada simulación por una integración concreta:
 
-## Modo profesor
+| Etapa | Demo local | Producción recomendada |
+|---|---|---|
+| Entrada | Formulario React | Webhook n8n o formulario del producto |
+| Validación | Reglas JavaScript | JSON Schema en nodo Code |
+| Clasificación | Función local | OpenAI, Anthropic o LiteLLM con salida JSON |
+| Aprobación | Botones locales | Slack, Teams o email con callback firmado |
+| CRM | Evento simulado | HubSpot, Airtable, Supabase o Postgres |
+| Email | Evento simulado | Resend, Gmail o Outlook |
+| Evidencia | JSON descargable | Postgres + Sentry + panel de métricas |
 
-Se activa desde la cabecera y el alumno nunca lo ve:
+Nunca se deben insertar claves de API en `src/`. Para un frontend desplegado, los secretos viven en n8n o en funciones de servidor. Una variable que empieza por `VITE_` queda expuesta al navegador y solo debe contener valores públicos.
 
-- **Guion de clase** con reparto de tiempo por bloque, qué decir, preguntas para
-  lanzar al aula y los errores que van a cometer.
-- **Presentaciones** a pantalla completa con las notas del ponente (tecla `N`).
-- Cualquier lección se puede proyectar como diapositivas.
+## Publicación en Vercel
 
-## Rutas
+```powershell
+npm install -g vercel
+vercel login
+vercel
+vercel --prod
+```
 
-| Ruta | Pantalla |
-|---|---|
-| `#/` · `#/ruta` | Portada y las diez áreas |
-| `#/area/<id>?tool=n8n&section=laboratorios` | Área, con filtros combinables |
-| `#/categoria/<id>` | Una de las 72 categorías |
-| `#/leccion/<slug>?n=avanzado` | Lección en un nivel |
-| `#/proyecto/<area>` | Proyecto final del área |
-| `#/deck/<id>` · `#/presentar/<slug>` | Presentaciones |
-| `#/herramientas` · `#/herramienta/<id>` | Guías de herramienta |
-| `#/biblioteca` · `#/carpeta/<id>` | Material por carpetas |
-| `#/indice` | Índice alfabético de conceptos |
-| `#/buscar?q=rag` | Búsqueda agrupada (`Ctrl+K`) |
-| `#/progreso` | Progreso, cuaderno y exportación |
+Configuración de proyecto:
 
-## Cómo se amplía
+- Framework preset: `Vite`.
+- Build command: `npm run build`.
+- Output directory: `dist`.
+- Install command: `npm install`.
+- Node.js: versión LTS compatible con Vite.
 
-Sin tocar el generador. Se añade un `.json` en `content/`:
+El índice se genera durante el build, por lo que en Vercel deben subirse también los documentos que sirven como fuente o adaptar el generador para descargar el contenido desde un repositorio privado, CMS o almacenamiento. Para una academia pública, conviene publicar únicamente la selección de materiales que corresponda al alumno autenticado.
 
-| Carpeta | Qué añade |
-|---|---|
-| `content/toolguides/` | Guía completa de una herramienta |
-| `content/quiz/` | Preguntas propias de una categoría |
-| `content/projects/` | Proyecto final de un área |
-| `content/decks/` | Una presentación |
-| `content/recipes/` | Una receta de código |
-| `content/authored/` | Una lección reescrita a mano |
+## Privacidad y publicación
 
-`npm run validate` comprueba que cada pregunta tiene exactamente una respuesta
-correcta, mínimo tres opciones y explicación en todas; que ningún enlace apunta
-a una lección inexistente; y que los JSON que ofrecen los diagramas existen.
+El catálogo generado incluye el contenido completo de los Markdown. No se debe desplegar públicamente si la bóveda contiene notas privadas, claves, datos personales o material reservado. Antes de publicar se recomienda crear una carpeta de contenido explícitamente público o añadir una propiedad de frontmatter como `visibility: public` y filtrar el generador.
 
-## Configuración
+La demo utiliza datos ficticios y funciona en memoria. No debe reemplazarse por datos reales hasta disponer de política de privacidad, base jurídica, plazo de conservación, control de acceso y procedimiento de borrado.
 
-La ruta a la carpeta de notas está en `course.config.json`, o en la variable
-`VAULT_DIR`. Si no la encuentra, el script se detiene con un mensaje que explica
-cómo apuntarla: nunca genera un curso vacío en silencio.
+## Sistema visual
 
-## Privacidad
+La dirección se denomina **centro de operaciones editorial**. Combina tipografía editorial para explicar y una estructura de panel operativo para actuar. La línea roja, los números de secuencia y los nodos cuadrados son el ancla reconocible de la interfaz. La paleta evita el aspecto de dashboard genérico: papel claro, tinta negra, rojo de decisión, cian para datos y amarillo para atención.
 
-El progreso, el nivel preferido, el cuaderno y el modo profesor se guardan solo
-en `localStorage`. No hay cuentas, no hay servidor y no sale nada de la máquina.
+DFII: impacto 4, ajuste al contexto 5, viabilidad 5, rendimiento 4 y riesgo de consistencia 2. Resultado: `16`, limitado al máximo operativo de `15`. La interfaz prioriza velocidad, lectura y densidad controlada. Las animaciones son escasas y respetan `prefers-reduced-motion`.
 
-## Diseño
+## Próximas integraciones
 
-Barra lateral oscura fija de 224 px, acento verde `#176b4d`, fondo hueso,
-esquinas de 4 px y líneas de 1 px sin sombras. Tipografía **Inter Tight** en
-titulares e **Inter** en texto.
-
-La escala tipográfica es deliberadamente compacta (etiquetas de 7 px, texto de
-9-11 px). Es una decisión explícita del proyecto: no cumple los criterios
-habituales de accesibilidad y se mantiene porque es el diseño pedido.
+La aplicación queda preparada para conectar autenticación, base de datos y analítica. El orden recomendado es Supabase Auth, Postgres para progreso, n8n para ejecuciones, Sentry para errores y PostHog para comprender dónde abandonan los alumnos. Es mejor validar el piloto local antes de añadir estas dependencias.
