@@ -1,0 +1,89 @@
+{
+  "name": "29 Release Notes Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "29-release-notes-generator",
+        "httpMethod": "POST"
+      },
+      "id": "trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const input = $json || {};\nreturn [{ json: { ...input, workflow: '29 Release Notes Generator', category: 'devops', status: input.email === '' ? 'needs_review' : 'processed', checked_at: new Date().toISOString() } }];"
+      },
+      "id": "process",
+      "name": "Validate process and enrich",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate process and enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Validate process and enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate process and enrich": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "academy": "AI Professional Academy",
+    "category": "devops",
+    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
+  }
+}

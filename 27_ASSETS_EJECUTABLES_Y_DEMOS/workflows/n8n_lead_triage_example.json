@@ -1,0 +1,41 @@
+﻿{
+  "name": "AI Academy - Lead triage example",
+  "nodes": [
+    {
+      "parameters": { "path": "lead-triage-demo", "httpMethod": "POST", "responseMode": "responseNode" },
+      "id": "webhook-lead",
+      "name": "Webhook Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json; const missing = []; for (const field of ['lead_id','name','email','message','source']) { if (!item[field]) missing.push(field); } return [{ json: { ...item, missing_fields: missing, needs_human_review: missing.length > 0 } }];"
+      },
+      "id": "validate-lead",
+      "name": "Validate Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { lead_id: $json.lead_id, needs_human_review: $json.needs_human_review, missing_fields: $json.missing_fields } }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [800, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Lead": { "main": [[{ "node": "Validate Lead", "type": "main", "index": 0 }]] },
+    "Validate Lead": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "educational-demo"
+}

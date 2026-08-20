@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const portalDir = path.resolve(scriptDir, '..')
-const vaultDir = path.resolve(portalDir, '..')
+const vaultDir = portalDir
 const publicDir = path.join(portalDir, 'public')
 const generatedDir = path.join(publicDir, 'generated')
 
@@ -14,7 +14,7 @@ const titleFromName = (name) => name.replace(/\.md$/i, '').replace(/^\d+[-_ ]*/,
 async function walk(directory, output = []) {
   const entries = await fs.readdir(directory, { withFileTypes: true })
   for (const entry of entries) {
-    if (['node_modules', 'dist', '.git', '.obsidian', '36_PORTAL_WEB_FORMACION'].includes(entry.name)) continue
+    if (['node_modules', 'dist', '.git', '.obsidian', 'public'].includes(entry.name)) continue
     const absolute = path.join(directory, entry.name)
     if (entry.isDirectory()) await walk(absolute, output)
     else output.push(absolute)
