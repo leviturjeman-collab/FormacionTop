@@ -48,13 +48,13 @@ function categoryFor(relativePath) {
 
 const moduleDefinitions = [
   { id: 'fundamentos', number: '01', title: 'Pensar antes de automatizar', description: 'Define el problema, la entrada, la salida y cómo sabrás que funciona.', milestone: 'Mapa del problema y criterio de éxito' },
-  { id: 'herramientas', number: '02', title: 'Preparar el entorno de trabajo', description: 'Instala, conecta y verifica las herramientas mínimas del proyecto.', milestone: 'Entorno reproducible y documentado' },
+  { id: 'herramientas', number: '02', title: 'Preparar el entorno de trabajo', description: 'Conoce, instala o identifica las herramientas mínimas cuando decidas practicar.', milestone: 'Entorno, checklist o mapa de herramientas' },
   { id: 'diseno', number: '03', title: 'Diseñar el sistema', description: 'Convierte la idea en un flujo con datos, decisiones y responsabilidades claras.', milestone: 'Arquitectura y contrato de datos' },
-  { id: 'construccion', number: '04', title: 'Construir una primera versión', description: 'Implementa el camino principal con datos ficticios y una salida comprobable.', milestone: 'Prototipo ejecutable' },
+  { id: 'construccion', number: '04', title: 'Practicar una primera versión', description: 'Convierte la idea en una nota, plantilla, flujo, demo o prototipo cuando tenga sentido.', milestone: 'Artefacto, demo o decisión comprobable' },
   { id: 'calidad', number: '05', title: 'Probar y reparar', description: 'Provoca errores, mide calidad y documenta cómo recuperar el sistema.', milestone: 'Pruebas, logs y caso roto resuelto' },
   { id: 'seguridad', number: '06', title: 'Operar con seguridad', description: 'Protege datos, credenciales, permisos, costes y acciones sensibles.', milestone: 'Checklist de producción y riesgos' },
   { id: 'entrega', number: '07', title: 'Convertirlo en una entrega profesional', description: 'Prepara documentación, demostración y traspaso para otra persona.', milestone: 'Paquete de entrega y demo' },
-  { id: 'defensa', number: '08', title: 'Medir y defender el proyecto', description: 'Explica decisiones, evidencia resultados y propone la siguiente versión.', milestone: 'Caso de estudio y defensa final' },
+  { id: 'defensa', number: '08', title: 'Medir y defender lo aprendido', description: 'Explica decisiones, evidencia resultados y propone la siguiente versión si existe proyecto.', milestone: 'Caso de estudio, síntesis o defensa final' },
 ]
 
 function moduleForPath(relativePath, documentTitle = '') {
@@ -98,7 +98,7 @@ function extractSection(content, names) {
 const fallbackSteps = {
   fundamentos: ['Escribe el problema sin mencionar ninguna herramienta.', 'Define una entrada realista y la salida que necesita el usuario.', 'Fija una métrica y un ejemplo que demostrarán que funciona.', 'Anota una decisión que todavía no puedes tomar.'],
   herramientas: ['Instala únicamente las dependencias necesarias para esta práctica.', 'Crea variables de entorno con valores ficticios.', 'Ejecuta una comprobación mínima desde la terminal.', 'Documenta el comando y el resultado que otra persona debe obtener.'],
-  diseno: ['Dibuja el flujo desde la entrada hasta el resultado.', 'Define los campos obligatorios del payload.', 'Marca qué decisiones son automáticas y cuáles requieren una persona.', 'Revisa el diseño contra el objetivo de tu proyecto.'],
+  diseno: ['Dibuja el flujo desde la entrada hasta el resultado.', 'Define los campos obligatorios del payload.', 'Marca qué decisiones son automáticas y cuáles requieren una persona.', 'Revisa el diseño contra el objetivo de la actividad o de tu proyecto opcional.'],
   construccion: ['Prepara un caso de prueba con datos ficticios.', 'Implementa primero el camino principal.', 'Guarda la entrada, la decisión y la salida.', 'Ejecuta el flujo y captura una evidencia reproducible.'],
   calidad: ['Define el comportamiento esperado antes de probar.', 'Ejecuta un caso correcto y registra el resultado.', 'Provoca un fallo concreto y localiza su causa.', 'Repara el fallo y añade una prueba que evite su regreso.'],
   seguridad: ['Identifica datos personales, secretos y acciones sensibles.', 'Reduce permisos y elimina datos que no sean necesarios.', 'Añade límite de coste, aprobación o rate limit donde corresponda.', 'Escribe cómo detener y recuperar el sistema.'],
@@ -107,14 +107,14 @@ const fallbackSteps = {
 }
 
 const moduleApplications = {
-  fundamentos: 'Utiliza este recurso para decidir qué parte de tu proyecto merece construirse y cuál debes dejar fuera.',
-  herramientas: 'Aplícalo al entorno real de tu proyecto hasta que otra persona pueda repetir la instalación.',
-  diseno: 'Conviértelo en una decisión concreta de arquitectura, datos o interacción dentro de tu proyecto.',
-  construccion: 'Úsalo para producir una parte ejecutable de tu proyecto con datos de prueba y salida visible.',
-  calidad: 'Aplícalo a un fallo probable de tu proyecto y conserva la evidencia de diagnóstico y reparación.',
-  seguridad: 'Revísalo contra los datos, permisos, costes y acciones externas que utiliza tu proyecto.',
+  fundamentos: 'Utiliza este recurso para comprender la idea, tomar una decisión o elegir si quieres practicarla.',
+  herramientas: 'Aplícalo como checklist de estudio o, si tienes proyecto, al entorno real que quieras repetir.',
+  diseno: 'Conviértelo en una decisión concreta de arquitectura, datos o interacción para una actividad o proyecto opcional.',
+  construccion: 'Úsalo para producir una nota, plantilla, demo, workflow o pieza ejecutable cuando quieras practicar.',
+  calidad: 'Aplícalo a un ejemplo, fallo probable o caso de estudio y conserva la evidencia de diagnóstico.',
+  seguridad: 'Revísalo contra datos, permisos, costes y acciones sensibles, aunque sea en un caso simulado.',
   entrega: 'Incorpóralo al paquete que recibiría un cliente, profesor o miembro nuevo del equipo.',
-  defensa: 'Úsalo como evidencia para explicar por qué tu proyecto funciona y qué límites todavía tiene.',
+  defensa: 'Úsalo como evidencia para explicar qué has aprendido, qué has probado y qué límites todavía existen.',
 }
 
 function extractCodeBlocks(content) {
@@ -129,16 +129,16 @@ function walkthroughFor(document, kind, moduleId, title, workflowData) {
   const codeBlocks = extractCodeBlocks(document.content)
   const module = moduleDefinitions.find((item) => item.id === moduleId)
   const commonStart = {
-    id: 'prepare', phase: 'Preparar', title: 'Abre tu proyecto y define el punto de partida',
-    where: 'En la ficha Mi proyecto de esta academia',
-    action: `Escribe qué parte de tu proyecto vas a mejorar con “${title}”. Limita el trabajo a una sola entrada y una sola salida.`,
-    expected: 'Una frase concreta que conecte esta práctica con una necesidad del usuario.',
-    evidenceLabel: 'Decisión que aplicarás al proyecto', projectField: 'decision',
+    id: 'prepare', phase: 'Preparar', title: 'Define cómo quieres trabajar esta lección',
+    where: 'En tu cuaderno, notas de estudio o proyecto opcional',
+    action: `Elige si vas a estudiar “${title}” como lectura guiada, nota, plantilla, práctica o pieza de un proyecto. Escribe una frase con el resultado que quieres obtener.`,
+    expected: 'Una frase concreta que conecta esta lección con una idea, decisión, práctica o necesidad real.',
+    evidenceLabel: 'Modo de trabajo y objetivo', projectField: 'decision',
   }
   const commonFinish = {
-    id: 'document', phase: 'Documentar', title: 'Guarda la evidencia y actualiza el proyecto',
+    id: 'document', phase: 'Documentar', title: 'Guarda la nota o evidencia final',
     where: 'En el panel Evidencia de este walkthrough',
-    action: 'Describe qué cambió, pega el resultado obtenido y anota un límite que aún no has resuelto.',
+    action: 'Describe qué entendiste, qué hiciste si practicaste y qué límite o duda queda abierta.',
     expected: 'Una evidencia comprensible sin necesidad de ver tu pantalla o preguntarte qué hiciste.',
     evidenceLabel: 'Resultado, límite y siguiente acción', projectField: 'evidence',
   }
@@ -154,7 +154,7 @@ function walkthroughFor(document, kind, moduleId, title, workflowData) {
     }))
     return [
       commonStart,
-      { id: 'import', phase: 'Preparar', title: 'Importa el workflow de trabajo', where: 'n8n > Workflows > menú de tres puntos > Import from File', action: `Descarga “${fileName}”, impórtalo y cambia el nombre añadiendo el nombre de tu proyecto. No actives todavía el workflow.`, expected: `El lienzo muestra ${(workflowData.nodes || []).length} nodos conectados y no aparecen credenciales reales.`, evidenceLabel: 'Nombre de tu copia del workflow', projectField: 'asset', downloadPath: `/generated/workflows/${fileName}` },
+      { id: 'import', phase: 'Preparar', title: 'Importa el workflow de trabajo si quieres practicar', where: 'n8n > Workflows > menú de tres puntos > Import from File', action: `Si quieres ejecutarlo, descarga “${fileName}”, impórtalo y ponle un nombre de práctica. Si solo estás estudiando, revisa el diagrama y anota qué nodos contiene.`, expected: `El lienzo muestra ${(workflowData.nodes || []).length} nodos conectados, o tienes una nota clara de qué hace cada tramo.`, evidenceLabel: 'Copia de práctica o resumen del workflow', projectField: 'asset', downloadPath: `/generated/workflows/${fileName}` },
       ...nodeSteps,
       { id: 'test-happy', phase: 'Verificar', title: 'Ejecuta el caso correcto de principio a fin', where: 'n8n > Execute workflow', action: 'Usa un payload ficticio completo. Recorre cada nodo y compara su salida con la entrada del siguiente.', expected: 'Todos los nodos terminan en verde y la respuesta final contiene estado, decisión y siguiente acción.', evidenceLabel: 'Resultado del caso correcto', projectField: 'test' },
       { id: 'test-broken', phase: 'Verificar', title: 'Provoca y controla un fallo', where: 'El mismo workflow, con datos ficticios', action: 'Elimina un campo obligatorio o utiliza una credencial de prueba inválida. Añade una rama que detenga el proceso y explique el error.', expected: 'El workflow no ejecuta una acción externa y devuelve un error que indica qué debe corregirse.', evidenceLabel: 'Fallo provocado y reparación', projectField: 'risk' },
@@ -164,7 +164,7 @@ function walkthroughFor(document, kind, moduleId, title, workflowData) {
 
   const exactCommandSteps = codeBlocks.map((command, index) => ({
     id: `command-${index + 1}`, phase: 'Construir', title: `Ejecuta la comprobación ${index + 1}`,
-    where: 'Terminal abierta en la carpeta de tu proyecto',
+    where: 'Terminal abierta en una carpeta de práctica o en tu proyecto opcional',
     action: 'Revisa rutas y nombres antes de ejecutar. Sustituye únicamente los valores de ejemplo; no pegues secretos en el comando.',
     command,
     expected: 'El comando termina sin errores y puedes explicar qué archivo, servicio o salida ha creado.',
@@ -175,7 +175,7 @@ function walkthroughFor(document, kind, moduleId, title, workflowData) {
   return [commonStart, ...middleSteps, {
     id: 'verify', phase: 'Verificar', title: 'Comprueba el resultado con un criterio observable',
     where: 'En la aplicación, terminal o herramienta donde acabas de trabajar',
-    action: `Repite la acción principal de “${title}” con datos ficticios y compárala con el resultado esperado de tu proyecto.`,
+    action: `Repite la acción principal de “${title}” con datos ficticios y compárala con el resultado esperado de la actividad o de tu proyecto opcional.`,
     expected: module.milestone,
     evidenceLabel: 'Comprobación y resultado obtenido', projectField: 'test',
   }, commonFinish]
@@ -185,11 +185,11 @@ function kindStepsForWalkthrough(kind, moduleId, title) {
   const steps = kindStepsTemplate(kind, moduleId)
   return steps.map((action, index) => ({
     id: `apply-${index + 1}`,
-    phase: index < 2 ? 'Construir' : 'Aplicar',
+    phase: index < 2 ? 'Practicar' : 'Aplicar',
     title: `${index + 1}. ${action.replace(/[.!]$/, '')}`,
-    where: index === 0 ? 'En tu documento de proyecto' : 'En la herramienta o repositorio de tu proyecto',
-    action: `${action} Hazlo utilizando “${title}” como referencia, pero conserva únicamente lo que responda al objetivo de tu proyecto.`,
-    expected: index === steps.length - 1 ? 'Una salida lista para revisar y no solo una nota teórica.' : 'Un cambio pequeño, visible y reversible dentro del proyecto.',
+    where: index === 0 ? 'En tus notas de estudio o ficha opcional' : 'En la herramienta, cuaderno o repositorio que elijas',
+    action: `${action} Hazlo utilizando “${title}” como referencia, pero conserva únicamente lo que responda al objetivo de la actividad.`,
+    expected: index === steps.length - 1 ? 'Una salida lista para revisar: nota, tabla, checklist, decisión, demo o prototipo.' : 'Un avance pequeño, visible y reversible.',
     evidenceLabel: index === steps.length - 1 ? 'Salida aplicada' : `Resultado del paso ${index + 1}`,
     projectField: index === 0 ? 'decision' : index === steps.length - 1 ? 'output' : 'implementation',
   }))
@@ -198,7 +198,7 @@ function kindStepsForWalkthrough(kind, moduleId, title) {
 function kindStepsTemplate(kind, moduleId) {
   const templates = {
     'Procedimiento': ['Define la señal que activa el procedimiento.', 'Ejecuta el procedimiento sobre una tarea pequeña.', 'Compara la salida con un criterio escrito previamente.', 'Anota cuándo debes detenerlo o pedir revisión humana.'],
-    'Proyecto': ['Compara el caso con el problema de tu proyecto.', 'Selecciona dos decisiones reutilizables y una que debes cambiar.', 'Construye la versión más pequeña que produzca una salida.', 'Prueba un caso correcto y un límite del diseño.'],
+    'Proyecto': ['Compara el caso con un problema real o hipotético.', 'Selecciona dos decisiones reutilizables y una que cambiarías.', 'Si quieres practicar, construye la versión más pequeña que produzca una salida.', 'Prueba un caso correcto o escribe el límite del diseño.'],
     'Guía': ['Comprueba requisitos y versiones en la terminal.', 'Realiza la configuración con datos ficticios.', 'Ejecuta una prueba mínima reproducible.', 'Documenta el comando y la reparación del error más probable.'],
     'Lección': fallbackSteps[moduleId],
   }
@@ -221,14 +221,14 @@ function adaptDocument(document, workflowJsonByName) {
   const kindSummaries = {
     'Workflow guiado': `Construirás una versión controlada de “${title}”, definirás su payload y comprobarás un caso correcto y otro roto.`,
     'Procedimiento': `Aprenderás cuándo utilizar “${title}”, cómo aplicarlo con límites claros y qué salida debes conservar como evidencia.`,
-    'Proyecto': `Usarás “${title}” como caso de trabajo: adaptarás sus decisiones a tu proyecto y justificarás qué mantienes o descartas.`,
+    'Proyecto': `Usarás “${title}” como caso de trabajo: puedes estudiarlo, adaptarlo a un proyecto opcional o convertirlo en una plantilla.`,
     'Guía': `Prepararás “${title}” dentro de tu entorno y dejarás una comprobación que otra persona pueda repetir.`,
-    'Lección': `Entenderás la idea central de “${title}” y la convertirás en una decisión concreta para tu proyecto.`,
+    'Lección': `Entenderás la idea central de “${title}” y la convertirás en una nota, decisión o práctica opcional.`,
   }
   const kindSteps = {
     'Workflow guiado': ['Define el evento que inicia el flujo y crea un payload ficticio.', 'Dibuja los nodos necesarios antes de importar o programar nada.', 'Configura credenciales de prueba y ejecuta el camino principal.', 'Provoca un error, añade su manejo y conserva el registro.'],
-    'Procedimiento': ['Escribe la situación exacta que debería activar este procedimiento.', 'Aplícalo a una tarea pequeña de tu proyecto.', 'Revisa la salida contra un criterio observable.', 'Anota cuándo no debería utilizarse y guarda una evidencia.'],
-    'Proyecto': ['Compara el caso con tu proyecto y marca diferencias importantes.', 'Elige dos decisiones que puedes reutilizar y una que debes cambiar.', 'Construye una versión pequeña con datos ficticios.', 'Documenta resultado, límite y siguiente mejora.'],
+    'Procedimiento': ['Escribe la situación exacta que debería activar este procedimiento.', 'Aplícalo a una tarea pequeña, real o simulada.', 'Revisa la salida contra un criterio observable.', 'Anota cuándo no debería utilizarse y guarda una evidencia.'],
+    'Proyecto': ['Compara el caso con un contexto real o hipotético y marca diferencias importantes.', 'Elige dos decisiones que puedes reutilizar y una que debes cambiar.', 'Construye una versión pequeña con datos ficticios solo si quieres practicar.', 'Documenta resultado, límite y siguiente mejora.'],
     'Guía': ['Comprueba requisitos y versiones antes de instalar.', 'Ejecuta la instalación con variables ficticias.', 'Realiza una prueba mínima y captura el resultado.', 'Escribe la reparación del error más probable.'],
     'Lección': fallbackSteps[moduleId],
   }
@@ -244,13 +244,13 @@ function adaptDocument(document, workflowJsonByName) {
     kind,
     duration: Math.min(45, Math.max(15, document.minutes)),
     summary,
-    studentOutcome: `Al terminar habrás aplicado “${title}” a una decisión o parte verificable de tu proyecto.`,
+    studentOutcome: `Al terminar habrás convertido “${title}” en una nota, decisión, evidencia o práctica verificable.`,
     projectApplication: moduleApplications[moduleId],
     context,
     steps: kindSteps[kind],
     deliverable,
     checks: [
-      'La salida está vinculada a una necesidad concreta del proyecto.',
+      'La salida está vinculada a una necesidad, pregunta o práctica concreta.',
       'Existe una evidencia que otra persona puede revisar.',
       'Has anotado al menos un límite, riesgo o caso que todavía falla.',
     ],
