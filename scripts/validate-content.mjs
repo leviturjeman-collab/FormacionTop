@@ -19,6 +19,11 @@ if (studentCatalog.stats.modules !== 8) failures.push(`El programa tiene ${stude
 
 for (const resource of studentCatalog.resources) {
   if (!Array.isArray(resource.walkthrough) || resource.walkthrough.length < 5) failures.push(`${resource.title} no tiene un walkthrough suficiente.`)
+  for (const level of ['basic', 'medium', 'advanced']) {
+    const track = resource.levels?.[level]
+    if (!track) failures.push(`${resource.title} no tiene nivel ${level}.`)
+    else if (!track.summary || !track.outcome || !track.activity || !track.evidence || !Array.isArray(track.checks) || track.checks.length < 3) failures.push(`${resource.title}/${level} no tiene una ruta de nivel completa.`)
+  }
   if ('content' in resource) failures.push(`${resource.title} expone contenido Markdown crudo.`)
   for (const step of resource.walkthrough || []) {
     if (!step.where || !step.action || !step.expected || !step.evidenceLabel) failures.push(`${resource.title}/${step.id} no define dónde, acción, resultado y evidencia.`)

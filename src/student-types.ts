@@ -11,6 +11,18 @@ export interface WalkthroughStep {
   downloadPath?: string
 }
 
+export type StudentLevel = 'basic' | 'medium' | 'advanced'
+
+export interface StudentLevelTrack {
+  label: string
+  summary: string
+  outcome: string
+  activity: string
+  evidence: string
+  checks: string[]
+  duration: number
+}
+
 export interface StudentResource {
   id: string
   title: string
@@ -25,6 +37,7 @@ export interface StudentResource {
   deliverable: string
   checks: string[]
   walkthrough: WalkthroughStep[]
+  levels: Record<StudentLevel, StudentLevelTrack>
   sourcePath: string
   sourceWords: number
 }

@@ -117,6 +117,89 @@ const moduleApplications = {
   defensa: 'Úsalo como evidencia para explicar qué has aprendido, qué has probado y qué límites todavía existen.',
 }
 
+function levelTracksFor(kind, moduleId, title, duration) {
+  const baseDuration = Math.min(45, Math.max(15, duration))
+  const byModule = {
+    fundamentos: {
+      basic: 'Entender la idea y decir para qué sirve sin jerga.',
+      medium: 'Convertir la idea en una decisión, ejemplo o mini práctica.',
+      advanced: 'Defender el criterio, sus límites y cuándo no conviene usarlo.',
+    },
+    herramientas: {
+      basic: 'Reconocer la herramienta, su función y cuándo aparece.',
+      medium: 'Preparar una comprobación o checklist reproducible.',
+      advanced: 'Evaluar riesgos, costes, permisos y alternativas.',
+    },
+    diseno: {
+      basic: 'Dibujar la entrada, transformación, salida y revisión humana.',
+      medium: 'Definir campos, reglas y decisiones con un ejemplo.',
+      advanced: 'Comparar arquitecturas, fallos probables y límites operativos.',
+    },
+    construccion: {
+      basic: 'Comprender qué se podría crear sin tener que construirlo.',
+      medium: 'Hacer una práctica, demo, plantilla o prototipo pequeño.',
+      advanced: 'Medir, romper, mejorar y documentar una versión defendible.',
+    },
+    calidad: {
+      basic: 'Reconocer qué significa que algo está bien probado.',
+      medium: 'Ejecutar o describir un caso correcto y un caso roto.',
+      advanced: 'Diseñar prevención, logs, regresión y criterios de aceptación.',
+    },
+    seguridad: {
+      basic: 'Identificar datos, permisos, secretos y acciones sensibles.',
+      medium: 'Aplicar una checklist de reducción de riesgo a un caso.',
+      advanced: 'Diseñar controles, auditoría, consentimiento y recuperación.',
+    },
+    entrega: {
+      basic: 'Entender qué necesita otra persona para usar lo aprendido.',
+      medium: 'Preparar una plantilla, guía, demo o paquete sencillo.',
+      advanced: 'Convertirlo en entrega profesional con límites y traspaso.',
+    },
+    defensa: {
+      basic: 'Explicar la idea con tus palabras y un ejemplo.',
+      medium: 'Mostrar evidencia, decisión y resultado de una práctica.',
+      advanced: 'Defender decisiones, descartes, riesgos y siguiente versión.',
+    },
+  }
+  const moduleText = byModule[moduleId] || byModule.fundamentos
+  const kindText = {
+    'Workflow guiado': 'workflow, mapa de nodos o simulación',
+    'Procedimiento': 'procedimiento, checklist o criterio de uso',
+    'Proyecto': 'caso, plantilla o proyecto opcional',
+    'Guía': 'guía, instalación o comprobación',
+    'Lección': 'nota, explicación o práctica',
+  }[kind] || 'nota o práctica'
+  return {
+    basic: {
+      label: 'Basic',
+      summary: `Basic: estudia “${title}” para entenderlo, explicarlo y reconocer cuándo usarlo.`,
+      outcome: moduleText.basic,
+      activity: `Lee el recurso y crea una explicación breve: qué es, para qué sirve y qué ejemplo sencillo lo representa.`,
+      evidence: `Una nota de 5-8 líneas, una lista de conceptos clave o una explicación oral preparada.`,
+      checks: ['Puedes explicarlo sin copiar frases.', 'Distingues qué problema resuelve.', 'Sabes cuándo no hace falta practicar todavía.'],
+      duration: baseDuration,
+    },
+    medium: {
+      label: 'Medium',
+      summary: `Medium: convierte “${title}” en una ${kindText} verificable sin obligarte a crear un proyecto completo.`,
+      outcome: moduleText.medium,
+      activity: `Haz una práctica pequeña, real o simulada: nota estructurada, plantilla, payload, checklist, prueba o demo mínima.`,
+      evidence: `Un artefacto revisable: tabla, plantilla, captura, comando, respuesta, checklist o decisión documentada.`,
+      checks: ['Hay una entrada y una salida claras.', 'La práctica se puede repetir o revisar.', 'Has anotado un límite o caso dudoso.'],
+      duration: Math.min(60, baseDuration + 10),
+    },
+    advanced: {
+      label: 'Advanced',
+      summary: `Advanced: evalúa “${title}” con criterio profesional: riesgos, calidad, límites y defensa.`,
+      outcome: moduleText.advanced,
+      activity: `Somete el caso a tensión: compara alternativas, provoca un fallo, revisa seguridad/coste o prepara una defensa breve.`,
+      evidence: `Una decisión defendida con criterio: alternativa descartada, riesgo principal, prueba, mejora y siguiente paso.`,
+      checks: ['Puedes defender por qué elegiste ese enfoque.', 'Incluyes riesgo, coste o límite operativo.', 'Hay evidencia suficiente para otra persona.'],
+      duration: Math.min(75, baseDuration + 20),
+    },
+  }
+}
+
 function extractCodeBlocks(content) {
   return [...stripFrontmatter(content).matchAll(/```(?:[a-zA-Z0-9_-]+)?\s*\r?\n([\s\S]*?)```/g)]
     .map((match) => match[1].trim())
@@ -237,12 +320,13 @@ function adaptDocument(document, workflowJsonByName) {
   const deliverable = deliverableSource ? deliverableSource.split(/(?<=[.!?])\s+/)[0].slice(0, 180) : module.milestone
   const workflowFileName = document.path.split('/').at(-1).replace(/\.md$/i, '.json')
   const workflowData = workflowJsonByName.get(workflowFileName)
+  const duration = Math.min(45, Math.max(15, document.minutes))
   return {
     id: document.id,
     title,
     moduleId,
     kind,
-    duration: Math.min(45, Math.max(15, document.minutes)),
+    duration,
     summary,
     studentOutcome: `Al terminar habrás convertido “${title}” en una nota, decisión, evidencia o práctica verificable.`,
     projectApplication: moduleApplications[moduleId],
@@ -255,6 +339,7 @@ function adaptDocument(document, workflowJsonByName) {
       'Has anotado al menos un límite, riesgo o caso que todavía falla.',
     ],
     walkthrough: walkthroughFor(document, kind, moduleId, title, workflowData),
+    levels: levelTracksFor(kind, moduleId, title, duration),
     sourcePath: document.path,
     sourceWords: document.words,
   }
