@@ -1,0 +1,214 @@
+{
+  "id": "n8n-01",
+  "tool": "n8n",
+  "slot": 1,
+  "number": 201,
+  "stageId": "automatizacion",
+  "title": "Qué es n8n y qué problema tuyo resuelve",
+  "promise": "Sabrás, con un proceso concreto tuyo delante, si n8n te ahorra horas de verdad o te va a complicar la vida, y tendrás escrita en una ficha la primera automatización que vas a montar, con su disparador, su filtro y sus acciones.",
+  "minutes": 25,
+  "why": "Rocío lleva la administración de una empresa de reformas en Valladolid. Cada mañana abre el correo, mira los presupuestos aceptados, copia el nombre y el importe a una hoja de cálculo, crea una carpeta en Drive con el nombre del cliente y avisa por WhatsApp al jefe de obra. Son once minutos por presupuesto y entran entre cuatro y ocho al día. Eso es una hora diaria copiando cosas de una ventana a otra, y el día que se salta un paso, la obra empieza sin carpeta. No necesita inteligencia artificial: necesita que esos cuatro pasos ocurran solos cada vez que llega un correo con una palabra concreta en el asunto.",
+  "theory": [
+    {
+      "title": "Un becario que vigila una cosa y hace otras",
+      "text": "n8n es un programa donde dibujas un proceso conectando cajas. Una caja vigila algo (que llegue un correo, que sean las ocho de la mañana, que alguien rellene un formulario) y las siguientes hacen cosas (crear una fila, mandar un mensaje, llamar a otro programa). Cuando lo enciendes, eso ocurre solo, sin ti, las veinticuatro horas. No hay que saber programar para montar los primeros: se arrastran cajas y se rellenan campos.",
+      "analogy": "Un becario obsesivo que solo sabe hacer una cosa, pero la hace exactamente igual las mil veces, a las tres de la mañana y en agosto."
+    },
+    {
+      "title": "Lo difícil nunca es el camino bueno",
+      "text": "Montar el caso en el que todo va bien te lleva veinte minutos. Lo que separa una automatización que funciona seis meses de una que hay que apagar a la semana son otras tres preguntas: qué pasa si llega un dato incompleto, qué pasa si el mismo caso entra dos veces, y qué pasa si el servicio del otro lado está caído. Una automatización sin respuesta a esas tres no está terminada, está empezada.",
+      "example": "El correo de Rocío a veces llega sin importe porque el cliente lo acepta escribiendo «de acuerdo» y ya está. Si el flujo no contempla eso, escribe una fila con el importe vacío y nadie se entera hasta que se factura."
+    },
+    {
+      "title": "La mayoría de las automatizaciones útiles no llevan IA dentro",
+      "text": "Esto sorprende a todo el mundo. Copiar un dato de un sitio a otro, avisar a alguien, crear una carpeta o comprobar si un número supera un límite son reglas fijas: el ordenador las hace perfectas y gratis. La inteligencia artificial entra solo cuando hay que interpretar algo que no cabe en una regla: entender un correo escrito en lenguaje libre, resumir, clasificar por tono o extraer datos de un texto desordenado.",
+      "analogy": "No pones un traductor jurado a sellar sobres. La IA es cara y comete errores; úsala donde una regla no llega."
+    },
+    {
+      "title": "n8n frente a los de arrastrar cajitas más simples",
+      "text": "Zapier y Make son webs donde conectas aplicaciones sin instalar nada y funcionan muy bien para cuatro pasos entre dos apps conocidas. n8n gana en tres situaciones: cuando necesitas lógica de verdad (bucles, condiciones encadenadas, tratar listas), cuando el volumen dispara la factura de los otros porque cobran por tarea, y cuando los datos no pueden salir de tu servidor. A cambio pide más cabeza al principio.",
+      "example": "Un flujo que recorre 500 filas y llama a una API por cada una son 500 tareas en Zapier. En n8n instalado en tu servidor, son 500 vueltas de un bucle y no cuestan nada."
+    },
+    {
+      "title": "Dos formas de tenerlo, y la diferencia importa",
+      "text": "Puedes usar la nube de n8n, pagando una cuota mensual, y no preocuparte de nada; o instalarlo tú en tu ordenador o en un servidor, gratis, y encargarte de mantenerlo. La nube es lo sensato para empezar y para clientes pequeños. Instalarlo tú tiene sentido cuando el volumen es alto o cuando manejas datos que no pueden estar en un servidor ajeno, como historiales médicos o nóminas.",
+      "analogy": "Alquilar una furgoneta con seguro incluido o comprarte una. La segunda sale más barata si la usas todos los días y tienes dónde aparcarla."
+    },
+    {
+      "title": "El error de principiante es empezar por la herramienta",
+      "text": "La gente abre n8n y empieza a arrastrar cajas a ver qué sale. Así se acaba con un flujo bonito que no resuelve nada, porque nunca se escribió qué tenía que resolver. El orden que funciona es al revés: primero escribes en castellano qué proceso quieres quitarte de encima, cuántas veces pasa, quién lo hace hoy y cómo sabrás mañana que funcionó. Y solo entonces abres n8n.",
+      "example": "Rocío escribió: «cuando llegue un correo con PRESUPUESTO ACEPTADO en el asunto, quiero una fila en la hoja, una carpeta en Drive y un aviso al jefe de obra». Cuatro líneas. Eso es el flujo entero, ya diseñado."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Elige el proceso, y elige uno aburrido",
+      "where": "En un papel o en un bloc de notas",
+      "action": "Apunta tres cosas que hagas a mano y se repitan. Después tacha las que solo pasen una o dos veces al mes: no compensan. De las que quedan, quédate con la más aburrida y la más mecánica, no con la más interesante. La primera automatización tiene que ser fácil de comprobar, no lucida.",
+      "expect": "Un proceso elegido, que pase al menos tres veces por semana y que hoy hagas tú a mano.",
+      "stuck": "Si no se te ocurre nada, mira tu historial de navegador de esta semana: lo que hayas abierto veinte veces seguidas es candidato."
+    },
+    {
+      "title": "Escribe el disparador con precisión de reloj",
+      "where": "En el mismo papel",
+      "action": "Completa esta frase sin dejar nada al aire: «esto tiene que arrancar cuando ___». Si has escrito «cuando llegue un correo», no vale: ¿de quién, con qué en el asunto, a qué buzón? Cuanto más vago sea el disparador, más veces se ejecutará cuando no debía.",
+      "expect": "Una frase tan concreta que otra persona podría comprobar si se cumple o no, sin preguntarte nada.",
+      "stuck": "Si no hay un momento claro que lo dispare, quizá no es una automatización: quizá es algo que se revisa una vez al día a una hora fija. Eso también vale y es más fácil."
+    },
+    {
+      "title": "Escribe el filtro: qué NO debe pasar nunca",
+      "where": "En el mismo papel",
+      "action": "Apunta los casos que cumplen el disparador pero NO deben seguir adelante: correos internos de tu propia empresa, pruebas, importes en cero, mensajes con la palabra «test». Este apartado es el que te va a salvar el primer día de uso real, y es el que todo el mundo se salta.",
+      "expect": "Al menos dos condiciones escritas de casos que deben cortarse nada más empezar.",
+      "stuck": "Piensa en qué correo o qué formulario te daría vergüenza que disparara un mensaje a un cliente. Eso es lo que hay que filtrar."
+    },
+    {
+      "title": "Escribe las acciones en orden, en castellano",
+      "where": "En el mismo papel",
+      "action": "Una línea por acción, como se lo contarías a un compañero nuevo. «Crea una fila con el nombre, el importe y la fecha». «Crea una carpeta con el nombre del cliente». «Manda un mensaje al jefe de obra con el nombre y la dirección». Nada de nombres de nodos ni de tecnicismos: eso viene después.",
+      "expect": "Entre dos y cinco líneas. Si te salen ocho, tienes dos automatizaciones distintas y conviene separarlas.",
+      "stuck": "Si dudas del orden, pregúntate qué acción necesita el resultado de la anterior. Eso te lo ordena solo."
+    },
+    {
+      "title": "Escribe cómo sabrás mañana que ha funcionado",
+      "where": "En el mismo papel",
+      "action": "Una comprobación concreta y observable, de las que se hacen en menos de un minuto. «Hay una fila nueva en la hoja Y un mensaje en el chat, con el mismo nombre en los dos sitios». Si no puedes escribir esta frase, el proceso no está lo bastante claro y montarlo va a ser un desastre.",
+      "expect": "Una frase que puedas comprobar tú mañana por la mañana sin abrir n8n.",
+      "stuck": "Si tu comprobación es «funciona», no sirve. Tiene que decir qué cosa concreta existe después que no existía antes."
+    },
+    {
+      "title": "Cuenta cuánto te cuesta hoy hacerlo a mano",
+      "where": "En el mismo papel",
+      "action": "Minutos por vez, multiplicado por veces al mes. Anota el número. Este dato decide dos cosas: si merece la pena automatizarlo y cuánto puedes gastarte en hacerlo. Un proceso de dos minutos que pasa tres veces al mes no se automatiza, se hace y punto.",
+      "expect": "Un número de horas al mes. Si sale menos de una hora, elige otro proceso: el primero tiene que compensar claramente.",
+      "stuck": "Cronometra la próxima vez que lo hagas. La gente siempre calcula por lo bajo."
+    },
+    {
+      "title": "Decide dónde va a vivir n8n",
+      "where": "En n8n.io, en la sección de precios",
+      "action": "Mira los dos caminos: la nube de pago y la versión que instalas tú. Con lo que has apuntado en el paso 6 (cuántas veces al mes) y con qué datos maneja el proceso, elige uno y escribe en el papel por qué. Fecha del dato: agosto de 2026, compruébalo tú porque cambian.",
+      "expect": "Una decisión escrita, con su motivo en una línea.",
+      "stuck": "Si dudas y no manejas datos delicados, empieza por la nube. Cambiarte después es exportar unos archivos, no rehacer nada."
+    },
+    {
+      "title": "Busca si ya está hecho",
+      "where": "En n8n.io/workflows",
+      "action": "Es la biblioteca pública de automatizaciones que la gente comparte. Busca dos o tres palabras de tu proceso en inglés (gmail sheets, invoice slack, form notion). Abre dos que se parezcan y mira las cajas que usan. No las copies todavía: mira cómo está resuelto lo que tú quieres hacer.",
+      "expect": "Dos ejemplos abiertos y la sensación de «ah, es esto». Eso es exactamente el objetivo.",
+      "stuck": "Si no encuentras nada parecido, prueba a buscar solo el nombre de las aplicaciones que usas, sin describir el proceso."
+    },
+    {
+      "title": "Pásale tu ficha a una IA y deja que la ataque",
+      "where": "En ChatGPT o Claude",
+      "action": "Pega el prompt de abajo con tu ficha rellena. No le pidas que te monte el flujo: pídele que te encuentre los agujeros. Los va a encontrar.",
+      "prompt": "Actúa como alguien que lleva años montando automatizaciones y ha visto fallar muchas. Te paso la ficha de la primera automatización que quiero montar en n8n. No me montes nada y no me des ánimos: quiero que la ataques.\n\nMI FICHA:\nDisparador: [PÉGALO]\nFiltros: [PÉGALOS]\nAcciones: [PÉGALAS]\nCómo sabré que funciona: [PÉGALO]\nCuántas veces al mes: [NÚMERO]\n\nContéstame en este orden. Uno: dime qué casos reales van a hacer que esto se comporte mal, y sé concreto con mi caso, no genérico: qué pasa si llega un dato incompleto, si el mismo caso entra dos veces, si el otro servicio está caído, si alguien escribe con acentos raros o si llega un caso a las tres de la mañana. Dos: dime qué falta en mis filtros, es decir, qué casos van a disparar esto cuando no debían. Tres: dime en qué punto exacto puede quedarse a medias y qué quedaría hecho y qué sin hacer, porque quiero saber si eso deja algo incoherente. Cuatro: dime si alguna de mis acciones necesita comprobar algo antes de ejecutarse para no duplicar. Cinco: dime si esto que quiero hacer merece n8n o se resuelve más fácil de otra forma, incluso sin automatizar. Seis: dime qué datos personales pasan por aquí y qué implica eso. Y si crees que mi ficha está bien, dímelo también en lugar de inventarte problemas.",
+      "expect": "Una lista de agujeros que no habías visto. Añádelos a tu papel: son parte del diseño, no una crítica.",
+      "stuck": "Si te dice que todo está bien, insiste: «dame tres casos concretos en los que esto falle»."
+    },
+    {
+      "title": "Cierra la ficha y guárdala",
+      "where": "En el papel, ahora en limpio",
+      "action": "Reescribe la ficha con lo que has aprendido en el paso 9: disparador, filtros, acciones, comprobación, qué pasa si falla a mitad y cuántas veces al mes. Media página. Guárdala donde la vayas a encontrar: es lo que vas a montar en las próximas lecciones y es la única explicación que tendrás dentro de seis meses de por qué está hecho así.",
+      "expect": "Una ficha de media página que otra persona podría leer y montar sin preguntarte nada.",
+      "stuck": "Si la ficha ocupa dos páginas, has metido dos automatizaciones. Sepáralas y monta primero la más sencilla."
+    }
+  ],
+  "errors": [
+    {
+      "message": "Monté el flujo y no se dispara nunca",
+      "means": "Casi siempre el disparador no es lo que creías. Muchos disparadores solo ven lo que ocurre DESPUÉS de encender el flujo, y otros comprueban cada varios minutos en vez de al instante.",
+      "fix": "Comprueba primero si en el historial de ejecuciones aparece algo, aunque salga como filtrado: si no aparece ni eso, el problema está en el disparador y no en los pasos. Y provoca el caso tú mismo después de encenderlo, no antes."
+    },
+    {
+      "message": "Se ejecuta con casos que no debían",
+      "means": "Te falta el filtro, o el filtro compara mal. El clásico: comparar texto con «es exactamente igual» cuando la gente escribe con mayúsculas distintas o con un espacio de más.",
+      "fix": "Mete un filtro justo detrás del disparador, antes de cualquier acción, y usa «contiene» en lugar de «es exactamente igual» cuando compares texto escrito por personas."
+    },
+    {
+      "message": "Hace las cosas dos veces: dos filas, dos mensajes",
+      "means": "El disparador ha visto el mismo caso dos veces. Pasa cuando un correo se marca como no leído, cuando una fila se edita después de crearse o cuando un webhook reintenta.",
+      "fix": "Antes de crear nada, busca si ya existe por un dato único (el correo, el número de pedido) y sigue solo si no lo encuentras. Se ve en detalle en la lección 39."
+    },
+    {
+      "message": "Funciona cuando lo pruebo yo pero falla con casos reales",
+      "means": "Tus pruebas usan datos bien formados. Lo real trae campos vacíos, textos larguísimos y casos que no imaginaste.",
+      "fix": "Prueba a propósito con el caso incompleto, el caso repetido y el caso con acentos y emojis. Está en la lección 44, y es la diferencia entre un flujo que aguanta y uno que hay que apagar."
+    },
+    {
+      "message": "Escribí la ficha pero al montarlo no se parece en nada",
+      "means": "La ficha estaba escrita en términos de herramientas («un nodo de Gmail») en lugar de en términos de proceso («cuando llegue un correo del cliente»).",
+      "fix": "Reescribe la ficha en castellano, como se lo contarías a un compañero nuevo. Las cajas concretas se eligen después, y a veces la caja correcta no es la que imaginabas."
+    },
+    {
+      "message": "Automaticé algo y ahora tardo más que antes",
+      "means": "Has automatizado un proceso que hacías tres veces al mes, o uno que cambia cada semana y hay que estar retocando el flujo constantemente.",
+      "fix": "Vuelve al número del paso 6. Si no llega a una hora al mes de ahorro, apágalo sin remordimientos y elige otro proceso. Automatizar algo que cambia constantemente es trabajo doble."
+    }
+  ],
+  "matters": [
+    "Escribir la ficha ANTES de abrir n8n. Es la diferencia entre montar algo que resuelve un problema y montar algo bonito que no usa nadie. Y la ficha no es burocracia: es lo que vas a leer dentro de seis meses cuando no te acuerdes de por qué está hecho así.",
+    "El filtro nada más empezar, siempre. Sin él, el primer día de uso real vas a mandar mensajes de verdad a personas de verdad por casos que no debían pasar. Es el error que más caro sale y el más fácil de evitar.",
+    "Elegir un proceso que pase varias veces por semana. Automatizar algo mensual no compensa el trabajo de montarlo, y encima cuando llegue la siguiente vez ya no te acordarás de cómo funcionaba.",
+    "Saber cuántos datos personales pasan por el flujo. Un nombre, un correo y un teléfono de un cliente circulando entre cuatro servicios distintos es algo que hay que decidir a conciencia, no descubrir después."
+  ],
+  "ignore": [
+    "Los nodos de inteligencia artificial durante las primeras semanas. La mayoría de las automatizaciones que de verdad te ahorran tiempo son reglas fijas, y son gratis, instantáneas y no se equivocan. La IA entra cuando una regla no llega.",
+    "Instalar n8n en un servidor propio antes de tener un flujo funcionando. Es una tarde entera de trabajo para resolver un problema que todavía no tienes. La nube o tu propio ordenador sobran para aprender.",
+    "Las mil integraciones que aparecen en la lista de nodos. Vas a usar seis o siete: un disparador, un filtro, una hoja de cálculo, un chat, un correo y una llamada genérica a una API. Con eso se monta el 90 % de lo que se paga en el mundo real."
+  ],
+  "canDo": [
+    "Repetir un proceso mecánico exactamente igual, mil veces, a cualquier hora, sin cansarse ni saltarse un paso porque ese día había prisa.",
+    "Coger un dato de un sitio y llevarlo a otros cuatro a la vez, manteniéndolos cuadrados sin que nadie tenga que acordarse de actualizar el segundo.",
+    "Vigilar algo continuamente y avisar solo cuando pasa lo que te importa, que es muy distinto de tener a alguien mirando una pantalla.",
+    "Servir de pegamento entre programas que no se hablan entre ellos, incluso cuando uno de ellos es un programa viejo de la empresa que nadie quiere tocar."
+  ],
+  "cantDo": [
+    "Entender tu negocio. Si un presupuesto de más de diez mil euros necesita el visto bueno del jefe, eso no lo va a deducir: se lo tienes que decir tú con esas palabras y ponerlo como una condición explícita.",
+    "Arreglar un proceso que está mal pensado. Si el proceso a mano es un desastre, automatizarlo te da un desastre más rápido y más difícil de parar. Primero se ordena, después se automatiza.",
+    "Adivinar qué hacer cuando pasa algo raro. Ante un caso que no contemplaste, o se para o hace una tontería con confianza absoluta. Lo que haga en esa situación lo decides tú al montarlo.",
+    "Mantenerse solo. Las aplicaciones cambian, las credenciales caducan y las APIs se actualizan. Un flujo es como un coche: funciona muchísimo tiempo, pero alguien tiene que pasarle la revisión."
+  ],
+  "words": [
+    [
+      "Flujo (workflow)",
+      "El dibujo entero: el conjunto de cajas conectadas que resuelve un proceso. Un flujo, un proceso."
+    ],
+    [
+      "Nodo (node)",
+      "Cada caja. Una hace una sola cosa: vigilar, decidir, transformar o actuar sobre una aplicación."
+    ],
+    [
+      "Disparador (trigger)",
+      "La caja del principio, la que vigila. Solo hay una por flujo, y decide cuándo arranca todo."
+    ],
+    [
+      "Ejecución (execution)",
+      "Cada vez que el flujo se pone en marcha. Quedan guardadas en una lista con lo que entró y salió de cada caja."
+    ],
+    [
+      "Item",
+      "Cada elemento que viaja entre cajas: un correo, una fila, un pedido. Un mismo paso puede recibir uno o quinientos."
+    ],
+    [
+      "Credencial",
+      "Los datos guardados con los que n8n entra en Gmail, en Drive o donde sea, en tu nombre."
+    ],
+    [
+      "Webhook",
+      "Una dirección tuya a la que otro programa manda un aviso cuando pasa algo. Le da la vuelta a preguntar cada minuto."
+    ],
+    [
+      "Nube (cloud)",
+      "Usar n8n en sus servidores pagando una cuota, sin instalar nada ni mantener nada."
+    ],
+    [
+      "Autoalojado (self-hosted)",
+      "Instalarlo tú en tu ordenador o en un servidor. Gratis en licencia, y el mantenimiento corre de tu cuenta."
+    ],
+    [
+      "Activar (activate)",
+      "El interruptor que hace que el flujo funcione solo. Un flujo probado pero sin activar no hace absolutamente nada."
+    ]
+  ],
+  "next": "Coge la ficha que has escrito y guárdala donde la encuentres mañana. En la lección siguiente decides en dos minutos si n8n es de verdad tu herramienta o si tu caso se resuelve más rápido con Zapier o Make, y a partir de la 03 empieza el montaje."
+}
