@@ -12,22 +12,171 @@
     {
       "title": "Qué es Docker y por qué molestarse",
       "text": "Docker es un programa que ejecuta otros programas dentro de cajas cerradas. Cada caja lleva dentro todo lo que ese programa necesita: su versión exacta de todo, sus dependencias, su configuración. Ni ensucia tu ordenador ni depende de lo que tú tengas instalado. La consecuencia práctica: n8n en Docker se comporta igual en tu portátil que en un servidor, y el día que lo muevas no habrá sorpresas de «en mi máquina funcionaba».",
-      "analogy": "Un cámping-gas con su bombona y su cazo dentro. No dependes de que la casa tenga cocina, ni de qué cocina sea."
+      "analogy": "Un cámping-gas con su bombona y su cazo dentro. No dependes de que la casa tenga cocina, ni de qué cocina sea.",
+      "visual": {
+        "kind": "beforeafter",
+        "title": "Con Docker y sin Docker",
+        "caption": "El mismo n8n. Lo que cambia es de qué depende que funcione.",
+        "beforeLabel": "Instalado a pelo",
+        "afterLabel": "Dentro de Docker",
+        "rows": [
+          {
+            "before": "Depende de qué versión de Node tengas tú",
+            "after": "Lleva su versión dentro, siempre la misma"
+          },
+          {
+            "before": "Deja archivos repartidos por tu ordenador",
+            "after": "Todo vive dentro de la caja o en una carpeta que eliges tú"
+          },
+          {
+            "before": "Se pelea con otros programas que usan lo mismo",
+            "after": "Aislado: ni molesta ni le molestan"
+          },
+          {
+            "before": "En tu portátil funciona y en el servidor falla",
+            "after": "Se comporta igual en los dos sitios"
+          },
+          {
+            "before": "Volver a una versión anterior es reinstalar",
+            "after": "Volver atrás es cambiar una etiqueta y arrancar"
+          }
+        ],
+        "gain": "El precio de todo esto es aprender tres palabras: imagen, contenedor y volumen."
+      }
     },
     {
       "title": "La distinción que le costó tres semanas a Sergio: imagen, contenedor y volumen",
       "text": "Son tres cosas distintas y confundirlas es lo que borra proyectos. La IMAGEN es el molde: el n8n descargado, igual para todo el mundo, de solo lectura. El CONTENEDOR es la caja funcionando, hecha a partir de ese molde: se crea, se para y se borra constantemente, y es normal borrarla. El VOLUMEN es una carpeta de tu ordenador enganchada a la caja, donde viven los datos: eso es lo único que sobrevive. Si tus flujos están dentro del contenedor y no en un volumen, el día que borres el contenedor los borras con él.",
-      "analogy": "La imagen es el plano de la casa, el contenedor es la casa construida y el volumen es la caja fuerte anclada al suelo. Puedes tirar la casa y volver a levantarla; la caja fuerte sigue ahí con lo de dentro."
+      "analogy": "La imagen es el plano de la casa, el contenedor es la casa construida y el volumen es la caja fuerte anclada al suelo. Puedes tirar la casa y volver a levantarla; la caja fuerte sigue ahí con lo de dentro.",
+      "visual": {
+        "kind": "canvas",
+        "title": "Imagen, contenedor y volumen: la distinción que costó tres semanas",
+        "caption": "Pulsa cada una. Confundir la segunda con la tercera es lo que borra proyectos.",
+        "nodes": [
+          {
+            "kind": "El molde",
+            "label": "Imagen",
+            "note": "descargada, igual para todos",
+            "role": "trigger",
+            "does": "Es n8n empaquetado, de solo lectura. Se descarga una vez y de ella salen todos los contenedores que quieras. Tú nunca la modificas.",
+            "input": "Se baja con docker pull.",
+            "output": "Un molde del que se crean contenedores.",
+            "breaks": "Nada. La imagen no se rompe: si quieres otra versión, te bajas otra."
+          },
+          {
+            "kind": "La caja funcionando",
+            "label": "Contenedor",
+            "note": "se crea y se borra a diario",
+            "role": "action",
+            "does": "n8n corriendo, hecho a partir de la imagen. Se crea, se para y se borra constantemente, y borrarlo es lo NORMAL: es como se actualiza.",
+            "input": "Una imagen y las opciones del arranque.",
+            "output": "n8n vivo en localhost:5678.",
+            "breaks": "Nada, si tus datos están en el volumen. Todo, si no lo están: se van con él."
+          },
+          {
+            "kind": "La caja fuerte",
+            "label": "Volumen",
+            "note": "la carpeta de tu ordenador",
+            "role": "filter",
+            "does": "Una carpeta tuya enganchada a la caja. Aquí viven la base de datos con tus flujos, tus credenciales y tus usuarios. Es lo ÚNICO que sobrevive a borrar el contenedor.",
+            "input": "La ruta que pones tras el -v en la orden de arranque.",
+            "output": "Un archivo database.sqlite que crece con tu trabajo.",
+            "breaks": "Si la ruta está mal escrita, la carpeta se queda vacía y tus datos viven dentro del contenedor sin que lo sepas. Compruébalo el primer día."
+          }
+        ]
+      },
+      "example": "La imagen es el plano, el contenedor es la casa construida y el volumen es la caja fuerte anclada al suelo. Puedes tirar la casa y volver a levantarla; la caja fuerte sigue ahí con lo de dentro."
     },
     {
       "title": "La clave de cifrado: la otra mitad de la copia de seguridad",
       "text": "n8n guarda tus credenciales cifradas, y la llave para descifrarlas se genera sola la primera vez. Si un día restauras tus datos en otra instalación con una llave distinta, verás tus credenciales en la lista pero no funcionarán: n8n no puede abrirlas. Por eso la clave se fija a mano desde el principio y se guarda en el gestor de contraseñas junto a la copia. Una copia de los datos sin su clave es media copia.",
-      "example": "El síntoma es desconcertante: la credencial de Gmail aparece con su nombre, pero cualquier flujo que la use falla diciendo que no está autorizado."
+      "example": "El síntoma es desconcertante: la credencial de Gmail aparece con su nombre, pero cualquier flujo que la use falla diciendo que no está autorizado.",
+      "visual": {
+        "kind": "cases",
+        "title": "Qué pasa cuando restauras una copia",
+        "caption": "Tres escenarios reales. Solo uno acaba bien.",
+        "cases": [
+          {
+            "id": "bien",
+            "label": "Copia + clave guardada",
+            "hint": "El único final feliz",
+            "parts": [
+              {
+                "type": "p",
+                "text": "Arrancas el contenedor nuevo con la misma clave de cifrado, apuntas el volumen a la carpeta restaurada y todo vuelve: flujos, credenciales y usuarios. No notas nada."
+              }
+            ]
+          },
+          {
+            "id": "regular",
+            "label": "Copia sin la clave",
+            "hint": "El caso que desconcierta",
+            "parts": [
+              {
+                "type": "p",
+                "text": "Ves tus credenciales en la lista, con su nombre y su servicio. Parecen estar. Pero cualquier flujo que las use falla diciendo que no está autorizado, porque n8n no puede descifrarlas con una llave distinta."
+              },
+              {
+                "type": "ul",
+                "items": [
+                  "Los flujos sí se recuperan: no van cifrados",
+                  "Las credenciales hay que volver a conectarlas una a una",
+                  "Con catorce servicios conectados, es una mañana entera"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "roto",
+            "label": "Sin volumen",
+            "hint": "Lo que le pasó a Sergio",
+            "parts": [
+              {
+                "type": "p",
+                "text": "Borras el contenedor siguiendo un tutorial y al arrancar te encuentras n8n recién instalado: sin flujos, sin credenciales y sin usuarios. Tres semanas de trabajo. No hay papelera, no hay deshacer."
+              },
+              {
+                "type": "ul",
+                "items": [
+                  "Comprueba si existe database.sqlite en tu carpeta",
+                  "Si existe, arranca con la ruta correcta y vuelven",
+                  "Si la carpeta está vacía, los datos no existen"
+                ]
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "title": "Los puertos: por qué 5678 y qué significa esa dirección",
       "text": "Cuando arrancas el contenedor le dices «lo que llegue al puerto 5678 de mi ordenador, mándalo al 5678 de la caja». Eso es lo que hace que puedas abrir http://localhost:5678 en el navegador y ver n8n. Si ese número ya lo ocupa otro programa, el arranque falla con un mensaje sobre el puerto. Y lo importante: localhost solo existe para ti. Nadie de fuera puede entrar por ahí, lo cual es una ventaja de seguridad y una limitación para los webhooks.",
-      "analogy": "Es el número del portal de un edificio. Solo un timbre por número, y desde la calle de otro barrio no se oye."
+      "analogy": "Es el número del portal de un edificio. Solo un timbre por número, y desde la calle de otro barrio no se oye.",
+      "visual": {
+        "kind": "screenmap",
+        "title": "Qué significa cada dirección",
+        "caption": "El puerto es el número del portal, y localhost es tu propia calle.",
+        "areas": [
+          {
+            "name": "localhost",
+            "place": "left",
+            "what": "Tu propio ordenador visto como si fuera un servidor. Solo existe para ti: aunque le pases el enlace a alguien, no podrá abrirlo.",
+            "tip": "Por eso un webhook no funciona todavía: el servicio de fuera no tiene forma de llegar hasta tu portátil."
+          },
+          {
+            "name": ":5678",
+            "place": "center",
+            "what": "El puerto, el número del portal. Solo un programa puede ocupar cada número a la vez, y de ahí sale el error de «port is already allocated».",
+            "tip": "Si lo tienes ocupado, cambia el primer número: -p 5679:5678 y entras por localhost:5679."
+          },
+          {
+            "name": "-p 5678:5678",
+            "place": "right",
+            "what": "Lo que le dice a Docker: «lo que llegue al 5678 de mi ordenador, mándalo al 5678 de dentro de la caja». El primero es el tuyo, el segundo el de dentro.",
+            "tip": "El de dentro no se toca: n8n siempre escucha en el 5678 dentro de su caja."
+          }
+        ]
+      }
     },
     {
       "title": "La zona horaria se pone en el arranque, no después",
@@ -37,12 +186,73 @@
     {
       "title": "Actualizar es tirar la caja y levantar otra, y por eso el volumen importa",
       "text": "En Docker no se actualiza «por dentro»: se descarga la imagen nueva, se para el contenedor viejo, se borra y se crea uno nuevo con la imagen nueva. Suena agresivo y es lo normal. Todo depende de que tus datos estén en el volumen: si lo están, el contenedor nuevo los encuentra y no notas nada; si no, empiezas de cero. Es exactamente el punto donde Sergio perdió tres semanas.",
-      "analogy": "Cambiar el coche por uno nuevo. Si tus cosas están en el maletero, se van con el coche viejo al desguace; si están en tu casa, te las llevas al nuevo."
+      "analogy": "Cambiar el coche por uno nuevo. Si tus cosas están en el maletero, se van con el coche viejo al desguace; si están en tu casa, te las llevas al nuevo.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "Actualizar: tirar la caja y levantar otra",
+        "caption": "Cuatro pasos. Fíjate en qué sobrevive a cada uno.",
+        "steps": [
+          {
+            "label": "docker pull",
+            "does": "Descarga la versión nueva",
+            "in": 1,
+            "out": 2,
+            "why": "Ahora tienes dos imágenes: la vieja y la nueva. Tu contenedor sigue corriendo con la vieja y no ha pasado nada todavía."
+          },
+          {
+            "label": "docker stop",
+            "does": "Apaga el contenedor",
+            "in": 1,
+            "out": 1,
+            "why": "n8n deja de responder. Tus datos siguen intactos en la carpeta, y el contenedor sigue existiendo: solo está apagado."
+          },
+          {
+            "label": "docker rm",
+            "does": "Borra el contenedor",
+            "in": 1,
+            "out": 0,
+            "why": "Aquí es donde la gente se asusta, y aquí es donde Sergio perdió tres semanas. Si tienes volumen, no pasa absolutamente nada: lo que se borra es la caja, no lo de dentro de la caja fuerte."
+          },
+          {
+            "label": "docker run",
+            "does": "Crea el contenedor nuevo",
+            "in": 0,
+            "out": 1,
+            "why": "Levanta con la imagen nueva y encuentra tus datos en la carpeta de siempre. Abres localhost:5678 y todo está donde lo dejaste, en la versión nueva."
+          }
+        ]
+      }
     },
     {
       "title": "Cuándo Docker te sobra",
       "text": "Si lo único que quieres es ver n8n hoy y cacharrear una tarde, npx n8n te lo abre en un minuto y no necesitas nada de esto. Docker gana cuando quieres que la instalación se parezca a la de producción, cuando quieres varias versiones sin que se peleen, o cuando vas a mover esto a un servidor más adelante. Si estás en el primer caso, salta a la lección 05 sin culpa.",
-      "example": "Mucha gente aprende con npx durante dos semanas y monta Docker el día que decide poner un flujo a funcionar de verdad."
+      "example": "Mucha gente aprende con npx durante dos semanas y monta Docker el día que decide poner un flujo a funcionar de verdad.",
+      "visual": {
+        "kind": "decision",
+        "title": "¿Docker o la vía rápida?",
+        "caption": "Las dos son legítimas. Elegir la equivocada es perder una tarde.",
+        "question": "¿Qué vas a hacer con n8n esta semana?",
+        "branches": [
+          {
+            "answer": "Ver qué es y cacharrear una tarde",
+            "then": "npx n8n, y sáltate esta lección",
+            "why": "Una sola orden y lo tienes abierto en un minuto. Se desinstala igual de fácil. Cuando decidas que esto va en serio, vuelves aquí.",
+            "cost": "Un minuto"
+          },
+          {
+            "answer": "Montar flujos que quiero conservar",
+            "then": "Docker, y hazla entera",
+            "why": "Vas a acumular flujos y credenciales, y quieres que sobrevivan a actualizar. Media hora ahora te ahorra la tarde de Sergio.",
+            "cost": "Cuarenta y cinco minutos"
+          },
+          {
+            "answer": "Esto va a acabar en un servidor",
+            "then": "Docker, sin dudarlo",
+            "why": "Lo que montes hoy en tu portátil funcionará igual en el servidor, con la misma orden. No habrá sorpresas de «en mi máquina funcionaba».",
+            "cost": "La misma orden sirve en los dos sitios"
+          }
+        ]
+      }
     },
     {
       "title": "Lo que Docker no te da",
@@ -286,5 +496,152 @@
       "El número de versión que va detrás de la imagen, tras dos puntos. Es cómo se vuelve a una versión anterior."
     ]
   ],
-  "next": "Deja el contenedor encendido y abre localhost:5678. En la lección 05 se reconoce la pantalla por dentro: el lienzo, el panel de datos de cada caja y el historial de ejecuciones, que es donde vas a vivir a partir de ahora."
+  "next": "Deja el contenedor encendido y abre localhost:5678. En la lección 05 se reconoce la pantalla por dentro: el lienzo, el panel de datos de cada caja y el historial de ejecuciones, que es donde vas a vivir a partir de ahora.",
+  "pieces": [
+    {
+      "kind": "anatomy",
+      "title": "La orden de arranque, línea a línea",
+      "caption": "No es larga por capricho. Cada línea evita un problema concreto.",
+      "lang": "bash",
+      "code": "docker run -d --name n8n --restart unless-stopped \\\n  -p 5678:5678 \\\n  -e GENERIC_TIMEZONE=\"Europe/Madrid\" \\\n  -e TZ=\"Europe/Madrid\" \\\n  -e N8N_ENCRYPTION_KEY=\"tu-clave-de-64-caracteres\" \\\n  -e N8N_DIAGNOSTICS_ENABLED=false \\\n  -v ~/n8n-datos:/home/node/.n8n \\\n  docker.n8n.io/n8nio/n8n",
+      "notes": [
+        {
+          "line": 1,
+          "kind": "clave",
+          "text": "-d lo deja corriendo por detrás y te devuelve la terminal. --name le pone nombre para poder pararlo luego sin buscar identificadores. --restart unless-stopped hace que vuelva solo al reiniciar el ordenador."
+        },
+        {
+          "line": 2,
+          "kind": "info",
+          "text": "El puerto: lo que llegue al 5678 de tu ordenador va al 5678 de dentro. Si te dice que está ocupado, cambia SOLO el primero."
+        },
+        {
+          "line": 3,
+          "kind": "aviso",
+          "text": "La zona horaria para n8n. Sin esto, todo lo programado va una hora tarde en invierno y dos en verano, y no falla: simplemente ocurre a otra hora."
+        },
+        {
+          "line": 4,
+          "kind": "aviso",
+          "text": "La zona horaria del sistema dentro de la caja. Hacen falta las dos, y esta es la que más se olvida."
+        },
+        {
+          "line": 5,
+          "kind": "clave",
+          "text": "La llave con la que se cifran tus credenciales. Guárdala en el gestor de contraseñas ANTES de arrancar: una copia de seguridad sin esta clave es media copia."
+        },
+        {
+          "line": 6,
+          "kind": "info",
+          "text": "Apaga el envío de estadísticas de uso. Opcional, pero si trabajas con datos de clientes es lo razonable."
+        },
+        {
+          "line": 7,
+          "kind": "clave",
+          "text": "LA LÍNEA IMPORTANTE. Engancha una carpeta tuya a la caja. Es lo único que sobrevive a borrar el contenedor. Sin ella, actualizar borra tres semanas de trabajo."
+        },
+        {
+          "line": 8,
+          "kind": "info",
+          "text": "La imagen. Sin nada detrás coge la última versión; con dos puntos y un número, la que tú digas: útil para volver atrás si una actualización rompe algo."
+        }
+      ]
+    },
+    {
+      "kind": "filetree",
+      "title": "Qué aparece en tu carpeta de datos",
+      "caption": "Si esto está vacío, el volumen no funciona. Compruébalo el primer día.",
+      "nodes": [
+        {
+          "name": "n8n-datos",
+          "depth": 0,
+          "isFile": false,
+          "path": "la carpeta que enganchaste con -v"
+        },
+        {
+          "name": "database.sqlite",
+          "depth": 1,
+          "isFile": true,
+          "path": "TU INSTALACIÓN ENTERA: flujos, credenciales cifradas, usuarios e historial"
+        },
+        {
+          "name": "config",
+          "depth": 1,
+          "isFile": true,
+          "path": "la configuración, con la clave de cifrado dentro si no la fijaste tú"
+        },
+        {
+          "name": "binaryData",
+          "depth": 1,
+          "isFile": false,
+          "path": "los archivos que pasan por tus flujos: adjuntos, imágenes, PDF"
+        },
+        {
+          "name": "nodes",
+          "depth": 1,
+          "isFile": false,
+          "path": "los nodos de la comunidad que instales, si algún día instalas alguno"
+        },
+        {
+          "name": "ssh",
+          "depth": 1,
+          "isFile": false,
+          "path": "claves de acceso a repositorios, si usas control de versiones de flujos"
+        }
+      ]
+    },
+    {
+      "kind": "terminal",
+      "title": "Las seis órdenes que vas a usar cada semana",
+      "caption": "Pulsa cada una. Fíjate en la diferencia entre stop y rm: es la que arruina instalaciones.",
+      "prompt": "$",
+      "steps": [
+        {
+          "command": "docker ps",
+          "output": "CONTAINER ID   IMAGE                       STATUS         NAMES\\na1b2c3d4e5f6   docker.n8n.io/n8nio/n8n     Up 2 hours     n8n",
+          "note": "Qué está corriendo ahora mismo. Con -a añadido salen también los parados."
+        },
+        {
+          "command": "docker logs -f n8n",
+          "output": "Editor is now accessible via:\\nhttp://localhost:5678/",
+          "note": "Lo que n8n va contando. Es lo PRIMERO que se mira cuando algo no arranca. Se sale con Ctrl+C."
+        },
+        {
+          "command": "docker stop n8n",
+          "output": "n8n",
+          "note": "Apaga sin borrar. localhost:5678 deja de responder y tus datos siguen intactos."
+        },
+        {
+          "command": "docker start n8n",
+          "output": "n8n",
+          "note": "Vuelve a encender con todo dentro. Estas dos son las de cada día."
+        },
+        {
+          "command": "docker rm n8n",
+          "output": "n8n",
+          "note": "BORRA el contenedor. Inofensivo si tienes volumen; catastrófico si no lo tienes. Es el paso normal de una actualización."
+        },
+        {
+          "command": "docker pull docker.n8n.io/n8nio/n8n",
+          "output": "Status: Downloaded newer image for docker.n8n.io/n8nio/n8n:latest",
+          "note": "Descarga la versión nueva. Después: stop, rm y la orden de arranque completa otra vez."
+        }
+      ]
+    },
+    {
+      "kind": "checklist",
+      "title": "La instalación no está terminada hasta que",
+      "caption": "Ocho comprobaciones. Las tres primeras son las que evitan perder trabajo.",
+      "items": [
+        "La clave de cifrado está guardada en tu gestor de contraseñas",
+        "Has borrado el contenedor a propósito y tus flujos seguían ahí",
+        "En tu carpeta de datos existe database.sqlite y pesa algo",
+        "La zona horaria pone Europe/Madrid en los ajustes de n8n",
+        "Sabes distinguir docker stop de docker rm sin pensarlo",
+        "Has actualizado una vez con tus manos: pull, stop, rm y run",
+        "La orden de arranque está guardada en un archivo de texto",
+        "Tienes una copia de la carpeta de datos en otro sitio, con su fecha"
+      ]
+    }
+  ]
 }
