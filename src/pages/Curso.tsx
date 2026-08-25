@@ -11,7 +11,7 @@ import Notebook from '../components/Notebook'
 import Piece from '../components/Piece'
 
 /**
- * El curso curado: 50 lecciones escritas a mano, en orden.
+ * El programa curado: lecciones escritas a mano, en orden.
  *
  * Cada una es teoría corta y bien explicada, y después una guía de tareas que
  * el alumno va marcando, con el prompt exacto donde hace falta.
@@ -54,7 +54,7 @@ export function CursoIndice() {
       <div className="st-page">
         <div className="st-empty">
           <h2>El curso se está escribiendo</h2>
-          <p>Cincuenta lecciones, una por una. Vuelve en un rato.</p>
+          <p>Las lecciones se están preparando. Vuelve en un rato.</p>
         </div>
       </div>
     )
@@ -85,19 +85,26 @@ export function CursoIndice() {
     <div className="st-page">
       <div className="st-page-title">
         <span className="st-kicker">El curso</span>
-        <h1>{lecciones.length} lecciones, en orden</h1>
+        <h1>Tu programa, paso a paso</h1>
         <p>
-          De no haber programado nunca a tener tu proyecto publicado en internet. Cada lección son
-          {' '}{Math.round(totalMin / lecciones.length)} minutos de media: un poco de teoría bien explicada y después
-          tareas concretas que haces tú. {Math.round(totalMin / 60)} horas en total.
+          Empieza por la base común y avanza hacia un proyecto real. Cada lección mezcla explicación, una tarea
+          concreta y una forma de comprobar que lo has entendido. Las especializaciones de herramientas aparecen
+          aparte para que puedas elegirlas cuando sepas qué quieres construir. Son {Math.round(totalMin / 60)} horas aproximadas.
         </p>
       </div>
+
+      <section className="st-program-guide">
+        <div><span>01</span><strong>Entender</strong><small>Qué puede hacer la IA y dónde se equivoca.</small></div>
+        <div><span>02</span><strong>Definir</strong><small>Qué problema quieres resolver y qué resultado esperas.</small></div>
+        <div><span>03</span><strong>Construir</strong><small>Una primera versión pequeña y comprobable.</small></div>
+        <div><span>04</span><strong>Entregar</strong><small>Pruebas, documentación, seguridad y siguiente versión.</small></div>
+      </section>
 
       {porHerramienta.map(({ id, label, items }) => (
         <section key={id} className="st-curso-area">
           <div className="st-section-head">
             <div>
-              <span className="st-kicker">Itinerario de herramienta</span>
+              <span className="st-kicker">Especialización opcional</span>
               <h2>{label}</h2>
             </div>
             <span>{items.length} de 20 lecciones</span>

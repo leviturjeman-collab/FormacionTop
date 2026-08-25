@@ -176,7 +176,18 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
               </ul>
             )}
 
-            {block.kind === 'codigo' && block.code && <CodeBlock code={block.code} lang={block.lang} />}
+            {block.kind === 'coste' && (
+              <ul className="st-plain st-cost-list">
+                {strings(block.items).map((item, itemIndex) => <li key={itemIndex}>{item}</li>)}
+              </ul>
+            )}
+
+            {block.kind === 'codigo' && block.code && (
+              <>
+                <CodeBlock code={block.code} lang={block.lang} />
+                {block.lang === 'prompt' && <small className="st-prompt-length">{block.code.trim().split(/\s+/).filter(Boolean).length} palabras · incluye preguntas, criterios, pruebas, límites y siguiente paso</small>}
+              </>
+            )}
 
             {block.kind === 'receta' && block.code && (
               <div className="st-recipe">

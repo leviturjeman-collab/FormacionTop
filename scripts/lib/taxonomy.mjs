@@ -206,6 +206,17 @@ export function stageFor(relativePath, title = '') {
  */
 export const TOOLS = [
   { id: 'higgsfield', label: 'Higgsfield', icon: 'higgsfield', match: /higgs?field/i },
+  { id: 'base44', label: 'Base44', icon: 'react', match: /base ?44/i },
+  { id: 'bolt', label: 'Bolt.new', icon: 'react', match: /bolt\.new|bolts+ai/i },
+  { id: 'replit', label: 'Replit', icon: 'nodedotjs', match: /replit|replit agent/i },
+  { id: 'framer', label: 'Framer', icon: 'figma', match: /framer/i },
+  { id: 'canva', label: 'Canva', icon: 'figma', match: /canva/i },
+  { id: 'heygen', label: 'HeyGen', icon: 'replicate', match: /heygen/i },
+  { id: 'descript', label: 'Descript', icon: 'replicate', match: /descript/i },
+  { id: 'gamma', label: 'Gamma', icon: 'replicate', match: /gamma\.app|gamma ai/i },
+  { id: 'pipedream', label: 'Pipedream', icon: 'n8n', match: /pipedream/i },
+  { id: 'notebooklm', label: 'NotebookLM', icon: 'googlegemini', match: /notebooklm/i },
+  { id: 'airtable', label: 'Airtable', icon: 'airtable', match: /airtable/i },
   // Herramientas de construccion y creacion con IA que entran en el itinerario.
   { id: 'lovable', label: 'Lovable', icon: 'react', match: /\blovable\b/i },
   { id: 'v0', label: 'v0', icon: 'vercel', match: /\bv0\.dev\b|\bv0\b(?= de vercel)/i },
@@ -238,7 +249,6 @@ export const TOOLS = [
   { id: 'slack', label: 'Slack', icon: 'slack', match: /\bslack\b/i },
   { id: 'gmail', label: 'Gmail', icon: 'gmail', match: /\bgmail\b/i },
   { id: 'sheets', label: 'Google Sheets', icon: 'googlesheets', match: /google sheets|hoja de c[aá]lculo/i },
-  { id: 'airtable', label: 'Airtable', icon: 'airtable', match: /\bairtable\b/i },
   { id: 'telegram', label: 'Telegram', icon: 'telegram', match: /\btelegram\b/i },
   { id: 'whatsapp', label: 'WhatsApp', icon: 'whatsapp', match: /\bwhatsapp\b/i },
   { id: 'huggingface', label: 'Hugging Face', icon: 'huggingface', match: /hugging ?face/i },

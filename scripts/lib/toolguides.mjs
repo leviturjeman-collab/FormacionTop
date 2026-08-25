@@ -345,6 +345,93 @@ export const TOOL_GUIDES = {
   },
 }
 
+/*
+ * Herramientas descubiertas en la revisión editorial.
+ *
+ * No se muestran como fichas vacías: aunque todavía no tengan una lección
+ * extensa propia, reciben una guía inicial con criterio de uso, primeros
+ * pasos, vocabulario, riesgos, coste y un encargo profesional. Después se
+ * pueden ampliar sin cambiar la navegación.
+ */
+const DISCOVERED_TOOL_META = {
+  base44: { label: 'Base44', url: 'base44.com', kind: 'apps', plain: 'Un constructor de aplicaciones que convierte una descripción en una aplicación funcional con pantallas, datos y lógica. Sirve para prototipos y productos pequeños, pero hay que revisar qué ha creado antes de usarlo con datos reales.' },
+  bolt: { label: 'Bolt.new', url: 'bolt.new', kind: 'apps', plain: 'Un constructor web que trabaja desde el navegador: describes una página o aplicación y genera una primera versión que puedes ver, editar y publicar. Es útil para prototipos rápidos, siempre que guardes el código y revises cada cambio.' },
+  replit: { label: 'Replit', url: 'replit.com', kind: 'apps', plain: 'Un entorno de programación en el navegador con un agente que puede crear aplicaciones a partir de una conversación. Te da una ruta rápida de idea a demo, pero la versión que entregues debe quedar respaldada en GitHub y probada fuera del chat.' },
+  framer: { label: 'Framer', url: 'framer.com', kind: 'web', plain: 'Un editor visual para diseñar y publicar sitios web. Es especialmente útil para páginas de marca, portfolios y sitios de marketing donde el control visual importa más que una lógica compleja.' },
+  canva: { label: 'Canva', url: 'canva.com', kind: 'content', plain: 'Un editor visual para crear piezas de comunicación, presentaciones, documentos y vídeos cortos. Su valor está en poder producir material coherente sin empezar desde un lienzo vacío.' },
+  heygen: { label: 'HeyGen', url: 'heygen.com', kind: 'video', plain: 'Una plataforma de vídeo con avatares y doblaje asistido por IA. Puede convertir un guion en una pieza presentada por una persona digital, pero requiere revisar consentimiento, pronunciación, tono y uso comercial.' },
+  descript: { label: 'Descript', url: 'descript.com', kind: 'video', plain: 'Un editor de audio y vídeo que permite editar una grabación trabajando sobre su transcripción. Es útil para convertir una conversación larga en clips, subtítulos o una versión corregida.' },
+  gamma: { label: 'Gamma', url: 'gamma.app', kind: 'content', plain: 'Una herramienta para crear presentaciones, documentos y páginas a partir de una estructura escrita. Acelera el primer borrador, pero el criterio, los datos y la revisión final siguen siendo tuyos.' },
+  pipedream: { label: 'Pipedream', url: 'pipedream.com', kind: 'automation', plain: 'Una plataforma de automatización orientada a conectar APIs y servicios con pasos visuales y código opcional. Es potente para integraciones que necesitan más control que un conector simple.' },
+  notebooklm: { label: 'NotebookLM', url: 'notebooklm.google.com', kind: 'knowledge', plain: 'Un espacio para conversar con documentos que tú aportas, con respuestas apoyadas en esas fuentes. Es útil para estudiar y sintetizar material, pero hay que comprobar siempre la cita y el alcance de los documentos.' },
+  airtable: { label: 'Airtable', url: 'airtable.com', kind: 'data', plain: 'Una base de datos visual que se parece a una hoja de cálculo, pero permite relaciones, vistas, permisos y automatizaciones. Es una buena pieza intermedia para proyectos que han crecido más que una hoja.' },
+  notion: { label: 'Notion', url: 'notion.so', kind: 'knowledge', plain: 'Un espacio para organizar documentos, bases de datos ligeras, proyectos y conocimiento. Funciona bien como centro de trabajo, siempre que definas qué información vive allí y cómo se actualiza.' },
+}
+
+function discoveredGuide(id, meta) {
+  const toolWord = meta.kind === 'video' ? 'créditos o minutos de generación' : meta.kind === 'automation' ? 'tareas o ejecuciones' : meta.kind === 'data' ? 'filas, registros o automatizaciones' : meta.kind === 'knowledge' ? 'documentos y consultas' : 'tokens, créditos o límites del plan'
+  return {
+    tool: id,
+    plain: meta.plain,
+    account: {
+      url: meta.url,
+      free: `Empieza con el plan de prueba o gratuito si existe y comprueba dentro de ${meta.label} qué límites tiene antes de conectar datos reales. Los precios, créditos y nombres de planes cambian; la fecha de la última comprobación debe quedar anotada en el proyecto.`,
+      steps: [
+        [`Entra en ${meta.url}`, 'Usa la dirección oficial y comprueba que el dominio coincide antes de crear la cuenta.'],
+        ['Crea una cuenta de prueba', 'Utiliza una cuenta separada si todavía estás evaluando la herramienta.'],
+        ['Mira el panel de uso', `Localiza los créditos, límites o consumos que ${meta.label} muestra antes de crear nada.`],
+        ['Crea un espacio de prueba', 'Ponle un nombre que indique que contiene datos ficticios y no lo mezcles con producción.'],
+        ['Haz una prueba pequeña', 'Comprueba una sola entrada, revisa el resultado y apunta qué cambiarías.'],
+      ],
+      warning: 'No conectes datos de clientes ni permisos de producción hasta haber probado el flujo, revisado la política de privacidad y definido cómo detenerlo.',
+    },
+    first: [
+      `Mira dos ejemplos de ${meta.label} y escribe qué resultado producen, no solo qué aspecto tienen.`,
+      'Crea una prueba con datos inventados y un resultado concreto que puedas comparar.',
+      'Cambia una sola variable entre una prueba y la siguiente para saber qué ha mejorado.',
+      'Guarda una copia del resultado y de la instrucción que lo produjo.',
+      'Apunta qué parte harías manualmente si la herramienta dejara de estar disponible.',
+    ],
+    words: [
+      ['Entrada', 'La información que recibe la herramienta para poder trabajar.'],
+      ['Salida', 'El resultado que produce y que otra persona puede revisar.'],
+      ['Plantilla', 'Una estructura preparada que evita empezar siempre desde cero.'],
+      ['Historial', 'El registro de cambios, pruebas o ejecuciones anteriores.'],
+      ['Producción', 'La versión que toca datos o usuarios reales.'],
+      ['Límite', `La cantidad máxima de ${toolWord} que permite tu plan o tu cuenta.`],
+    ],
+    matters: [
+      'Definir el resultado antes de abrir la herramienta.',
+      'Conservar una copia exportable o reproducible del trabajo.',
+      'Probar con un caso normal, uno vacío, uno repetido y uno extremo.',
+      'Revisar permisos, privacidad, uso comercial y propiedad de los resultados.',
+    ],
+    ignore: [
+      'Las opciones avanzadas que no afectan a tu primera prueba.',
+      'Perseguir el diseño perfecto antes de comprobar que el resultado sirve.',
+      'Conectar cinco herramientas a la vez cuando todavía no sabes cuál falla.',
+    ],
+    daily: [
+      `Escribe primero qué debe existir al final y deja que ${meta.label} te ayude solo con los pasos que aporten algo.`,
+      'Usa nombres claros y guarda una versión antes de cada cambio importante.',
+      'Revisa el resultado con una lista fija, no con la impresión del momento.',
+      'Separa la cuenta de pruebas de la cuenta que contiene datos reales.',
+      `Mide el consumo de ${toolWord} antes de automatizar una tarea repetitiva.`,
+    ],
+    errors: [
+      ['El resultado parece correcto, pero no sirve para mi caso', 'La instrucción era demasiado general o no incluía un ejemplo real.', 'Escribe una entrada concreta, una salida esperada y dos casos que no deben pasar.'],
+      ['La herramienta ha cambiado algo que yo no quería', 'El encargo dejaba demasiado margen o no había una copia anterior.', 'Trabaja por cambios pequeños, revisa el diff o historial y acepta solo una modificación cada vez.'],
+      ['El proyecto funciona en la prueba y falla con datos reales', 'Los datos reales tienen vacíos, formatos raros o permisos distintos.', 'Prueba antes con casos incompletos, repetidos y extremos, y registra cómo recuperarte.'],
+    ],
+    prompts: [{ name: `Diseñar un trabajo profesional con ${meta.label}`, prompt: `Quiero usar ${meta.label} para resolver un problema real y necesito que me acompañes con criterio profesional. No quiero que me entregues una idea bonita pero imposible de mantener. Quiero que primero entiendas mi situación, que después me ayudes a decidir si esta herramienta es adecuada y que solo entonces me propongas una primera versión pequeña. Mi situación es: [DESCRIBE EL PROBLEMA, QUIÉN LO TIENE, QUÉ HACE HOY Y QUÉ RESULTADO QUIERE]. Trabaja en español natural, explicando cada palabra técnica la primera vez que aparezca. Empieza haciendo una sola pregunta cada vez y espera mi respuesta. Pregunta por la entrada real, la salida exacta, el volumen, los datos personales, los permisos, el presupuesto, quién mantendrá el trabajo y qué ocurrirá si la herramienta deja de funcionar. Cuando tengas suficiente información, resume el proyecto en una ficha con problema, usuarios, entrada, salida, pasos, límites y criterio de éxito. Después compárame tres caminos: hacerlo con ${meta.label}, hacerlo con una alternativa y hacerlo manualmente durante la primera versión. Para cada camino explica tiempo, coste, dependencia, facilidad de reparación y qué datos tendrían que salir de mi equipo. Recomienda uno solo y justifica la decisión. Si recomiendo ${meta.label}, diseña una prueba de diez minutos con datos ficticios. Indica exactamente qué tengo que preparar, qué botón o zona debo buscar, qué debería ver al terminar y qué señal demostraría que algo ha fallado. No conectes cuentas reales ni envíes mensajes todavía. Luego prepara un plan de cinco pasos: preparar, construir, probar, documentar y entregar. Cada paso debe tener un resultado observable y una forma de volver atrás. Añade una lista de casos difíciles: entrada vacía, dato duplicado, texto largo, permiso caducado, servicio caído y persona que se arrepiente. Para cada caso dime qué debería hacer el sistema y qué debería hacer yo. Termina con un checklist de producción y una explicación de cómo medir el consumo de tokens, créditos, tareas, ejecuciones o límites del plan de ${meta.label}. No inventes precios ni funciones que no puedas confirmar: marca lo que tenga que comprobar en la web oficial.`, }],
+    usage: { unit: toolWord, explanation: `En ${meta.label} no basta con mirar el precio del plan. Hay que saber qué unidad se descuenta en cada acción: ${toolWord}. Haz una prueba controlada, anota la lectura del panel antes y después y multiplica ese consumo por el volumen mensual. La cifra debe revisarse cuando cambie el plan o el modelo.`, examples: [`Una prueba con una sola entrada y datos ficticios.`, `El consumo antes y después de una repetición idéntica.`, `El coste aproximado de diez, cien y mil usos.`, 'Un límite mensual y una alerta antes de alcanzarlo.', 'La fecha en la que se comprobó la información.'] },
+  }
+}
+
+for (const [id, meta] of Object.entries(DISCOVERED_TOOL_META)) {
+  if (!TOOL_GUIDES[id]) TOOL_GUIDES[id] = discoveredGuide(id, meta)
+}
+
 /** Añade guías escritas fuera del código, en content/toolguides/. */
 export function registerGuides(list) {
   for (const guide of list) {

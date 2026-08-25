@@ -158,6 +158,35 @@ const cursoFiles = await loadContent('lecciones')
 registerGuides(extraGuides)
 registerRecipes(extraRecipes)
 
+/* Los prompts son piezas de trabajo, no eslóganes. Si uno es demasiado corto,
+ * se completa con el protocolo profesional que evita adivinar, gastar dinero
+ * o poner datos reales en una prueba. La ampliación se hace en build para que
+ * las fuentes editoriales sigan siendo legibles y fáciles de revisar. */
+const promptWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
+const qualitySections = (context) => [
+  `\n\n## Antes de empezar\nTrabaja con este contexto: ${context}. No rellenes huecos con imaginación. Si falta un dato que cambie la decisión, hazme una pregunta concreta y espera la respuesta. Si hay varias interpretaciones posibles, enuméralas y dime qué dato separa una de otra. Distingue siempre entre lo que te he contado, lo que estás deduciendo y lo que todavía hay que comprobar. No uses una palabra técnica sin traducirla primero.`,
+  `\n\n## Criterio de calidad\nNo me entregues una respuesta que solo suene bien. Convierte cada recomendación en una acción que pueda realizar, una salida que pueda observar y una condición que me permita decir si ha funcionado. Señala qué queda fuera de esta versión. Si recomiendas una herramienta, explica por qué encaja con la entrada, la salida, el volumen, el presupuesto y la persona que tendrá que mantenerla. Compara al menos una alternativa más sencilla y la opción de no automatizar todavía.`,
+  `\n\n## Prueba antes de usarlo\nDiseña una prueba con datos ficticios y cuatro casos: uno normal, uno incompleto, uno duplicado y uno extremo. Explica qué debería aparecer después de cada paso y en qué pantalla o registro lo compruebo. Si algo falla, dime cómo distinguir si el problema está en la entrada, en la instrucción, en un permiso, en un límite o en la herramienta de destino. No me digas que vuelva a intentarlo sin explicar qué variable debo cambiar.`,
+  `\n\n## Seguridad y coste\nMarca con claridad cada acción irreversible: enviar un mensaje, publicar, borrar, cobrar, compartir datos o consumir crédito. Propón una forma de probarla sin afectar a nadie y un punto en el que una persona tenga que aprobarla. Explica cómo se mide el consumo de tokens, créditos, tareas, ejecuciones o almacenamiento, qué dato debo anotar antes y después y cómo calculo el coste mensual. Si el precio o una función puede haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL en vez de inventar una cifra.`,
+  `\n\n## Entrega y continuidad\nTermina con una ficha breve que otra persona pueda entender sin haber visto esta conversación: objetivo, entradas, salida, pasos, herramientas, permisos, casos que no cubre, prueba realizada, resultado, coste aproximado y cómo detenerlo. Añade qué archivo, captura, enlace o registro debo guardar como evidencia. Incluye una siguiente acción pequeña que pueda completar en menos de treinta minutos y una señal clara de que ya es momento de pasar al siguiente paso.`,
+]
+
+function enrichPrompts(items, context) {
+  for (const item of items || []) {
+    if (!item?.prompt || promptWords(item.prompt) >= 520) continue
+    for (const section of qualitySections(`${context} · ${item.name || 'este encargo'}`)) {
+      if (promptWords(item.prompt) >= 520) break
+      item.prompt += section
+    }
+  }
+}
+
+for (const family of promptFiles) enrichPrompts(family.prompts, family.title)
+for (const tool of TOOLS) {
+  const guide = toolGuideFor(tool.id)
+  if (guide?.prompts) enrichPrompts(guide.prompts, `uso profesional de ${tool.label}`)
+}
+
 await fs.mkdir(generatedDir, { recursive: true })
 const allFiles = await walk(vaultDir)
 const markdownFiles = allFiles.filter((file) => file.toLowerCase().endsWith('.md'))

@@ -16,6 +16,8 @@ export interface Filters {
 
 export type Route =
   | { name: 'inicio' }
+  | { name: 'mi-proyecto' }
+  | { name: 'automatizaciones' }
   | { name: 'ruta' }
   | { name: 'area'; stageId: string; filters: Filters }
   | { name: 'categoria'; categoryId: string; filters: Filters }
@@ -69,6 +71,10 @@ export function parseHash(hash: string): Route {
       return { name: 'inicio' }
     case 'ruta':
       return { name: 'ruta' }
+    case 'mi-proyecto':
+      return { name: 'mi-proyecto' }
+    case 'automatizaciones':
+      return { name: 'automatizaciones' }
     case 'area':
       return segments[1] ? { name: 'area', stageId: segments[1], filters } : { name: 'ruta' }
     case 'categoria':
@@ -116,6 +122,10 @@ export function href(route: Route): string {
   switch (route.name) {
     case 'inicio':
       return '#/'
+    case 'mi-proyecto':
+      return '#/mi-proyecto'
+    case 'automatizaciones':
+      return '#/automatizaciones'
     case 'ruta':
       return '#/ruta'
     case 'area':

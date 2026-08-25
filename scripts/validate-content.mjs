@@ -18,10 +18,22 @@ const check = (condition, message) => { if (!condition) problems.push(message) }
 
 const course = JSON.parse(await fs.readFile(path.join(publicDir, 'course.json'), 'utf8'))
 
+const countWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
+
 check(course.lessons.length >= 300, `Solo hay ${course.lessons.length} lecciones; se esperaban al menos 300.`)
 check(course.stages.length === 10, `Hay ${course.stages.length} etapas; se esperaban 10.`)
 check(course.folders.length > 0, 'No se ha generado ninguna carpeta para la biblioteca.')
 check(course.tools?.length > 0, 'Falta el catálogo de herramientas en course.json.')
+for (const family of course.prompts || []) {
+  for (const prompt of family.prompts || []) {
+    check(countWords(prompt.prompt) >= 500, `El prompt «${prompt.name}» tiene menos de 500 palabras.`)
+  }
+}
+for (const tool of course.toolPages || []) {
+  for (const prompt of tool.guide?.prompts || []) {
+    check(countWords(prompt.prompt) >= 500, `El prompt de ${tool.label} «${prompt.name}» tiene menos de 500 palabras.`)
+  }
+}
 
 // Cada lección tiene sus tres niveles completos.
 const LEVELS = ['basico', 'intermedio', 'avanzado']

@@ -378,6 +378,8 @@ export interface ToolGuide {
   errors?: [string, string][]
   /** Prompts específicos de esta herramienta. */
   prompts?: { name: string; prompt: string }[]
+  /** Cómo se mide el uso: tokens, créditos, tareas, ejecuciones o tiempo. */
+  usage?: { unit: string; explanation: string; examples: string[]; updatedAt?: string }
 }
 
 export interface ToolPage {
