@@ -323,15 +323,22 @@ export function Herramientas() {
       </div>
 
       <div className="st-tool-grid">
-        {course.toolPages.map((tool) => (
-          <a key={tool.id} className="st-tool-card" href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
-            <BrandMark icon={tool.icon} size={24} />
-            <div>
-              <strong>{tool.label}</strong>
-              <span>{tool.count} {tool.count === 1 ? 'lección' : 'lecciones'} · {tool.stageIds.length} áreas</span>
-            </div>
-          </a>
-        ))}
+        {course.toolPages.map((tool) => {
+          const escritas = tool.itinerary?.length || 0
+          return (
+            <a key={tool.id} className="st-tool-card" href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
+              <BrandMark icon={tool.icon} size={24} />
+              <div>
+                <strong>{tool.label}</strong>
+                {escritas > 0 ? (
+                  <span className="st-tool-itinerary">Itinerario · {escritas} de 20 lecciones</span>
+                ) : (
+                  <span>Itinerario pendiente · {tool.count} de material antiguo</span>
+                )}
+              </div>
+            </a>
+          )
+        })}
       </div>
     </div>
   )

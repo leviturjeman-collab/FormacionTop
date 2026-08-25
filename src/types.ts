@@ -329,6 +329,8 @@ export interface ToolPage {
   label: string
   icon: string
   count: number
+  /** Las 20 lecciones escritas a mano de esta herramienta, si ya las tiene. */
+  itinerary?: { id: string; slot?: number; title: string; minutes: number }[]
   lessonSlugs: string[]
   stageIds: string[]
   guide?: ToolGuide | null

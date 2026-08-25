@@ -417,6 +417,11 @@ const toolPages = TOOLS
       label: tool.label,
       icon: tool.icon,
       count: inTool.length,
+      // Las lecciones del itinerario escrito a mano cuentan aparte.
+      itinerary: cursoFiles
+        .filter((leccion) => leccion.tool === tool.id)
+        .sort((a, b) => (a.slot || 0) - (b.slot || 0))
+        .map((leccion) => ({ id: leccion.id, slot: leccion.slot, title: leccion.title, minutes: leccion.minutes })),
       lessonSlugs: inTool.map((lesson) => lesson.slug),
       stageIds: [...new Set(inTool.map((lesson) => lesson.stageId))],
       guide: toolGuideFor(tool.id),
