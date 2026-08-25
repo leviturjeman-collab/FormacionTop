@@ -43,7 +43,7 @@ En avanzado, cada proyecto debe tener un "contrato de agente": que puede leer, q
 
 ## Proyectos reales
 
-Un proyecto real con OpenAI puede ser un generador de propuestas comerciales, un copiloto de documentacion interna, un revisor de PRs, un asistente de investigacion con fuentes, un traductor de requisitos a tickets, un sistema de soporte con retrieval o un generador de cursos en Obsidian. El flujo AAAA+ es siempre parecido: investigar fuentes, disenar estructura, crear artefactos, verificar, romper, reparar, documentar y convertirlo en plantilla.
+Un proyecto real con OpenAI puede ser un generador de propuestas comerciales, un copiloto de documentacion interna, un revisor de PRs, un asistente de investigacion con fuentes, un traductor de requisitos a tickets, un sistema de soporte con retrieval o un generador de cursos en Obsidian. El flujo de máximo nivel es siempre parecido: investigar fuentes, disenar estructura, crear artefactos, verificar, romper, reparar, documentar y convertirlo en plantilla.
 
 Ejemplo de practica: el alumno crea una skill para transformar cualquier reunion en plan de accion. Debe definir entradas, formato de salida, pasos, limites, ejemplos, errores frecuentes y prueba de calidad. Luego ejecuta la skill sobre tres reuniones distintas y compara resultados. Si la skill falla, debe explicar si fallo por falta de contexto, instruccion ambigua, datos incompletos o criterio de evaluacion insuficiente.
 
@@ -97,4 +97,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **OpenAI ChatGPT Codex**.
-

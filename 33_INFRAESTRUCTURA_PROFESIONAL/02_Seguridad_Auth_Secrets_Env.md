@@ -56,16 +56,6 @@ build/
 - Las tools de agentes deben usar permisos minimos.
 - Toda accion sensible requiere aprobacion humana.
 
-## BREAK
-
-Poner `SUPABASE_SERVICE_ROLE_KEY` en frontend o subir `.env.local` a un repo de prueba.
-
-## FIX
-
-Rotar clave, limpiar repo, mover secreto al servidor, documentar incidente y anadir escaneo preventivo.
-
-<!-- DESARROLLO_EXTENSO_PREMIUM_2026_08_18 -->
-
 # Desarrollo extenso premium - 02 Seguridad Auth Secrets Env
 
 ## 1. Proposito profesional

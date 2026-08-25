@@ -45,7 +45,7 @@ El alumno avanzado debe disenar "guardrails de repositorio": rules, tests, linte
 
 Proyectos con Cursor: construir una feature en una app existente, arreglar un bug reproducible, crear tests faltantes, documentar una API, migrar una pantalla, crear un dashboard, revisar accesibilidad, preparar una plantilla de componente o generar rules de equipo. El valor real no esta en que Cursor escriba mucho codigo, sino en que el alumno aprenda a dirigirlo como colaborador tecnico.
 
-Practica AAAA+: abrir un proyecto, crear una rule para estilo de componentes, pedir al Agent una mejora concreta, revisar diff, ejecutar pruebas, provocar un error cambiando un selector o tipo, pedir diagnostico y documentar el arreglo. La evaluacion mide si el alumno mantuvo alcance, entendio los cambios y verifico.
+Practica de máximo nivel: abrir un proyecto, crear una rule para estilo de componentes, pedir al Agent una mejora concreta, revisar diff, ejecutar pruebas, provocar un error cambiando un selector o tipo, pedir diagnostico y documentar el arreglo. La evaluacion mide si el alumno mantuvo alcance, entendio los cambios y verifico.
 
 ## Fuentes oficiales
 
@@ -57,12 +57,6 @@ Practica AAAA+: abrir un proyecto, crear una rule para estilo de componentes, pe
 - Cloud Agents: https://cursor.com/docs/cloud-agent
 - Customizing agents: https://cursor.com/learn/customizing-agents
 - Cursor Marketplace: https://cursor.com/marketplace
-
-## Criterio de evaluacion AAAA+
-
-Un alumno domina Cursor cuando puede dirigir al agente sin perder control del repositorio. La prueba debe exigir tres cosas: una rule util, una tarea de codigo con alcance pequeno y una revision de diff. La rule debe ser especifica, estar ubicada donde corresponde y no duplicar lo que ya hacen linters o tests. La tarea debe tener criterio de terminado. La revision debe mencionar archivos tocados, motivo del cambio, pruebas ejecutadas y riesgo residual.
-
-Una evaluacion avanzada puede pedir al alumno que cree un flujo de equipo: rules para frontend, subagent para accesibilidad, MCP para una herramienta externa y Cloud Agent para una tarea no urgente. La nota excelente explica que partes quedan en local, que partes van a cloud, que secretos no se comparten y que humano aprueba antes de merge. Cursor se vuelve AAAA+ cuando no es una maquina de escribir codigo rapido, sino una extension gobernada del equipo tecnico.
 
 ## Siguiente paso del alumno
 
@@ -104,4 +98,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **Cursor AI Editor Agents**.
-

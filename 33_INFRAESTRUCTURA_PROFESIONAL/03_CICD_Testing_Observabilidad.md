@@ -87,10 +87,6 @@ NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
 {"run_id":"demo-001","model":"gpt-4.1-mini","tokens":1200,"cost_estimate":0.01,"human_review":true}
 ```
 
-## BREAK
-
-Romper un test, quitar una variable, provocar un error capturado por Sentry o enviar un evento PostHog mal nombrado.
-
 ## Entregable
 
 Workflow verde, test E2E, reporte, evento de analitica y error controlado.

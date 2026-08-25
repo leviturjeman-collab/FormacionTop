@@ -30,9 +30,6 @@ El examen final exige construir y defender. El alumno recibe un caso: una peque√
 
 Problema claro: 10. Arquitectura: 15. Ejecucion: 20. Diagnostico: 15. Fuentes: 10. Privacidad: 10. Documentacion: 10. Defensa: 10.
 
-## Criterio AAAA+
-
-El alumno no solo entrega algo que funciona. Entrega algo que otra persona puede leer, ejecutar, revisar y mantener.
 ## Control editorial profesional
 
 Este archivo forma parte de la capa final de producto de la academia. Su funcion es que **Examen final practico** no sea solo una idea escrita, sino una pieza util para impartir, evaluar, vender, actualizar o entregar. El entregable asociado es: **examen final con evidencia**.

@@ -102,10 +102,6 @@ curl -X POST https://api.example.com/leads \
 
 Status codes clave: `200`, `201`, `400`, `401`, `403`, `404`, `429`, `500`.
 
-## BREAK
-
-Usar una password incorrecta, un puerto ocupado, un JSON roto o una API key falsa. El alumno debe mirar logs, status code y variables.
-
 ## Entregable
 
 `docker-compose.yml`, `.env.example`, SQL inicial, request cURL feliz y request roto.

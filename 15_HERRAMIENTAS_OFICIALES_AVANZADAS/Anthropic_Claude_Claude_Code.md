@@ -47,7 +47,7 @@ Hooks son utiles para ejecutar comprobaciones, formateos o pasos del flujo, pero
 
 Proyectos con Claude/Claude Code: revisor de codigo, migracion pequena de framework, generador de documentacion tecnica, auditor de arquitectura, subagent de tests, asistente de debugging, refactor con pruebas y sistema de documentacion de decisiones. En no-codigo: asistente de investigacion, generador de programas formativos, critico de propuestas, analista de contratos o sintetizador de reuniones.
 
-Practica AAAA+: el alumno toma un repositorio sencillo y pide a Claude Code una mejora pequena. Debe escribir una tarea con criterios de aceptacion, pedir plan, permitir cambios, ejecutar tests y revisar diff. BREAK: pedir una tarea demasiado amplia, quitar un test o usar una instruccion ambigua. FIX: reducir alcance, anadir criterio observable y documentar el cambio.
+Practica de máximo nivel: el alumno toma un repositorio sencillo y pide a Claude Code una mejora pequena. Debe escribir una tarea con criterios de aceptacion, pedir plan, permitir cambios, ejecutar tests y revisar diff. BREAK: pedir una tarea demasiado amplia, quitar un test o usar una instruccion ambigua. FIX: reducir alcance, anadir criterio observable y documentar el cambio.
 
 ## Fuentes oficiales
 
@@ -59,12 +59,6 @@ Practica AAAA+: el alumno toma un repositorio sencillo y pide a Claude Code una 
 - Tool use: https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview
 - Computer use: https://docs.anthropic.com/en/docs/agents-and-tools/computer-use
 - Anthropic skills repository: https://github.com/anthropics/skills
-
-## Criterio de evaluacion AAAA+
-
-Un alumno domina Claude y Claude Code cuando puede convertir una tarea ambigua en una unidad de trabajo revisable. La evaluacion debe pedirle que escriba una peticion inicial, un criterio de aceptacion, una lista de archivos probables, un plan de pruebas y una politica de permisos. Despues debe ejecutar la tarea o simularla, revisar cambios y explicar riesgos. Si usa subagents, debe justificar por que la tarea necesita especialistas. Si usa hooks, debe explicar que evento los dispara y que pasa si fallan. Si usa MCP, debe listar herramientas disponibles y datos que pueden leer.
-
-La defensa oral debe incluir una frase clave: "no doy mas autonomia hasta que puedo medir el resultado". Esa frase resume el criterio profesional. Claude puede razonar mucho, pero el sistema necesita evidencias: tests, logs, diffs, fuentes, permisos y revision humana.
 
 ## Siguiente paso del alumno
 
@@ -107,4 +101,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **Anthropic Claude Claude Code**.
-

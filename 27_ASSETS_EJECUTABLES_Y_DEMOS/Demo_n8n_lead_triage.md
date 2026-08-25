@@ -24,13 +24,6 @@ Esta demo simula un flujo de clasificacion de leads. No incluye credenciales rea
 
 Importar el workflow en n8n de prueba o leer el JSON como arquitectura. Enviar payload correcto. Despues enviar payload incompleto. El alumno debe explicar que campo falta y donde validarlo.
 
-## BREAK
-
-Quitar email o presupuesto. El flujo debe marcar `needs_human_review`.
-
-## FIX
-
-Actualizar schema o validacion para no enviar leads incompletos a CRM.
 ## Control editorial profesional
 
 Este archivo forma parte de la capa final de producto de la academia. Su funcion es que **Demo n8n lead triage** no sea solo una idea escrita, sino una pieza util para impartir, evaluar, vender, actualizar o entregar. El entregable asociado es: **demo de workflow n8n**.

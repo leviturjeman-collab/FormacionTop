@@ -6,13 +6,34 @@
     "url": "sheets.google.com",
     "free": "Gratis con una cuenta normal de Gmail: hojas ilimitadas dentro de los 15 GB que compartes con el correo y con Drive. Conectarla a un proceso automático también es gratis, Google no cobra por llamada. Si quieres correo con tu propio dominio, Google Workspace cuesta unos 7 € por persona al mes, pero para el curso no hace falta.",
     "steps": [
-      ["Crea la hoja", "Escribe sheets.new en la barra del navegador y pulsa intro. Aparece una hoja vacía al momento. Ponle nombre arriba a la izquierda, donde pone \"Hoja de cálculo sin título\". Si no lo haces, dentro de un mes tendrás quince iguales."],
-      ["Escribe las cabeceras en la fila 1", "Una palabra por columna: fecha, email, importe, estado. Sin acentos y sin espacios te ahorra líos luego. Esa primera fila es la que el proceso automático lee para saber dónde va cada dato, así que no la muevas después."],
-      ["Crea un proyecto en console.cloud.google.com", "Es el panel de Google para gente que conecta programas. Arriba a la izquierda hay un desplegable con el nombre del proyecto: púlsalo y elige \"Nuevo proyecto\" (\"New project\"). Ponle un nombre tipo automatizaciones. Tarda unos segundos en crearse."],
-      ["Activa las dos puertas de entrada", "En la barra de búsqueda de arriba escribe \"Google Sheets API\" y pulsa \"Habilitar\" (\"Enable\"). Repite con \"Google Drive API\", que hace falta para que pueda encontrar y listar tus hojas. Si te saltas esto, todo lo siguiente falla."],
-      ["Crea la cuenta de servicio", "Menú lateral → \"IAM y administración\" → \"Cuentas de servicio\" → \"Crear cuenta de servicio\". Ponle un nombre, por ejemplo n8n-bot. Al terminar verás un correo con pinta rara: n8n-bot@automatizaciones-471203.iam.gserviceaccount.com. Cópialo, lo necesitas en el último paso."],
-      ["Descarga la clave", "Entra en esa cuenta → pestaña \"Claves\" (\"Keys\") → \"Agregar clave\" → \"Crear clave nueva\" → formato JSON. Se descarga un archivo a tu carpeta de Descargas. Se descarga UNA sola vez: no hay forma de volver a bajarlo, si lo pierdes toca crear otra clave."],
-      ["Comparte la hoja con ese correo", "Vuelve a la hoja, botón azul \"Compartir\" arriba a la derecha, pega el correo de la cuenta de servicio y dale permiso de \"Editor\". Desmarca \"Notificar a las personas\": no es una persona, no hay nadie leyendo. Sin este paso la conexión falla siempre, y el error no te dirá que es esto."]
+      [
+        "Crea la hoja",
+        "Escribe sheets.new en la barra del navegador y pulsa intro. Aparece una hoja vacía al momento. Ponle nombre arriba a la izquierda, donde pone \"Hoja de cálculo sin título\". Si no lo haces, dentro de un mes tendrás quince iguales."
+      ],
+      [
+        "Escribe las cabeceras en la fila 1",
+        "Una palabra por columna: fecha, email, importe, estado. Sin acentos y sin espacios te ahorra líos luego. Esa primera fila es la que el proceso automático lee para saber dónde va cada dato, así que no la muevas después."
+      ],
+      [
+        "Crea un proyecto en console.cloud.google.com",
+        "Es el panel de Google para gente que conecta programas. Arriba a la izquierda hay un desplegable con el nombre del proyecto: púlsalo y elige \"Nuevo proyecto\" (\"New project\"). Ponle un nombre tipo automatizaciones. Tarda unos segundos en crearse."
+      ],
+      [
+        "Activa las dos puertas de entrada",
+        "En la barra de búsqueda de arriba escribe \"Google Sheets API\" y pulsa \"Habilitar\" (\"Enable\"). Repite con \"Google Drive API\", que hace falta para que pueda encontrar y listar tus hojas. Si te saltas esto, todo lo siguiente falla."
+      ],
+      [
+        "Crea la cuenta de servicio",
+        "Menú lateral → \"IAM y administración\" → \"Cuentas de servicio\" → \"Crear cuenta de servicio\". Ponle un nombre, por ejemplo n8n-bot. Al terminar verás un correo con pinta rara: n8n-bot@automatizaciones-471203.iam.gserviceaccount.com. Cópialo, lo necesitas en el último paso."
+      ],
+      [
+        "Descarga la clave",
+        "Entra en esa cuenta → pestaña \"Claves\" (\"Keys\") → \"Agregar clave\" → \"Crear clave nueva\" → formato JSON. Se descarga un archivo a tu carpeta de Descargas. Se descarga UNA sola vez: no hay forma de volver a bajarlo, si lo pierdes toca crear otra clave."
+      ],
+      [
+        "Comparte la hoja con ese correo",
+        "Vuelve a la hoja, botón azul \"Compartir\" arriba a la derecha, pega el correo de la cuenta de servicio y dale permiso de \"Editor\". Desmarca \"Notificar a las personas\": no es una persona, no hay nadie leyendo. Sin este paso la conexión falla siempre, y el error no te dirá que es esto."
+      ]
     ],
     "warning": "El archivo que descargas es la contraseña de esa cuenta de servicio, escrita en texto que se lee abriéndolo con el bloc de notas. Quien lo tenga puede escribir en tus hojas sin pedirte permiso a ti. No lo subas a GitHub, no lo mandes por correo y no lo dejes tirado en Descargas: pega su contenido en n8n y borra el archivo. Si se te escapa, entra en Google Cloud y elimina esa clave desde la pestaña \"Claves\"; borrar el archivo de tu disco no la anula."
   },
@@ -24,14 +45,38 @@
     "Cámbialo a \"Append or Update Row\" y pon la columna email en \"Column to match on\": así actualiza la ficha si ese correo ya está, en vez de duplicarlo."
   ],
   "words": [
-    ["API", "La puerta por la que un programa entra en otro sin que haya una persona haciendo clic. Google Sheets tiene la suya y hay que abrirla a mano una vez."],
-    ["Cuenta de servicio", "Un usuario que no es una persona: no tiene contraseña ni entra por la pantalla de acceso normal. Existe para que un programa actúe por su cuenta. Tiene su propio correo, y la hoja hay que compartírsela igual que se la compartirías a un compañero."],
-    ["Clave JSON", "El archivo que te descargas al crear esa cuenta. Es su contraseña, guardada en un texto ordenado por parejas de nombre y valor que cualquiera puede leer si lo abre."],
-    ["ID de la hoja", "El trozo largo de letras y números de la dirección web, entre /d/ y /edit. Es la matrícula de esa hoja: dos hojas con el mismo nombre tienen matrículas distintas."],
-    ["Rango", "La forma de decir \"desde esta casilla hasta esta otra\". A1:D50 son las cuatro primeras columnas de las cincuenta primeras filas."],
-    ["Append", "Añadir al final. Escribe una fila nueva debajo de la última que haya, sin tocar nada de lo que ya estaba."],
-    ["Cuota", "El número de veces que puedes llamar a la puerta en un minuto. Google deja unas 60 por minuto y por usuario. Si te pasas, deja de abrir un rato y te devuelve un aviso de \"demasiadas peticiones\"."],
-    ["Sondeo (polling)", "Preguntar cada cierto tiempo \"¿ha cambiado algo?\" en lugar de que te avisen cuando pasa. Es lo que hace n8n con las hojas: mira cada minuto como mínimo, no se entera al instante."]
+    [
+      "API",
+      "La puerta por la que un programa entra en otro sin que haya una persona haciendo clic. Google Sheets tiene la suya y hay que abrirla a mano una vez."
+    ],
+    [
+      "Cuenta de servicio",
+      "Un usuario que no es una persona: no tiene contraseña ni entra por la pantalla de acceso normal. Existe para que un programa actúe por su cuenta. Tiene su propio correo, y la hoja hay que compartírsela igual que se la compartirías a un compañero."
+    ],
+    [
+      "Clave JSON",
+      "El archivo que te descargas al crear esa cuenta. Es su contraseña, guardada en un texto ordenado por parejas de nombre y valor que cualquiera puede leer si lo abre."
+    ],
+    [
+      "ID de la hoja",
+      "El trozo largo de letras y números de la dirección web, entre /d/ y /edit. Es la matrícula de esa hoja: dos hojas con el mismo nombre tienen matrículas distintas."
+    ],
+    [
+      "Rango",
+      "La forma de decir \"desde esta casilla hasta esta otra\". A1:D50 son las cuatro primeras columnas de las cincuenta primeras filas."
+    ],
+    [
+      "Append",
+      "Añadir al final. Escribe una fila nueva debajo de la última que haya, sin tocar nada de lo que ya estaba."
+    ],
+    [
+      "Cuota",
+      "El número de veces que puedes llamar a la puerta en un minuto. Google deja unas 60 por minuto y por usuario. Si te pasas, deja de abrir un rato y te devuelve un aviso de \"demasiadas peticiones\"."
+    ],
+    [
+      "Sondeo (polling)",
+      "Preguntar cada cierto tiempo \"¿ha cambiado algo?\" en lugar de que te avisen cuando pasa. Es lo que hace n8n con las hojas: mira cada minuto como mínimo, no se entera al instante."
+    ]
   ],
   "matters": [
     "Compartir la hoja con el correo de la cuenta de servicio. Es el paso que se salta todo el mundo, y el mensaje que sale (403, \"no tienes permiso\") no menciona ni la hoja ni el correo, así que te pasas media tarde revisando la credencial, que estaba bien.",
@@ -48,20 +93,201 @@
     {
       "prompt": "Tienes el flujo montado, la credencial guardada sin quejas y al pulsar \"Test step\" sale: The caller does not have permission (403). ¿Qué falta?",
       "options": [
-        {"text": "Compartir la hoja con el correo de la cuenta de servicio, con permiso de Editor", "correct": true, "why": "Correcto. La credencial solo demuestra quién es; no le da acceso a nada. Para Google ese correo es un usuario más, y una hoja que nadie le ha compartido, para él no existe. El matiz importa: con permiso de Lector podría leer, pero al escribir volvería a fallar."},
-        {"text": "Volver a descargar la clave, que estará caducada", "correct": false, "why": "Es lo primero que piensa todo el mundo, porque el error suena a credencial. Pero las claves de cuenta de servicio no caducan solas, y si la clave estuviera mal el mensaje sería de identidad (401), no de permiso (403). Ese número es la pista."},
-        {"text": "Poner la hoja como \"cualquiera con el enlace\"", "correct": false, "why": "Se cree porque a veces parece funcionar: en lectura, el enlace público deja pasar. Se rompe en dos sitios. Uno, el enlace público en modo lectura no permite escribir, que es justo lo que hace tu flujo. Dos, si lo pones en modo edición para arreglarlo, acabas de dejar tus datos abiertos a cualquiera de internet."}
+        {
+          "text": "Compartir la hoja con el correo de la cuenta de servicio, con permiso de Editor",
+          "correct": true,
+          "why": "Correcto. La credencial solo demuestra quién es; no le da acceso a nada. Para Google ese correo es un usuario más, y una hoja que nadie le ha compartido, para él no existe. El matiz importa: con permiso de Lector podría leer, pero al escribir volvería a fallar."
+        },
+        {
+          "text": "Volver a descargar la clave, que estará caducada",
+          "correct": false,
+          "why": "Es lo primero que piensa todo el mundo, porque el error suena a credencial. Pero las claves de cuenta de servicio no caducan solas, y si la clave estuviera mal el mensaje sería de identidad (401), no de permiso (403). Ese número es la pista."
+        },
+        {
+          "text": "Poner la hoja como \"cualquiera con el enlace\"",
+          "correct": false,
+          "why": "Se cree porque a veces parece funcionar: en lectura, el enlace público deja pasar. Se rompe en dos sitios. Uno, el enlace público en modo lectura no permite escribir, que es justo lo que hace tu flujo. Dos, si lo pones en modo edición para arreglarlo, acabas de dejar tus datos abiertos a cualquiera de internet."
+        }
       ],
       "explain": "Una credencial dice quién eres. Un permiso dice qué puedes tocar. Son dos cosas distintas y hay que hacer las dos."
     },
     {
       "prompt": "Tienes 800 contactos y montas un bucle que añade cada uno como fila. Alrededor de la fila 60 el flujo se detiene con \"Quota exceeded\". ¿Qué haces?",
       "options": [
-        {"text": "Mandar las 800 filas en una sola operación de añadir, en lugar de 800 llamadas", "correct": true, "why": "Sí. El nodo de Google Sheets acepta todas las filas de golpe: una petición en vez de ochocientas. El límite se cuenta en peticiones, no en filas, así que el problema no se retrasa, desaparece."},
-        {"text": "Meter una espera de un segundo entre fila y fila", "correct": false, "why": "Suena razonable porque de hecho terminaría, y por eso mucha gente se queda ahí. Pero tardas trece minutos en algo que dura dos segundos, y durante esos trece minutos cualquier otro flujo tuyo que toque Sheets comparte la misma cuota y se cae también."},
-        {"text": "Pedirle a Google que te suba el límite", "correct": false, "why": "Se puede pedir, y para volúmenes grandes de verdad es lo correcto, por eso no es una tontería. Aquí no encaja: estarías pidiendo permiso para hacer ochocientas veces algo que se hace una sola. Google pregunta para qué lo necesitas, y no tienes respuesta."}
+        {
+          "text": "Mandar las 800 filas en una sola operación de añadir, en lugar de 800 llamadas",
+          "correct": true,
+          "why": "Sí. El nodo de Google Sheets acepta todas las filas de golpe: una petición en vez de ochocientas. El límite se cuenta en peticiones, no en filas, así que el problema no se retrasa, desaparece."
+        },
+        {
+          "text": "Meter una espera de un segundo entre fila y fila",
+          "correct": false,
+          "why": "Suena razonable porque de hecho terminaría, y por eso mucha gente se queda ahí. Pero tardas trece minutos en algo que dura dos segundos, y durante esos trece minutos cualquier otro flujo tuyo que toque Sheets comparte la misma cuota y se cae también."
+        },
+        {
+          "text": "Pedirle a Google que te suba el límite",
+          "correct": false,
+          "why": "Se puede pedir, y para volúmenes grandes de verdad es lo correcto, por eso no es una tontería. Aquí no encaja: estarías pidiendo permiso para hacer ochocientas veces algo que se hace una sola. Google pregunta para qué lo necesitas, y no tienes respuesta."
+        }
       ],
       "explain": "El límite cuenta las veces que llamas a la puerta, no lo que llevas dentro. Llama una vez con mucho, no mil veces con poco."
+    }
+  ],
+  "shortcuts": [
+    [
+      "El identificador de la hoja, en la dirección del navegador",
+      "Abre tu hoja y mira la barra de arriba: docs.google.com/spreadsheets/d/1AbC...XyZ/edit. Ese trozo largo entre /d/ y /edit es el identificador, y es lo que te va a pedir cualquier automatización. Cópialo con cuidado: un carácter de menos y el error que sale no dice 'te falta una letra', dice 'no encontrada'."
+    ],
+    [
+      "El nombre exacto de la pestaña, abajo del todo",
+      "Las automatizaciones no buscan 'la primera pestaña': buscan una pestaña con un nombre concreto. Si la tuya se llama 'Hoja 1' con espacio y la automatización busca 'Hoja1', falla. Renómbrala a algo corto, en minúsculas y sin espacios ni acentos (por ejemplo pedidos) y usa ese nombre en todas partes."
+    ],
+    [
+      "Ctrl+Mayús+V — pegar sin formato",
+      "Pega solo el texto, sin colores, tipos de letra ni fórmulas de donde venías. Cuando pegas datos de una web directamente, arrastras basura invisible que luego rompe las búsquedas. Este atajo es el que hay que usar por defecto."
+    ],
+    [
+      "Fila 1 congelada: 'Ver' → 'Inmovilizar' → '1 fila'",
+      "Fija los títulos arriba para que no se te vayan al bajar. Además, muchas automatizaciones dan por hecho que la fila 1 son los nombres de las columnas: dejarla congelada es también una señal para ti de que esa fila no se toca."
+    ],
+    [
+      "Ctrl+Mayús+flecha abajo — ver dónde acaban los datos de verdad",
+      "Te lleva a la última fila con contenido. Sirve para descubrir el problema más común de las hojas automatizadas: quedan filas con un espacio en blanco escrito muy abajo, y para el ordenador esa hoja tiene 4.000 filas aunque tú solo veas 30."
+    ],
+    [
+      "Formato → Número → Texto sin formato, para los teléfonos y los códigos",
+      "Google convierte solo lo que le parece un número. Un teléfono que empieza por 0 pierde el cero, un código como 1-2 se convierte en una fecha. Selecciona esas columnas y márcalas como texto ANTES de que entren datos, no después."
+    ],
+    [
+      "Botón 'Compartir' (arriba a la derecha)",
+      "Es donde se le da acceso a la automatización. No basta con crear la cuenta de servicio: hay que compartir la hoja con su correo (ese que acaba en .iam.gserviceaccount.com) y darle permiso de 'Editor'. Si solo le das 'Lector', podrá leer pero no escribir, y el error que verás no lo dirá tan claro."
+    ],
+    [
+      "'Archivo' → 'Historial de versiones' → 'Ver historial'",
+      "El deshacer de verdad, con nombres y horas. Cuando una automatización te llene la hoja de basura a las tres de la mañana, aquí recuperas el estado de antes en dos clics. Míralo una vez ahora, con calma, para saber dónde está el día que te haga falta."
+    ],
+    [
+      "'Datos' → 'Validación de datos'",
+      "Obliga a que una columna solo acepte ciertos valores (por ejemplo: nuevo, en curso, cerrado). Es la forma barata de evitar que alguien escriba 'Nuevo', 'NUEVO' y 'nuevo ' y que luego tus filtros no cuadren."
+    ],
+    [
+      "'Extensiones' → 'Apps Script'",
+      "El sitio donde Google deja escribir código dentro de la hoja. No lo necesitas para empezar y lo mencionamos por lo contrario: si un tutorial te dice de pegar aquí un código que no entiendes, no lo hagas. Ese código puede leer y enviar todo lo que hay en tu Drive."
+    ]
+  ],
+  "daily": [
+    "Una fila es una ficha y una columna es un dato. En cuanto una hoja tiene títulos en dos sitios, filas de resumen en medio o celdas combinadas, deja de servir para automatizar. Para mirarla tú, ponte bonita otra hoja aparte; la que usa el robot se queda fea y ordenada.",
+    "Los títulos de la fila 1, en minúsculas, sin espacios ni acentos. Escribe fecha, nombre, correo, importe, estado. Así se llamarán los datos dentro de la automatización, y cada acento o espacio que pongas ahí es un fallo esperándote más adelante.",
+    "Nunca reordenes ni renombres columnas de una hoja que ya está automatizada. La automatización busca la columna por su nombre o por su posición. Si insertas una en medio, todo se descoloca sin dar error: simplemente empieza a escribir el importe donde va el correo.",
+    "Añadir filas al final, nunca insertar en medio. Las automatizaciones escriben en la primera fila libre. Si insertas filas por arriba, se pisan datos. Ordenar lo dejas para una vista o para una hoja de lectura aparte.",
+    "Comparte la hoja con el correo de la cuenta de servicio y dale permiso de Editor. Es el paso que se olvida el 90 % de las veces. El síntoma es un error de 'no encontrada' o 'sin permiso' aunque la hoja esté ahí delante.",
+    "Una hoja de cálculo no es una base de datos. Aguanta bien unos miles de filas; a partir de ahí se arrastra, y con varias automatizaciones escribiendo a la vez se pisan entre ellas. Cuando llegues ahí, toca mover los datos a Supabase o Postgres, y es buena señal: significa que aquello funciona.",
+    "Antes de tocar nada, mira el historial de versiones. Es tu red. Y antes de dejar suelta una automatización que escribe, haz una copia de la hoja ('Archivo' → 'Hacer una copia') y pruébala contra la copia."
+  ],
+  "templates": [
+    {
+      "name": "La hoja de registro que aguanta cualquier automatización",
+      "what": "Es la estructura mínima de una hoja pensada para que la escriba un robot y la lea una persona: identificador, fecha, los datos, el estado y una columna de notas donde el robot deja constancia de lo que hizo. Vale para leads, pedidos, incidencias, facturas o lo que sea que llegue de fuera y haya que ir despachando.",
+      "how": "1) Crea una hoja nueva en sheets.google.com. 2) Renombra la pestaña de abajo a 'registro'. 3) Pega la primera fila de abajo en la celda A1 (con Ctrl+Mayús+V, sin formato). 4) Inmoviliza la fila 1 desde 'Ver' → 'Inmovilizar'. 5) Marca la columna del teléfono como 'Texto sin formato'. 6) Comparte la hoja con el correo de tu cuenta de servicio, con permiso de Editor. 7) Copia el identificador de la barra de direcciones y guárdalo: es lo que te va a pedir la automatización.",
+      "fill": [
+        [
+          "id",
+          "Un número que no se repite nunca. Lo pone la automatización, no tú. Sirve para saber si una fila ya se procesó"
+        ],
+        [
+          "fecha_alta",
+          "Cuándo entró. Formato AAAA-MM-DD para que se ordene bien y no dependa de si la hoja está en español o en inglés"
+        ],
+        [
+          "estado",
+          "Solo tres valores posibles: nuevo, en_curso, cerrado. Ponle validación de datos para que nadie invente otro"
+        ],
+        [
+          "procesado_en",
+          "La marca de tiempo que deja el robot cuando ya ha hecho su trabajo con esa fila. Si está vacía, no la ha tocado"
+        ],
+        [
+          "nota_robot",
+          "Lo que la automatización quiera contarte: qué hizo, o por qué no pudo. Aquí es donde miras cuando algo va raro"
+        ]
+      ],
+      "code": "# ── Fila 1 de la pestaña llamada  registro  ──────────────\n# Pégalo en A1. Sin acentos, sin espacios, todo en minúsculas.\n\nid\tfecha_alta\tnombre\temail\ttelefono\torigen\testado\tprocesado_en\tnota_robot\n\n# ── Ejemplo de dos filas ya rellenas ─────────────────────\n\n1\t2026-08-25\tMarta Ruiz\tmarta@ejemplo.com\t600111222\tformulario_web\tnuevo\t\t\n2\t2026-08-25\tLuis Prat\tluis@ejemplo.com\t600333444\temail\tcerrado\t2026-08-25 10:14\tRespuesta enviada\n\n# ── Reglas de la casa ────────────────────────────────────\n# 1. La fila 1 no se toca nunca.\n# 2. No se insertan columnas en medio: se añaden a la derecha.\n# 3. La columna telefono va en formato Texto sin formato.\n# 4. Nada de celdas combinadas, ni filas de total, ni colores\n#    que signifiquen algo: el robot no ve los colores."
+    },
+    {
+      "name": "Las tres fórmulas que resuelven el 90 % de lo que vas a necesitar",
+      "what": "No hace falta saber fórmulas para automatizar, pero estas tres te ahorran montar pasos extra en n8n o Zapier: contar cuántas fichas hay en cada estado, buscar un dato de otra hoja, y limpiar el texto que llega de fuera con espacios de más. Se escriben una vez y se quedan.",
+      "how": "1) Abre una pestaña nueva y llámala 'resumen'; deja la de datos limpia. 2) Pega estas fórmulas cambiando 'registro' por el nombre de tu pestaña de datos. 3) Ojo con el separador: si tu hoja está en español, puede que necesite punto y coma en lugar de coma. Si te da error, cambia todas las comas por punto y coma. 4) Si una fórmula te devuelve #N/A, no está rota: es que no ha encontrado nada.",
+      "fill": [
+        [
+          "CONTAR.SI",
+          "Cuenta cuántas filas tienen un valor concreto. Para el panel de 'cuántos llevo pendientes'"
+        ],
+        [
+          "BUSCARV",
+          "Busca un valor en otra hoja y te trae un dato de esa fila. El clásico para cruzar dos listas"
+        ],
+        [
+          "ESPACIOS",
+          "Quita los espacios de sobra al principio y al final. El texto que llega de formularios viene sucio casi siempre"
+        ],
+        [
+          "UNIQUE / FILTER",
+          "Listar sin repetidos y filtrar. Con estas dos se monta un panel entero sin tocar los datos originales"
+        ]
+      ],
+      "code": "# ── Contar por estado ────────────────────────────────────\n=CONTAR.SI(registro!G:G; \"nuevo\")\n=CONTAR.SI(registro!G:G; \"en_curso\")\n=CONTAR.SI(registro!G:G; \"cerrado\")\n\n# ── Buscar el nombre a partir del email ──────────────────\n# Busca el email de la celda A2 en la columna D de registro\n# y devuelve lo que haya en la 3ª columna a partir de ahí.\n=SI.ERROR(BUSCARV(A2; registro!D:F; 3; FALSO); \"no encontrado\")\n\n# ── Limpiar texto que llega de un formulario ─────────────\n=ESPACIOS(MINUSC(B2))\n\n# ── Panel: los pendientes, sin tocar los datos ───────────\n=FILTER(registro!A:I; registro!G:G=\"nuevo\")\n\n# ── Lista de orígenes sin repetir ────────────────────────\n=UNIQUE(registro!F2:F)\n\n# Si algo da error de fórmula, prueba a cambiar los ; por ,\n# (o al revés): depende del idioma de tu hoja."
+    }
+  ],
+  "errors": [
+    [
+      "Requested entity was not found · 404",
+      "La automatización no encuentra la hoja. Dos causas, y la segunda es la de verdad en nueve de cada diez casos. Una: el identificador está mal copiado; tiene que ser el trozo entre /d/ y /edit, no la dirección entera. Dos: la hoja existe pero no la has compartido con el correo de la cuenta de servicio. Para el robot, una hoja que no puede ver es una hoja que no existe. Abre 'Compartir', pega ese correo larguísimo acabado en .iam.gserviceaccount.com y dale 'Editor'."
+    ],
+    [
+      "The caller does not have permission · 403",
+      "La ve pero no puede escribir. Le has dado permiso de 'Lector' en lugar de 'Editor'. Ve a 'Compartir', busca el correo de la cuenta de servicio en la lista y cámbialo a Editor. Si el archivo está en una unidad compartida de empresa, puede que además haya una política que bloquee el acceso a cuentas externas: eso lo tiene que levantar quien administre el Workspace."
+    ],
+    [
+      "Unable to parse range: Hoja 1!A:F",
+      "El nombre de la pestaña no coincide. Mira abajo del todo cómo se llama exactamente: mayúsculas, espacios y acentos cuentan. Si tiene un espacio, en muchas herramientas hay que escribirlo entre comillas simples ('Hoja 1'!A:F). La solución tranquila es renombrar la pestaña a algo sin espacios ni acentos y usar ese nombre en todas partes."
+    ],
+    [
+      "Se añaden filas al final aunque la hoja parece vacía",
+      "Hay filas con contenido invisible más abajo: un espacio, un resto de un pegado antiguo, una fórmula que devuelve texto vacío. Compruébalo con Ctrl+Mayús+flecha abajo: te llevará a la última fila 'ocupada'. Selecciona desde ahí hacia arriba hasta donde acaban tus datos de verdad, botón derecho y 'Eliminar filas'. No basta con pulsar Suprimir sobre el contenido."
+    ],
+    [
+      "Los teléfonos pierden el cero de delante y las referencias se vuelven fechas",
+      "Google interpreta solo lo que le parece un número o una fecha. Un 08 se queda en 8 y un 1-2 se convierte en 1 de febrero, sin avisar. Arréglalo antes de que entren datos: selecciona la columna, 'Formato' → 'Número' → 'Texto sin formato'. Si ya ha pasado, los datos originales no se recuperan desde la celda: mira el historial de versiones."
+    ],
+    [
+      "Quota exceeded / Rate limit · 429",
+      "Estás pidiéndole demasiadas cosas seguidas a Google. Pasa cuando una automatización escribe fila a fila en un bucle de doscientas vueltas. La solución no es esperar: es escribir de golpe. Junta las filas y usa la operación de 'append' con todas a la vez, o mete una espera de un segundo entre vueltas. Los límites gratuitos son generosos si no las llamas de una en una."
+    ],
+    [
+      "La automatización lee la fila vieja o se salta la nueva",
+      "Casi siempre es que estás usando 'la última fila' como referencia mientras alguien tiene la hoja abierta y escribiendo. Usa una columna de estado y una de procesado_en: el robot busca filas con estado 'nuevo' y procesado_en vacío, hace su trabajo y las marca. Así da igual el orden, y si algo falla a medias no se pierde ni se duplica nada."
+    ],
+    [
+      "La hoja va lentísima y tarda en abrir",
+      "Suele ser una de tres: has arrastrado una fórmula hasta la fila 50.000, tienes formato condicional aplicado a columnas enteras, o llevas años acumulando filas. Limpia las fórmulas hasta donde hay datos de verdad, quita el formato condicional de las columnas enteras, y si pasas de unos miles de filas empieza a mover el histórico a otra hoja. Si esto se repite, la hoja se te ha quedado pequeña: toca base de datos."
+    ]
+  ],
+  "prompts": [
+    {
+      "name": "Diseñar la hoja antes de automatizar nada",
+      "prompt": "Actúa como la persona técnica que me acompaña. No sé programar y quiero montar una hoja de Google Sheets que va a rellenar y leer una automatización, y quiero hacerlo bien a la primera porque sé que cambiar las columnas después lo rompe todo. Antes de darme nada, hazme como máximo cuatro preguntas para entender de dónde vienen los datos, quién los va a mirar y qué hay que hacer con cada ficha. Después dame lo siguiente, en este orden. Uno: la fila de títulos exacta para pegar en A1, en minúsculas, sin espacios ni acentos, y explícame en una línea qué guarda cada columna y de dónde saldrá el dato. Dos: qué columnas tienen que ir en formato 'Texto sin formato' y por qué, pensando sobre todo en teléfonos, códigos y referencias. Tres: qué columnas necesita el robot para saber qué filas ya ha tratado, de forma que si la automatización falla a mitad no se dupliquen ni se pierdan fichas. Cuatro: qué valores exactos puede tener la columna de estado, y cómo pongo la validación de datos para que nadie escriba otra cosa. Cinco: qué NO debo hacer nunca en esta hoja una vez esté automatizada, en forma de lista corta y tajante. Seis: dime a partir de cuántas filas esta hoja se me va a quedar pequeña y qué debería usar entonces. Lo que quiero registrar es: [DESCRIBE QUÉ FICHAS SON: LEADS, PEDIDOS, INCIDENCIAS...]. Los datos llegan desde: [FORMULARIO / CORREO / OTRA APP]."
+    },
+    {
+      "name": "Arreglar una hoja heredada que está hecha un desastre",
+      "prompt": "Tengo una hoja de cálculo que lleva años usándose a mano y ahora quiero automatizarla. Te pego abajo los títulos de las columnas y tres filas de ejemplo. No sé programar: dime qué está mal y qué hago, paso a paso, sin teoría. Contéstame así. Uno: dime qué cosas de esta hoja van a impedir que una automatización trabaje con ella (celdas combinadas, títulos en varias filas, columnas con acentos o espacios, filas de total en medio, colores que significan algo, datos de dos tipos en la misma columna) y ordénalas por gravedad. Dos: por cada problema, dime exactamente qué hacer para arreglarlo y si eso puede romper algo que alguien esté usando ahora. Tres: proponme la estructura nueva de columnas y dime cómo paso de la actual a la nueva sin perder el histórico; si lo más sensato es dejar la hoja vieja congelada y empezar una limpia, dímelo claramente. Cuatro: dime qué hago con los datos sucios que ya hay dentro (espacios de más, mayúsculas mezcladas, fechas escritas de tres formas distintas) y dame la fórmula concreta para limpiarlos. Cinco: avísame de si hay datos personales aquí dentro que no deberían estar en una hoja compartida. Antes de empezar, dime qué copia de seguridad tengo que hacer y cómo. Mis títulos y mis filas de ejemplo son: [PEGA AQUÍ]."
+    },
+    {
+      "name": "Montar el panel de control sin tocar los datos",
+      "prompt": "Tengo una hoja de Google Sheets que rellena una automatización y quiero una segunda pestaña que me diga de un vistazo cómo va la cosa, sin tocar ni una celda de la pestaña de datos, porque si la toco rompo el robot. No sé de fórmulas: dámelas escritas para pegar y dime en qué celda va cada una. Hazlo así. Uno: proponme qué cuatro o cinco números merece la pena mirar cada día en mi caso concreto, y descarta los que quedan bonitos pero no sirven para decidir nada. Dos: dame la fórmula exacta de cada uno, con la celda donde va, y avísame de si necesito cambiar las comas por punto y coma según el idioma de mi hoja. Tres: dame una tabla de 'pendientes' que se rellene sola con las filas que aún están sin cerrar, ordenadas por antigüedad, para poder trabajar desde ahí. Cuatro: dime cómo hago que se pinten solas en rojo las fichas que llevan más de X días sin tocar, explicándome dónde se pincha para poner esa regla. Cinco: dime qué NO poner en este panel para que no se me vuelva lento. Mi pestaña de datos se llama [NOMBRE] y sus columnas son: [PEGA LOS TÍTULOS]."
+    },
+    {
+      "name": "Decidir si esto sigue en una hoja o ya toca base de datos",
+      "prompt": "Uso una hoja de Google Sheets como si fuera la base de datos de [DESCRIBE EL PROCESO] y no sé si me estoy pasando de rosca. Quiero un diagnóstico honesto, no un vendedor de tecnología. Contéstame así. Uno: hazme las preguntas que necesites sobre cuántas filas tengo, cuántas cosas escriben en ella a la vez, cuántas personas la abren y qué datos guarda. Dos: dime con claridad si mi caso aguanta perfectamente en una hoja, si está en la frontera, o si ya estoy teniendo problemas por esto sin saberlo, y en qué señales concretas te basas. Tres: si aguanta, dime qué tres cosas debería arreglar para que aguante otro año, y no me propongas migrar nada. Cuatro: si no aguanta, dime a qué debería moverme y por qué esa opción y no otra, cuánto costaría al mes, cuánto trabajo es moverlo, y qué se rompe el día de la mudanza. Cinco: dime si hay datos personales aquí que legalmente no deberían estar en una hoja compartida por enlace, porque eso cambia la urgencia de todo lo anterior. Seis: si la respuesta honesta es 'déjalo como está', dímelo sin adornos. Mi situación es: [CUÁNTAS FILAS, CUÁNTA GENTE, QUÉ AUTOMATIZACIONES ESCRIBEN EN ELLA]."
     }
   ]
 }

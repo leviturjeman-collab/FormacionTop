@@ -423,27 +423,6 @@ Objetivo: preparar un proyecto minimo desplegable.
 9. Anadir una variable de entorno en Vercel.
 10. Documentar un fallo provocado y repararlo.
 
-## BREAK
-
-Provocar uno de estos fallos:
-
-- Quitar una variable de entorno.
-- Subir `.env.local` por error a un repo de prueba privado.
-- Ejecutar `vercel --prod` sin haber probado preview.
-- Usar una API key falsa.
-- Instalar `vercel` sin tener Node correcto.
-
-## FIX
-
-El alumno debe documentar:
-
-- Sintoma.
-- Causa probable.
-- Evidencia.
-- Comando utilizado.
-- Cambio realizado.
-- Como prevenirlo.
-
 ## Fuentes oficiales revisadas
 
 - Homebrew: https://brew.sh/

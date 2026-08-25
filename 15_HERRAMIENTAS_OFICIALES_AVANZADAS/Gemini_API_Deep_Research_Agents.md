@@ -47,7 +47,7 @@ El alumno avanzado debe aprender a crear evaluaciones. Para structured outputs, 
 
 Proyectos recomendados: analizador multimodal de documentos, extractor de datos de facturas o contratos, investigador de mercado con fuentes, generador de briefings, sistema RAG con embeddings, asistente de video que resume reuniones, clasificador de tickets con JSON validado y agente que decide entre varias herramientas internas.
 
-Practica AAAA+: construir un extractor de oportunidades comerciales. Entrada: texto libre de una conversacion con cliente. Salida: JSON con problema, presupuesto, urgencia, decision maker, siguiente accion y nivel de confianza. BREAK: introducir texto ambiguo, fechas contradictorias y datos ausentes. FIX: exigir campo `evidencia`, permitir `desconocido` y anadir validacion de schema antes de enviar datos al CRM.
+Practica de máximo nivel: construir un extractor de oportunidades comerciales. Entrada: texto libre de una conversacion con cliente. Salida: JSON con problema, presupuesto, urgencia, decision maker, siguiente accion y nivel de confianza. BREAK: introducir texto ambiguo, fechas contradictorias y datos ausentes. FIX: exigir campo `evidencia`, permitir `desconocido` y anadir validacion de schema antes de enviar datos al CRM.
 
 ## Fuentes oficiales
 
@@ -59,12 +59,6 @@ Practica AAAA+: construir un extractor de oportunidades comerciales. Entrada: te
 - Embeddings: https://ai.google.dev/gemini-api/docs/embeddings
 - Grounding with Google Search: https://ai.google.dev/gemini-api/docs/google-search
 - Gemini Cookbook: https://github.com/google-gemini/cookbook
-
-## Criterio de evaluacion AAAA+
-
-Un alumno domina Gemini cuando deja de pedir "una respuesta buena" y empieza a pedir "una salida verificable". La evaluacion debe obligarle a definir schema, fuente, modelo y motivo de eleccion. Si usa Deep Research, debe entregar una tabla de fuentes con fecha, autoridad, afirmacion usada y duda pendiente. Si usa function calling, debe describir cada funcion, parametros, caso de uso correcto y caso donde no debe llamarse. Si usa embeddings, debe explicar que documentos indexa, como parte los fragmentos, que metrica de recuperacion revisa y que ocurre si no hay contexto suficiente.
-
-La practica avanzada consiste en comparar dos arquitecturas: una con Gemini como modelo unico y otra con Gemini solo para la parte donde aporta mas valor. Por ejemplo, Gemini puede extraer campos multimodales de documentos, mientras n8n orquesta el flujo, una base de datos guarda resultados y un humano valida excepciones. La respuesta AAAA+ justifica la frontera entre razonamiento y automatizacion determinista.
 
 ## Control editorial profesional
 
@@ -102,4 +96,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **Gemini API Deep Research Agents**.
-

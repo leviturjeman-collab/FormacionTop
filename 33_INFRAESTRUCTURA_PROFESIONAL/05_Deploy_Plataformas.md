@@ -32,10 +32,6 @@ entregable: "matriz de deploy"
 7. Desplegar produccion.
 8. Documentar rollback.
 
-## BREAK
-
-Hacer deploy sin variable de entorno o con comando de start incorrecto.
-
 ## Entregable
 
 Matriz de decision, preview probado, produccion y rollback.

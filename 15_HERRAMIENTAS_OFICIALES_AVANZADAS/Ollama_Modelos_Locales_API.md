@@ -45,7 +45,7 @@ El alumno avanzado debe construir un router de modelos: cloud para tareas critic
 
 Proyectos con Ollama: asistente local de documentos, clasificador offline, generador de etiquetas para archivos, RAG privado, chatbot interno sin salida a internet, laboratorio de comparacion de modelos, extractor de datos de PDFs locales, asistente de programacion offline y servidor local para n8n.
 
-Practica AAAA+: construir un clasificador local de tickets. Entrada: texto de ticket. Salida: JSON con categoria, prioridad, resumen y confianza. BREAK: pedir salida sin JSON, enviar un ticket ambiguo, usar un modelo demasiado pequeno y exponer el servicio fuera de localhost. FIX: anadir schema, validacion, umbral de confianza, fallback a humano y proteccion de red.
+Practica de máximo nivel: construir un clasificador local de tickets. Entrada: texto de ticket. Salida: JSON con categoria, prioridad, resumen y confianza. BREAK: pedir salida sin JSON, enviar un ticket ambiguo, usar un modelo demasiado pequeno y exponer el servicio fuera de localhost. FIX: anadir schema, validacion, umbral de confianza, fallback a humano y proteccion de red.
 
 ## Fuentes oficiales
 
@@ -55,12 +55,6 @@ Practica AAAA+: construir un clasificador local de tickets. Entrada: texto de ti
 - Hermes 3 en Ollama: https://ollama.com/library/hermes3
 - Ollama Python: https://github.com/ollama/ollama-python
 - Ollama docs: https://docs.ollama.com/
-
-## Criterio de evaluacion AAAA+
-
-Un alumno domina Ollama cuando puede justificar por que usar local. La evaluacion debe comparar local contra cloud en cinco dimensiones: privacidad, coste, calidad, latencia y mantenimiento. No basta con decir "local es privado". Debe explicar donde viven los datos, que procesos tienen acceso, si el endpoint esta expuesto, que modelo se ha descargado y que limites de hardware existen. Tambien debe medir resultados: tiempo de primera respuesta, tokens por segundo si aplica, memoria usada y calidad en una muestra de tareas.
-
-La practica avanzada consiste en montar un servicio local para una automatizacion. n8n llama a Ollama para clasificar textos, valida JSON, guarda resultados y envia a revision humana si la confianza es baja. BREAK: usar un modelo insuficiente, pedir JSON sin schema, apagar el servidor o cambiar el tag del modelo. FIX: pinnear modelo, validar salida, crear fallback y documentar requisitos de maquina.
 
 ## Siguiente paso del alumno
 
@@ -103,4 +97,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **Ollama Modelos Locales API**.
-

@@ -128,5 +128,166 @@
       ],
       "explain": "La dirección de un buzón no se cambia: se tira y se hace otra."
     }
+  ],
+  "shortcuts": [
+    [
+      "La dirección del webhook (Incoming Webhook)",
+      "Es una dirección larga que empieza por https://hooks.slack.com/services/... y que apunta a UN canal concreto. Quien tenga esa dirección puede escribir en ese canal, sin contraseña ni nada más. Trátala como una llave: no la pegues en un chat, no la subas a internet, y si se te escapa, bórrala y genera otra desde la misma pantalla donde la creaste."
+    ],
+    [
+      "Ctrl+K — saltar a un canal o a una persona",
+      "El buscador de Slack. Escribes tres letras del nombre del canal y Enter. Con veinte canales abiertos deja de ser un capricho. Ctrl+Mayús+K hace lo mismo para mensajes directos."
+    ],
+    [
+      "/invite @nombre-de-la-app",
+      "La orden que se escribe DENTRO del canal para meter ahí a tu robot. Es el paso que se olvida siempre: la app puede estar instalada en el espacio de trabajo y aun así no poder escribir en ese canal concreto porque nadie la ha invitado. El error que verás si falta es 'not_in_channel'."
+    ],
+    [
+      "Los hilos (responder en hilo, no en el canal)",
+      "Al pasar el ratón por un mensaje sale un icono de bocadillo: 'Reply in thread' (responder en hilo). Todo lo relacionado se queda colgando de ese mensaje en lugar de inundar el canal. Para un robot que informa del progreso de algo largo, es la diferencia entre un canal legible y un canal que la gente silencia."
+    ],
+    [
+      "@aquí y @canal",
+      "@aquí (@here) avisa solo a quien está conectado en ese momento; @canal (@channel) avisa a todos, aunque sea domingo. Regla para automatizaciones: por defecto, ninguno de los dos. Solo se pone @aquí en avisos donde alguien tiene que actuar en la próxima hora, y @canal prácticamente nunca. La gente silencia los canales que abusan, y a partir de ahí tus avisos no existen."
+    ],
+    [
+      "Block Kit Builder (app.slack.com/block-kit-builder)",
+      "Una página de Slack donde montas el mensaje a la izquierda y lo ves pintado a la derecha, en tiempo real. Sirve para no adivinar: pegas el JSON que te ha dado la IA, ves cómo queda, lo corriges y luego lo llevas a tu automatización. Es la herramienta que ahorra más tiempo de toda esta lista."
+    ],
+    [
+      "El formato de texto de Slack (que no es Markdown normal)",
+      "Negrita con *un asterisco* a cada lado, cursiva con _guiones bajos_, tachado con ~virgulillas~, código con `acentos graves`. Los dos asteriscos de Markdown NO funcionan: te salen los asteriscos escritos. Los enlaces van así: <https://ejemplo.com|texto del enlace>."
+    ],
+    [
+      "'Añadir apps a este canal' en el menú del canal",
+      "El camino de ratón equivalente al /invite: nombre del canal arriba → 'Integraciones' → 'Añadir apps'. Útil cuando alguien de tu equipo tiene que hacerlo y no quieres explicarle órdenes con barra."
+    ],
+    [
+      "El ts de un mensaje (su marca de tiempo)",
+      "Cada mensaje tiene un identificador que parece un número con decimales, por ejemplo 1724580000.123456. Es lo que te devuelve Slack cuando publicas, y lo que necesitas guardar si luego quieres responder en ese hilo, editar el mensaje o ponerle una reacción. Guárdalo en la misma fila donde guardas el resto del caso."
+    ],
+    [
+      "Preferencias → Notificaciones → 'Configurar por canal'",
+      "Para que el canal de avisos del robot no te suene en el móvil a las tres de la mañana mientras el de urgencias sí. Es la manera de que un canal ruidoso siga siendo útil en lugar de acabar silenciado del todo."
+    ]
+  ],
+  "daily": [
+    "Un canal solo para los avisos del robot, separado de donde habla la gente. En cuanto mezclas, o la gente pierde la conversación entre avisos, o los avisos se pierden entre conversación. Nómbralo con un prefijo claro: #avisos-facturas, #avisos-leads.",
+    "Invitar a la app al canal, no solo instalarla. Instalada en el espacio de trabajo ≠ presente en ese canal. Escribe /invite @tu-app dentro del canal. Es la causa número uno de 'la automatización dice que ha enviado el mensaje pero no aparece nada'.",
+    "La primera línea del mensaje tiene que decirlo todo. Es lo único que se ve en la notificación del móvil y en la lista de canales. 'Factura 2043 rechazada: falta el NIF' sirve; 'Nueva notificación del sistema' no sirve para nada.",
+    "Nunca metas datos personales o secretos en un canal. Un canal de Slack lo lee todo el que esté dentro, hoy y dentro de dos años, y se busca. Manda el identificador y un enlace a donde está el dato, no el dato. Y jamás una clave, ni de prueba.",
+    "Un aviso, un mensaje; el detalle, en el hilo. Si tu automatización tiene diez pasos, publica uno con el titular y cuelga el resto en el hilo. El canal se queda legible y quien quiera detalle lo despliega.",
+    "Botones solo si de verdad hacen algo. Slack deja poner botones (Aprobar / Rechazar) y quedan muy bien en la demo, pero necesitan una parte que escuche la respuesta. Si no la tienes montada, pon un enlace a donde se hace la acción de verdad: un botón que no responde destruye la confianza en todo el sistema.",
+    "Silencia los avisos de éxito y deja sonar solo los de fallo. Un robot que dice 'todo bien' cien veces al día enseña a la gente a ignorarlo, y el día que diga 'esto ha fallado' nadie lo verá. Publica los éxitos en un resumen diario y los fallos al momento."
+  ],
+  "templates": [
+    {
+      "name": "El mensaje de aviso que se entiende desde el móvil",
+      "what": "Es la estructura de un mensaje de Slack montado con bloques (Block Kit): un titular que se lee en la notificación, los datos en dos columnas, y un botón que lleva al sitio donde se actúa. Vale para avisar de un lead nuevo, una factura con problemas, un error de un proceso o cualquier cosa que requiera que una persona mire algo.",
+      "how": "1) Entra en app.slack.com/block-kit-builder. 2) Borra lo que haya y pega el bloque de abajo. 3) A la derecha lo ves pintado tal cual saldrá. 4) Cambia los textos por los tuyos. 5) Cópialo y pégalo en tu automatización, en el campo de 'Blocks' del nodo de Slack (en n8n hay que activar la opción de mensaje con bloques). 6) Sustituye los valores fijos por los datos que vengan del paso anterior. 7) Deja SIEMPRE el campo 'text' relleno: es lo que se ve en la notificación del móvil y en los avisos por correo.",
+      "fill": [
+        [
+          "text",
+          "El texto plano de reserva. Es lo que aparece en la notificación del móvil. Si lo dejas vacío, la notificación llega en blanco"
+        ],
+        [
+          "header",
+          "El titular. Corto y con el dato que importa. Máximo unas ocho palabras"
+        ],
+        [
+          "fields",
+          "Los datos en dos columnas. Máximo diez, y en la práctica con cuatro o seis va sobrado"
+        ],
+        [
+          "url",
+          "La dirección a la que lleva el botón. Si no tienes una parte que escuche los botones, usa un enlace, nunca un botón mudo"
+        ],
+        [
+          "context",
+          "La letra pequeña de abajo: de dónde viene el aviso y a qué hora. Sirve para saber qué automatización te está hablando"
+        ]
+      ],
+      "code": "{\n  \"text\": \"Factura 2043 rechazada: falta el NIF\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": { \"type\": \"plain_text\", \"text\": \"Factura rechazada\" }\n    },\n    {\n      \"type\": \"section\",\n      \"fields\": [\n        { \"type\": \"mrkdwn\", \"text\": \"*Número:*\\n2043\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Cliente:*\\nTalleres Ruiz S.L.\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Importe:*\\n1.240,00 €\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Motivo:*\\nFalta el NIF\" }\n      ]\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"Abrir la factura\" },\n          \"url\": \"https://tu-sistema.example.com/facturas/2043\",\n          \"style\": \"primary\"\n        }\n      ]\n    },\n    {\n      \"type\": \"context\",\n      \"elements\": [\n        { \"type\": \"mrkdwn\", \"text\": \"Automatización _facturas_ · 25/08 10:14\" }\n      ]\n    }\n  ]\n}"
+    },
+    {
+      "name": "El aviso de que algo ha fallado, escrito para que se pueda arreglar",
+      "what": "Cuando una automatización se rompe a las tres de la mañana, el mensaje que deja decide si el problema se arregla en cinco minutos o en dos horas. Este formato incluye lo único que hace falta: qué se rompió, qué caso concreto era, el error tal cual, y qué se supone que hay que hacer ahora.",
+      "how": "1) Móntalo en el Block Kit Builder igual que el anterior. 2) Ponlo en la rama de error de tu automatización (en n8n, el 'Error Trigger'; en Zapier, la notificación de fallo). 3) Publícalo en un canal distinto al de los avisos normales: #alertas-fallos. 4) Ese canal SÍ merece notificación en el móvil; el de avisos normales, no. 5) No pongas @canal aquí tampoco: quien tenga que arreglarlo ya tendrá el canal en notificación activa.",
+      "fill": [
+        [
+          "Qué proceso",
+          "El nombre exacto de la automatización, tal y como se llama en n8n o Zapier. Sin esto hay que ir buscándola"
+        ],
+        [
+          "Qué caso",
+          "El identificador de la ficha, pedido o correo concreto que estaba procesando cuando reventó"
+        ],
+        [
+          "El error",
+          "Copiado tal cual, sin resumir. Entre acentos graves para que salga en gris y no se pierda el formato"
+        ],
+        [
+          "Qué hacer",
+          "La instrucción concreta para la persona que lo lea a las 8 de la mañana. Ojo: si la respuesta es 'reintentar', dilo"
+        ],
+        [
+          "Enlace",
+          "A la ejecución concreta que ha fallado, no a la página de inicio de la herramienta"
+        ]
+      ],
+      "code": "{\n  \"text\": \"FALLO en la automatización facturas (caso 2043)\",\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \":red_circle: *Fallo en:* `facturas-entrantes`\\n*Caso:* 2043 · Talleres Ruiz S.L.\\n*Hora:* 25/08 03:12\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Error:*\\n```ETIMEDOUT: la API de facturación no respondió en 30s```\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Qué hacer:* el caso NO se ha procesado y sigue en estado `nuevo`. Se puede relanzar sin duplicar nada.\"\n      }\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"Ver la ejecución que falló\" },\n          \"url\": \"https://tu-n8n.example.com/workflow/12/executions/9981\"\n        }\n      ]\n    }\n  ]\n}"
+    }
+  ],
+  "errors": [
+    [
+      "channel_not_found",
+      "Slack no encuentra ese canal. Tres causas por orden de frecuencia. Una: has escrito el nombre con la almohadilla delante y en algunas herramientas hay que poner solo el nombre, o al revés. Dos: es un canal privado y tu app no está dentro; en los privados hay que invitarla sí o sí. Tres: has puesto el nombre en lugar del identificador (ese código tipo C09ABCDEF que sale en 'Ver detalles del canal', abajo del todo). Cuando dudes, usa el identificador: no cambia aunque renombres el canal."
+    ],
+    [
+      "not_in_channel",
+      "El canal existe, la app existe, pero la app no está dentro. Entra en el canal y escribe /invite @nombre-de-tu-app. Es el error más común de todos y el más fácil de arreglar. Ojo si renombras canales: la app sigue dentro, pero si alguien la echó sin querer, este es el error que verás."
+    ],
+    [
+      "invalid_auth · token_revoked · account_inactive",
+      "El token con el que se identifica tu automatización ya no vale: lo han revocado, se ha desinstalado la app o alguien la ha regenerado. No lo intentes arreglar reescribiéndolo: entra en api.slack.com/apps, abre tu app, ve a 'OAuth & Permissions', copia el token de nuevo (empieza por xoxb-) y pégalo en la credencial. Si te lo habías guardado en un chat o en un correo, aprovecha para borrarlo de ahí."
+    ],
+    [
+      "missing_scope · needed: chat:write",
+      "A la app le falta un permiso concreto. El mensaje te dice cuál en la palabra 'needed'. Ve a api.slack.com/apps → tu app → 'OAuth & Permissions' → 'Bot Token Scopes' → 'Add an OAuth Scope', añade el que pide, y después REINSTALA la app en el espacio de trabajo (sale un botón amarillo arriba). Sin reinstalar, el permiso nuevo no entra en vigor: ese es el paso que se olvida."
+    ],
+    [
+      "no_text · invalid_blocks",
+      "Has mandado un mensaje con bloques pero sin el campo 'text' de reserva, o el JSON de los bloques tiene un fallo de formato. Dos cosas. Una: rellena siempre 'text', aunque uses bloques; es lo que se ve en la notificación del móvil. Dos: pega tu JSON en app.slack.com/block-kit-builder, que te marca el error exacto en rojo mucho mejor que el mensaje de la API."
+    ],
+    [
+      "El webhook devuelve 404 · no_service",
+      "La dirección del webhook ya no existe: se ha borrado la app, o alguien la ha regenerado. Los webhooks no se pueden 'arreglar', se generan de nuevo: entra en la configuración de tu app, 'Incoming Webhooks', crea uno nuevo apuntando al canal, y sustituye la dirección entera en tu automatización. Aprovecha para comprobar dónde tenías guardada la vieja."
+    ],
+    [
+      "ratelimited · 429",
+      "Estás publicando demasiado rápido. Slack admite aproximadamente un mensaje por segundo y por canal, y corta si te pasas. Sale cuando una automatización recorre una lista de cien filas publicando una por una. La solución no es esperar más: es publicar UN mensaje con las cien líneas dentro, o un mensaje con el resumen y el detalle en el hilo. Además de no fallar, se lee mucho mejor."
+    ],
+    [
+      "Los mensajes salen con asteriscos escritos en lugar de negrita",
+      "Estás usando Markdown normal, con dos asteriscos. Slack usa el suyo: negrita con *un solo asterisco*, cursiva con _guiones bajos_, y los enlaces con <https://direccion|texto>. Si el texto lo escribe una IA, díselo explícitamente en el prompt: 'formato mrkdwn de Slack, no Markdown', porque por defecto te dará Markdown."
+    ]
+  ],
+  "prompts": [
+    {
+      "name": "Diseñar los avisos antes de montarlos",
+      "prompt": "Actúa como la persona técnica que me acompaña. Voy a montar una automatización que avisará por Slack y quiero decidir bien los avisos ANTES de montar nada, porque he visto equipos silenciar canales enteros por culpa de un robot pesado. No sé programar. Hazme primero las preguntas que necesites sobre qué proceso es, quién lee el canal y qué se supone que tiene que hacer esa persona al ver el aviso. Luego dame esto. Uno: la lista de eventos que MERECEN un mensaje y, aparte y explícitamente, la lista de los que no lo merecen aunque me apetezca ponerlos; justifica cada exclusión. Dos: para cada aviso que sí se queda, escríbeme la primera línea exacta tal y como se verá en la notificación del móvil, y comprueba que se entiende sin abrir nada. Tres: dime qué avisos van al momento y cuáles deberían agruparse en un resumen diario, y a qué hora tendría sentido ese resumen. Cuatro: dime cuántos canales necesito y cómo se llaman, separando avisos normales de fallos. Cinco: dime en cuáles de estos avisos está justificado usar @aquí, y si la respuesta es 'en ninguno', dímelo. Seis: avísame de qué datos de los que quiero mandar NO deberían ir escritos en un canal de Slack por ser datos personales o secretos, y qué pongo en su lugar. Mi proceso es: [DESCRÍBELO]. Quien lee el canal es: [QUIÉN Y QUÉ PUEDE HACER]."
+    },
+    {
+      "name": "Convertir un mensaje feo en un mensaje que se lee",
+      "prompt": "Mi automatización manda a Slack un mensaje que es un ladrillo y nadie lo lee. Te lo pego abajo tal cual sale. Quiero que me lo conviertas en un mensaje bien montado, y necesito el JSON listo para pegar. Hazlo así. Uno: dime en dos frases qué está mal en el mensaje actual, desde el punto de vista de alguien que lo ve en el móvil de pie en la calle. Dos: dame el JSON completo de Block Kit, con el campo 'text' de reserva relleno (que sé que se olvida) y con la información ordenada: titular, cuatro o seis datos en columnas, y un enlace o botón al final. Tres: usa el formato de texto de Slack, no Markdown normal: negrita con un solo asterisco, enlaces con la sintaxis de menor que y barra vertical. Cuatro: dime en qué campos tengo que sustituir el texto fijo por los datos que vienen de mi automatización, señalándomelos uno a uno. Cinco: dime qué pinta tendrá la notificación del móvil, escrita literalmente, para que yo pueda juzgar si se entiende. Seis: si algo de lo que estoy mandando no debería estar en un canal de Slack, dímelo. Mi mensaje actual es: [PÉGALO]. Los datos de los que dispongo en ese punto son: [LISTA DE CAMPOS]."
+    },
+    {
+      "name": "Averiguar por qué no llega el mensaje",
+      "prompt": "Mi automatización dice que ha enviado el mensaje a Slack, pero en el canal no aparece nada. No sé programar y no quiero teoría: llévame por un diagnóstico, una pregunta cada vez, empezando por lo más probable y lo más fácil de comprobar. Antes de proponerme cambiar nada, pídeme lo que necesites ver: la respuesta exacta que devuelve Slack (que puede ser un 'ok: true' engañoso), el nombre o identificador del canal que estoy usando, si el canal es público o privado, y si la app aparece en la lista de miembros del canal. Cuando tengas los datos, dime: uno, cuál es la causa y cómo lo has sabido; dos, la solución en pasos con clics concretos, sin dar por hecho que sé dónde está cada pantalla de la configuración de Slack; tres, cómo compruebo que ya funciona, con una prueba que tarde menos de un minuto; cuatro, qué debería dejar montado para que la próxima vez lo detecte yo solo. Si en algún momento la causa resulta ser un permiso que hay que añadir, recuérdame explícitamente que hay que reinstalar la app después, porque sé que se olvida. Mi situación es: [CUÉNTALA]."
+    },
+    {
+      "name": "Revisar si un canal de Slack se ha convertido en un problema",
+      "prompt": "Tengo un canal de Slack donde escriben varias automatizaciones y creo que se nos ha ido de las manos. Quiero una revisión honesta y sin adornos. Te voy a pegar un día entero de mensajes de ese canal. Contéstame así. Uno: cuenta cuántos mensajes hay, cuántos exigían que alguien hiciera algo y cuántos eran ruido informativo, y dame el porcentaje. Dos: dime qué mensajes se podrían haber agrupado en uno solo o en un resumen diario. Tres: señala cualquier mensaje que contenga datos personales, importes con nombre y apellidos, claves, tokens o direcciones internas, y dime qué habría que hacer con ese historial. Cuatro: dime cuáles de estos avisos son inútiles porque nadie puede actuar sobre ellos, aunque a alguien le pareciera buena idea ponerlos. Cinco: proponme la lista final de avisos que deberían quedar, con qué canal, con qué prioridad de notificación y con qué primera línea. Seis: dime si hay algún fallo que debería estar avisando y NO está, es decir, qué se rompería en silencio ahora mismo. Los mensajes de un día son: [PÉGALOS]."
+    }
   ]
 }

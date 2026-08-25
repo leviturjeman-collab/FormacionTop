@@ -31,7 +31,7 @@ Este archivo existe para que cualquier persona abra la boveda y entienda la orga
 | `11_MANUAL_PARA_CREAR_PROYECTOS` | Metodo para llevar ideas a proyectos | Cuando el alumno tiene una idea y quiere ejecutarla |
 | `12_FASES_DEL_APRENDIZAJE` | Camino por fases | Cuando quieres seguir un recorrido ordenado |
 | `13_PROYECTOS_REALES_Y_SKILLS` | Casos reales y skills oficiales | Cuando quieres inspiracion profesional |
-| `14_ESTANDAR_AAAA_PLUS` | Criterio de maxima calidad | Cuando quieres convertir un proyecto B en AAAA+ |
+| `14_ESTANDAR_DE_CALIDAD` | Criterio de maxima calidad | Cuando quieres convertir un proyecto B en de máximo nivel |
 | `15_HERRAMIENTAS_OFICIALES_AVANZADAS` | OpenAI, n8n, Gemini, Anthropic, Cursor, Hermes y Ollama | Cuando quieres elegir y dominar herramientas |
 | `16_CASOS_POR_PROFESION` | Aplicaciones por tipo de alumno o negocio | Cuando quieres aplicar IA a un oficio concreto |
 | `17_ROADMAPS_30_60_90_DIAS` | Rutas temporales de aprendizaje | Cuando quieres saber que hacer cada mes |
@@ -56,7 +56,7 @@ Este archivo existe para que cualquier persona abra la boveda y entienda la orga
 
 `01_INVESTIGACION_OFICIAL` es la biblioteca de fuentes. Sirve para que la formacion no dependa de opiniones ni contenido reciclado. Aqui se mira que dicen OpenAI, Anthropic, Google, n8n, GitHub y otros proveedores oficiales.
 
-`02_METODO_DE_ENSENANZA` explica como se enseña. En vez de dar teoria y ya, la academia usa profundidad por capas y el ciclo `CHECK -> DO -> BREAK -> FIX -> EXPLAIN`. Eso obliga a que el alumno lea, practique, rompa, repare y explique.
+`02_METODO_DE_ENSENANZA` explica como se enseña. En vez de dar teoria y ya, la academia usa profundidad por capas y el ciclo ``. Eso obliga a que el alumno lea, practique, rompa, repare y explique.
 
 `03_RUTA_DEL_CURSO` es el orden. Si la investigacion es la biblioteca y el metodo es la forma de enseñar, esta carpeta es el calendario intelectual: que va antes, que va despues y que competencias se esperan.
 
@@ -80,7 +80,7 @@ Este archivo existe para que cualquier persona abra la boveda y entienda la orga
 
 `13_PROYECTOS_REALES_Y_SKILLS` muestra patrones reales y procedimientos reutilizables. Sirve para inspirarse y copiar buenas estructuras, no contenido.
 
-`14_ESTANDAR_AAAA_PLUS` define lo que significa calidad extrema: claridad, profundidad, practica, fuentes, verificaciones, errores, defensa y utilidad profesional.
+`14_ESTANDAR_DE_CALIDAD` define lo que significa calidad extrema: claridad, profundidad, practica, fuentes, verificaciones, errores, defensa y utilidad profesional.
 
 `15_HERRAMIENTAS_OFICIALES_AVANZADAS` es la nueva carpeta para estudiar herramientas punteras y elegir bien. Aqui estan OpenAI, n8n, Gemini, Anthropic, Cursor, Hermes y Ollama.
 
@@ -123,7 +123,7 @@ Este archivo existe para que cualquier persona abra la boveda y entienda la orga
 5. Estudiar los modulos de [[../04_CLASES_POR_HERRAMIENTA/00_AI_Foundations/00_Resumen/README]].
 6. Practicar con [[../05_PRACTICAS_Y_EJERCICIOS/README]].
 7. Crear un proyecto con [[../11_MANUAL_PARA_CREAR_PROYECTOS/Como_llevar_a_cabo_cualquier_proyecto]].
-8. Subir el nivel con [[../14_ESTANDAR_AAAA_PLUS/README]].
+8. Subir el nivel con [[../14_ESTANDAR_DE_CALIDAD/README]].
 9. Elegir herramientas con [[../15_HERRAMIENTAS_OFICIALES_AVANZADAS/Mapa_Comparativo_Que_Usar_Y_Cuando]].
 10. Aplicarlo a un oficio con [[../16_CASOS_POR_PROFESION/README]].
 11. Seguir un plan temporal con [[../17_ROADMAPS_30_60_90_DIAS/README]].
@@ -177,4 +177,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **QUE ES CADA CARPETA**.
-

@@ -33,10 +33,6 @@ Usar cuando el alumno quiere aprender agentes paso a paso.
 
 Ficha tecnica con repos elegidos, motivo, instalacion minima, riesgo principal, automatizacion asociada y defensa de 3 minutos.
 
-## BREAK
-
-Pedirle a la skill que ejecute sin datos, sin permisos o sin criterio de terminado. Debe frenar y pedir informacion concreta.
-
 ## Evaluacion
 
 Aprobada si la persona puede explicar por que esos repos son adecuados, que alternativa descarta y que evidencia demuestra que la automatizacion funciona.

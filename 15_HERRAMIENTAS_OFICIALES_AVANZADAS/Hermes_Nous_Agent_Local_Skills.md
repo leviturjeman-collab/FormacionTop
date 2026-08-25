@@ -47,7 +47,7 @@ El alumno avanzado debe construir una politica de memoria. No todo debe recordar
 
 Proyectos con Hermes: asistente persistente de operaciones, agente personal conectado a mensajeria, sistema de recordatorio e investigacion, agente que aprende procedimientos de soporte, copiloto de DevOps en VPS, agente de documentacion que mantiene una base de conocimiento o sistema de automatizaciones programadas. En todos los casos, el entregable profesional debe incluir memoria, skills, permisos, entorno de ejecucion y rollback.
 
-Practica AAAA+: crear una skill de "resumen semanal operativo". Entrada: mensajes, tareas o notas. Proceso: agrupar temas, detectar bloqueos, proponer acciones y guardar aprendizajes reutilizables. BREAK: meter informacion privada, pedir una accion fuera de permisos o introducir instrucciones contradictorias. FIX: separar memoria privada, definir confirmaciones y mejorar la skill.
+Practica de máximo nivel: crear una skill de "resumen semanal operativo". Entrada: mensajes, tareas o notas. Proceso: agrupar temas, detectar bloqueos, proponer acciones y guardar aprendizajes reutilizables. BREAK: meter informacion privada, pedir una accion fuera de permisos o introducir instrucciones contradictorias. FIX: separar memoria privada, definir confirmaciones y mejorar la skill.
 
 ## Fuentes oficiales
 
@@ -57,12 +57,6 @@ Practica AAAA+: crear una skill de "resumen semanal operativo". Entrada: mensaje
 - Hermes Function Calling: https://github.com/NousResearch/Hermes-Function-Calling
 - Hermes 3 model card: https://huggingface.co/NousResearch/Hermes-3-Llama-3.1-8B
 - Nous Research: https://nousresearch.com/
-
-## Criterio de evaluacion AAAA+
-
-Un alumno domina Hermes cuando entiende la diferencia entre memoria util y acumulacion peligrosa. La evaluacion debe pedir una politica de memoria: que recordar, que olvidar, que pedir permiso antes de guardar y que nunca conservar. Tambien debe pedir una skill pequena, con objetivo, pasos, ejemplos y condicion de uso. Si el agente se conecta a mensajeria, el alumno debe explicar quien puede invocarlo, desde donde, con que permisos y que acciones requieren confirmacion.
-
-La practica avanzada consiste en disenar un agente persistente para un rol real, por ejemplo "asistente de operaciones de una academia". El alumno define canales, herramientas, memoria, skills, calendario, entorno de ejecucion, logs y limites. BREAK: pedirle al agente que actue sobre una cuenta sin autorizacion o que recuerde informacion sensible. FIX: anadir politica de aprobacion, clasificacion de datos y skill de borrado o correccion de memoria. Esa es la diferencia entre jugar con un agente y operarlo profesionalmente.
 
 ## Control editorial profesional
 
@@ -102,4 +96,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **Hermes Nous Agent Local Skills**.
-

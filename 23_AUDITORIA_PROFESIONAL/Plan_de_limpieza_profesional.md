@@ -26,4 +26,3 @@ La limpieza estructural ya se ha aplicado: no quedan placeholders, todos los arc
 ## Criterio de finalizacion premium
 
 Un archivo esta listo para venta cuando una persona puede leerlo sin el profesor delante, ejecutar una practica, entender que hacer si falla, entregar un resultado y defender por que uso esas herramientas.
-

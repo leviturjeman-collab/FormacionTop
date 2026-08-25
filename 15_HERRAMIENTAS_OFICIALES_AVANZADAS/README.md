@@ -62,19 +62,6 @@ No uses agentes autonomos si el alumno no sabe revisar outputs. No uses MCP si t
 
 La practica recomendada de esta carpeta es construir un "sistema operativo de proyecto": una carpeta de Obsidian con objetivo, fuentes, decision de herramientas, arquitectura, prompts, workflows, agente, logs, evaluacion, riesgos y version final. El alumno elige una idea real, como un asistente de atencion al cliente, un generador de propuestas, un analizador de tickets, un sistema de investigacion de mercado o un copiloto de contenidos. Despues decide que herramienta usa para cada parte y justifica por que.
 
-## Checklist AAAA+
-
-- La herramienta se explica con fuentes oficiales.
-- El alumno sabe que problema resuelve.
-- El alumno sabe cuando no usarla.
-- Hay separacion entre basico, intermedio y avanzado.
-- Hay practica real.
-- Hay errores provocados.
-- Hay verificacion.
-- Hay criterio de seguridad.
-- Hay salida aplicable a trabajo.
-- Hay enlaces internos para continuar aprendiendo.
-
 ## Fuentes oficiales base
 
 - OpenAI / ChatGPT Learn: https://learn.chatgpt.com/
@@ -125,4 +112,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **HERRAMIENTAS OFICIALES AVANZADAS**.
-

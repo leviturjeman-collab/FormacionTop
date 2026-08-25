@@ -62,7 +62,7 @@ ChatGPT o Claude transforma notas comerciales en estructura. Gemini puede extrae
 
 ### Agente de codigo
 
-Cursor, Codex o Claude Code lee el repositorio, aplica reglas, modifica archivos y ejecuta pruebas. GitHub gestiona PR. Un subagent puede revisar seguridad. La regla AAAA+: cambios pequenos, pruebas, diff revisado, rollback claro.
+Cursor, Codex o Claude Code lee el repositorio, aplica reglas, modifica archivos y ejecuta pruebas. GitHub gestiona PR. Un subagent puede revisar seguridad. La regla de máximo nivel: cambios pequenos, pruebas, diff revisado, rollback claro.
 
 ### Investigacion de mercado
 
@@ -88,12 +88,6 @@ Antes de elegir herramienta, responde:
 ## Fuentes oficiales
 
 Consulta los archivos hermanos de esta carpeta y sus fuentes oficiales: [[OpenAI_ChatGPT_Codex]], [[n8n_Automatizacion_AI_Agents]], [[Gemini_API_Deep_Research_Agents]], [[Anthropic_Claude_Claude_Code]], [[Cursor_AI_Editor_Agents]], [[Hermes_Nous_Agent_Local_Skills]] y [[Ollama_Modelos_Locales_API]].
-
-## Criterio de evaluacion AAAA+
-
-Para evaluar este mapa, el alumno debe recibir tres ideas de proyecto y elegir herramientas para cada una. No se acepta una respuesta tipo "usaria ChatGPT y n8n". Debe justificar capas: entrada, datos, razonamiento, automatizacion, herramienta externa, almacenamiento, revision humana, evaluacion y despliegue. Tambien debe decir que no usaria. Esa parte es crucial: un profesional se define tanto por lo que descarta como por lo que elige.
-
-Ejemplo de defensa: "Para un asistente interno con datos sensibles usaria Ollama o un proveedor cloud con controles empresariales; no usaria Deep Research porque no necesito fuentes web; usaria n8n para orquestar; usaria schema para salida; pondria revision humana antes de enviar respuestas; y mediria calidad con diez casos reales". Si el alumno puede razonar asi, ya no depende de recetas. Puede construir proyectos nuevos.
 
 ## Control editorial profesional
 

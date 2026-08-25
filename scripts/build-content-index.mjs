@@ -368,6 +368,27 @@ if (await exists(quizDir)) {
 // El glosario escrito a mano (content/glosario/) sustituye por completo al
 // automático: el automático recogía nombres de archivo sin definición.
 const glosarioManual = (await loadContent('glosario'))[0]
+// Cada termino del glosario enlaza con las lecciones donde de verdad sale.
+const sinTildes = (valor) =>
+  valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+function leccionesDelTermino(termino) {
+  // "Chunk (trozo)" busca por "chunk": lo de los parentesis es la traduccion.
+  const aguja = sinTildes(termino.split(' (')[0]).trim()
+  if (aguja.length < 3) return []
+  const patron = new RegExp(`(^|[^a-z0-9])${aguja.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`)
+  const marcadas = []
+  for (const leccion of lessons) {
+    const enTitulo = patron.test(sinTildes(leccion.title))
+    const enCuerpo = patron.test(sinTildes(leccion.search || ''))
+    if (enTitulo || enCuerpo) marcadas.push({ leccion, peso: enTitulo ? 0 : 1 })
+  }
+  return marcadas
+    .sort((a, b) => a.peso - b.peso || a.leccion.title.localeCompare(b.leccion.title, 'es'))
+    .slice(0, 4)
+    .map(({ leccion }) => ({ slug: leccion.slug, title: leccion.title }))
+}
+
 const glossaryIndex = glosarioManual?.terms?.length
   ? glosarioManual.terms.map((entry) => ({
       term: entry.term,
@@ -377,7 +398,7 @@ const glossaryIndex = glosarioManual?.terms?.length
       analogy: entry.analogy || null,
       confusion: entry.confusion || null,
       seeAlso: entry.seeAlso || [],
-      lessons: [],
+      lessons: leccionesDelTermino(entry.term),
     }))
   : buildGlossaryIndex(
       lessons.map((lesson) => ({ slug: lesson.slug, title: lesson.title, terms: lesson.indexTerms || [] })),

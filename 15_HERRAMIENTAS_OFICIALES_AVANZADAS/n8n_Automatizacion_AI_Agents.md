@@ -47,7 +47,7 @@ En avanzado, cada workflow debe tener una ficha tecnica: objetivo, trigger, apps
 
 Proyectos excelentes para n8n: agente que triagea leads, asistente de soporte con base de conocimiento, generador automatico de propuestas, pipeline de contenido, alerta de incidencias, sincronizacion CRM-hoja de calculo, analisis de reseñas, onboarding de clientes, reporting semanal y sistema de investigacion con resumen y fuentes. Cada proyecto debe incluir entrada, workflow, salida, humano responsable y registro.
 
-Practica AAAA+: crear un workflow de soporte. Entrada: webhook con pregunta de cliente. Paso 1: validar campos. Paso 2: clasificar urgencia. Paso 3: consultar conocimiento. Paso 4: generar borrador. Paso 5: si confianza baja, enviar a humano. Paso 6: guardar log. Paso 7: responder. BREAK: borrar un campo obligatorio, usar una credencial sin permisos, enviar payload duplicado y forzar una respuesta ambigua. FIX: documentar causa, evidencia, reparacion y prevencion.
+Practica de máximo nivel: crear un workflow de soporte. Entrada: webhook con pregunta de cliente. Paso 1: validar campos. Paso 2: clasificar urgencia. Paso 3: consultar conocimiento. Paso 4: generar borrador. Paso 5: si confianza baja, enviar a humano. Paso 6: guardar log. Paso 7: responder. BREAK: borrar un campo obligatorio, usar una credencial sin permisos, enviar payload duplicado y forzar una respuesta ambigua. FIX: documentar causa, evidencia, reparacion y prevencion.
 
 ## Fuentes oficiales
 
@@ -59,12 +59,6 @@ Practica AAAA+: crear un workflow de soporte. Entrada: webhook con pregunta de c
 - n8n API: https://docs.n8n.io/connect/n8n-api
 - RBAC: https://docs.n8n.io/administer/manage-users-and-access/set-permissions-and-roles-rbac
 - Queue mode: https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode
-
-## Criterio de evaluacion AAAA+
-
-Un alumno domina n8n cuando puede explicar un workflow sin mirar solo el canvas. Debe poder leer la ejecucion, detectar en que node aparece un dato, justificar por que un node esta antes que otro, documentar credenciales y separar prueba de produccion. Para evaluar, dale un workflow que funcione y pide tres mejoras: una de claridad, una de seguridad y una de mantenimiento. Despues dale un workflow roto y pide diagnostico con evidencia. La respuesta excelente no dice "fallaba el webhook"; dice que payload llego con un campo distinto al esperado, que la expresion apuntaba a una ruta inexistente, que el node posterior recibio `undefined` y que la reparacion consiste en validar entrada antes de transformar.
-
-El proyecto final con n8n debe entregarse con export, descripcion del flujo, payloads de prueba, capturas o resumen de ejecuciones, lista de credenciales usadas sin secretos, plan de errores y criterio de activacion. Si incluye IA, debe explicar que modelo usa, que prompt o instrucciones recibe, que tools puede llamar, cuando interviene un humano y como se evita que una respuesta de baja confianza pase a produccion.
 
 ## Control editorial profesional
 
@@ -102,4 +96,3 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
 - Si se detecta informacion generica, convertirla en ejemplo especifico de **n8n Automatizacion AI Agents**.
-

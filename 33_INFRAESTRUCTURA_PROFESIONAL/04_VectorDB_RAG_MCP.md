@@ -54,10 +54,6 @@ Plantilla de permisos:
 }
 ```
 
-## BREAK
-
-Dar al agente una tool con permisos demasiado amplios o un RAG sin metadatos.
-
 ## Entregable
 
 Demo RAG con 10 preguntas y mapa MCP con permisos minimos.
