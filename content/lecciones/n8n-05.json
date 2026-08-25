@@ -1,0 +1,466 @@
+{
+  "id": "n8n-05",
+  "tool": "n8n",
+  "slot": 5,
+  "number": 205,
+  "stageId": "automatizacion",
+  "title": "La pantalla por dentro: lienzo, nodos y ejecuciones",
+  "promise": "Sabrás moverte por n8n sin buscar: dónde se añade una caja, dónde se ve lo que entra y sale de ella, y dónde se investiga cualquier «no ha funcionado». Al terminar tendrás un flujo de dos cajas ejecutado y habrás leído sus datos de verdad.",
+  "minutes": 20,
+  "why": "Ana monta su primer flujo en una tarde y le funciona. Al día siguiente deja de funcionar y se pasa dos horas cambiando cosas al azar: reescribe el filtro, borra una caja, la vuelve a poner, cambia la credencial. Al final lo arregla sin saber qué arregló. El problema no era el flujo: era que no sabía que existe una pantalla que dice exactamente qué entró y qué salió de cada caja en cada ejecución. Con esa pantalla, el diagnóstico habría durado dos minutos.",
+  "theory": [
+    {
+      "title": "Tres zonas y una que es la importante",
+      "text": "La pantalla tiene el lienzo en el centro, donde dibujas; el panel de nodos a la derecha, que es el buscador de cajas; y la lista de ejecuciones, que es el historial de todas las veces que el flujo se ha puesto en marcha. Casi todo el mundo vive en las dos primeras y descubre la tercera cuando algo falla. Es al revés: la lista de ejecuciones es donde de verdad se aprende, porque es la única que te enseña datos reales en lugar de configuración.",
+      "analogy": "El lienzo es el plano de la instalación; las ejecuciones son el registro de lo que pasó cada vez que se abrió el grifo.",
+      "visual": {
+        "kind": "screenmap",
+        "title": "Las cinco zonas que vas a usar",
+        "caption": "Pulsa cada una. El resto de la interfaz puede esperar meses.",
+        "areas": [
+          {
+            "name": "Barra de arriba",
+            "place": "top",
+            "what": "Nombre del flujo, botón de guardar y el interruptor de activar. Guardar y activar son cosas DISTINTAS: guardar conserva tus cambios, activar hace que el flujo funcione solo.",
+            "tip": "Un flujo guardado y probado pero sin activar no hace absolutamente nada, y no avisa. Es el olvido número uno."
+          },
+          {
+            "name": "Lienzo",
+            "place": "center",
+            "what": "Donde arrastras las cajas y las conectas con flechas. Cada caja hace una cosa; las flechas dicen en qué orden y con qué datos.",
+            "tip": "Se mueve arrastrando el fondo y se acerca con la rueda. Si te pierdes, hay un botón para encajar todo en pantalla."
+          },
+          {
+            "name": "Panel de nodos",
+            "place": "right",
+            "what": "El buscador de cajas. Escribes el nombre de una aplicación (Gmail, Sheets) o de lo que quieres hacer (filtrar, esperar) y salen las opciones.",
+            "tip": "Hay más de mil. Vas a usar seis o siete. No te pongas a explorarlas: busca lo que necesitas y sal."
+          },
+          {
+            "name": "Ejecuciones",
+            "place": "left",
+            "what": "El historial: cada vez que el flujo ha arrancado, con su fecha y su estado (correcta, con error, filtrada). Cada línea se abre.",
+            "tip": "Es la pantalla del diagnóstico. Antes de tocar nada cuando algo falle, se viene aquí."
+          },
+          {
+            "name": "Panel de la caja",
+            "place": "bottom",
+            "what": "Al abrir una caja, tres columnas: lo que ENTRA a la izquierda, la configuración en medio, y lo que SALE a la derecha.",
+            "tip": "Esas tres columnas son n8n entero. Si aprendes a leerlas, ya no necesitas tutoriales."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Las tres columnas de una caja: entra, configuras, sale",
+      "text": "Cuando abres cualquier caja verás siempre lo mismo: a la izquierda los datos que le llegan del paso anterior, en el centro lo que tú configuras, y a la derecha lo que devuelve. Aprender n8n es aprender a mirar la columna de la derecha después de ejecutar, comprobar que trae lo que esperabas, y solo entonces montar la caja siguiente. Quien monta seis cajas seguidas sin mirar esas columnas acaba con un flujo que no sabe depurar.",
+      "example": "Abres el nodo de Gmail, ejecutas, y en la derecha aparece el correo entero: remitente, asunto, cuerpo, adjuntos. Ahora ya sabes los nombres exactos de los campos que podrás usar en la caja siguiente.",
+      "visual": {
+        "kind": "canvas",
+        "title": "Una caja por dentro",
+        "caption": "Las tres columnas, explicadas. Pulsa cada una.",
+        "nodes": [
+          {
+            "kind": "Columna izquierda",
+            "label": "Lo que entra",
+            "note": "del paso anterior",
+            "role": "trigger",
+            "does": "Los datos que le llegan de la caja de antes, tal cual. Si esta columna está vacía, la caja no puede hacer nada y el problema está ARRIBA, no aquí.",
+            "input": "La salida de la caja anterior.",
+            "output": "Nada: solo se mira.",
+            "breaks": "Si esperabas cuatro elementos y ves uno, el filtro de antes está cortando de más."
+          },
+          {
+            "kind": "Columna central",
+            "label": "Lo que configuras",
+            "note": "tus ajustes",
+            "role": "filter",
+            "does": "Los campos que rellenas: qué hoja, qué canal, qué condición. Aquí es donde se usan las expresiones para coger datos de la columna izquierda.",
+            "input": "Lo que escribes tú.",
+            "output": "La configuración guardada con el flujo.",
+            "breaks": "Un nombre de campo escrito a mano en vez de seleccionado de la lista: si el campo cambia de nombre, deja de funcionar en silencio."
+          },
+          {
+            "kind": "Columna derecha",
+            "label": "Lo que sale",
+            "note": "el resultado real",
+            "role": "action",
+            "does": "Lo que la caja devuelve después de ejecutarse. Es lo que va a recibir la caja siguiente, y es la columna que hay que mirar SIEMPRE antes de montar el paso siguiente.",
+            "input": "El resultado de ejecutar.",
+            "output": "Los datos que viajan al siguiente paso.",
+            "breaks": "Si está vacía pero la caja sale en verde, la caja funcionó y no encontró nada. Verde no significa que haya datos."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Verde no significa bien",
+      "text": "Cuando ejecutas, las cajas se ponen en verde si no ha habido error. Pero una caja puede ponerse verde y no haber hecho nada: un filtro que corta todo, una búsqueda que no encuentra nada, una lista vacía. El verde dice «no ha reventado», no «ha hecho lo que querías». Por eso la comprobación de verdad nunca es el color: es el número de elementos que salen, que aparece en la propia flecha entre cajas.",
+      "analogy": "Como el «enviado» del correo: confirma que salió, no que llegara a la persona correcta.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "Cuatro ejecuciones, todas en verde",
+        "caption": "Mira el número que sale de cada paso. Solo una de las cuatro hizo su trabajo.",
+        "steps": [
+          {
+            "label": "Todo bien",
+            "does": "El filtro deja pasar lo que debe",
+            "in": 6,
+            "out": 4,
+            "why": "Entran seis, salen cuatro. Es lo esperado y el flujo sigue con esos cuatro."
+          },
+          {
+            "label": "El filtro corta todo",
+            "does": "La condición no se cumple nunca",
+            "in": 6,
+            "out": 0,
+            "why": "Verde, sin errores, y no ha pasado nada. Suele ser comparar con «es exactamente igual» cuando el texto trae un espacio o una mayúscula distinta."
+          },
+          {
+            "label": "La búsqueda no encuentra",
+            "does": "Busca un cliente que no existe",
+            "in": 1,
+            "out": 0,
+            "why": "La caja funcionó perfectamente: buscó y no había. Verde. Si el paso siguiente da por hecho que hay algo, reventará allí y buscarás el fallo en el sitio equivocado."
+          },
+          {
+            "label": "Llegan de más",
+            "does": "Una lista que no esperabas",
+            "in": 1,
+            "out": 47,
+            "why": "Entra uno y salen cuarenta y siete: la caja ha devuelto una lista entera. Si la siguiente manda un mensaje, acabas de mandar cuarenta y siete mensajes."
+          }
+        ]
+      }
+    },
+    {
+      "title": "La lista de ejecuciones es donde se diagnostica",
+      "text": "Cada vez que el flujo arranca queda una línea en el historial, con la hora y el estado. Al abrirla, ves el flujo tal y como se ejecutó ESA vez, con los datos reales de ese momento en cada caja. No es una simulación ni un registro de texto: es el flujo congelado. Cuando alguien te diga «esto falló ayer a las tres», abres esa ejecución y ves exactamente qué llegó y en qué caja se torció.",
+      "example": "Ana habría abierto la ejecución fallida, habría visto que en el nodo de la hoja entraba un correo sin importe, y habría entendido en dos minutos lo que le costó dos horas.",
+      "visual": {
+        "kind": "timeline",
+        "title": "Una ejecución abierta, paso a paso",
+        "caption": "Lo que ves al abrir una línea del historial. Fíjate en dónde se tuerce.",
+        "note": "Los tiempos son de una ejecución real: casi todo el rato se va esperando a servicios de fuera, no calculando.",
+        "steps": [
+          {
+            "label": "Llega el correo",
+            "ms": 40,
+            "risk": "bajo",
+            "detail": "El disparador recoge el mensaje entero: remitente, asunto, cuerpo y adjuntos."
+          },
+          {
+            "label": "Filtro: ¿es de cliente?",
+            "ms": 15,
+            "risk": "bajo",
+            "detail": "Comprueba el remitente y el asunto. Pasa.",
+            "fails": "Si comparas con «igual exacto», un espacio de más lo corta y el flujo termina aquí, en verde."
+          },
+          {
+            "label": "Extraer el importe",
+            "ms": 25,
+            "risk": "medio",
+            "detail": "Busca la cifra en el cuerpo del correo.",
+            "fails": "Si el cliente escribió «de acuerdo» sin cifra, esto devuelve vacío y NO da error."
+          },
+          {
+            "label": "Crear la fila",
+            "ms": 820,
+            "risk": "medio",
+            "detail": "Escribe en la hoja de Google. Casi un segundo: es red, no cálculo.",
+            "fails": "Si el importe venía vacío, crea la fila con el hueco. Verde y con un dato incompleto dentro."
+          },
+          {
+            "label": "Crear la carpeta",
+            "ms": 1140,
+            "risk": "medio",
+            "detail": "Crea la carpeta en Drive con el nombre del cliente.",
+            "fails": "Si ya existía de otro presupuesto, crea una segunda con el mismo nombre."
+          },
+          {
+            "label": "Avisar al jefe de obra",
+            "ms": 610,
+            "risk": "alto",
+            "detail": "Manda el mensaje. Es el último paso y el que más duele si falla.",
+            "fails": "Si revienta aquí, la fila y la carpeta YA están creadas. El trabajo está a medias y nadie lo sabe."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Guardar, ejecutar y activar son tres cosas distintas",
+      "text": "Guardar conserva tus cambios en el dibujo. Ejecutar lo lanza una vez, ahora, con datos de prueba, y es lo que haces cien veces mientras montas. Activar es el interruptor que hace que funcione solo a partir de ahora, sin ti. Se confunden constantemente, y el resultado siempre es el mismo: un flujo que el alumno da por terminado y que no está haciendo nada porque nadie tocó el interruptor.",
+      "example": "Prueba tú: guarda un flujo, ciérralo, ábrelo. Sigue ahí. Ejecútalo: aparece una línea nueva en el historial. Actívalo y provoca el caso real: aparece otra línea, esta vez sin que tú hayas hecho nada.",
+      "visual": {
+        "kind": "beforeafter",
+        "title": "Guardado no es activado",
+        "caption": "Los dos flujos están terminados. Solo uno funciona.",
+        "beforeLabel": "Guardado y probado",
+        "afterLabel": "Guardado, probado y ACTIVADO",
+        "rows": [
+          {
+            "before": "El dibujo se conserva al cerrar",
+            "after": "El dibujo se conserva al cerrar"
+          },
+          {
+            "before": "Se ejecuta cuando le das al botón",
+            "after": "Se ejecuta cuando ocurre el disparador"
+          },
+          {
+            "before": "El historial solo tiene tus pruebas",
+            "after": "El historial recoge los casos reales"
+          },
+          {
+            "before": "Con el navegador cerrado, no pasa nada",
+            "after": "Con el navegador cerrado, sigue funcionando"
+          },
+          {
+            "before": "Crees que está en marcha, y no lo está",
+            "after": "Está en marcha de verdad"
+          }
+        ],
+        "gain": "El interruptor está arriba a la derecha. Después de darle, provoca el caso una vez y comprueba en el historial que ha saltado solo."
+      }
+    },
+    {
+      "title": "Lo que puedes ignorar durante meses",
+      "text": "n8n enseña muchas cosas que no necesitas todavía: variables de entorno propias, plantillas de la comunidad, credenciales compartidas, proyectos, ajustes de ejecución, etiquetas, notas de nodo. Todo eso existe por buenas razones y ninguna es tuya ahora. La lista de lo que sí importa es corta y cabe en una mano: añadir caja, conectar, ejecutar, mirar la columna derecha, abrir una ejecución del historial.",
+      "analogy": "Un coche tiene cuarenta botones. Aprendes a conducir con tres."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Abre n8n y localiza las cinco zonas",
+      "where": "En n8n, con un flujo nuevo abierto",
+      "action": "Sin tocar nada, señala con el dedo en la pantalla: la barra de arriba, el lienzo, el panel de nodos, la lista de ejecuciones y dónde saldrá el panel de la caja. Suena tonto y es lo que hace que no te pierdas en la lección siguiente.",
+      "expect": "Sabes decir en voz alta qué es cada zona sin mirar esta lección.",
+      "stuck": "Si no encuentras la lista de ejecuciones, mira en el menú lateral o arriba: según la versión está en un sitio o en otro, pero siempre se llama Executions o Ejecuciones."
+    },
+    {
+      "title": "Crea el flujo más simple que existe",
+      "where": "En el lienzo",
+      "action": "Pulsa el botón de añadir el primer paso y elige el disparador manual («Trigger manually» o «Ejecutar manualmente»). Es el único disparador que no vigila nada: arranca cuando tú le das al botón. Es el que se usa para aprender.",
+      "expect": "Una caja en el lienzo con el nombre del disparador manual.",
+      "stuck": "Si no lo encuentras, escribe «manual» en el buscador de nodos."
+    },
+    {
+      "title": "Añade una caja que fabrique datos de mentira",
+      "where": "Pulsando el + a la derecha de la primera caja",
+      "action": "Busca «Edit Fields» (también aparece como «Set»). Es la caja que se usa para crear o cambiar datos a mano, y es perfecta para practicar porque no toca ningún servicio de fuera. Dentro, añade dos campos: uno llamado nombre con el valor Marta, y otro llamado importe con el valor 1240.",
+      "expect": "Dos cajas conectadas por una flecha.",
+      "stuck": "Si la caja pide elegir el modo, deja el que viene por defecto. Lo que importa ahora es que devuelva algo."
+    },
+    {
+      "title": "Ejecuta y mira la columna de la derecha",
+      "where": "Botón de ejecutar, y después abre la segunda caja",
+      "action": "Dale a ejecutar el flujo. Las dos cajas se ponen en verde. Ahora abre la segunda caja y mira la columna de la derecha: ahí están tus dos campos con sus valores. Esa columna es lo que recibiría la caja siguiente.",
+      "expect": "En la derecha ves nombre: Marta e importe: 1240.",
+      "stuck": "Si la columna derecha está vacía, es que no has ejecutado o que la caja no devuelve nada. Vuelve a darle a ejecutar."
+    },
+    {
+      "title": "Cambia a la vista JSON y compárala",
+      "where": "En la misma columna derecha, hay un selector de vista (Table / JSON)",
+      "action": "Pulsa JSON. Verás los mismos datos en el formato en que viajan de verdad: llaves, nombres entre comillas y valores. No hay que saber escribirlo, pero hay que reconocerlo, porque es lo que verás cuando conectes servicios de verdad.",
+      "expect": "El mismo dato en dos formatos. Entiendes que la tabla es una forma bonita de enseñar el JSON.",
+      "stuck": "Si no ves el selector, busca las palabras Table, JSON o Schema en algún lugar de esa columna."
+    },
+    {
+      "title": "Fabrica dos elementos en lugar de uno",
+      "where": "En la caja de Edit Fields",
+      "action": "Busca la opción de ejecutar una vez por cada elemento, o añade un segundo elemento si tu versión lo permite. Si no encuentras cómo, no pasa nada: fíjate en la flecha entre las dos cajas. Ahí aparece un número, y ese número es cuántos elementos viajan por esa flecha. Es el dato que más vas a mirar en todo el curso.",
+      "expect": "Localizas el número de elementos en la flecha entre cajas.",
+      "stuck": "Ese número es pequeño y está sobre la línea. Si no lo ves, ejecuta el flujo: aparece después de ejecutar."
+    },
+    {
+      "title": "Rompe el flujo a propósito",
+      "where": "En la segunda caja",
+      "action": "Borra el nombre del primer campo y déjalo vacío, o escribe algo inválido. Ejecuta. Mira qué pasa: puede dar error rojo, o puede quedarse verde y devolver algo raro. Las dos cosas enseñan, y la segunda enseña más.",
+      "expect": "Sabes distinguir una caja que revienta de una caja que funciona y devuelve basura.",
+      "stuck": "Si no consigues romperlo, no insistas: en la lección 35 se rompe en serio y con método."
+    },
+    {
+      "title": "Abre la lista de ejecuciones y cuenta",
+      "where": "En la sección de ejecuciones",
+      "action": "Ahí están todas las veces que has ejecutado en esta sesión, con la hora y el estado. Ábre la última: verás el flujo tal y como se ejecutó, con los datos de ese momento. Pulsa las cajas dentro de esa vista y comprueba que puedes leer lo que entró y lo que salió.",
+      "expect": "Una lista con varias líneas y una de ellas abierta, con datos reales dentro.",
+      "stuck": "Si la lista está vacía, es que las ejecuciones manuales no se guardan en tu configuración. Ejecuta con el flujo guardado y vuelve a mirar."
+    },
+    {
+      "title": "Guarda, cierra y vuelve a abrir",
+      "where": "Barra de arriba",
+      "action": "Ponle un nombre al flujo (algo que se entienda dentro de un año, no «flujo 1»), guarda, cierra la pestaña y vuelve a entrar. Comprueba que sigue ahí con sus dos cajas. Fíjate en que el interruptor de activar sigue apagado: guardar no es activar.",
+      "expect": "El flujo aparece en tu lista con el nombre que le pusiste, y el interruptor está en apagado.",
+      "stuck": "Si al cerrar te avisa de cambios sin guardar, es que no habías guardado. Ese aviso es tu amigo."
+    },
+    {
+      "title": "Escribe en tu ficha los tres sitios",
+      "where": "En el papel de la lección 01",
+      "action": "Tres líneas, con tus palabras: dónde se añade una caja, dónde se ve lo que sale de una caja, y dónde se investiga un fallo. Escribirlo tú fija lo que acabas de hacer mucho mejor que releerlo.",
+      "expect": "Tres frases escritas de tu puño.",
+      "stuck": "Si alguna no te sale, vuelve a la tarea correspondiente y hazla otra vez mirando."
+    }
+  ],
+  "errors": [
+    {
+      "message": "He ejecutado y no pasa nada, ni verde ni rojo",
+      "means": "No has ejecutado el flujo, has guardado. Son botones distintos y están cerca.",
+      "fix": "Busca el botón que pone «Test workflow» o «Execute workflow». Guardar es el otro. Después de ejecutar, las cajas cambian de color y aparece una línea en el historial."
+    },
+    {
+      "message": "La caja está en verde pero la columna derecha está vacía",
+      "means": "La caja funcionó y no devolvió nada. No es un error: es un resultado. Un filtro que corta todo, una búsqueda sin resultados o una lista vacía se ven así.",
+      "fix": "Sube a la caja anterior y mira SU columna derecha: si ahí tampoco hay nada, el problema está más arriba. Se busca hacia atrás hasta encontrar la primera caja que sí trae datos."
+    },
+    {
+      "message": "No encuentro la lista de ejecuciones",
+      "means": "Según la versión está en el menú lateral, en una pestaña junto al flujo o arriba del todo.",
+      "fix": "Busca la palabra Executions o Ejecuciones. Si tu flujo nunca se ha ejecutado, la lista sale vacía y parece que no existe: ejecuta una vez y aparecerá."
+    },
+    {
+      "message": "Mis ejecuciones manuales no se guardan en el historial",
+      "means": "Hay un ajuste que decide si se guardan las ejecuciones manuales, las correctas y las fallidas, y no siempre viene todo activado.",
+      "fix": "En los ajustes del flujo (el engranaje, no los ajustes generales) busca las opciones de guardar ejecuciones y activa al menos las fallidas y las manuales mientras aprendes. Ocupan poco y valen mucho."
+    },
+    {
+      "message": "He conectado las cajas pero los datos no llegan a la segunda",
+      "means": "La flecha está dibujada pero no has vuelto a ejecutar, o la conectaste después de ejecutar.",
+      "fix": "Ejecuta otra vez. Los datos de la columna izquierda de una caja son de la ÚLTIMA ejecución, no se actualizan solos al dibujar una flecha nueva."
+    },
+    {
+      "message": "El flujo funciona cuando le doy al botón pero no solo",
+      "means": "Está guardado pero no activado, o el disparador es manual, que por definición solo arranca cuando tú lo lanzas.",
+      "fix": "Dos cosas: cambia el disparador manual por uno de verdad (programado, webhook o de aplicación) y luego dale al interruptor de activar. Con el manual puesto, activar no sirve de nada."
+    },
+    {
+      "message": "He perdido el flujo que estaba montando",
+      "means": "Cerraste sin guardar. n8n avisa, pero el aviso se descarta sin leer con facilidad.",
+      "fix": "No hay recuperación en la mayoría de los casos. Coge la costumbre de guardar cada pocos cambios: el atajo es el mismo que en cualquier programa."
+    }
+  ],
+  "matters": [
+    "Mirar la columna derecha de cada caja después de ejecutar, antes de montar la siguiente. Es el hábito que separa a quien monta flujos de quien copia tutoriales. Los nombres de los campos que ves ahí son exactamente los que podrás usar después.",
+    "Entender que verde no significa bien. Una caja verde puede no haber hecho nada, y ese es el fallo más difícil de encontrar porque no da error. El número de elementos en la flecha es la comprobación de verdad.",
+    "Saber que el interruptor de activar existe y está apagado. Un flujo probado y guardado no funciona solo, y no avisa de que no funciona. Es el olvido más común de todos.",
+    "La lista de ejecuciones. Cuando algo falle, ahí está la respuesta con los datos reales de ese momento. Dos minutos mirando eso equivalen a dos horas cambiando cosas al azar."
+  ],
+  "ignore": [
+    "Los mil nodos del panel de la derecha. Vas a usar seis o siete durante meses: un disparador, un filtro, una hoja de cálculo, un chat, una llamada genérica a una API y poco más. Explorar la lista es una forma agradable de no montar nada.",
+    "Las plantillas de la comunidad, de momento. Son útiles cuando ya entiendes lo que estás mirando; ahora solo son flujos ajenos con veinte cajas que no sabes leer. Vuelve a ellas en la lección 08.",
+    "Los ajustes avanzados del flujo: modo de ejecución, tiempo máximo, versión guardada. Los valores por defecto están bien y ninguno de esos ajustes va a ser tu problema en los próximos dos meses."
+  ],
+  "canDo": [
+    "Enseñarte los datos exactos que entraron y salieron de cada caja en cada ejecución, con la hora, para que no tengas que adivinar nunca qué pasó.",
+    "Guardar el flujo tal y como se ejecutó en un momento concreto, de forma que puedas volver a mirarlo días después.",
+    "Avisarte con color cuando una caja revienta, y dejarte abrirla ahí mismo para ver el error completo.",
+    "Dejarte probar el flujo cuantas veces quieras sin activarlo, con datos de mentira, antes de que toque nada real."
+  ],
+  "cantDo": [
+    "Decirte que una caja verde no ha hecho lo que querías. El color solo informa de si hubo error, no de si el resultado es correcto.",
+    "Recordarte que actives el flujo. Puede quedarse apagado para siempre sin una sola advertencia.",
+    "Guardar el historial eternamente: las ejecuciones antiguas se van borrando según tu configuración, y si no lo miras a tiempo puede que ya no esté.",
+    "Recuperar un flujo que cerraste sin guardar. El aviso al cerrar es la única red que hay."
+  ],
+  "words": [
+    [
+      "Lienzo (canvas)",
+      "La zona central donde dibujas el flujo arrastrando cajas y conectándolas con flechas."
+    ],
+    [
+      "Nodo (node)",
+      "Cada caja. Hace una sola cosa: vigilar, decidir, transformar o actuar sobre una aplicación."
+    ],
+    [
+      "Ejecución (execution)",
+      "Cada vez que el flujo se pone en marcha. Queda guardada con los datos reales de ese momento."
+    ],
+    [
+      "Item",
+      "Cada elemento que viaja por una flecha: un correo, una fila, un pedido. El número sobre la flecha dice cuántos van."
+    ],
+    [
+      "Panel de entrada / salida",
+      "Las columnas izquierda y derecha al abrir una caja: lo que le llega y lo que devuelve."
+    ],
+    [
+      "JSON",
+      "El formato en que viajan los datos de verdad. No hay que saber escribirlo, sí reconocerlo."
+    ],
+    [
+      "Disparador manual",
+      "El que arranca solo cuando pulsas el botón. Es el que se usa para aprender y para probar."
+    ],
+    [
+      "Guardar",
+      "Conserva el dibujo. No hace que funcione."
+    ],
+    [
+      "Ejecutar",
+      "Lo lanza una vez, ahora, normalmente con datos de prueba."
+    ],
+    [
+      "Activar",
+      "El interruptor que hace que funcione solo a partir de ahora. Sin esto, el flujo no hace nada."
+    ]
+  ],
+  "pieces": [
+    {
+      "kind": "checklist",
+      "title": "Sabes moverte por n8n si puedes hacer esto sin mirar",
+      "caption": "Ocho cosas. Si fallas en tres o más, repite las tareas 2 a 8.",
+      "items": [
+        "Añadir una caja nueva y conectarla a la anterior",
+        "Abrir una caja y decir qué hay en la columna izquierda y en la derecha",
+        "Cambiar la vista de tabla a JSON y volver",
+        "Encontrar el número de elementos que viajan por una flecha",
+        "Ejecutar el flujo y ver el resultado en el historial",
+        "Abrir una ejecución antigua y leer los datos de una caja",
+        "Distinguir el botón de guardar del de ejecutar y del interruptor de activar",
+        "Decir en voz alta por qué una caja verde puede no haber hecho nada"
+      ]
+    },
+    {
+      "kind": "compare",
+      "title": "Los tres botones que se confunden",
+      "caption": "Guardar, ejecutar y activar. Tres cosas distintas, tres momentos distintos.",
+      "header": [
+        "",
+        "Guardar",
+        "Ejecutar",
+        "Activar"
+      ],
+      "rows": [
+        [
+          "Qué hace",
+          "Conserva el dibujo",
+          "Lo lanza una vez, ahora",
+          "Lo deja funcionando solo"
+        ],
+        [
+          "Cuándo se usa",
+          "Cada pocos cambios",
+          "Cien veces mientras montas",
+          "Una vez, al terminar"
+        ],
+        [
+          "Con el navegador cerrado",
+          "Se conserva",
+          "No hace nada",
+          "Sigue funcionando"
+        ],
+        [
+          "Qué deja en el historial",
+          "Nada",
+          "Una línea de prueba",
+          "Las líneas de los casos reales"
+        ],
+        [
+          "Si se te olvida",
+          "Pierdes los cambios",
+          "No compruebas nada",
+          "El flujo no hace NADA y no avisa"
+        ]
+      ]
+    }
+  ],
+  "next": "Deja el flujo de dos cajas guardado: lo vas a reutilizar. En la lección 06 montas la primera automatización de verdad, con un disparador que vigila algo y una acción que escribe en un sitio real, y la dejas funcionando en quince minutos."
+}
