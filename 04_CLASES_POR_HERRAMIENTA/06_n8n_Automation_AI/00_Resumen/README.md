@@ -9,15 +9,15 @@ fuentes: ["https://docs.n8n.io/"]
 tags: ["ai-academy", "modulo_clase", "transversal", "aprendizaje"]
 entregable: "clase, practica y evaluacion"
 ---
-# MÃ³dulo 06 - n8n, automatizaciÃ³n e IA
+# Módulo 06 - n8n, automatización e IA
 
 ## Manual base
 
-Antes de desarrollar o impartir este mÃ³dulo, leer [[../../../01_INVESTIGACION_OFICIAL/n8n|n8n - AutomatizaciÃ³n, workflows, AI Agents, RAG, HITL, MCP y producciÃ³n]]. Ese archivo contiene el desarrollo largo con fuentes oficiales, ruta pedagÃ³gica, laboratorios, errores provocados y criterios de producciÃ³n.
+Antes de desarrollar o impartir este módulo, leer [[../../../01_INVESTIGACION_OFICIAL/n8n|n8n - Automatización, workflows, AI Agents, RAG, HITL, MCP y producción]]. Ese archivo contiene el desarrollo largo con fuentes oficiales, ruta pedagógica, laboratorios, errores provocados y criterios de producción.
 
 ## Objetivo
 
-EnseÃ±ar n8n desde fundamentos reales hasta agentes con herramientas, memoria, RAG, HITL, evaluaciones y producciÃ³n.
+Enseñar n8n desde fundamentos reales hasta agentes con herramientas, memoria, RAG, HITL, evaluaciones y producción.
 
 ## Conceptos
 
@@ -37,26 +37,26 @@ EnseÃ±ar n8n desde fundamentos reales hasta agentes con herramientas, memoria,
 - RBAC.
 - Self-hosting.
 
-## Resultado del mÃ³dulo
+## Resultado del módulo
 
 El alumno puede construir un workflow operativo, depurarlo y convertirlo en agente controlado.
 
-## QuÃ© debe dominar el alumno
+## Qué debe dominar el alumno
 
-El alumno debe aprender n8n desde la base operativa. Antes de crear AI Agents, debe entender workflows, nodes, JSON, expressions, credentials, HTTP Request, webhooks, executions y error handling. Esta progresiÃ³n es obligatoria porque los agentes en n8n heredan todos los problemas de la automatizaciÃ³n tradicional y ademÃ¡s aÃ±aden decisiones del LLM.
+El alumno debe aprender n8n desde la base operativa. Antes de crear AI Agents, debe entender workflows, nodes, JSON, expressions, credentials, HTTP Request, webhooks, executions y error handling. Esta progresión es obligatoria porque los agentes en n8n heredan todos los problemas de la automatización tradicional y además añaden decisiones del LLM.
 
-Un workflow profesional no es solo una lÃ­nea de nodos conectados. Tiene trigger claro, datos esperados, validaciÃ³n, credenciales con permisos mÃ­nimos, manejo de errores, salida verificable y documentaciÃ³n. El alumno debe saber mirar una ejecuciÃ³n, inspeccionar inputs y outputs, interpretar status codes y diagnosticar por quÃ© un campo no llega donde esperaba.
+Un workflow profesional no es solo una línea de nodos conectados. Tiene trigger claro, datos esperados, validación, credenciales con permisos mínimos, manejo de errores, salida verificable y documentación. El alumno debe saber mirar una ejecución, inspeccionar inputs y outputs, interpretar status codes y diagnosticar por qué un campo no llega donde esperaba.
 
-DespuÃ©s de esa base, se introduce IA. El AI Agent node conecta un modelo con tools. El agente decide quÃ© herramienta llamar, por lo que el diseÃ±o de tools es crÃ­tico. Una herramienta debe tener nombre claro, descripciÃ³n precisa, inputs definidos, permisos limitados y comportamiento observable. Si una tool puede modificar datos, enviar mensajes o ejecutar acciones externas, debe aÃ±adirse human-in-the-loop.
+Después de esa base, se introduce IA. El AI Agent node conecta un modelo con tools. El agente decide qué herramienta llamar, por lo que el diseño de tools es crítico. Una herramienta debe tener nombre claro, descripción precisa, inputs definidos, permisos limitados y comportamiento observable. Si una tool puede modificar datos, enviar mensajes o ejecutar acciones externas, debe añadirse human-in-the-loop.
 
-## PrÃ¡ctica principal
+## Práctica principal
 
-El mÃ³dulo se divide en dos laboratorios grandes:
+El módulo se divide en dos laboratorios grandes:
 
-- Workflow sin IA: webhook, JSON, transformaciÃ³n, HTTP Request, respuesta, error handling.
-- Agente controlado: AI Agent con una tool limitada, memory opcional, aprobaciÃ³n humana y logs.
+- Workflow sin IA: webhook, JSON, transformación, HTTP Request, respuesta, error handling.
+- Agente controlado: AI Agent con una tool limitada, memory opcional, aprobación humana y logs.
 
-El error provocado serÃ¡ primero tÃ©cnico: JSON roto, credencial incorrecta, 401, 403, 429 o webhook duplicado. DespuÃ©s serÃ¡ agentico: tool demasiado amplia, ausencia de aprobaciÃ³n humana o loop de coste.
+El error provocado será primero técnico: JSON roto, credencial incorrecta, 401, 403, 429 o webhook duplicado. Después será agentico: tool demasiado amplia, ausencia de aprobación humana o loop de coste.
 ---
 
 # Desarrollo completo - 00 Resumen
@@ -313,7 +313,7 @@ Para que el alumno lo domine, debe conectar cuatro capas:
 2. Subrayar conceptos que no podria explicar a otra persona.
 3. Crear una nota derivada con ejemplo propio.
 4. Convertir el ejemplo en una mini practica.
-5. AÃ±adir una version basica, intermedia y avanzada.
+5. Añadir una version basica, intermedia y avanzada.
 6. Definir que herramienta se usa y que herramienta se evita.
 7. Crear el artefacto real correspondiente.
 8. Probar caso feliz, caso ambiguo y caso roto.
@@ -369,7 +369,7 @@ Una persona se queda impresionada cuando nota que la formacion no es una explica
 - Que hay una progresion clara.
 - Que cada concepto termina en practica.
 - Que cada practica se puede romper.
-- Que cada error enseÃ±a algo.
+- Que cada error enseña algo.
 - Que cada entrega tiene criterio.
 - Que cada proyecto puede convertirse en portfolio.
 - Que se sabe que herramienta usar y cual evitar.
@@ -380,7 +380,7 @@ Una persona se queda impresionada cuando nota que la formacion no es una explica
 Usa este prompt cuando quieras convertir esta nota en material accionable:
 
 `	ext
-Actua como diseÃ±ador senior de formacion profesional en IA. Convierte esta nota en una experiencia de aprendizaje AAAA+.
+Actua como diseñador senior de formacion profesional en IA. Convierte esta nota en una experiencia de aprendizaje AAAA+.
 
 Necesito:
 1. Explicacion para principiante.
@@ -416,9 +416,9 @@ Antes de considerar esta nota terminada como material premium, comprueba:
 - Tiene enlaces internos suficientes.
 - Puede convertirse en documento, presentacion o laboratorio.
 
-## Errores que debe enseÃ±ar esta nota
+## Errores que debe enseñar esta nota
 
-Una nota AAAA+ no solo enseÃ±a el camino correcto. EnseÃ±a tambien como se rompe el trabajo. Errores recomendados:
+Una nota AAAA+ no solo enseña el camino correcto. Enseña tambien como se rompe el trabajo. Errores recomendados:
 
 - Falta de contexto.
 - Elegir herramienta demasiado avanzada.
@@ -494,7 +494,7 @@ No memorices esta nota. Usala. Si puedes convertirla en una accion, una plantill
 
 Esta capa existe para que el archivo no sea simplemente bueno, sino extraordinario. La promesa es que una persona pueda leer esta nota y salir con una transformacion concreta: entender mejor, trabajar mejor, construir mejor, decidir mejor o presentar mejor. El lector ideal no debe sentir que esta consumiendo informacion; debe sentir que esta recibiendo un sistema de accion.
 
-Perfil principal al que sirve: alumno, formador y diseÃ±ador de modulo.
+Perfil principal al que sirve: alumno, formador y diseñador de modulo.
 
 Artefacto premium esperado: leccion completa, practica guiada, laboratorio, evaluacion y fuentes.
 
@@ -502,7 +502,7 @@ Prueba de dominio: alumno puede explicar, practicar y entregar evidencia.
 
 ## Escenario real de uso
 
-Una persona quiere automatizar una tarea: primero entiende JSON, inputs y outputs; despues crea workflow simple; luego aÃ±ade error handling; finalmente controla credenciales, logs, HITL y produccion.
+Una persona quiere automatizar una tarea: primero entiende JSON, inputs y outputs; despues crea workflow simple; luego añade error handling; finalmente controla credenciales, logs, HITL y produccion.
 
 Este escenario debe guiar la lectura. Si el alumno no puede imaginar como usar la nota en una situacion real, falta aterrizaje. Si puede imaginarlo pero no sabe que entregar, falta artefacto. Si sabe entregar pero no sabe como evaluarlo, falta rubrica. Si sabe evaluarlo pero no sabe defenderlo, falta madurez profesional.
 
@@ -530,7 +530,7 @@ Dia 3 - Version basica:
 Dia 4 - Version intermedia:
 
 - Convertir el artefacto en plantilla, workflow, checklist, skill, schema, documento o laboratorio.
-- AÃ±adir criterio de terminado.
+- Añadir criterio de terminado.
 
 Dia 5 - Ruptura controlada:
 
@@ -541,8 +541,8 @@ Dia 5 - Ruptura controlada:
 Dia 6 - Version avanzada:
 
 - Reparar con evidencia.
-- AÃ±adir evaluacion.
-- AÃ±adir limites, seguridad o compatibilidad si aplica.
+- Añadir evaluacion.
+- Añadir limites, seguridad o compatibilidad si aplica.
 
 Dia 7 - Portfolio y defensa:
 
@@ -587,7 +587,7 @@ Para perfil formador:
 
 ## Biblioteca de fallos de alto valor
 
-Estos fallos son deseables en formacion porque enseÃ±an criterio:
+Estos fallos son deseables en formacion porque enseñan criterio:
 
 1. Falta de contexto: el resultado parece correcto pero no sirve.
 2. Herramienta excesiva: se usa tecnologia avanzada para un problema simple.
@@ -660,7 +660,7 @@ Cuando esta nota se convierta en entregable, debe tener esta estructura:
 - Que puede fallar.
 - Que herramienta no debo usar todavia.
 - Que evidencia voy a guardar.
-- Como lo explicaria a un cliente, jefe, compaÃ±ero o alumno.
+- Como lo explicaria a un cliente, jefe, compañero o alumno.
 
 Si no puede responder alguna, no pasa nada. Esa pregunta se convierte en tarea.
 
@@ -670,7 +670,7 @@ Para que esta nota se convierta en una clase que impacte, necesita cinco momento
 
 1. Reconocimiento: el alumno ve un problema real suyo.
 2. Claridad: entiende el modelo mental.
-3. Accion: produce algo pequeÃ±o.
+3. Accion: produce algo pequeño.
 4. Tension: algo se rompe.
 5. Dominio: lo repara y lo explica.
 
@@ -687,7 +687,7 @@ Para que un proyecto derivado de esta nota sea memorable, debe tener:
 - Error reparado.
 - Mejora respecto a la version inicial.
 - Utilidad para alguien real.
-- Posibilidad de enseÃ±arse en portfolio.
+- Posibilidad de enseñarse en portfolio.
 
 ## Frase de calidad extrema
 
@@ -723,7 +723,7 @@ Usar **Resumen** para producir el entregable definido en la metadata: **clase, p
 
 ### Criterio para eliminar contenido innecesario
 
-Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseÃ±ar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
+Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseñar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
 
 ### Proxima revision
 

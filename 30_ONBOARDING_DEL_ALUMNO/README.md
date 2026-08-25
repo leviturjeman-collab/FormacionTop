@@ -11,7 +11,7 @@ entregable: "sistema de bienvenida"
 ---
 # Onboarding del alumno
 
-Esta carpeta guia al alumno antes de entrar en la montaÃ±a de contenido. Su objetivo es reducir ansiedad, clasificar nivel, elegir ruta y preparar entorno.
+Esta carpeta guia al alumno antes de entrar en la montaña de contenido. Su objetivo es reducir ansiedad, clasificar nivel, elegir ruta y preparar entorno.
 
 ## Archivos
 
@@ -64,7 +64,7 @@ El alumno debe poder explicar que hizo, por que eligio esa solucion, que limite 
 
 ### Que eliminar si sobra
 
-Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseÃ±ar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
+Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseñar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
 
 ### Proxima revision
 

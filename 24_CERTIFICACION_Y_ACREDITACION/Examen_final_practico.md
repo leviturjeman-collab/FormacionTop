@@ -11,7 +11,7 @@ entregable: "examen final con evidencia"
 ---
 # Examen final practico
 
-El examen final exige construir y defender. El alumno recibe un caso: una pequeÃ±a empresa necesita reducir tiempo en captacion, soporte o reporting. Debe proponer sistema, construir prueba y documentar.
+El examen final exige construir y defender. El alumno recibe un caso: una pequeña empresa necesita reducir tiempo en captacion, soporte o reporting. Debe proponer sistema, construir prueba y documentar.
 
 ## Entregas obligatorias
 
@@ -77,7 +77,7 @@ El alumno debe poder explicar que hizo, por que eligio esa solucion, que limite 
 
 ### Que eliminar si sobra
 
-Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseÃ±ar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
+Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseñar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
 
 ### Proxima revision
 

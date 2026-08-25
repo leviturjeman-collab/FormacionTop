@@ -282,7 +282,7 @@ Para que el alumno lo domine, debe conectar cuatro capas:
 2. Subrayar conceptos que no podria explicar a otra persona.
 3. Crear una nota derivada con ejemplo propio.
 4. Convertir el ejemplo en una mini practica.
-5. AÃ±adir una version basica, intermedia y avanzada.
+5. Añadir una version basica, intermedia y avanzada.
 6. Definir que herramienta se usa y que herramienta se evita.
 7. Crear el artefacto real correspondiente.
 8. Probar caso feliz, caso ambiguo y caso roto.
@@ -338,7 +338,7 @@ Una persona se queda impresionada cuando nota que la formacion no es una explica
 - Que hay una progresion clara.
 - Que cada concepto termina en practica.
 - Que cada practica se puede romper.
-- Que cada error enseÃ±a algo.
+- Que cada error enseña algo.
 - Que cada entrega tiene criterio.
 - Que cada proyecto puede convertirse en portfolio.
 - Que se sabe que herramienta usar y cual evitar.
@@ -349,7 +349,7 @@ Una persona se queda impresionada cuando nota que la formacion no es una explica
 Usa este prompt cuando quieras convertir esta nota en material accionable:
 
 `	ext
-Actua como diseÃ±ador senior de formacion profesional en IA. Convierte esta nota en una experiencia de aprendizaje AAAA+.
+Actua como diseñador senior de formacion profesional en IA. Convierte esta nota en una experiencia de aprendizaje AAAA+.
 
 Necesito:
 1. Explicacion para principiante.
@@ -385,9 +385,9 @@ Antes de considerar esta nota terminada como material premium, comprueba:
 - Tiene enlaces internos suficientes.
 - Puede convertirse en documento, presentacion o laboratorio.
 
-## Errores que debe enseÃ±ar esta nota
+## Errores que debe enseñar esta nota
 
-Una nota AAAA+ no solo enseÃ±a el camino correcto. EnseÃ±a tambien como se rompe el trabajo. Errores recomendados:
+Una nota AAAA+ no solo enseña el camino correcto. Enseña tambien como se rompe el trabajo. Errores recomendados:
 
 - Falta de contexto.
 - Elegir herramienta demasiado avanzada.
@@ -463,7 +463,7 @@ No memorices esta nota. Usala. Si puedes convertirla en una accion, una plantill
 
 Esta capa existe para que el archivo no sea simplemente bueno, sino extraordinario. La promesa es que una persona pueda leer esta nota y salir con una transformacion concreta: entender mejor, trabajar mejor, construir mejor, decidir mejor o presentar mejor. El lector ideal no debe sentir que esta consumiendo informacion; debe sentir que esta recibiendo un sistema de accion.
 
-Perfil principal al que sirve: alumno, formador y diseÃ±ador de modulo.
+Perfil principal al que sirve: alumno, formador y diseñador de modulo.
 
 Artefacto premium esperado: leccion completa, practica guiada, laboratorio, evaluacion y fuentes.
 
@@ -499,7 +499,7 @@ Dia 3 - Version basica:
 Dia 4 - Version intermedia:
 
 - Convertir el artefacto en plantilla, workflow, checklist, skill, schema, documento o laboratorio.
-- AÃ±adir criterio de terminado.
+- Añadir criterio de terminado.
 
 Dia 5 - Ruptura controlada:
 
@@ -510,8 +510,8 @@ Dia 5 - Ruptura controlada:
 Dia 6 - Version avanzada:
 
 - Reparar con evidencia.
-- AÃ±adir evaluacion.
-- AÃ±adir limites, seguridad o compatibilidad si aplica.
+- Añadir evaluacion.
+- Añadir limites, seguridad o compatibilidad si aplica.
 
 Dia 7 - Portfolio y defensa:
 
@@ -556,7 +556,7 @@ Para perfil formador:
 
 ## Biblioteca de fallos de alto valor
 
-Estos fallos son deseables en formacion porque enseÃ±an criterio:
+Estos fallos son deseables en formacion porque enseñan criterio:
 
 1. Falta de contexto: el resultado parece correcto pero no sirve.
 2. Herramienta excesiva: se usa tecnologia avanzada para un problema simple.
@@ -629,7 +629,7 @@ Cuando esta nota se convierta en entregable, debe tener esta estructura:
 - Que puede fallar.
 - Que herramienta no debo usar todavia.
 - Que evidencia voy a guardar.
-- Como lo explicaria a un cliente, jefe, compaÃ±ero o alumno.
+- Como lo explicaria a un cliente, jefe, compañero o alumno.
 
 Si no puede responder alguna, no pasa nada. Esa pregunta se convierte en tarea.
 
@@ -639,7 +639,7 @@ Para que esta nota se convierta en una clase que impacte, necesita cinco momento
 
 1. Reconocimiento: el alumno ve un problema real suyo.
 2. Claridad: entiende el modelo mental.
-3. Accion: produce algo pequeÃ±o.
+3. Accion: produce algo pequeño.
 4. Tension: algo se rompe.
 5. Dominio: lo repara y lo explica.
 
@@ -656,7 +656,7 @@ Para que un proyecto derivado de esta nota sea memorable, debe tener:
 - Error reparado.
 - Mejora respecto a la version inicial.
 - Utilidad para alguien real.
-- Posibilidad de enseÃ±arse en portfolio.
+- Posibilidad de enseñarse en portfolio.
 
 ## Frase de calidad extrema
 
@@ -693,7 +693,7 @@ Usar **Lecciones** para producir el entregable definido en la metadata: **clase,
 
 ### Criterio para eliminar contenido innecesario
 
-Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseÃ±ar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
+Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseñar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
 
 ### Proxima revision
 

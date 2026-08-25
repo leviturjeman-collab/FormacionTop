@@ -26,7 +26,7 @@ demo-repo/
 
 ## Practica
 
-Pedir a Codex, Cursor o Claude Code que implemente un cambio pequeÃ±o. Revisar diff y documentar pruebas.
+Pedir a Codex, Cursor o Claude Code que implemente un cambio pequeño. Revisar diff y documentar pruebas.
 ## Control editorial profesional
 
 Este archivo forma parte de la capa final de producto de la academia. Su funcion es que **Demo repositorio codigo asistido** no sea solo una idea escrita, sino una pieza util para impartir, evaluar, vender, actualizar o entregar. El entregable asociado es: **demo de codigo asistido**.
@@ -77,7 +77,7 @@ El alumno debe poder explicar que hizo, por que eligio esa solucion, que limite 
 
 ### Que eliminar si sobra
 
-Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseÃ±ar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
+Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseñar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
 
 ### Proxima revision
 

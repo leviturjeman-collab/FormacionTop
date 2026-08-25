@@ -11,7 +11,7 @@ entregable: "disclaimer formativo"
 ---
 # Disclaimer de formacion y limites
 
-Esta formacion enseÃ±a uso profesional de IA, automatizacion y agentes. No constituye asesoramiento legal, medico, financiero, fiscal ni de seguridad regulada. Los ejemplos son educativos y deben revisarse antes de usarse con clientes, datos reales o sistemas productivos.
+Esta formacion enseña uso profesional de IA, automatizacion y agentes. No constituye asesoramiento legal, medico, financiero, fiscal ni de seguridad regulada. Los ejemplos son educativos y deben revisarse antes de usarse con clientes, datos reales o sistemas productivos.
 
 ## Uso permitido
 
@@ -71,7 +71,7 @@ El alumno debe poder explicar que hizo, por que eligio esa solucion, que limite 
 
 ### Que eliminar si sobra
 
-Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseÃ±ar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
+Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseñar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
 
 ### Proxima revision
 

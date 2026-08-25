@@ -25,7 +25,7 @@ Accion siguiente:
 
 ## 2026-08-13
 
-Se aÃ±aden capas finales: certificacion, versionado, lecciones listas, assets ejecutables, legal/privacidad/etica, presentaciones y onboarding. Se actualizan indices principales y se mantiene auditoria profesional.
+Se añaden capas finales: certificacion, versionado, lecciones listas, assets ejecutables, legal/privacidad/etica, presentaciones y onboarding. Se actualizan indices principales y se mantiene auditoria profesional.
 
 ## Regla
 
@@ -74,7 +74,7 @@ El alumno debe poder explicar que hizo, por que eligio esa solucion, que limite 
 
 ### Que eliminar si sobra
 
-Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseÃ±ar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
+Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseñar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
 
 ### Proxima revision
 

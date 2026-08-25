@@ -33,7 +33,7 @@ Evita relleno y lenguaje de marketing.
 ## Prompt de presentacion
 
 ```text
-Convierte esta nota en una presentacion de [numero] diapositivas. Cada diapositiva debe tener titulo, mensaje central, bullets cortos, ejemplo y nota del ponente. MantÃ©n una progresion clara: problema, concepto, ejemplo, practica, error, solucion y cierre.
+Convierte esta nota en una presentacion de [numero] diapositivas. Cada diapositiva debe tener titulo, mensaje central, bullets cortos, ejemplo y nota del ponente. Mantén una progresion clara: problema, concepto, ejemplo, practica, error, solucion y cierre.
 ```
 
 ## Prompt de rubrica
@@ -67,15 +67,15 @@ Nivel avanzado: el alumno debe convertir Prompts de documentacion y cursos en un
 
 ## Como convertirlo en clase
 
-Para transformar este archivo en una clase, usa esta estructura: apertura con problema real, explicacion del modelo mental, ejemplo guiado, practica individual, error provocado, reparacion y cierre con transferencia al trabajo. La apertura debe conectar con una situacion reconocible. El modelo mental debe simplificar sin falsear. El ejemplo debe ser concreto. La practica debe producir un artefacto. El error provocado debe enseÃƒÂ±ar diagnostico. La reparacion debe basarse en evidencia. El cierre debe responder como se aplicaria fuera del aula.
+Para transformar este archivo en una clase, usa esta estructura: apertura con problema real, explicacion del modelo mental, ejemplo guiado, practica individual, error provocado, reparacion y cierre con transferencia al trabajo. La apertura debe conectar con una situacion reconocible. El modelo mental debe simplificar sin falsear. El ejemplo debe ser concreto. La practica debe producir un artefacto. El error provocado debe enseÃƒ±ar diagnostico. La reparacion debe basarse en evidencia. El cierre debe responder como se aplicaria fuera del aula.
 
 Una clase basada en Prompts de documentacion y cursos no deberia terminar con "lo hemos visto". Debe terminar con algo que el alumno pueda guardar en Obsidian: una checklist, una plantilla, un prompt, un workflow, un mini informe, una rubrica, un mapa de decision o una pieza de portfolio. Ese artefacto es la prueba de aprendizaje.
 
 ## Practica recomendada
 
-La practica recomendada consiste en tomar un problema pequeÃƒÂ±o y usar Prompts de documentacion y cursos para resolverlo de forma limitada. Primero se define el objetivo. Despues se escribe el contexto. Luego se decide que herramienta o metodo se usara. A continuacion se construye una primera version. Despues se provoca un fallo. Finalmente se documenta la reparacion.
+La practica recomendada consiste en tomar un problema pequeÃƒ±o y usar Prompts de documentacion y cursos para resolverlo de forma limitada. Primero se define el objetivo. Despues se escribe el contexto. Luego se decide que herramienta o metodo se usara. A continuacion se construye una primera version. Despues se provoca un fallo. Finalmente se documenta la reparacion.
 
-Ejemplo generico: si el archivo trata de prompts, el alumno crea un prompt y lo prueba con tres entradas diferentes. Si trata de negocio, crea una propuesta y la somete a critica. Si trata de troubleshooting, reproduce un error y escribe la solucion. Si trata de profesion, adapta una automatizacion a ese perfil. Si trata de capstone, integra varias piezas en un proyecto. Si trata de entregables, produce una version lista para enseÃƒÂ±ar.
+Ejemplo generico: si el archivo trata de prompts, el alumno crea un prompt y lo prueba con tres entradas diferentes. Si trata de negocio, crea una propuesta y la somete a critica. Si trata de troubleshooting, reproduce un error y escribe la solucion. Si trata de profesion, adapta una automatizacion a ese perfil. Si trata de capstone, integra varias piezas en un proyecto. Si trata de entregables, produce una version lista para enseÃƒ±ar.
 
 ## CHECK
 
@@ -83,11 +83,11 @@ Antes de ejecutar, el alumno debe responder: que intento lograr, que informacion
 
 ## DO
 
-En la fase DO, el alumno realiza la accion minima viable. No se busca una obra maestra inicial. Se busca una version observable. Debe quedar algo en la boveda: texto, tabla, prompt, workflow, decision, schema, prueba, documento o demo. La accion debe ser suficientemente pequeÃƒÂ±a para terminarse y suficientemente real para revelar problemas.
+En la fase DO, el alumno realiza la accion minima viable. No se busca una obra maestra inicial. Se busca una version observable. Debe quedar algo en la boveda: texto, tabla, prompt, workflow, decision, schema, prueba, documento o demo. La accion debe ser suficientemente pequeÃƒ±a para terminarse y suficientemente real para revelar problemas.
 
 ## BREAK
 
-En BREAK se rompe el caso de forma deliberada. Puede faltar un campo, fallar una API, aparecer un dato ambiguo, usarse una fuente mala, romperse el JSON, duplicarse un webhook, tocarse un archivo equivocado o elegirse una herramienta excesiva. El objetivo no es frustrar al alumno; es enseÃƒÂ±arle que los proyectos reales fallan y que el profesional se distingue por diagnosticar.
+En BREAK se rompe el caso de forma deliberada. Puede faltar un campo, fallar una API, aparecer un dato ambiguo, usarse una fuente mala, romperse el JSON, duplicarse un webhook, tocarse un archivo equivocado o elegirse una herramienta excesiva. El objetivo no es frustrar al alumno; es enseÃƒ±arle que los proyectos reales fallan y que el profesional se distingue por diagnosticar.
 
 ## FIX
 
@@ -95,7 +95,7 @@ En FIX se repara con evidencias. El alumno debe escribir causa, sintoma, evidenc
 
 ## EXPLAIN
 
-En EXPLAIN, el alumno convierte la experiencia en conocimiento transferible. Debe explicar Prompts de documentacion y cursos a otra persona, preferiblemente con un ejemplo propio. Si puede enseÃƒÂ±arlo, defenderlo y adaptarlo, entonces lo ha aprendido. Esta fase tambien sirve para generar materiales: presentaciones, guiones, casos de estudio, documentos de venta o plantillas.
+En EXPLAIN, el alumno convierte la experiencia en conocimiento transferible. Debe explicar Prompts de documentacion y cursos a otra persona, preferiblemente con un ejemplo propio. Si puede enseÃƒ±arlo, defenderlo y adaptarlo, entonces lo ha aprendido. Esta fase tambien sirve para generar materiales: presentaciones, guiones, casos de estudio, documentos de venta o plantillas.
 
 ## Criterio de evaluacion
 
@@ -103,7 +103,7 @@ La evaluacion debe medir comprension, aplicacion, diagnostico y comunicacion. Co
 
 ## Conversion en entregable profesional
 
-Para convertir Prompts de documentacion y cursos en entregable, aÃƒÂ±ade portada, objetivo, contexto, pasos, resultado, limites, riesgos, checklist y siguiente accion. Si es para cliente, aÃƒÂ±ade alcance y mantenimiento. Si es para portfolio, aÃƒÂ±ade demo y caso de estudio. Si es para clase, aÃƒÂ±ade practica y rubrica. Si es para uso interno, aÃƒÂ±ade responsable y frecuencia de revision.
+Para convertir Prompts de documentacion y cursos en entregable, aÃƒ±ade portada, objetivo, contexto, pasos, resultado, limites, riesgos, checklist y siguiente accion. Si es para cliente, aÃƒ±ade alcance y mantenimiento. Si es para portfolio, aÃƒ±ade demo y caso de estudio. Si es para clase, aÃƒ±ade practica y rubrica. Si es para uso interno, aÃƒ±ade responsable y frecuencia de revision.
 
 ## Que no hacer
 
@@ -143,7 +143,7 @@ Usar **Prompts de documentacion y cursos** para producir el entregable definido 
 
 ### Criterio para eliminar contenido innecesario
 
-Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseÃ±ar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
+Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseñar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
 
 ### Proxima revision
 

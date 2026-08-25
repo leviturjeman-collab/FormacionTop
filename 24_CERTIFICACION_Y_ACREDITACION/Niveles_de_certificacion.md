@@ -25,7 +25,7 @@ Evidencias: workflow exportable, payloads de prueba, README tecnico, rubrica y d
 
 ## Nivel 3 - Arquitecto IA profesional
 
-El alumno diseÃ±a un sistema con seguridad, privacidad, mantenimiento, evaluacion, coste y defensa. No necesita usar todas las herramientas, pero debe justificar las elegidas y descartadas. Debe construir capstone final.
+El alumno diseña un sistema con seguridad, privacidad, mantenimiento, evaluacion, coste y defensa. No necesita usar todas las herramientas, pero debe justificar las elegidas y descartadas. Debe construir capstone final.
 
 Evidencias: capstone, arquitectura, demo, troubleshooting, caso de estudio, propuesta de servicio y defensa oral.
 
@@ -76,7 +76,7 @@ El alumno debe poder explicar que hizo, por que eligio esa solucion, que limite 
 
 ### Que eliminar si sobra
 
-Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseÃ±ar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
+Eliminar frases genericas que no ayuden a decidir, ejecutar, verificar, evaluar o entregar. En una version comercial, cada bloque debe tener una funcion clara: enseñar, guiar, prevenir, demostrar, evaluar o vender con honestidad.
 
 ### Proxima revision
 

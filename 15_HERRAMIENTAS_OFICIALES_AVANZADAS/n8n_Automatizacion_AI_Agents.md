@@ -45,7 +45,7 @@ En avanzado, cada workflow debe tener una ficha tecnica: objetivo, trigger, apps
 
 ## Proyectos reales
 
-Proyectos excelentes para n8n: agente que triagea leads, asistente de soporte con base de conocimiento, generador automatico de propuestas, pipeline de contenido, alerta de incidencias, sincronizacion CRM-hoja de calculo, analisis de reseÃ±as, onboarding de clientes, reporting semanal y sistema de investigacion con resumen y fuentes. Cada proyecto debe incluir entrada, workflow, salida, humano responsable y registro.
+Proyectos excelentes para n8n: agente que triagea leads, asistente de soporte con base de conocimiento, generador automatico de propuestas, pipeline de contenido, alerta de incidencias, sincronizacion CRM-hoja de calculo, analisis de reseñas, onboarding de clientes, reporting semanal y sistema de investigacion con resumen y fuentes. Cada proyecto debe incluir entrada, workflow, salida, humano responsable y registro.
 
 Practica AAAA+: crear un workflow de soporte. Entrada: webhook con pregunta de cliente. Paso 1: validar campos. Paso 2: clasificar urgencia. Paso 3: consultar conocimiento. Paso 4: generar borrador. Paso 5: si confianza baja, enviar a humano. Paso 6: guardar log. Paso 7: responder. BREAK: borrar un campo obligatorio, usar una credencial sin permisos, enviar payload duplicado y forzar una respuesta ambigua. FIX: documentar causa, evidencia, reparacion y prevencion.
 
@@ -96,7 +96,7 @@ Usar **n8n Automatizacion AI Agents** para producir el entregable definido en la
 
 ### Criterio para eliminar contenido innecesario
 
-Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseÃ±ar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
+Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseñar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
 
 ### Proxima revision
 

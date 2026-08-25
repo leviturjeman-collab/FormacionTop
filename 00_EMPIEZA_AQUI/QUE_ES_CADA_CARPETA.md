@@ -56,15 +56,15 @@ Este archivo existe para que cualquier persona abra la boveda y entienda la orga
 
 `01_INVESTIGACION_OFICIAL` es la biblioteca de fuentes. Sirve para que la formacion no dependa de opiniones ni contenido reciclado. Aqui se mira que dicen OpenAI, Anthropic, Google, n8n, GitHub y otros proveedores oficiales.
 
-`02_METODO_DE_ENSENANZA` explica como se enseÃ±a. En vez de dar teoria y ya, la academia usa profundidad por capas y el ciclo `CHECK -> DO -> BREAK -> FIX -> EXPLAIN`. Eso obliga a que el alumno lea, practique, rompa, repare y explique.
+`02_METODO_DE_ENSENANZA` explica como se enseña. En vez de dar teoria y ya, la academia usa profundidad por capas y el ciclo `CHECK -> DO -> BREAK -> FIX -> EXPLAIN`. Eso obliga a que el alumno lea, practique, rompa, repare y explique.
 
-`03_RUTA_DEL_CURSO` es el orden. Si la investigacion es la biblioteca y el metodo es la forma de enseÃ±ar, esta carpeta es el calendario intelectual: que va antes, que va despues y que competencias se esperan.
+`03_RUTA_DEL_CURSO` es el orden. Si la investigacion es la biblioteca y el metodo es la forma de enseñar, esta carpeta es el calendario intelectual: que va antes, que va despues y que competencias se esperan.
 
 `04_CLASES_POR_HERRAMIENTA` es donde viven los modulos. Cada herramienta tiene sus clases, practicas, evaluacion y fuentes. Aqui se prepara material para sesiones, documentos y presentaciones.
 
 `05_PRACTICAS_Y_EJERCICIOS` convierte teoria en manos. Cada laboratorio debe tener objetivo, pasos, resultado, errores y reparacion.
 
-`06_PROYECTOS_PARA_PORTFOLIO` contiene trabajos grandes. La idea es que el alumno pueda enseÃ±ar algo real: un workflow, un agente, una app, un sistema de investigacion, una automatizacion o una documentacion completa.
+`06_PROYECTOS_PARA_PORTFOLIO` contiene trabajos grandes. La idea es que el alumno pueda enseñar algo real: un workflow, un agente, una app, un sistema de investigacion, una automatizacion o una documentacion completa.
 
 `07_EXAMENES_RUBRICAS_DEFENSA` mide si el alumno sabe hacerlo. No basta con "me salio". Debe explicar, justificar, defender y corregir.
 
@@ -171,7 +171,7 @@ Usar **QUE ES CADA CARPETA** para producir el entregable definido en la metadata
 
 ### Criterio para eliminar contenido innecesario
 
-Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseÃ±ar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
+Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseñar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
 
 ### Proxima revision
 

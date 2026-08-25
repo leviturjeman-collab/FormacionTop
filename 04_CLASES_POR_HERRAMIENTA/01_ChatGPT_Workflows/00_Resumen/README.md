@@ -9,52 +9,52 @@ fuentes: ["https://learn.chatgpt.com/", "https://developers.openai.com/", "https
 tags: ["ai-academy", "modulo_clase", "transversal", "aprendizaje"]
 entregable: "clase, practica y evaluacion"
 ---
-# MÃ³dulo 01 - ChatGPT y workflows
+# Módulo 01 - ChatGPT y workflows
 
 ## Manual base
 
-Antes de desarrollar o impartir este mÃ³dulo, leer [[../../../01_INVESTIGACION_OFICIAL/OpenAI_Academy_ChatGPT_Codex|OpenAI, ChatGPT, Codex, skills y workflows]]. Ese archivo contiene el desarrollo largo con fuentes oficiales, criterios pedagÃ³gicos, ejemplos de prompting, lÃ­mites, skills y plugins.
+Antes de desarrollar o impartir este módulo, leer [[../../../01_INVESTIGACION_OFICIAL/OpenAI_Academy_ChatGPT_Codex|OpenAI, ChatGPT, Codex, skills y workflows]]. Ese archivo contiene el desarrollo largo con fuentes oficiales, criterios pedagógicos, ejemplos de prompting, límites, skills y plugins.
 
 ## Objetivo
 
-Pasar de usar ChatGPT para respuestas aisladas a diseÃ±ar flujos de trabajo repetibles.
+Pasar de usar ChatGPT para respuestas aisladas a diseñar flujos de trabajo repetibles.
 
 ## Conceptos
 
 - Tarea.
 - Workflow.
 - Contexto reutilizable.
-- RevisiÃ³n.
+- Revisión.
 - Formato de salida.
 - Criterio de terminado.
 - Instrucciones persistentes.
 
-## Resultado del mÃ³dulo
+## Resultado del módulo
 
-El alumno documenta un workflow que puede repetir, mejorar y convertir en material de formaciÃ³n.
+El alumno documenta un workflow que puede repetir, mejorar y convertir en material de formación.
 
-## QuÃ© debe dominar el alumno
+## Qué debe dominar el alumno
 
-El alumno debe dejar de pensar en ChatGPT como una caja de respuestas y empezar a verlo como una superficie de trabajo. Esto significa que no basta con escribir un prompt y aceptar el resultado. Debe definir quÃ© necesita, por quÃ© lo necesita, quÃ© informaciÃ³n cambia la respuesta, quÃ© lÃ­mites protegen el trabajo, quÃ© formato espera y cÃ³mo revisarÃ¡ la salida. El patrÃ³n mÃ­nimo para tareas importantes serÃ¡ siempre: objetivo, contexto, salida y lÃ­mites.
+El alumno debe dejar de pensar en ChatGPT como una caja de respuestas y empezar a verlo como una superficie de trabajo. Esto significa que no basta con escribir un prompt y aceptar el resultado. Debe definir qué necesita, por qué lo necesita, qué información cambia la respuesta, qué límites protegen el trabajo, qué formato espera y cómo revisará la salida. El patrón mínimo para tareas importantes será siempre: objetivo, contexto, salida y límites.
 
-En la prÃ¡ctica, este mÃ³dulo debe enseÃ±ar a transformar frases vagas en instrucciones Ãºtiles. "Hazme un resumen" se convierte en "convierte estas notas en una actualizaciÃ³n para direcciÃ³n, pon primero decisiones y prÃ³ximos pasos, conserva fechas y cifras aprobadas, y marca cualquier informaciÃ³n que no puedas verificar". Esa diferencia es el corazÃ³n del mÃ³dulo. La calidad no aparece porque el modelo sea potente; aparece porque el trabajo estÃ¡ bien planteado.
+En la práctica, este módulo debe enseñar a transformar frases vagas en instrucciones útiles. "Hazme un resumen" se convierte en "convierte estas notas en una actualización para dirección, pon primero decisiones y próximos pasos, conserva fechas y cifras aprobadas, y marca cualquier información que no puedas verificar". Esa diferencia es el corazón del módulo. La calidad no aparece porque el modelo sea potente; aparece porque el trabajo está bien planteado.
 
-TambiÃ©n debe aprender a iterar. El primer resultado no es el final. El alumno revisa, detecta desviaciones y hace seguimientos concretos: mover una recomendaciÃ³n, separar hechos de supuestos, convertir texto en tabla, reducir extensiÃ³n, aÃ±adir fuentes o marcar dudas. Esta parte es importante porque entrena direcciÃ³n. Un alumno que sabe dirigir una conversaciÃ³n puede usar ChatGPT para investigar, escribir, analizar, sintetizar y documentar sin depender de una fÃ³rmula rÃ­gida.
+También debe aprender a iterar. El primer resultado no es el final. El alumno revisa, detecta desviaciones y hace seguimientos concretos: mover una recomendación, separar hechos de supuestos, convertir texto en tabla, reducir extensión, añadir fuentes o marcar dudas. Esta parte es importante porque entrena dirección. Un alumno que sabe dirigir una conversación puede usar ChatGPT para investigar, escribir, analizar, sintetizar y documentar sin depender de una fórmula rígida.
 
-## PrÃ¡ctica principal
+## Práctica principal
 
-Cada alumno elegirÃ¡ una tarea repetida de su trabajo o estudio. La convertirÃ¡ en workflow documentado con:
+Cada alumno elegirá una tarea repetida de su trabajo o estudio. La convertirá en workflow documentado con:
 
 - Entrada necesaria.
-- Contexto Ãºtil.
+- Contexto útil.
 - Prompt inicial.
-- Seguimientos tÃ­picos.
+- Seguimientos típicos.
 - Formato de salida.
-- Checklist de revisiÃ³n.
+- Checklist de revisión.
 - Errores comunes.
-- VersiÃ³n final reusable.
+- Versión final reusable.
 
-El laboratorio debe incluir un error provocado: falta una fuente, hay una cifra ambigua o el prompt pide actuar sin revisiÃ³n. El alumno debe corregir el workflow aÃ±adiendo lÃ­mites y una verificaciÃ³n final.
+El laboratorio debe incluir un error provocado: falta una fuente, hay una cifra ambigua o el prompt pide actuar sin revisión. El alumno debe corregir el workflow añadiendo límites y una verificación final.
 ---
 
 # Desarrollo completo - 00 Resumen
@@ -311,7 +311,7 @@ Para que el alumno lo domine, debe conectar cuatro capas:
 2. Subrayar conceptos que no podria explicar a otra persona.
 3. Crear una nota derivada con ejemplo propio.
 4. Convertir el ejemplo en una mini practica.
-5. AÃ±adir una version basica, intermedia y avanzada.
+5. Añadir una version basica, intermedia y avanzada.
 6. Definir que herramienta se usa y que herramienta se evita.
 7. Crear el artefacto real correspondiente.
 8. Probar caso feliz, caso ambiguo y caso roto.
@@ -367,7 +367,7 @@ Una persona se queda impresionada cuando nota que la formacion no es una explica
 - Que hay una progresion clara.
 - Que cada concepto termina en practica.
 - Que cada practica se puede romper.
-- Que cada error enseÃ±a algo.
+- Que cada error enseña algo.
 - Que cada entrega tiene criterio.
 - Que cada proyecto puede convertirse en portfolio.
 - Que se sabe que herramienta usar y cual evitar.
@@ -378,7 +378,7 @@ Una persona se queda impresionada cuando nota que la formacion no es una explica
 Usa este prompt cuando quieras convertir esta nota en material accionable:
 
 `	ext
-Actua como diseÃ±ador senior de formacion profesional en IA. Convierte esta nota en una experiencia de aprendizaje AAAA+.
+Actua como diseñador senior de formacion profesional en IA. Convierte esta nota en una experiencia de aprendizaje AAAA+.
 
 Necesito:
 1. Explicacion para principiante.
@@ -414,9 +414,9 @@ Antes de considerar esta nota terminada como material premium, comprueba:
 - Tiene enlaces internos suficientes.
 - Puede convertirse en documento, presentacion o laboratorio.
 
-## Errores que debe enseÃ±ar esta nota
+## Errores que debe enseñar esta nota
 
-Una nota AAAA+ no solo enseÃ±a el camino correcto. EnseÃ±a tambien como se rompe el trabajo. Errores recomendados:
+Una nota AAAA+ no solo enseña el camino correcto. Enseña tambien como se rompe el trabajo. Errores recomendados:
 
 - Falta de contexto.
 - Elegir herramienta demasiado avanzada.
@@ -492,7 +492,7 @@ No memorices esta nota. Usala. Si puedes convertirla en una accion, una plantill
 
 Esta capa existe para que el archivo no sea simplemente bueno, sino extraordinario. La promesa es que una persona pueda leer esta nota y salir con una transformacion concreta: entender mejor, trabajar mejor, construir mejor, decidir mejor o presentar mejor. El lector ideal no debe sentir que esta consumiendo informacion; debe sentir que esta recibiendo un sistema de accion.
 
-Perfil principal al que sirve: alumno, formador y diseÃ±ador de modulo.
+Perfil principal al que sirve: alumno, formador y diseñador de modulo.
 
 Artefacto premium esperado: leccion completa, practica guiada, laboratorio, evaluacion y fuentes.
 
@@ -528,7 +528,7 @@ Dia 3 - Version basica:
 Dia 4 - Version intermedia:
 
 - Convertir el artefacto en plantilla, workflow, checklist, skill, schema, documento o laboratorio.
-- AÃ±adir criterio de terminado.
+- Añadir criterio de terminado.
 
 Dia 5 - Ruptura controlada:
 
@@ -539,8 +539,8 @@ Dia 5 - Ruptura controlada:
 Dia 6 - Version avanzada:
 
 - Reparar con evidencia.
-- AÃ±adir evaluacion.
-- AÃ±adir limites, seguridad o compatibilidad si aplica.
+- Añadir evaluacion.
+- Añadir limites, seguridad o compatibilidad si aplica.
 
 Dia 7 - Portfolio y defensa:
 
@@ -585,7 +585,7 @@ Para perfil formador:
 
 ## Biblioteca de fallos de alto valor
 
-Estos fallos son deseables en formacion porque enseÃ±an criterio:
+Estos fallos son deseables en formacion porque enseñan criterio:
 
 1. Falta de contexto: el resultado parece correcto pero no sirve.
 2. Herramienta excesiva: se usa tecnologia avanzada para un problema simple.
@@ -658,7 +658,7 @@ Cuando esta nota se convierta en entregable, debe tener esta estructura:
 - Que puede fallar.
 - Que herramienta no debo usar todavia.
 - Que evidencia voy a guardar.
-- Como lo explicaria a un cliente, jefe, compaÃ±ero o alumno.
+- Como lo explicaria a un cliente, jefe, compañero o alumno.
 
 Si no puede responder alguna, no pasa nada. Esa pregunta se convierte en tarea.
 
@@ -668,7 +668,7 @@ Para que esta nota se convierta en una clase que impacte, necesita cinco momento
 
 1. Reconocimiento: el alumno ve un problema real suyo.
 2. Claridad: entiende el modelo mental.
-3. Accion: produce algo pequeÃ±o.
+3. Accion: produce algo pequeño.
 4. Tension: algo se rompe.
 5. Dominio: lo repara y lo explica.
 
@@ -685,7 +685,7 @@ Para que un proyecto derivado de esta nota sea memorable, debe tener:
 - Error reparado.
 - Mejora respecto a la version inicial.
 - Utilidad para alguien real.
-- Posibilidad de enseÃ±arse en portfolio.
+- Posibilidad de enseñarse en portfolio.
 
 ## Frase de calidad extrema
 
@@ -723,7 +723,7 @@ Usar **Resumen** para producir el entregable definido en la metadata: **clase, p
 
 ### Criterio para eliminar contenido innecesario
 
-Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseÃ±ar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
+Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: explicar una decision, enseñar un concepto, guiar una practica, prevenir un error, respaldar una fuente, preparar un entregable o mejorar la evaluacion.
 
 ### Proxima revision
 
