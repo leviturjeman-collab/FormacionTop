@@ -1,0 +1,357 @@
+{
+  "id": "n8n-08",
+  "tool": "n8n",
+  "slot": 8,
+  "number": 208,
+  "stageId": "automatizacion",
+  "title": "Los cuatro disparadores y cuándo usar cada uno",
+  "promise": "Sabrás elegir el disparador de tu proceso sin dudar —programado, webhook, de aplicación o manual— y lo dejarás montado y comprobado para tu flujo de verdad, con su condición escrita y su primer disparo visto en el historial.",
+  "minutes": 25,
+  "why": "Teresa quiere que su flujo salte «cuando entre un pedido en la tienda». Monta un disparador programado cada cinco minutos que pregunta a la tienda si hay pedidos nuevos. Funciona, pero de las 288 consultas diarias, 280 vuelven vacías: son las tres de la mañana y no compra nadie. Además, un pedido puede tardar hasta cinco minutos en procesarse, y el cliente que paga a las 12:00:01 espera hasta las 12:05. Su tienda tenía webhooks: la tienda misma podía avisarle en el segundo exacto. Eligió el disparador equivocado porque nadie le contó que había cuatro y en qué se diferencian.",
+  "theory": [
+    {
+      "title": "La pregunta que lo decide todo: ¿quién se entera primero?",
+      "text": "Todo disparador responde a la misma pregunta: cuándo arranca esto. La diferencia está en quién detecta el momento. Si el momento lo marca el reloj, es un disparador programado. Si el servicio de fuera puede avisarte él, es un webhook. Si el servicio no avisa pero n8n sabe preguntarle, es un disparador de aplicación. Y si arranca cuando tú le das al botón, es manual. Elegir bien es preguntarse: ¿quién es el primero en saber que ha pasado lo que me importa, y puede contármelo?",
+      "analogy": "¿Quieres enterarte de que ha llegado un paquete? O bajas al portal cada hora (programado), o el cartero te llama al timbre (webhook), o le preguntas al conserje que ya vigila la puerta (de aplicación).",
+      "visual": {
+        "kind": "decision",
+        "title": "El selector de disparador",
+        "caption": "Contesta con tu proceso de la ficha delante. En dos preguntas estás.",
+        "question": "¿El servicio donde ocurre lo que te importa puede avisarte él?",
+        "branches": [
+          {
+            "answer": "Sí: tiene webhooks (tiendas, formularios, pasarelas de pago...)",
+            "then": "Webhook. Es el mejor cuando existe",
+            "why": "Te avisan en el segundo exacto, sin consultas vacías y sin esperas. Exige que tu n8n sea alcanzable desde fuera, que es el precio a pagar (lección 27).",
+            "cost": "Instantáneo y sin llamadas de sobra"
+          },
+          {
+            "answer": "No avisa, pero n8n tiene un disparador para ese servicio",
+            "then": "Disparador de aplicación",
+            "why": "El nodo de Gmail Trigger, Sheets Trigger o similar pregunta él solo cada X minutos y te entrega lo nuevo. Es un programado con el trabajo sucio ya hecho: él lleva la cuenta de qué ha visto.",
+            "cost": "Retardo de minutos, configuración mínima"
+          },
+          {
+            "answer": "Lo que importa lo marca el reloj: cada día, cada hora",
+            "then": "Programado (Schedule)",
+            "why": "Informes de la mañana, resúmenes, revisiones, limpiezas. Aquí el tiempo ES la condición, y este disparador es exactamente eso.",
+            "cost": "Retardo cero respecto a lo que quieres: la hora"
+          },
+          {
+            "answer": "Solo debe arrancar cuando yo lo diga",
+            "then": "Manual",
+            "why": "Procesos que un humano lanza tras revisar algo: una migración, una carga, un envío masivo. Y todo lo que estés probando, siempre.",
+            "cost": "Ninguno: tú eres el disparador"
+          }
+        ]
+      }
+    },
+    {
+      "title": "El programado: cuando el tiempo es la condición",
+      "text": "El Schedule Trigger que ya usaste dispara por reloj: cada día a las 9, cada lunes, cada hora. Es perfecto cuando lo que quieres ES un momento («el resumen de la mañana») y una trampa cuando lo usas para vigilar algo que ocurre a su aire («¿hay pedidos?»), porque te condena a elegir entre preguntar mucho en vacío o enterarte tarde. La regla: si te descubres poniendo «cada 5 minutos» para no perderte algo, casi seguro querías un webhook o un disparador de aplicación.",
+      "example": "Bien usado: el correo de pendientes de las 9:00 de tu flujo. Mal usado: preguntar cada 5 minutos si hay pedidos, como Teresa: 288 consultas para 8 pedidos."
+    },
+    {
+      "title": "El webhook: que te llamen ellos",
+      "text": "El webhook le da la vuelta: tú publicas una dirección y el servicio te manda un aviso con el payload en el momento exacto. Cero consultas vacías, cero retardo. A cambio, tu n8n tiene que estar en un sitio alcanzable desde internet (la nube o un servidor, no tu portátil), y tienes que preparar el flujo para avisos repetidos, porque los servicios reintentan si no respondes a tiempo. Es el disparador profesional por excelencia y tiene su lección entera, la 27.",
+      "example": "Formularios web, tiendas (pedido creado, pago recibido), pasarelas de pago, calendarios... Casi todo servicio moderno sabe avisar por webhook. Se mira en su documentación buscando la palabra webhooks.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "Programado frente a webhook, el mismo día de tienda",
+        "caption": "Ocho pedidos en un día. Mira cuántas ejecuciones necesita cada enfoque.",
+        "steps": [
+          {
+            "label": "Programado cada 5 min",
+            "does": "288 consultas al día, la mayoría en vacío",
+            "in": 288,
+            "out": 8,
+            "why": "288 ejecuciones para capturar 8 pedidos: 280 consultas de madrugada y de horas muertas que vuelven vacías. Funciona, pero paga en ejecuciones y en retardo (hasta 5 minutos por pedido)."
+          },
+          {
+            "label": "Webhook",
+            "does": "La tienda avisa cuando hay pedido",
+            "in": 8,
+            "out": 8,
+            "why": "Ocho avisos, ocho ejecuciones, retardo de un segundo. La misma información, sin ruido. Cuando el servicio sabe avisar, avisar gana."
+          }
+        ]
+      }
+    },
+    {
+      "title": "El de aplicación: el programado con el trabajo hecho",
+      "text": "Los nodos tipo Gmail Trigger o Sheets Trigger son disparadores que preguntan solos al servicio cada pocos minutos y te entregan únicamente lo nuevo. Por dentro son un programado, pero con las dos partes difíciles resueltas: llevan la cuenta de qué han visto ya (para no darte lo mismo dos veces) y traducen la respuesta del servicio a items limpios. Su letra pequeña: la mayoría solo ve lo que ocurre DESPUÉS de activar el flujo, y el intervalo de consulta depende del plan y la versión.",
+      "example": "El Gmail Trigger con filtro «asunto contiene PRESUPUESTO ACEPTADO» es la pieza natural para el proceso de Rocío de la lección 01: nadie tiene que abrir el correo para que el flujo se entere."
+    },
+    {
+      "title": "El manual: el que usas cien veces y el que salva procesos delicados",
+      "text": "El disparador manual parece el de juguete y tiene dos papeles serios. El primero ya lo vives: es el disparador de pruebas, el que usas mientras montas cualquier flujo. El segundo es el de los procesos que NO deben arrancar solos: un envío masivo a clientes, una migración de datos, un borrado. Ahí, que una persona tenga que pulsar es la característica, no la limitación: es un botón con un humano delante como guardarraíl.",
+      "example": "«Mandar la newsletter» como flujo manual: alguien revisa el borrador, y cuando está conforme, pulsa. La automatización hace el trabajo; la decisión sigue siendo humana."
+    },
+    {
+      "title": "Cambiar de disparador no es rehacer el flujo",
+      "text": "El disparador es la primera caja, y solo la primera. Todo lo demás —filtros, transformaciones, acciones— trabaja con los items que le llegan, venga de donde venga el arranque. Empezar con un programado y pasarte a un webhook cuando el volumen lo pida es cambiar una caja y comprobar que los campos se llaman igual. Así que la elección de hoy no es un matrimonio: es la mejor opción con lo que sabes ahora, y las señales para cambiarla son claras.",
+      "analogy": "Cambiar el timbre de la puerta no obliga a reformar la casa. La instalación de dentro sigue igual.",
+      "visual": {
+        "kind": "compare",
+        "title": "Los cuatro, frente a frente",
+        "caption": "La tabla para decidir en diez segundos. Tu proceso de la ficha cae en una columna.",
+        "header": [
+          "",
+          "Programado",
+          "Webhook",
+          "De aplicación",
+          "Manual"
+        ],
+        "rows": [
+          [
+            "Quién detecta",
+            "El reloj",
+            "El servicio te avisa",
+            "n8n pregunta solo",
+            "Tú"
+          ],
+          [
+            "Retardo",
+            "El del intervalo",
+            "Segundos",
+            "Minutos",
+            "Cero: tú decides"
+          ],
+          [
+            "Consultas vacías",
+            "Muchas si vigilas eventos",
+            "Ninguna",
+            "Las hace él por dentro",
+            "Ninguna"
+          ],
+          [
+            "Necesita n8n alcanzable",
+            "No",
+            "SÍ (nube o servidor)",
+            "No",
+            "No"
+          ],
+          [
+            "Duplicados posibles",
+            "Si tú no llevas la cuenta",
+            "Sí: reintentos",
+            "Los gestiona él",
+            "No"
+          ],
+          [
+            "Ideal para",
+            "Resúmenes, informes, limpiezas",
+            "Pedidos, pagos, formularios",
+            "Correo, hojas, apps conocidas",
+            "Pruebas y procesos delicados"
+          ]
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Clasifica tu proceso",
+      "where": "Con tu ficha de la lección 01 delante",
+      "action": "Relee tu frase de disparador («esto arranca cuando ___») y pásala por el selector de la teoría: ¿el servicio puede avisar? ¿n8n tiene disparador para él? ¿lo marca el reloj? Escribe en la ficha cuál de los cuatro le toca y por qué, en una línea.",
+      "expect": "Una línea nueva en tu ficha: «disparador: [tipo], porque [motivo]».",
+      "stuck": "Si dudas entre webhook y aplicación: busca el nombre de tu servicio en el panel de nodos de n8n. Si existe «[Servicio] Trigger», el de aplicación es el camino corto hoy."
+    },
+    {
+      "title": "Comprueba si tu servicio sabe avisar",
+      "where": "En la documentación o los ajustes del servicio de tu proceso",
+      "action": "Busca la palabra «webhooks» en sus ajustes o su documentación (suele estar en Configuración, Integraciones o Developers). No lo montes: solo confirma si existe y apúntalo en la ficha. Es información que decide tu lección 27.",
+      "expect": "Un sí o un no escrito en la ficha, con la ruta de dónde lo viste.",
+      "stuck": "Si el servicio es Gmail, Sheets o similar, la respuesta práctica es «uso el disparador de aplicación»: existe, está mantenido y te ahorra el problema."
+    },
+    {
+      "title": "Monta el disparador de tu proceso, en un flujo nuevo",
+      "where": "En n8n, flujo nuevo con el nombre de tu proceso",
+      "action": "Crea el flujo que va a ser EL TUYO (el de la ficha) y ponle su primera caja: el disparador elegido, configurado con tu condición real. Si es de aplicación, con su filtro (remitente, asunto, hoja). Si es programado, con su hora y su zona horaria comprobada. Solo el disparador: el resto del flujo llega en las próximas lecciones.",
+      "expect": "Un flujo nuevo, con nombre serio, cuya primera caja es tu disparador configurado.",
+      "stuck": "Si tu elección fue webhook, monta HOY el de aplicación o el programado como provisional: el webhook necesita la lección 27 y un n8n alcanzable. Apunta en la ficha «cambiar a webhook» y sigue."
+    },
+    {
+      "title": "Provoca el primer disparo real",
+      "where": "En el servicio real y en la lista de ejecuciones",
+      "action": "Haz que ocurra la condición de verdad: mándate el correo con el asunto exacto, añade la fila, o espera a la hora. Después abre la lista de ejecuciones y busca la línea: debe estar, abierta por el sistema, con el payload real dentro. Ábrela y lee qué campos trae tu item.",
+      "expect": "Una execution disparada sin tocar n8n, y tú leyendo los nombres reales de los campos que llegan.",
+      "stuck": "¿No aparece? Tres sospechosos por orden: el flujo no está activado, el disparador de aplicación solo ve lo posterior a la activación, o tu condición está escrita distinta de como llegó (mayúsculas, espacios)."
+    },
+    {
+      "title": "Apunta los campos que llegan",
+      "where": "En tu ficha",
+      "action": "De la execution que acabas de abrir, copia los nombres exactos de los cinco o seis campos que trae el item: como se llame el remitente, el asunto, la fecha. Son los nombres que usarás en las expresiones de las próximas lecciones, y copiarlos ahora te ahorra adivinarlos después.",
+      "expect": "La ficha tiene una lista de campos reales con sus nombres exactos.",
+      "stuck": "Los nombres se copian de la columna derecha del disparador, en la vista de tabla o JSON. Tal cual están, con su mayúscula o su guion."
+    },
+    {
+      "title": "Decide qué pasa con los repetidos, por escrito",
+      "where": "En la ficha",
+      "action": "Una línea: «si el mismo caso llega dos veces, quiero que ___». Todavía no lo vas a implementar (lección 39), pero decidirlo ahora, con el disparador recién elegido, es el momento en que mejor se piensa. Los webhooks reintentan, los correos se marcan como no leídos: los repetidos van a llegar.",
+      "expect": "La decisión escrita: se ignora, se actualiza lo existente, o se avisa.",
+      "stuck": "Si no sabes qué elegir, la respuesta más segura casi siempre es «se comprueba si existe por [dato único] y si existe no se crea otro»."
+    }
+  ],
+  "errors": [
+    {
+      "message": "El disparador de aplicación no ve los correos/filas que ya estaban",
+      "means": "La mayoría de estos disparadores solo procesan lo que ocurre DESPUÉS de activar el flujo. Lo anterior no existe para ellos.",
+      "fix": "Es diseño, no fallo. Para procesar lo histórico, haz una carga inicial aparte con un flujo manual que lea todo lo existente una vez, y deja el disparador para lo nuevo."
+    },
+    {
+      "message": "El programado dispara pero siempre en vacío",
+      "means": "Preguntas a horas en que no hay nada, o tu consulta no distingue lo nuevo de lo ya visto y filtras de más.",
+      "fix": "Primera opción: cambia a un disparador de aplicación o webhook si existen, que llevan la cuenta por ti. Si te quedas con el programado, necesitas marcar lo procesado (columna de estado) para no depender de la memoria."
+    },
+    {
+      "message": "Me llegan dos ejecuciones por el mismo evento",
+      "means": "El servicio reintentó el aviso (webhooks) o el elemento volvió a cumplir la condición (un correo marcado como no leído).",
+      "fix": "Hoy: apúntalo como confirmación de que tu decisión de la tarea 6 importa. La solución de verdad es comprobar existencia antes de crear, y es la lección 39. No intentes arreglarlo afinando el disparador: no se arregla ahí."
+    },
+    {
+      "message": "Activé el flujo pero el webhook me da la URL de test",
+      "means": "Estás copiando la dirección desde la pestaña de test del nodo, que es la que se muestra por defecto en el editor.",
+      "fix": "En el nodo del webhook hay dos pestañas o dos URLs: test y production. Con el flujo activado, la buena para el servicio externo es la production. La de test solo vive mientras el editor escucha."
+    },
+    {
+      "message": "Quiero dos disparadores en el mismo flujo",
+      "means": "Quieres que el mismo proceso arranque por dos vías: por hora Y por aviso, por ejemplo.",
+      "fix": "Se puede: n8n permite varios triggers en un flujo, y cada uno abre su propia execution. Pero pregúntate antes si son de verdad el mismo proceso: si los caminos divergen pronto, son dos flujos más claros que uno con dos cabezas."
+    },
+    {
+      "message": "Mi condición del disparador no filtra: llega todo",
+      "means": "Los filtros del propio disparador (asunto, remitente, etiqueta) están vacíos o mal escritos, y estás recibiendo el buzón entero.",
+      "fix": "Configura el filtro EN el disparador si lo tiene (más barato: lo que no toca ni entra), y de respaldo mantén tu nodo de filtro justo después, robusto como el de la lección 06. Cinturón y tirantes."
+    }
+  ],
+  "matters": [
+    "La pregunta de quién se entera primero. Es la que elige el disparador correcto en diez segundos y la que Teresa no se hizo: 288 consultas diarias para 8 pedidos.",
+    "Saber que el de aplicación solo ve lo posterior a la activación. Es la sorpresa número uno de los primeros flujos reales: «no me procesa los correos de ayer». No es un fallo: es su diseño.",
+    "Copiar los nombres reales de los campos de la primera execution. Diez minutos ahora contra adivinar en cada expresión de las próximas veinte lecciones.",
+    "Decidir por escrito qué pasa con los repetidos. Los avisos duplicados van a llegar; la diferencia entre un flujo serio y uno frágil es haberlo decidido antes de que lleguen."
+  ],
+  "ignore": [
+    "Las expresiones cron avanzadas del programado (los asteriscos tipo 0 9 * * 1-5). El modo visual cubre todo lo que necesitas este mes; el cron fino existe y puede esperar.",
+    "Montar el webhook de verdad si tu n8n está en tu portátil. Sin dirección pública no va a funcionar, y frustrarse hoy con eso es gratis: la lección 27 lo monta bien y con red.",
+    "Los disparadores exóticos del panel: por correo entrante a n8n, por RSS, por MQTT. Existen para casos concretos; los cuatro de hoy cubren el 95% de los procesos reales."
+  ],
+  "canDo": [
+    "Arrancar tu flujo en el segundo exacto en que pasa algo, si el servicio sabe avisar: el webhook es tiempo real de verdad.",
+    "Llevarte la cuenta de qué ha visto ya, con los disparadores de aplicación: tú recibes solo lo nuevo, limpio y en items.",
+    "Tener varios arranques para el mismo flujo, cada uno con su vía, cuando el proceso lo pide de verdad.",
+    "Cambiar de disparador sin rehacer nada más, siempre que los campos que salgan se llamen igual."
+  ],
+  "cantDo": [
+    "Avisarte de eventos pasados: el de aplicación empieza a mirar cuando lo activas, y lo de antes no existe para él.",
+    "Garantizar un aviso único: los webhooks reintentan y los correos reaparecen. El duplicado es un cuándo, no un si.",
+    "Recibir webhooks en un portátil sin dirección pública. Para eso hace falta la nube o un servidor.",
+    "Elegir por ti. La pregunta de quién se entera primero la contestas tú con tu proceso delante; el resto es configuración."
+  ],
+  "words": [
+    [
+      "Schedule Trigger",
+      "El programado: dispara por reloj. Perfecto cuando el tiempo ES la condición."
+    ],
+    [
+      "Webhook Trigger",
+      "El que espera avisos de fuera en una dirección tuya. Tiempo real, exige n8n alcanzable."
+    ],
+    [
+      "App Trigger",
+      "El de aplicación (Gmail Trigger, Sheets Trigger...): pregunta él solo y entrega lo nuevo."
+    ],
+    [
+      "Manual Trigger",
+      "Arranca cuando tú pulsas. Para probar, y para procesos que exigen un humano delante."
+    ],
+    [
+      "Polling",
+      "Preguntar cada X minutos si hay novedades. Es lo que hace el de aplicación por dentro."
+    ],
+    [
+      "Intervalo",
+      "Cada cuánto pregunta un disparador de tipo polling. Más corto: más fresco y más consultas."
+    ],
+    [
+      "Retardo",
+      "El tiempo entre que ocurre algo y tu flujo se entera. Del webhook: segundos. Del polling: el intervalo."
+    ],
+    [
+      "Reintento",
+      "El aviso repetido que manda un servicio si no respondes a tiempo. El origen clásico del duplicado."
+    ],
+    [
+      "Carga inicial",
+      "El procesado, una sola vez y a mano, de lo histórico que el disparador de aplicación no ve."
+    ],
+    [
+      "Condición de disparo",
+      "Tu frase de la ficha: «esto arranca cuando ___». Cuanto más precisa, menos disparos falsos."
+    ]
+  ],
+  "pieces": [
+    {
+      "kind": "cases",
+      "title": "Tres procesos, tres disparadores: razona cada uno",
+      "caption": "Antes de mirar la solución, decide tú cuál le toca a cada caso.",
+      "cases": [
+        {
+          "id": "informe",
+          "label": "El informe de los lunes",
+          "hint": "Resumen semanal de ventas a las 8:00",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Programado, sin duda: el tiempo ES la condición. Nadie tiene que avisar de que es lunes. Schedule Trigger, lunes 8:00, zona horaria comprobada, y a correr."
+            }
+          ]
+        },
+        {
+          "id": "pedido",
+          "label": "El pedido de la tienda",
+          "hint": "Actuar en cuanto alguien compra",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Webhook si la tienda los tiene (casi todas los tienen): aviso en el segundo, sin consultas vacías. El programado cada 5 minutos de Teresa funciona, pero paga 288 ejecuciones diarias y hasta 5 minutos de espera por pedido."
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Buscar «webhooks» en los ajustes de la tienda",
+                "Mientras no haya n8n alcanzable: App Trigger si existe, o programado como provisional",
+                "Decidir ya qué pasa con el aviso duplicado"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "masivo",
+          "label": "El envío masivo a clientes",
+          "hint": "Una campaña que sale cuando está revisada",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Manual, y es la elección profesional: que arranque solo sería un riesgo, no una comodidad. Una persona revisa, una persona pulsa, la automatización hace el resto. El botón con humano delante es el guardarraíl."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "checklist",
+      "title": "El disparador de tu proceso está bien elegido si",
+      "caption": "Seis comprobaciones sobre TU flujo nuevo, no sobre el ejemplo.",
+      "items": [
+        "Puedes decir en una frase quién se entera primero y por qué ese disparador",
+        "El flujo nuevo existe, con nombre serio, y su primera caja configurada",
+        "Has provocado un disparo real y está en el historial, abierto por el sistema",
+        "Tienes copiados los nombres exactos de los campos que llegan",
+        "Sabes si tu servicio tiene webhooks, y lo tienes apuntado para la lección 27",
+        "Está escrito qué debe pasar cuando el mismo caso llegue dos veces"
+      ]
+    }
+  ],
+  "next": "Tu flujo real ya tiene su primera caja y sabes qué campos llegan. La lección 09 sigue el viaje de esos datos: items, JSON y el panel de entrada y salida, a fondo, que es la base de las expresiones de la 16."
+}
