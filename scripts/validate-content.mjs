@@ -30,15 +30,19 @@ for (const lesson of course.lessons) {
   if (slugs.has(lesson.slug)) problems.push(`Slug duplicado: ${lesson.slug}`)
   slugs.add(lesson.slug)
 
+  // Una lección y una ficha de consulta no se miden igual. La lección
+  // enseña, así que necesita objetivos y práctica; la ficha se consulta,
+  // y lo que se le exige es tener contenido y algo que comprobar.
+  const esLeccion = lesson.format !== 'ficha'
+
   for (const level of LEVELS) {
     const content = lesson.levels?.[level]
     if (!content) { problems.push(`${lesson.slug}: falta el nivel ${level}.`); continue }
     if (!content.headline) problems.push(`${lesson.slug} (${level}): sin titular.`)
-    if (!content.objectives?.length) problems.push(`${lesson.slug} (${level}): sin objetivos.`)
     if (!content.blocks?.length) problems.push(`${lesson.slug} (${level}): sin contenido.`)
-    if (!content.practice?.steps?.length) problems.push(`${lesson.slug} (${level}): sin práctica.`)
     if (!content.checklist?.length) problems.push(`${lesson.slug} (${level}): sin checklist.`)
-
+    if (esLeccion && !content.objectives?.length) problems.push(`${lesson.slug} (${level}): sin objetivos.`)
+    if (esLeccion && !content.practice?.steps?.length) problems.push(`${lesson.slug} (${level}): sin práctica.`)
   }
 }
 
@@ -89,7 +93,7 @@ for (const tool of course.tools || []) {
   if (!iconModule.includes(`"${tool.icon}":`)) warnings.push(`La herramienta ${tool.id} usa el icono «${tool.icon}», que no está descargado.`)
 }
 
-console.log(`Lecciones: ${course.lessons.length} · niveles: ${course.lessons.length * 3} · tareas: ${course.stats.tasks ?? 0} · diagramas descargables: ${downloads}`)
+console.log(`Lecciones: ${course.lessons.length} · niveles: ${course.lessons.length * 3} · fichas: ${course.stats.fichas ?? 0} · diagramas descargables: ${downloads}`)
 for (const warning of warnings.slice(0, 10)) console.warn(`  aviso: ${warning}`)
 if (warnings.length > 10) console.warn(`  … y ${warnings.length - 10} avisos más.`)
 

@@ -363,6 +363,69 @@ if (await exists(quizDir)) {
   console.log(`  Preguntas por categoria: ${byCategory.size} archivos en reserva (no se muestran).`)
 }
 
+/* --- Fuera el relleno que se repite -------------------------------- */
+
+/**
+ * Hay texto en la boveda que se copio igual en decenas de archivos cambiando
+ * solo el titulo: capas metodologicas, apartados de "para que sirve" y
+ * listas de requisitos identicas. Al alumno le llegan como si fueran
+ * contenido de esa leccion, y no lo son: son plantilla.
+ *
+ * Aqui no se toca ningun archivo. Se detecta que un bloque aparece con el
+ * MISMO texto en demasiadas lecciones y se deja de mostrar. Solo se mira lo
+ * que viene de los .md; lo que generan las guias de herramienta se repite a
+ * proposito, porque es la misma guia enseñada en cada leccion de esa
+ * herramienta.
+ */
+const REPETICIONES_ADMITIDAS = 12
+
+function huellaDeBloque(bloque) {
+  const cuerpo = { ...bloque }
+  delete cuerpo.title
+  return `${bloque.title || ''}::${JSON.stringify(cuerpo)}`
+}
+
+const vecesQueApareceCadaBloque = new Map()
+for (const lesson of lessons) {
+  const vistosEnEstaLeccion = new Set()
+  for (const level of LEVELS) {
+    for (const bloque of lesson.levels[level].blocks || []) {
+      if (bloque.from !== 'vault') continue
+      const huella = huellaDeBloque(bloque)
+      // Cuenta una vez por leccion, no una por nivel.
+      if (vistosEnEstaLeccion.has(huella)) continue
+      vistosEnEstaLeccion.add(huella)
+      vecesQueApareceCadaBloque.set(huella, (vecesQueApareceCadaBloque.get(huella) || 0) + 1)
+    }
+  }
+}
+
+let bloquesDeRellenoFuera = 0
+const rellenoDistinto = new Set()
+for (const lesson of lessons) {
+  for (const level of LEVELS) {
+    const antes = lesson.levels[level].blocks || []
+    const despues = antes.filter((bloque) => {
+      if (bloque.from !== 'vault') return true
+      const huella = huellaDeBloque(bloque)
+      const veces = vecesQueApareceCadaBloque.get(huella) || 0
+      if (veces <= REPETICIONES_ADMITIDAS) return true
+      rellenoDistinto.add(huella)
+      return false
+    })
+    // Nunca se deja una leccion en blanco: si TODO lo que tenia era relleno,
+    // se conserva el primer bloque para que siga diciendo algo. Esa leccion
+    // no esta bien, pero una pagina vacia esta peor.
+    const finales = despues.length || !antes.length ? despues : antes.slice(0, 1)
+    bloquesDeRellenoFuera += antes.length - finales.length
+    lesson.levels[level].blocks = finales
+  }
+}
+console.log(
+  `  Relleno retirado de las lecciones: ${bloquesDeRellenoFuera} bloques ` +
+    `(${rellenoDistinto.size} textos distintos repetidos en mas de ${REPETICIONES_ADMITIDAS} lecciones).`,
+)
+
 /* --- Indice alfabetico de conceptos -------------------------------- */
 
 // El glosario escrito a mano (content/glosario/) sustituye por completo al

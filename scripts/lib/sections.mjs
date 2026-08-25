@@ -259,6 +259,9 @@ export function analyzeSections(sections) {
     }
 
     blocks.push({
+      // De donde sale: 'vault' es texto de los .md. Sirve para detectar
+      // despues el relleno que se repite igual en decenas de lecciones.
+      from: 'vault',
       id: meta.id,
       // El título del autor manda; la etiqueta del esquema solo se usa si el
       // suyo no aporta (por ejemplo "Objetivo" a secas).

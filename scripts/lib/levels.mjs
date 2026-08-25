@@ -163,6 +163,8 @@ function sectionBlocks(analysis, limit) {
     return { section, title: count > 1 ? `${section.title} (${count})` : section.title }
   }).map(({ section, title }) => ({
     kind: 'seccion',
+    // Se arrastra el origen para poder detectar despues el relleno repetido.
+    from: section.from,
     title,
     icon: section.icon,
     parts: podar(section.parts),
