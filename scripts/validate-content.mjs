@@ -79,6 +79,32 @@ for (const lesson of course.lessons) {
 const stageIds = new Set(course.stages.map((stage) => stage.id))
 for (const lesson of course.lessons) {
   if (!stageIds.has(lesson.stageId)) problems.push(`${lesson.slug}: etapa desconocida «${lesson.stageId}».`)
+
+  // Las automatizaciones con código deben enseñar el archivo que se ejecuta;
+  // una ficha sin su fuente real es un fallo de contenido, no de diseño.
+  if (/automatizaciones_codigo_40\/docs\//i.test(lesson.sourcePath)) {
+    const codeAssets = (lesson.assets || []).filter((asset) => asset.kind === 'code' && asset.code?.trim())
+    if (!codeAssets.length) problems.push(`${lesson.slug}: la documentación de código no tiene archivo ejecutable asociado.`)
+  }
+  for (const asset of lesson.assets || []) {
+    if (!asset.code?.trim()) problems.push(`${lesson.slug}: el asset ${asset.name} está vacío.`)
+    if (!asset.sourcePath || !asset.language) problems.push(`${lesson.slug}: el asset ${asset.name} no tiene origen o lenguaje.`)
+    if (asset.downloadPath) {
+      const target = path.join(publicDir, asset.downloadPath.replace(/^\//, ''))
+      try { await fs.access(target) } catch { problems.push(`${lesson.slug}: el asset ${asset.name} no tiene descarga generada.`) }
+    }
+  }
+}
+
+// El Programa curado es la ruta que se presenta a una persona que empieza de cero.
+const cursoIds = new Set()
+for (const lesson of course.curso || []) {
+  if (cursoIds.has(lesson.id)) problems.push(`Programa: id duplicado «${lesson.id}».`)
+  cursoIds.add(lesson.id)
+  if (!lesson.title || !lesson.promise || !lesson.why) problems.push(`Programa ${lesson.id}: falta título, promesa o motivo.`)
+  for (const task of lesson.tasks || []) {
+    if (!task.title || !task.where || !task.action || !task.expect) problems.push(`Programa ${lesson.id}: tarea incompleta.`)
+  }
 }
 
 // Los diagramas de workflow apuntan a un JSON descargable que existe.

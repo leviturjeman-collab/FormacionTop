@@ -60,7 +60,8 @@ export function CursoIndice() {
     )
   }
 
-  // Las lecciones de itinerario se agrupan por herramienta; el resto, por área.
+  // La ruta común va primero. Las especializaciones se consultan después,
+  // cuando el alumno ya entiende qué quiere construir.
   const conHerramienta = lecciones.filter((item) => item.tool)
   const sueltas = lecciones.filter((item) => !item.tool)
 
@@ -100,34 +101,11 @@ export function CursoIndice() {
         <div><span>04</span><strong>Entregar</strong><small>Pruebas, documentación, seguridad y siguiente versión.</small></div>
       </section>
 
-      {porHerramienta.map(({ id, label, items }) => (
-        <section key={id} className="st-curso-area">
-          <div className="st-section-head">
-            <div>
-              <span className="st-kicker">Especialización opcional</span>
-              <h2>{label}</h2>
-            </div>
-            <span>{items.length} de 20 lecciones</span>
-          </div>
-
-          <ol className="st-curso-list">
-            {items.map((item) => (
-              <li key={item.id}>
-                <a href={href({ name: 'curso', lessonId: item.id })}>
-                  <span className="st-curso-num">{String(item.slot || item.number).padStart(2, '0')}</span>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <p>{item.promise}</p>
-                  </div>
-                  <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
-                  <ArrowRight size={14} />
-                </a>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ))}
-
+      <section className="st-curso-divider">
+        <span className="st-kicker">Ruta principal · obligatoria</span>
+        <h2>Aprende el método antes de elegir herramientas</h2>
+        <p>Estas {sueltas.length} lecciones construyen la base: entender, definir, construir, automatizar y comprobar.</p>
+      </section>
       {porArea.map(({ stage, items }) => (
         <section key={stage.id} className="st-curso-area">
           <div className="st-section-head">
@@ -143,6 +121,40 @@ export function CursoIndice() {
               <li key={item.id}>
                 <a href={href({ name: 'curso', lessonId: item.id })}>
                   <span className="st-curso-num">{String(item.number).padStart(2, '0')}</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.promise}</p>
+                  </div>
+                  <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
+                  <ArrowRight size={14} />
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
+
+      <section className="st-curso-divider">
+        <span className="st-kicker">Especializaciones · opcionales</span>
+        <h2>Ahora sí: aprende una herramienta concreta</h2>
+        <p>Elige una cuando tengas un proyecto o una tarea concreta. No necesitas estudiar todas para empezar.</p>
+      </section>
+
+      {porHerramienta.map(({ id, label, items }) => (
+        <section key={id} className="st-curso-area">
+          <div className="st-section-head">
+            <div>
+              <span className="st-kicker">Ruta de herramienta</span>
+              <h2>{label}</h2>
+            </div>
+            <span>{items.length} lecciones disponibles</span>
+          </div>
+
+          <ol className="st-curso-list">
+            {items.map((item) => (
+              <li key={item.id}>
+                <a href={href({ name: 'curso', lessonId: item.id })}>
+                  <span className="st-curso-num">{String(item.slot || item.number).padStart(2, '0')}</span>
                   <div>
                     <strong>{item.title}</strong>
                     <p>{item.promise}</p>
@@ -192,7 +204,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
     <article className="st-lesson">
       <header className="st-lesson-head">
         <span className="st-kicker">
-          Lección {String(leccion.number).padStart(2, '0')}{stage ? ` · ${stage.title}` : ''}
+          {leccion.tool ? 'Especialización' : 'Ruta principal'} · lección {String(leccion.number).padStart(2, '0')}{stage ? ` · ${stage.title}` : ''}
         </span>
         <h1>{leccion.title}</h1>
         <p className="st-lesson-headline">{leccion.promise}</p>

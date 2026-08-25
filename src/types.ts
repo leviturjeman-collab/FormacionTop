@@ -72,6 +72,15 @@ export interface Block {
   account?: { url: string; free: string; steps: string[]; warning?: string }
 }
 
+export interface LessonAsset {
+  kind: 'code' | 'workflow'
+  name: string
+  language: string
+  sourcePath: string
+  downloadPath?: string
+  code: string
+}
+
 export interface PracticeStep {
   title: string
   where: string
@@ -334,6 +343,8 @@ export interface Lesson {
   search: string
   levels: Record<LevelId, LessonLevel>
   interactive: InteractivePiece[]
+  /** Archivos ejecutables o importables asociados al material fuente. */
+  assets?: LessonAsset[]
   related: string[]
   authored: boolean
 }

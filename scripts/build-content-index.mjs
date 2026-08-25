@@ -31,7 +31,7 @@ const projectDir = path.resolve(scriptDir, '..')
 const publicDir = path.join(projectDir, 'public')
 const generatedDir = path.join(publicDir, 'generated')
 
-const IGNORED = new Set(['node_modules', 'dist', '.git', '.obsidian', '.vscode', '36_PORTAL_WEB_FORMACION'])
+const IGNORED = new Set(['node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '36_PORTAL_WEB_FORMACION'])
 
 async function exists(target) {
   try { await fs.access(target); return true } catch { return false }
@@ -186,6 +186,7 @@ for (const family of promptFiles) enrichPrompts(family.prompts, family.title)
 await fs.mkdir(generatedDir, { recursive: true })
 const allFiles = await walk(vaultDir)
 const markdownFiles = allFiles.filter((file) => file.toLowerCase().endsWith('.md'))
+const fileByRelative = new Map(allFiles.map((file) => [toPosix(path.relative(vaultDir, file)), file]))
 
 if (!markdownFiles.length) {
   throw new Error(`No hay archivos .md en ${vaultDir}. ¿Es la carpeta correcta?`)
@@ -195,13 +196,47 @@ if (!markdownFiles.length) {
 const workflowJson = new Map()
 for (const file of allFiles) {
   if (!file.toLowerCase().endsWith('.json')) continue
-  if (!/workflows_n8n_40|workflows[\\/]/.test(file)) continue
+  if (!/workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/.test(file)) continue
   try {
     workflowJson.set(path.basename(file), JSON.parse(await fs.readFile(file, 'utf8')))
   } catch {
     console.warn(`  aviso: ${path.basename(file)} no es JSON válido, se ignora en los diagramas.`)
   }
 }
+
+const ASSET_EXTENSIONS = new Set(['.py', '.js', '.mjs', '.ts', '.tsx', '.sh', '.sql', '.json'])
+const assetLanguage = (relativePath) => {
+  const extension = path.extname(relativePath).toLowerCase()
+  return ({ '.py': 'python', '.js': 'javascript', '.mjs': 'javascript', '.ts': 'typescript', '.tsx': 'tsx', '.sh': 'bash', '.sql': 'sql', '.json': 'json' })[extension] || 'text'
+}
+const assetKind = (relativePath) => /workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/i.test(relativePath) && path.extname(relativePath).toLowerCase() === '.json' ? 'workflow' : 'code'
+const assetStem = (relativePath) => path.basename(relativePath)
+  .replace(/\.md$/i, '')
+  .replace(/\.(py|js|mjs|ts|tsx|sh|sql|json)$/i, '')
+  .replace(/^\d+[_-]/, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '_')
+const assetSourcesFor = (relativePath) => {
+  const sources = new Set()
+  const base = path.basename(relativePath).replace(/\.md$/i, '')
+  const parent = path.dirname(relativePath)
+  if (parent.endsWith('/docs') || parent.endsWith('\\docs')) {
+    const sibling = toPosix(path.join(parent.replace(/[\\/]docs$/, ''), base))
+    if (fileByRelative.has(sibling)) sources.add(sibling)
+  }
+  const stem = assetStem(relativePath)
+  for (const candidate of fileByRelative.keys()) {
+    const extension = path.extname(candidate).toLowerCase()
+    if (!ASSET_EXTENSIONS.has(extension) || assetStem(candidate) !== stem) continue
+    if (/node_modules|\.git|36_PORTAL_WEB_FORMACION/i.test(candidate)) continue
+    sources.add(candidate)
+  }
+  return [...sources]
+}
+
+const titleOverrides = new Map([
+  ['35_AUTOMATIZACIONES_SKILLS_BIBLIOTECA/automatizaciones_codigo_40/docs/02_email_summarizer.py.md', 'Email summarizer: resumen y acciones desde Python'],
+])
 
 const lessons = []
 const usedSlugs = new Set()
@@ -220,11 +255,12 @@ for (const absolute of markdownFiles) {
   // Secciones clasificadas y los tres casos, para el simulador.
   signal.analysis = analyzeSections(signal.sections)
 
-  const title = signal.title
+  const extractedTitle = signal.title
     .replace(/^Desarrollo completo\s*[-–—]\s*/i, '')
     .replace(/^Documentaci[oó]n\s*[-–—]\s*/i, '')
     .replace(/\s+/g, ' ')
     .trim()
+  const title = titleOverrides.get(relativePath) || extractedTitle
 
   const stageId = stageFor(relativePath, title)
   const kind = kindFor(relativePath, title)
@@ -236,12 +272,15 @@ for (const absolute of markdownFiles) {
     .filter((block) => block.kind === 'seccion')
     .reduce((sum, block) => sum + (block.parts || []).reduce(
       (acc, part) => acc + `${part.text || ''} ${(part.items || []).join(' ')}`.split(/\s+/).filter(Boolean).length, 0), 0)
-  const format = realWords < 400 ? 'ficha' : 'leccion'
+  const assetSources = assetSourcesFor(relativePath)
+  // Un archivo ejecutable o importable necesita una lección completa aunque
+  // su documentación sea breve. La longitud del texto no puede ocultar la práctica.
+  const format = realWords < 400 && assetSources.length === 0 ? 'ficha' : 'leccion'
 
   // Una ficha es consulta rápida: se queda con su contenido propio y nada más.
   // Sin instaladores, sin recetas y sin el andamiaje de una lección larga.
   if (format === 'ficha') {
-    const CONSULTA = new Set(['idea', 'seccion', 'tabla', 'herramientas'])
+    const CONSULTA = new Set(['idea', 'seccion', 'tabla', 'herramientas', 'receta', 'codigo', 'comandos', 'instalar'])
     const compacto = levels.intermedio.blocks
       .filter((block) => CONSULTA.has(block.kind))
       // Los títulos genéricos de lección no pintan nada en una ficha.
@@ -267,12 +306,34 @@ for (const absolute of markdownFiles) {
   }
   usedSlugs.add(slug)
 
+  const assets = []
+  for (const sourcePath of assetSources) {
+    const absoluteAsset = fileByRelative.get(sourcePath)
+    if (!absoluteAsset) continue
+    const stat = await fs.stat(absoluteAsset)
+    if (stat.size > 120000) continue
+    const code = await fs.readFile(absoluteAsset, 'utf8')
+    const fileName = `${slug}-${path.basename(sourcePath)}`
+    const generatedAssetPath = path.join(generatedDir, 'assets', fileName)
+    await fs.mkdir(path.dirname(generatedAssetPath), { recursive: true })
+    await fs.writeFile(generatedAssetPath, code, 'utf8')
+    assets.push({
+      kind: assetKind(sourcePath),
+      name: path.basename(sourcePath),
+      language: assetLanguage(sourcePath),
+      sourcePath,
+      downloadPath: `/generated/assets/${fileName}`,
+      code,
+    })
+  }
+
   const workflowFile = path.basename(relativePath).replace(/\.md$/i, '.json')
+  const relatedWorkflow = assets.find((asset) => asset.kind === 'workflow')
   const interactive = buildInteractive({
     signal,
     stageId,
-    workflow: workflowJson.get(workflowFile),
-    workflowFile,
+    workflow: workflowJson.get(workflowFile) || (relatedWorkflow ? workflowJson.get(relatedWorkflow.name) : undefined),
+    workflowFile: relatedWorkflow?.name || workflowFile,
     slug,
   })
 
@@ -296,6 +357,7 @@ for (const absolute of markdownFiles) {
     search: `${title} ${signal.keyTerms.join(' ')} ${signal.intro}`.slice(0, 900).toLowerCase(),
     levels,
     interactive,
+    assets,
     relatedTitles: signal.links,
     // Alimenta el indice A-Z: definiciones con significado y terminos destacados.
     indexTerms: [
@@ -540,7 +602,7 @@ const workflowTarget = path.join(generatedDir, 'workflows')
 await fs.mkdir(workflowTarget, { recursive: true })
 for (const file of allFiles) {
   if (!file.toLowerCase().endsWith('.json')) continue
-  if (!/workflows_n8n_40/.test(file)) continue
+  if (!/workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/.test(file)) continue
   await fs.copyFile(file, path.join(workflowTarget, path.basename(file)))
   copiedWorkflows += 1
 }
