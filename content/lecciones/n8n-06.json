@@ -1,0 +1,414 @@
+{
+  "id": "n8n-06",
+  "tool": "n8n",
+  "slot": 6,
+  "number": 206,
+  "stageId": "automatizacion",
+  "title": "Tu primera automatización en quince minutos",
+  "promise": "Tendrás un flujo real funcionando solo: cada mañana a las nueve mirará una hoja de Google y te avisará por correo si hay filas nuevas pendientes. Pequeño a propósito, pero de verdad: activado, con su filtro, y comprobado con tus ojos al día siguiente.",
+  "minutes": 35,
+  "why": "La primera automatización de la mayoría de la gente muere de ambición: intentan montar el proceso entero de su empresa el primer día, se atascan en la credencial de Gmail a la hora y media, y abandonan con la sensación de que esto no es para ellos. La primera tiene que ser pequeña, útil y tuya. La de esta lección la eligen miles de personas como primera por algo: toca una hoja real y un correo real, se monta en quince minutos si las credenciales están listas, y a la mañana siguiente te despierta un correo que ha escrito una máquina sola. Ese correo cambia cómo te crees lo que estás aprendiendo.",
+  "theory": [
+    {
+      "title": "Por qué esta y no la tuya (todavía)",
+      "text": "Tu proceso de la lección 01 sigue siendo el destino, pero tiene demasiadas piezas para ser el primero: varios servicios, varios pasos, casos raros. La primera automatización tiene un objetivo distinto: que TODO el circuito funcione una vez de principio a fin. Un disparador de verdad, una credencial de verdad, un filtro, una acción y el interruptor activado. Con el circuito entero hecho una vez, tu proceso real es añadir piezas a algo que ya sabes montar, no empezar de cero.",
+      "analogy": "Nadie aprende a conducir yendo de mudanza. Se da una vuelta a la manzana, y la mudanza cae la semana siguiente.",
+      "visual": {
+        "kind": "canvas",
+        "title": "El flujo de hoy, entero",
+        "caption": "Cuatro cajas. Pulsa cada una para ver qué hace y cómo se rompe.",
+        "nodes": [
+          {
+            "kind": "Disparador",
+            "label": "Cada día a las 9:00",
+            "note": "Schedule Trigger",
+            "role": "trigger",
+            "does": "Arranca el flujo todos los días a la misma hora. No vigila nada: es un despertador.",
+            "input": "Nada. Solo la hora configurada.",
+            "output": "Un elemento vacío que da el pistoletazo de salida.",
+            "breaks": "Si la zona horaria está en UTC, salta a las 7 o a las 8 españolas. Lo arreglaste en la lección 03; hoy lo compruebas."
+          },
+          {
+            "kind": "Acción",
+            "label": "Leer la hoja",
+            "note": "Google Sheets",
+            "role": "action",
+            "does": "Lee todas las filas de tu hoja de tareas pendientes.",
+            "input": "El pistoletazo del despertador.",
+            "output": "Una lista: un elemento por fila, con sus columnas como campos.",
+            "breaks": "Si la hoja no está compartida con la credencial, da 404: para el robot, una hoja que no puede ver no existe."
+          },
+          {
+            "kind": "Filtro",
+            "label": "¿Está pendiente?",
+            "note": "Filter",
+            "role": "filter",
+            "does": "Deja pasar solo las filas cuyo estado sea pendiente.",
+            "input": "Todas las filas de la hoja.",
+            "output": "Solo las pendientes. Puede ser ninguna, y eso está bien.",
+            "breaks": "Comparar con «igual exacto» cuando en la hoja alguien escribió «Pendiente» con mayúscula: cero resultados, todo en verde."
+          },
+          {
+            "kind": "Acción",
+            "label": "Mandarme el correo",
+            "note": "Gmail",
+            "role": "action",
+            "does": "Escribe un correo con la lista de pendientes y te lo manda a ti.",
+            "input": "Las filas pendientes.",
+            "output": "El correo enviado.",
+            "breaks": "Sin control, manda un correo POR CADA fila. Cinco pendientes, cinco correos. Hoy aprendes a juntarlas en uno."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Las credenciales: el peaje que solo se paga una vez",
+      "text": "Conectar Google la primera vez es el paso más engorroso de todo n8n, y es donde abandona la gente. Que no te pille de sorpresa: hay que pasar por unas pantallas de Google, dar permisos y volver. Son diez minutos la primera vez y cero las siguientes, porque la credencial queda guardada y todas las cajas de Google la reutilizan. El error clásico es intentar hacerlo deprisa: hazlo con calma una vez y no vuelvas a pensar en ello.",
+      "example": "En la nube de n8n, conectar Google es pulsar un botón y aceptar. Instalado en tu ordenador, la primera vez pide crear unas claves en la consola de Google: es un tramite de pantallas, no de conocimientos. La tarea 2 te lleva por el camino según tu caso.",
+      "visual": {
+        "kind": "decision",
+        "title": "Conectar Google: tu camino depende de dónde esté tu n8n",
+        "caption": "Los dos acaban en el mismo sitio: una credencial guardada que se reutiliza siempre.",
+        "question": "¿Dónde tienes n8n?",
+        "branches": [
+          {
+            "answer": "En la nube de n8n",
+            "then": "El camino corto: un botón",
+            "why": "Pulsas «Sign in with Google» al crear la credencial, eliges tu cuenta, aceptas los permisos y listo. n8n ya está registrado ante Google y no hay que crear nada.",
+            "cost": "Dos minutos"
+          },
+          {
+            "answer": "Instalado en mi ordenador",
+            "then": "El camino largo: crear tus claves en Google, una vez",
+            "why": "Google exige saber qué programa pide acceso. Hay que entrar en console.cloud.google.com, crear un proyecto, activar la API de Sheets y la de Gmail, y crear unas credenciales OAuth con la dirección de callback que n8n te enseña en pantalla. Es seguir pantallas, no programar.",
+            "cost": "Diez minutos la primera vez, cero después"
+          },
+          {
+            "answer": "Me atasco a mitad del camino largo",
+            "then": "No abandones aquí: es el punto exacto donde abandona todo el mundo",
+            "why": "Copia el mensaje de error entero y pégaselo a la IA con la palabra n8n delante. El 90% de los atascos son la dirección de callback mal copiada o las APIs sin activar, y los dos se arreglan en un minuto sabiendo cuál es.",
+            "cost": "Cinco minutos más, no una tarde"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Leer una hoja es recibir una lista",
+      "text": "Cuando la caja de Sheets lee tu hoja, no devuelve «la hoja»: devuelve un elemento por cada fila, con las columnas convertidas en campos. Si tu hoja tiene doce filas, por la flecha viajan doce elementos. Esto, que viste en abstracto en la lección anterior, hoy se vuelve práctico: el filtro va a mirar cada elemento por separado, y el correo final tiene que juntarlos, porque si no te llegarán doce correos.",
+      "example": "Tu hoja: | tarea | estado | fecha |. La caja devuelve elementos como {tarea: «Llamar a Marta», estado: «pendiente», fecha: «2026-08-25»}. Los nombres de los campos son EXACTAMENTE los títulos de la fila 1 de tu hoja: por eso la fila 1 se escribe en minúsculas y sin acentos.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "De la hoja al correo: cuenta los elementos",
+        "caption": "Doce filas en la hoja. Mira cuántos elementos viajan en cada tramo.",
+        "steps": [
+          {
+            "label": "El despertador",
+            "does": "Suena a las 9:00",
+            "in": 1,
+            "out": 1,
+            "why": "El disparador produce un solo elemento vacío: la señal de salida."
+          },
+          {
+            "label": "Leer la hoja",
+            "does": "Doce filas, doce elementos",
+            "in": 1,
+            "out": 12,
+            "why": "Entra la señal y salen doce: uno por fila. Este es el momento «recibo una lista» que viste en la teoría."
+          },
+          {
+            "label": "El filtro",
+            "does": "Solo las pendientes",
+            "in": 12,
+            "out": 3,
+            "why": "De doce, tres están pendientes. Si salieran cero, el flujo terminaría aquí en verde, y eso sería correcto: no hay nada que avisar."
+          },
+          {
+            "label": "Juntar y mandar",
+            "does": "UN correo con las tres",
+            "in": 3,
+            "out": 1,
+            "why": "Sin juntar, serían tres correos. La tarea 7 enseña el ajuste que junta la lista en un solo mensaje: es la diferencia entre un aviso útil y el spam de tu propio robot."
+          }
+        ]
+      }
+    },
+    {
+      "title": "El filtro va antes del gasto y antes del ruido",
+      "text": "El filtro de hoy parece poca cosa: dejar pasar las filas pendientes. Pero fija el hábito que vale para todo: el filtro se pone lo más arriba posible, justo después de conseguir los datos, para que lo que no toca ni gaste llamadas ni genere ruido. Y la condición se escribe pensando en cómo escribe la gente de verdad: «pendiente», «Pendiente» y «PENDIENTE » con espacio final son la misma cosa para una persona y tres cosas distintas para una máquina.",
+      "analogy": "El portero se pone en la puerta, no en la barra. Cuando alguien no debe entrar, mejor que ni entre.",
+      "visual": {
+        "kind": "beforeafter",
+        "title": "La condición, escrita por un humano y escrita bien",
+        "caption": "La diferencia entre un filtro que funciona un día y uno que funciona siempre.",
+        "beforeLabel": "Frágil",
+        "afterLabel": "Robusto",
+        "rows": [
+          {
+            "before": "estado es exactamente igual a «pendiente»",
+            "after": "estado, en minúsculas y sin espacios, contiene «pendiente»"
+          },
+          {
+            "before": "Se rompe si alguien escribe «Pendiente»",
+            "after": "Da igual cómo lo escriban"
+          },
+          {
+            "before": "Se rompe con un espacio final invisible",
+            "after": "Los espacios se quitan antes de comparar"
+          },
+          {
+            "before": "Cero resultados y nadie sabe por qué",
+            "after": "Los mismos resultados escriba quien escriba"
+          }
+        ],
+        "gain": "La mitad de los «mi filtro no funciona» de los foros son esto. Tú ya lo sabes antes de que te pase."
+      }
+    },
+    {
+      "title": "Activar es el examen de verdad",
+      "text": "Hoy no terminas cuando el flujo funciona al darle al botón: terminas cuando funciona SIN ti. Eso significa activarlo, cerrar el navegador, y comprobar mañana que el correo ha llegado solo. Esa espera de un día es parte de la lección, y la comprobación de pasado mañana también: la mayoría de los flujos que fallan no fallan el primer día, fallan el tercero, cuando cambia algo que nadie miró.",
+      "example": "Ponte una nota para pasado mañana: «¿ha llegado el correo de las 9?». Si un día no llega, ya sabes dónde mirar: la lista de ejecuciones te dirá si el flujo ni arrancó (problema de activación o zona horaria), arrancó y no encontró filas (normal), o arrancó y reventó (la ejecución roja te enseña dónde)."
+    },
+    {
+      "title": "Lo que acabas de aprender sin darte cuenta",
+      "text": "Este flujo pequeño contiene, en miniatura, todo lo que viene después: un disparador que no depende de ti, una credencial guardada y reutilizable, una lectura que devuelve una lista, un filtro que protege, una acción que junta y entrega, y el interruptor activado. Las próximas treinta lecciones son este mismo circuito con piezas más potentes. Si hoy has llegado al final, ya no eres alguien «viendo tutoriales de n8n»: tienes una automatización en producción.",
+      "analogy": "La vuelta a la manzana ya está dada. La mudanza, con este mismo coche, empieza en la lección siguiente."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Prepara la hoja en dos minutos",
+      "where": "En sheets.google.com",
+      "action": "Crea una hoja nueva llamada «pendientes». En la fila 1, escribe tres títulos en minúsculas y sin acentos: tarea, estado, fecha. Añade cuatro filas de datos inventados y pon dos con estado pendiente y dos con estado hecho. Renombra la pestaña de abajo a «tareas».",
+      "expect": "Una hoja con cuatro filas de datos y títulos limpios en la fila 1.",
+      "stuck": "Los títulos de la fila 1 van a ser los nombres de los campos en n8n. Si les pones acentos o espacios, los arrastrarás durante todo el flujo."
+    },
+    {
+      "title": "Crea la credencial de Google Sheets",
+      "where": "En n8n: Credentials → Add credential → Google Sheets",
+      "action": "Sigue tu camino según la teoría: en la nube es el botón de Google; instalado en tu ordenador es el trámite de la consola de Google. Hazlo con calma. Cuando termine, la credencial aparece con un nombre y una marca de conectada.",
+      "expect": "La credencial guardada y verificada. La vas a reutilizar en todos los flujos que toquen Google desde hoy.",
+      "stuck": "El atasco típico del camino largo es la dirección de callback: se copia EXACTAMENTE la que n8n muestra en la pantalla de la credencial y se pega en la consola de Google, sin cambiar ni una letra."
+    },
+    {
+      "title": "Monta el despertador",
+      "where": "Flujo nuevo → primer paso → busca «Schedule»",
+      "action": "Elige el Schedule Trigger y configúralo: cada día, a las 9:00. Comprueba dos veces la zona horaria: en los ajustes del flujo debe estar Europe/Madrid, lo que dejaste hecho en la lección 03.",
+      "expect": "La caja del despertador en el lienzo, configurada a las 9:00.",
+      "stuck": "Si al ejecutar en pruebas no hace nada, es normal: el despertador de verdad solo suena a su hora. Para probar, usa el botón de ejecutar, que lo lanza a mano."
+    },
+    {
+      "title": "Conecta la lectura de la hoja",
+      "where": "El + después del despertador → Google Sheets",
+      "action": "Operación: leer filas (Get Rows / Read). Elige tu credencial, tu documento «pendientes» y la pestaña «tareas». Ejecuta el flujo y abre la caja: en la columna derecha tienen que estar tus cuatro filas convertidas en cuatro elementos.",
+      "expect": "Cuatro elementos con los campos tarea, estado y fecha, con los nombres exactos de tu fila 1.",
+      "stuck": "Si da 404 o «not found»: la credencial no ve esa hoja. Comprueba que has elegido el documento desde el desplegable (no pegando una dirección) y que la cuenta de la credencial es la dueña de la hoja."
+    },
+    {
+      "title": "Pon el filtro robusto",
+      "where": "El + después de Sheets → busca «Filter»",
+      "action": "Condición: el campo estado contiene pendiente. Y hazla robusta como en la teoría: busca la opción de ignorar mayúsculas, o convierte antes el campo a minúsculas. Ejecuta y cuenta: de cuatro elementos deben salir dos.",
+      "expect": "El número 2 en la flecha de salida del filtro.",
+      "stuck": "¿Salen cero? Abre el filtro y mira la columna izquierda: comprueba letra a letra cómo está escrito el valor real del campo estado en tus filas. La diferencia estará ahí: una mayúscula o un espacio."
+    },
+    {
+      "title": "Junta las filas en un solo mensaje",
+      "where": "El + después del filtro",
+      "action": "Aquí está el ajuste que evita el spam: necesitas convertir los N elementos en un solo texto. La forma más simple: una caja de código o de agregación (busca «Aggregate») que junte las tareas en una lista. Si usas Aggregate: agrupa todos los elementos y quédate con el campo tarea como lista.",
+      "expect": "UN solo elemento en la flecha de salida, con las tareas pendientes juntas.",
+      "stuck": "Si esto se te atasca, atajo legítimo: en el nodo de Gmail de la tarea siguiente, algunas versiones tienen la opción de ejecutar una sola vez (Execute Once). Actívala y manda solo el resumen del primer elemento. Menos elegante, funciona, y en la lección 21 lo harás fino."
+    },
+    {
+      "title": "Monta el correo",
+      "where": "El + al final → Gmail → Send",
+      "action": "Crea la credencial de Gmail (mismo camino que la de Sheets, y si es la misma cuenta de Google, más rápido). Para: tu propio correo. Asunto: «Pendientes de hoy». Cuerpo: la lista de tareas del paso anterior, usando el selector de campos, no escribiéndolo a mano. Ejecuta el flujo entero.",
+      "expect": "Un correo en tu bandeja, ahora mismo, con tus dos tareas pendientes dentro.",
+      "stuck": "Si el correo llega vacío, abre la caja de Gmail y mira su columna izquierda: ¿llegaba la lista? Si no llegaba, el problema es del paso 6, no de Gmail. Se busca hacia atrás."
+    },
+    {
+      "title": "Ensaya el caso «no hay nada»",
+      "where": "En tu hoja de Google",
+      "action": "Cambia las dos filas pendientes a estado hecho y ejecuta el flujo otra vez. Debe terminar en verde SIN mandar correo: el filtro corta todo y no hay nada que avisar. Esto no es un fallo: es el comportamiento correcto, y verlo una vez te evita buscarle un problema el día que pase de verdad.",
+      "expect": "Ejecución en verde, cero elementos tras el filtro, ningún correo.",
+      "stuck": "Si te llega un correo vacío, el nodo de Gmail se está ejecutando aunque no lleguen elementos. Revisa que esté conectado DESPUÉS del filtro, no en paralelo."
+    },
+    {
+      "title": "Activa y cierra",
+      "where": "El interruptor de arriba a la derecha",
+      "action": "Vuelve a poner una fila en pendiente. Guarda, activa el interruptor, y cierra el navegador del todo. Se acabó por hoy: el examen es mañana a las 9:01.",
+      "expect": "El flujo aparece como activo en tu lista de flujos.",
+      "stuck": "Si tu n8n corre en tu ordenador, el ordenador tiene que estar encendido a las 9:00. Si va a estar apagado, cambia la hora del despertador a una en que esté encendido: la lección es la misma."
+    },
+    {
+      "title": "La comprobación de mañana y la de pasado",
+      "where": "En tu bandeja de entrada, mañana a las 9:01",
+      "action": "Mañana: comprueba que el correo ha llegado solo y mira en la lista de ejecuciones la línea de las 9:00, abierta por el sistema y no por ti. Pasado mañana: repite. Si un día no llega, aplica el diagnóstico de la teoría: ¿ni arrancó, arrancó sin filas, o reventó?",
+      "expect": "Dos correos en dos mañanas, sin que hayas tocado nada. Tu primera automatización en producción.",
+      "stuck": "¿No llegó y la ejecución de las 9:00 ni aparece? Zona horaria o flujo sin activar. ¿Aparece en verde sin correo? No había pendientes, o el filtro corta de más. ¿Aparece en rojo? Ábrela: la caja roja te dice dónde."
+    }
+  ],
+  "errors": [
+    {
+      "message": "Google: Access blocked / Esta app no está verificada",
+      "means": "Estás en el camino largo (n8n en tu ordenador) y tu proyecto de Google está en modo de pruebas, así que Google te frena con una pantalla de advertencia.",
+      "fix": "En esa pantalla pulsa «Avanzado» y luego «Ir a [tu proyecto] (no seguro)»: es tu propio proyecto, no una app ajena. Y en la consola de Google, añade tu propio correo como usuario de prueba del proyecto."
+    },
+    {
+      "message": "404 - The requested URL was not found / Requested entity was not found",
+      "means": "La credencial no puede ver la hoja. Para el robot, una hoja que no ve no existe.",
+      "fix": "Elige el documento desde el desplegable de la caja, no pegando la dirección. Si usas cuenta de servicio, comparte la hoja con su correo (el que acaba en .iam.gserviceaccount.com) con permiso de editor."
+    },
+    {
+      "message": "The redirect URI in the request does not match",
+      "means": "El clásico del camino largo: la dirección de callback que pusiste en la consola de Google no es exactamente la que n8n te enseñó.",
+      "fix": "Copia otra vez la OAuth Redirect URL desde la pantalla de la credencial en n8n y pégala en la consola de Google tal cual, sin barra final de más ni http en vez de https. Guarda y reintenta."
+    },
+    {
+      "message": "Me llegan cinco correos en vez de uno",
+      "means": "El nodo de Gmail se ejecuta una vez por cada elemento que le llega. Cinco pendientes, cinco correos.",
+      "fix": "Junta los elementos antes del correo (Aggregate, tarea 6) o activa la opción de ejecutar una sola vez en el nodo de Gmail. Es el comportamiento por elemento de n8n: útil casi siempre, spam aquí."
+    },
+    {
+      "message": "El flujo saltó a las 7:00 en vez de a las 9:00",
+      "means": "Zona horaria en UTC en algún nivel: el del flujo o el de la instalación.",
+      "fix": "Ajustes del flujo → zona horaria → Europe/Madrid. Si sigue igual, es el nivel de la instalación: en Docker, las dos variables del arranque de la lección 04."
+    },
+    {
+      "message": "El filtro deja pasar cero filas y en la hoja hay pendientes",
+      "means": "La condición compara con «igual exacto» y en la hoja está escrito distinto: mayúscula, espacio final o acento.",
+      "fix": "Abre el filtro y mira en su columna izquierda el valor REAL del campo, letra a letra. Cambia la condición a «contiene» sobre el texto en minúsculas. Es la lección del filtro robusto en la práctica."
+    },
+    {
+      "message": "Ayer llegó el correo y hoy no",
+      "means": "Algo cambió entre ayer y hoy: el flujo se desactivó, la credencial caducó, o simplemente no había pendientes.",
+      "fix": "Lista de ejecuciones, siempre. ¿No hay línea de las 9:00? El flujo no está activo o la zona horaria bailó. ¿Línea verde con cero tras el filtro? No había nada que avisar: correcto. ¿Línea roja? Ábrela y la caja roja te lleva al motivo."
+    },
+    {
+      "message": "Mi ordenador estaba apagado a las 9:00",
+      "means": "n8n corre en tu ordenador y a esa hora no existía. El despertador no sonó y no hay línea en el historial.",
+      "fix": "No es un fallo: es el límite de tenerlo en el portátil, lo viste en la lección 03. Cambia la hora a una en que esté encendido, o este es tu primer motivo real para la nube o el servidor (lección 46)."
+    }
+  ],
+  "matters": [
+    "Hacer las credenciales con calma una sola vez. Es el peaje de entrada a todo lo que viene: a partir de hoy, conectar Google en cualquier flujo es elegirla de una lista.",
+    "Contar los elementos en cada flecha después de ejecutar. Doce de la hoja, dos tras el filtro, uno hacia el correo. Si sabes contar eso, sabes depurar cualquier flujo.",
+    "El ensayo del caso vacío. Un flujo que termina en verde sin hacer nada es correcto cuando no hay nada que hacer, y haberlo visto una vez te ahorra buscarle un fallo inexistente.",
+    "La comprobación de pasado mañana. Los flujos no suelen fallar el primer día: fallan el tercero. La nota en el calendario es parte del flujo, no un extra."
+  ],
+  "ignore": [
+    "Hacer bonito el correo. Hoy es texto plano con una lista. El formato con tablas y colores existe y no es de hoy: primero el circuito, luego el esmalte.",
+    "Los demás disparadores de tiempo (cron avanzado, intervalos, expresiones). Cada día a una hora cubre el 80% de los casos reales y es el único que necesitas esta semana.",
+    "Conectar tu proceso de verdad. La tentación al ver esto funcionando es meterle ya tu caso de la lección 01. Espera tres lecciones: te faltan dos piezas (escribir sin duplicar y las expresiones) que lo harán mucho más fácil."
+  ],
+  "canDo": [
+    "Despertarse solo cada mañana a la hora exacta y hacer su ronda sin que tú existas, incluido el sábado que estás en la playa.",
+    "Reutilizar la credencial de Google que has creado hoy en todos los flujos futuros: el peaje ya está pagado.",
+    "Terminar en verde sin hacer nada cuando no hay nada que hacer, que es exactamente lo correcto.",
+    "Dejarte el registro de cada mañana en la lista de ejecuciones, para que el día que algo falle sepas si ni arrancó, arrancó vacío o reventó."
+  ],
+  "cantDo": [
+    "Sonar con el ordenador apagado, si tu n8n vive en el portátil. Un despertador necesita estar enchufado.",
+    "Adivinar que «Pendiente» y «pendiente » son lo mismo. Se lo has enseñado tú con el filtro robusto; sin eso, son cosas distintas.",
+    "Avisarte de que la credencial ha caducado. Un día Google pide renovar el permiso, el flujo falla y te enteras si miras (o cuando montes el flujo de error, en la lección 38).",
+    "Juntar las filas en un correo por iniciativa propia. Por defecto ejecuta una vez por elemento: cinco pendientes serían cinco correos. El juntado lo pones tú."
+  ],
+  "words": [
+    [
+      "Schedule Trigger",
+      "El despertador: arranca el flujo a las horas que le digas, sin vigilar nada más."
+    ],
+    [
+      "Credencial OAuth",
+      "El permiso que le das a n8n para actuar en tu Google. Se hace una vez y se reutiliza siempre."
+    ],
+    [
+      "Callback / Redirect URL",
+      "La dirección de vuelta del baile con Google. El clásico atasco del camino largo: se copia tal cual, sin cambiar nada."
+    ],
+    [
+      "Get Rows",
+      "La operación de leer filas de una hoja. Devuelve un elemento por fila, con los títulos de la fila 1 como nombres de campo."
+    ],
+    [
+      "Filter",
+      "La caja que corta: deja pasar solo lo que cumple la condición. Cero resultados también es un resultado."
+    ],
+    [
+      "Contiene / Igual exacto",
+      "Las dos formas de comparar texto. Con texto escrito por personas, casi siempre quieres «contiene» y en minúsculas."
+    ],
+    [
+      "Aggregate",
+      "La caja que junta varios elementos en uno. Es lo que convierte cinco correos en un correo con cinco líneas."
+    ],
+    [
+      "Execute Once",
+      "La opción de un nodo para ejecutarse una sola vez aunque le lleguen varios elementos. El atajo legítimo de hoy."
+    ],
+    [
+      "Producción",
+      "Cuando algo funciona solo, con datos reales, sin ti delante. Tu flujo de hoy, a partir de mañana a las 9:00."
+    ],
+    [
+      "Caso vacío",
+      "La ejecución en la que no hay nada que hacer y el flujo termina en verde sin actuar. Correcto, no un fallo."
+    ]
+  ],
+  "pieces": [
+    {
+      "kind": "timeline",
+      "title": "Mañana a las 9:00: lo que pasará sin ti",
+      "caption": "La ejecución que verás en el historial pasado mañana. Ya sabes leerla.",
+      "note": "Fíjate: casi todo el tiempo es esperar a Google, no calcular. Y el único paso que puede doler es el último.",
+      "steps": [
+        {
+          "label": "Suena el despertador",
+          "ms": 5,
+          "risk": "bajo",
+          "detail": "9:00:00. El flujo arranca solo. Tú duermes."
+        },
+        {
+          "label": "Lee la hoja",
+          "ms": 740,
+          "risk": "bajo",
+          "detail": "Google tarda casi un segundo en devolver las filas. Normal: es red.",
+          "fails": "Si la credencial caducó, aquí sale rojo y el diagnóstico es de un minuto."
+        },
+        {
+          "label": "Filtra pendientes",
+          "ms": 10,
+          "risk": "bajo",
+          "detail": "De tus filas, quedan las pendientes. Instantáneo: no llama a nadie.",
+          "fails": "Cero pendientes = flujo verde sin correo. Correcto."
+        },
+        {
+          "label": "Junta la lista",
+          "ms": 8,
+          "risk": "bajo",
+          "detail": "Los N elementos se convierten en un solo texto."
+        },
+        {
+          "label": "Manda el correo",
+          "ms": 920,
+          "risk": "medio",
+          "detail": "Gmail acepta el mensaje y a las 9:00:02 está en tu bandeja.",
+          "fails": "Si falla aquí, la lectura y el filtro ya se hicieron: no se pierde nada, se reintenta mañana."
+        }
+      ]
+    },
+    {
+      "kind": "checklist",
+      "title": "Tu primera automatización está en producción si",
+      "caption": "Las siete. La última es la que casi nadie hace y la que más enseña.",
+      "items": [
+        "La credencial de Google quedó guardada y reutilizable",
+        "El flujo tiene disparador, lectura, filtro y acción: el circuito entero",
+        "El filtro es robusto: contiene + minúsculas, no igual exacto",
+        "Has visto el caso vacío terminar en verde sin correo, y sabes que es correcto",
+        "El interruptor está activado y lo has comprobado en la lista de flujos",
+        "El correo de mañana llegó solo y viste su línea en el historial",
+        "El de pasado mañana también, y si no llegó, supiste decir cuál de los tres motivos era"
+      ]
+    }
+  ],
+  "next": "Ya tienes el circuito completo funcionando solo. La lección 07 le pone nombre a todo lo que acabas de tocar —item, expresión, credencial, webhook— para que a partir de aquí hablemos con precisión, y en la 08 eliges disparador para tu proceso de verdad."
+}
