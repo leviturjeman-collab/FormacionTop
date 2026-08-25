@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 import { STAGES, stageFor, KINDS, TOOLS } from './lib/taxonomy.mjs'
 import { extract } from './lib/extract.mjs'
 import { analyzeSections, isMetaDocument } from './lib/sections.mjs'
-import { registerGuides, toolGuideFor } from './lib/toolguides.mjs'
+import { completeToolGuide, registerGuides, toolGuideFor } from './lib/toolguides.mjs'
 import { registerRecipes } from './lib/recipes.mjs'
 import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
@@ -182,10 +182,6 @@ function enrichPrompts(items, context) {
 }
 
 for (const family of promptFiles) enrichPrompts(family.prompts, family.title)
-for (const tool of TOOLS) {
-  const guide = toolGuideFor(tool.id)
-  if (guide?.prompts) enrichPrompts(guide.prompts, `uso profesional de ${tool.label}`)
-}
 
 await fs.mkdir(generatedDir, { recursive: true })
 const allFiles = await walk(vaultDir)
@@ -504,6 +500,7 @@ const conItinerario = new Set(cursoFiles.map((leccion) => leccion.tool).filter(B
 const toolPages = TOOLS
   .map((tool) => {
     const inTool = lessons.filter((lesson) => lesson.tools.includes(tool.id))
+    const guide = completeToolGuide(toolGuideFor(tool.id), tool)
     return {
       id: tool.id,
       label: tool.label,
@@ -516,7 +513,7 @@ const toolPages = TOOLS
         .map((leccion) => ({ id: leccion.id, slot: leccion.slot, title: leccion.title, minutes: leccion.minutes })),
       lessonSlugs: inTool.map((lesson) => lesson.slug),
       stageIds: [...new Set(inTool.map((lesson) => lesson.stageId))],
-      guide: toolGuideFor(tool.id),
+      guide,
     }
   })
   // Una herramienta tiene página si el material la menciona, si tiene guía

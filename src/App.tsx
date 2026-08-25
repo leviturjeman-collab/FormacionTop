@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, BookMarked, Compass, GraduationCap, Home, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, Workflow, X } from 'lucide-react'
+import { BookOpen, BookMarked, Compass, GraduationCap, Home, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
 import { store, useStudent } from './store'
 import Inicio from './pages/Inicio'
 import MiProyecto from './pages/MiProyecto'
-import Automatizaciones from './pages/Automatizaciones'
 import Leccion from './pages/Leccion'
 import Buscar from './pages/Buscar'
 import Indice from './pages/Indice'
@@ -85,12 +84,6 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         <a className={is('mi-proyecto') ? 'active' : ''} href={href({ name: 'mi-proyecto' })} onClick={onClose}>
           <BookMarked size={14} /> Mi proyecto
         </a>
-        <a className={is('automatizaciones') ? 'active' : ''} href={href({ name: 'automatizaciones' })} onClick={onClose}>
-          <Workflow size={14} /> Automatizaciones
-        </a>
-        <a className={is('guia') ? 'active' : ''} href={href({ name: 'guia' })} onClick={onClose}>
-          <Compass size={14} /> Guías
-        </a>
         <a className={is('prompts') ? 'active' : ''} href={href({ name: 'prompts' })} onClick={onClose}>
           <Sparkles size={14} /> Prompts
         </a>
@@ -102,6 +95,9 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         </a>
         <a className={is('progreso') ? 'active' : ''} href={href({ name: 'progreso' })} onClick={onClose}>
           <TrendingUp size={14} /> Progreso
+        </a>
+        <a className={is('guia') ? 'active' : ''} href={href({ name: 'guia' })} onClick={onClose}>
+          <Compass size={14} /> Guías
         </a>
       </nav>
 
@@ -186,7 +182,6 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
     switch (route.name) {
       case 'inicio': return ['Inicio']
       case 'mi-proyecto': return ['Mi proyecto']
-      case 'automatizaciones': return ['Automatizaciones']
       case 'ruta': return ['Ruta']
       case 'area': {
         const stage = course.stages.find((item) => item.id === route.stageId)
@@ -221,6 +216,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'guia': return ['Guías']
       case 'curso': return ['El curso']
       case 'progreso': return ['Progreso']
+      default: return ['Academia']
     }
   }, [route, course])
 
@@ -261,7 +257,6 @@ function Pages({ route }: { route: Route }) {
   switch (route.name) {
     case 'inicio': return <Inicio />
     case 'mi-proyecto': return <MiProyecto />
-    case 'automatizaciones': return <Automatizaciones />
     case 'ruta': return <Ruta />
     case 'area': return <Area stageId={route.stageId} route={route} />
     case 'categoria': return <Categoria categoryId={route.categoryId} route={route} />

@@ -37,6 +37,9 @@ export interface ProjectProfile {
   problem: string
   outcome: string
   tools: string
+  toolIds?: string[]
+  projectType?: string
+  promptBrief?: string
   updatedAt: string
 }
 

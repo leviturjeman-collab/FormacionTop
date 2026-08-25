@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { ArrowRight } from 'lucide-react'
-import type { Block, LevelId, Lesson, ToolPage } from '../types'
+import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href, type Route } from '../router'
 import { useStudent } from '../store'
@@ -331,10 +332,10 @@ export function Herramientas() {
               <BrandMark icon={tool.icon} size={24} />
               <div>
                 <strong>{tool.label}</strong>
-                {escritas > 0 ? (
-                  <span className="st-tool-itinerary">Itinerario · {escritas} de 20 lecciones</span>
-                ) : tool.guide ? (
-                  <span>Guía completa · primeros pasos, errores y uso profesional</span>
+                {tool.guide ? (
+                  <span>{tool.guide.prompts?.length || 0} prompts · {tool.guide.automations?.length || 0} automatizaciones · guía completa</span>
+                ) : escritas > 0 ? (
+                  <span className="st-tool-itinerary">Itinerario · {escritas} lecciones</span>
                 ) : (
                   <span>{tool.count} lecciones de consulta</span>
                 )}
@@ -395,6 +396,7 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
             </div>
           </div>
           <Blocks blocks={guideBlocks(tool.guide, tool.label)} />
+          <ToolInside guide={tool.guide} label={tool.label} />
         </>
       )}
 
@@ -507,12 +509,70 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
     blocks.push({
       kind: 'codigo',
       title: `Prompt: ${item.name}`,
+      text: [item.when, item.model ? `Elección recomendada: ${item.model}.` : ''].filter(Boolean).join(' '),
       code: item.prompt,
       lang: 'prompt',
     })
   }
 
   return blocks
+}
+
+function ToolInside({ guide, label }: { guide: ToolGuide; label: string }) {
+  return (
+    <>
+      {guide.catalog?.items?.length ? (
+        <section className="st-tool-inside">
+          <div className="st-section-head">
+            <div><span className="st-kicker">Dentro de {label}</span><h2>Qué hay aquí y cuándo usarlo</h2></div>
+            <span>{guide.catalog.items.length} piezas explicadas</span>
+          </div>
+          <p className="st-tool-inside-intro">{guide.catalog.intro}</p>
+          <div className="st-inside-grid">
+            {guide.catalog.items.map((item) => (
+              <article key={`${item.group}-${item.name}`} className="st-inside-card">
+                <span>{item.group}</span>
+                <h3>{item.name}</h3>
+                <p>{item.what}</p>
+                <div><strong>Úsalo cuando</strong><p>{item.useWhen}</p></div>
+                {item.model && <div><strong>Cómo elegir</strong><p>{item.model}</p></div>}
+                {item.avoidWhen && <div className="st-inside-avoid"><strong>No lo uses así</strong><p>{item.avoidWhen}</p></div>}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {guide.automations?.length ? <AutomationLibrary automations={guide.automations} label={label} /> : null}
+    </>
+  )
+}
+
+function AutomationLibrary({ automations, label }: { automations: ToolAutomation[]; label: string }) {
+  return (
+    <section className="st-automation-library">
+      <div className="st-section-head">
+        <div><span className="st-kicker">Flujos dentro de la herramienta</span><h2>Automatizaciones que puedes construir con {label}</h2></div>
+        <span>{automations.length} recorridos</span>
+      </div>
+      <p className="st-tool-inside-intro">Cada recorrido tiene un disparador, una validación, una acción observable y una ruta de recuperación. Las conexiones reales necesitan tus propias credenciales y primero se prueban con datos ficticios.</p>
+      <div className="st-automation-grid">
+        {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} />)}
+      </div>
+    </section>
+  )
+}
+
+function AutomationCard({ automation }: { automation: ToolAutomation }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <article className={`st-automation-card${open ? ' open' : ''}`}>
+      <button type="button" className="st-automation-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        <span><strong>{automation.name}</strong><small>{automation.difficulty} · {automation.platform}</small></span>
+        <span>{open ? '−' : '+'}</span>
+      </button>
+      {open && <div className="st-automation-body"><p>{automation.goal}</p><dl><div><dt>Disparador</dt><dd>{automation.trigger}</dd></div><div><dt>Credenciales</dt><dd>{automation.credentials}</dd></div></dl><h4>Pasos del flujo</h4><ol>{automation.steps.map((step, index) => <li key={index}><span>{index + 1}</span>{step}</li>)}</ol>{automation.code && <div className="st-code"><em>n8n · Code</em><pre><code>{automation.code}</code></pre></div>}<div className="st-automation-test"><strong>Prueba</strong><p>{automation.test}</p><strong>Si falla</strong><p>{automation.failure}</p></div></div>}
+    </article>
+  )
 }
 
 function usageText(guide: NonNullable<ToolPage['guide']>, label: string) {

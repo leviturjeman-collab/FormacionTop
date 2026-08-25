@@ -354,6 +354,7 @@ export const TOOL_GUIDES = {
  * pueden ampliar sin cambiar la navegación.
  */
 const DISCOVERED_TOOL_META = {
+  'nano-banana': { label: 'Nano Banana', url: 'ai.google.dev', kind: 'image', plain: 'Nano Banana aparece aquí como una herramienta independiente del curso para crear y editar imágenes con instrucciones y referencias. Sirve para pasar de una idea visual a variantes controladas, pero hay que revisar composición, texto, identidad, derechos y consumo antes de publicar.' },
   base44: { label: 'Base44', url: 'base44.com', kind: 'apps', plain: 'Un constructor de aplicaciones que convierte una descripción en una aplicación funcional con pantallas, datos y lógica. Sirve para prototipos y productos pequeños, pero hay que revisar qué ha creado antes de usarlo con datos reales.' },
   bolt: { label: 'Bolt.new', url: 'bolt.new', kind: 'apps', plain: 'Un constructor web que trabaja desde el navegador: describes una página o aplicación y genera una primera versión que puedes ver, editar y publicar. Es útil para prototipos rápidos, siempre que guardes el código y revises cada cambio.' },
   replit: { label: 'Replit', url: 'replit.com', kind: 'apps', plain: 'Un entorno de programación en el navegador con un agente que puede crear aplicaciones a partir de una conversación. Te da una ruta rápida de idea a demo, pero la versión que entregues debe quedar respaldada en GitHub y probada fuera del chat.' },
@@ -430,6 +431,200 @@ function discoveredGuide(id, meta) {
 
 for (const [id, meta] of Object.entries(DISCOVERED_TOOL_META)) {
   if (!TOOL_GUIDES[id]) TOOL_GUIDES[id] = discoveredGuide(id, meta)
+}
+
+/* ------------------------------------------------------------------ *
+ * Biblioteca profunda generada por herramienta.
+ *
+ * Esta capa no rellena una ficha con el mismo texto. Define las piezas que
+ * el alumno ve dentro de cada producto, los trabajos para los que conviene y
+ * automatizaciones comprobables que se pueden convertir en un flujo real.
+ * ------------------------------------------------------------------ */
+
+const PROMPT_TASKS = [
+  ['Definir un problema real', 'convertir una idea vaga en una ficha de problema, usuarios, entrada, salida y criterio de éxito', 'No construyas nada hasta separar lo que sé de lo que estoy suponiendo.'],
+  ['Investigar y comparar opciones', 'investigar alternativas y terminar con una recomendación que pueda defender', 'Separa fuentes, hechos, inferencias y puntos que debo comprobar.'],
+  ['Analizar información propia', 'analizar los datos o documentos que aporte y encontrar patrones sin inventar valores', 'Marca los campos vacíos, los duplicados y los datos que no permiten concluir nada.'],
+  ['Extraer datos de documentos', 'convertir documentos desordenados en una tabla o ficha consistente', 'Conserva la referencia de origen y devuelve vacío cuando el dato no aparezca.'],
+  ['Escribir una pieza profesional', 'crear un texto útil para un público concreto y con una voz definida', 'Antes de escribir, fija propósito, lector, tono, extensión y acción siguiente.'],
+  ['Revisar y mejorar un texto', 'auditar un texto que ya existe y proponer cambios que se puedan justificar', 'No cambies la voz por gusto: distingue error, riesgo, falta de claridad y preferencia.'],
+  ['Crear una imagen', 'diseñar una imagen que cumpla una función concreta dentro de un proyecto', 'Describe sujeto, encuadre, luz, composición, texto visible y lo que debe quedar fuera.'],
+  ['Editar una imagen de referencia', 'modificar una imagen manteniendo lo que debe seguir siendo reconocible', 'Lista qué píxeles o elementos pueden cambiar y cuáles tienen que permanecer.'],
+  ['Planificar un vídeo', 'pasar de una idea a un guion con planos, sonido, ritmo y entregables', 'Cada plano debe tener una intención, una duración y una forma de revisarlo.'],
+  ['Crear un storyboard', 'ordenar una secuencia audiovisual antes de gastar créditos o grabar', 'Devuelve una tabla de planos y señala las transiciones difíciles de generar.'],
+  ['Diseñar una web', 'definir una web que se pueda construir, probar y publicar', 'Prioriza la tarea del visitante, el móvil, la accesibilidad y el contenido real.'],
+  ['Diseñar una aplicación', 'convertir un proceso en pantallas, estados, datos y reglas', 'No escondas estados de error, permisos, datos vacíos ni la forma de recuperar un cambio.'],
+  ['Hacer un cambio de código', 'modificar una base de código sin romper lo que ya funciona', 'Pide primero contexto, archivos afectados, pruebas actuales y un cambio mínimo.'],
+  ['Diagnosticar un error', 'encontrar la causa de un fallo y arreglarla con evidencia', 'Diferencia síntoma, causa, hipótesis y prueba; no propongas cinco cambios a la vez.'],
+  ['Diseñar una interfaz', 'crear una interfaz clara para una persona que no domina la herramienta', 'Cada control debe tener una acción, un estado, una ayuda y un resultado visible.'],
+  ['Preparar datos y estructura', 'diseñar campos, relaciones y reglas para que los datos no se vuelvan inservibles', 'Incluye identificador, tipos, valores vacíos, duplicados, permisos y exportación.'],
+  ['Automatizar un proceso', 'diseñar un flujo que empiece con un evento y termine con un resultado comprobable', 'Incluye idempotencia, aprobación humana, reintentos, registro, parada y coste.'],
+  ['Crear un agente con límites', 'decidir qué puede consultar o hacer un sistema y qué debe aprobar una persona', 'Define herramientas permitidas, datos que no puede tocar y qué ocurre ante una duda.'],
+  ['Evaluar calidad', 'crear casos de prueba y una forma de comparar versiones', 'Incluye caso normal, incompleto, repetido, extremo y un umbral que bloquee la entrega.'],
+  ['Documentar y entregar', 'preparar una entrega que otra persona pueda usar, revisar y mantener', 'Incluye instalación, uso, límites, coste, secretos, recuperación y responsable.'],
+]
+
+const PROFILE_DEFAULT = {
+  intro: 'Esta ficha no se queda en el nombre del producto: te enseña qué piezas hay dentro, qué decisión resuelve cada una y cómo encaja en un proyecto completo.',
+  units: 'tokens, créditos, tareas o ejecuciones',
+  selection: 'elige la opción más sencilla que cubra tu entrada, salida, volumen y necesidad de revisión',
+  catalog: [
+    ['Entrada', 'qué información recibe', 'preparar y validar la información antes de abrir la herramienta', 'no uses datos reales hasta conocer sus permisos'],
+    ['Salida', 'qué entrega y cómo se guarda', 'definir el resultado antes de empezar', 'no aceptes una salida bonita que no puedas comprobar'],
+    ['Plantillas', 'estructuras reutilizables para no empezar de cero', 'repetir un formato que ya has probado', 'no copies una plantilla sin entender sus dependencias'],
+    ['Historial', 'versiones, ejecuciones o cambios anteriores', 'comparar una prueba con otra y volver atrás', 'no borres el historial mientras investigas un fallo'],
+    ['Permisos', 'qué puede leer o modificar', 'conectar solo el mínimo necesario', 'no concedas acceso total por comodidad'],
+    ['Exportación', 'cómo sacar tu trabajo si cambias de proveedor', 'guardar una copia antes de depender del servicio', 'no confundas compartir una vista con exportar los datos'],
+  ],
+}
+
+const TOOL_PROFILES = {
+  openai: {
+    intro: 'Aquí se estudian ChatGPT y OpenAI como dos capas: la aplicación que usas en pantalla y los modelos y servicios que pueden ejecutar otros programas. El nombre visible y la disponibilidad cambian según el plan.',
+    units: 'tokens, mensajes, archivos, créditos de imagen o minutos de audio',
+    selection: 'ChatGPT: Instant para ir rápido, Thinking para razonar y Pro si el plan lo permite; API: GPT-5.1, GPT-5 mini/nano, Codex, Image, Sora, realtime y deep-research. GPT-5.6 Sol, Luna y Pro pueden aparecer según la cuenta; comprueba el selector y la documentación',
+    catalog: [
+      ['Selector de modelo', 'modos rápidos o Instant, Thinking y Pro; en API aparecen familias como GPT-5.1, GPT-5 mini/nano, Codex, GPT Image, Sora, realtime y deep-research. GPT-5.6 Sol, Luna y Pro pueden aparecer según cuenta', 'cambiar de modelo solo cuando la tarea lo necesite y comparar calidad, tiempo y coste', 'no elijas por el número más alto sin probar el resultado'],
+      ['Archivos y análisis', 'subir documentos, hojas o imágenes para analizarlos', 'extraer, comparar, calcular o revisar material propio', 'no subas secretos ni datos personales sin revisar permisos'],
+      ['Búsqueda e investigación', 'consultar la web y devolver fuentes cuando esté disponible', 'trabajar con información actual que necesita referencias', 'no trates una respuesta sin fuente como una comprobación'],
+      ['Imágenes', 'generar o editar imágenes a partir de instrucciones y referencias', 'crear conceptos visuales, variantes y materiales de campaña', 'no publiques sin revisar texto, manos, marcas y derechos'],
+      ['Voz y tiempo real', 'conversar o trabajar con audio en experiencias compatibles', 'prototipos de atención, práctica oral o asistentes', 'no grabes ni envíes audio sin consentimiento'],
+      ['Proyectos y GPTs', 'guardar instrucciones, archivos y una forma de trabajo', 'mantener contexto estable para una tarea repetida', 'no confundas memoria de trabajo con una base de datos fiable'],
+      ['API y herramientas', 'hacer que un programa llame a modelos, búsqueda, archivos o funciones', 'automatizar procesos y devolver una salida estructurada', 'no pongas claves API en el navegador ni en un repositorio'],
+      ['Codex y código', 'usar modelos para leer, cambiar y probar código', 'trabajar por cambios pequeños con pruebas y revisión', 'no aceptes una reescritura completa sin copia y diff'],
+    ],
+  },
+  claude: {
+    intro: 'Claude se entiende mejor separando el modelo que responde de las superficies de trabajo que lo rodean: Projects, Artifacts, archivos, visión, web, Workbench, API y Claude Code. No todo aparece en todos los planes.',
+    units: 'tokens de entrada y salida, archivos, mensajes y límites del plan',
+    selection: 'Claude Opus 4.1 para arquitectura y análisis exigente, Claude Sonnet 4 para construir y revisar cada día y Claude Haiku para clasificación y tareas rápidas; los nombres y límites pueden cambiar, así que comprueba el selector visible y la documentación oficial',
+    catalog: [
+      ['Opus', 'Claude Opus 4.1: la familia de mayor capacidad para problemas difíciles y proyectos complejos', 'arquitectura, análisis profundo y decisiones con muchas restricciones', 'no lo uses para clasificar miles de entradas sencillas si otro modelo basta'],
+      ['Sonnet', 'Claude Sonnet 4: la opción equilibrada para construir, escribir y revisar', 'la mayoría del trabajo de curso y prototipos', 'no presupongas que sustituye una prueba real'],
+      ['Haiku', 'la familia rápida y económica para tareas cortas; comprueba el número actual en el selector', 'clasificación, extracción y borradores repetitivos', 'no le delegues una decisión de arquitectura sin revisión'],
+      ['Projects', 'un espacio con instrucciones y documentos persistentes', 'mantener el contexto de un proyecto entre conversaciones', 'no lo uses como único lugar para guardar una versión entregable'],
+      ['Artifacts', 'un panel para ver y tocar entregables generados', 'webs, componentes, documentos y prototipos visibles', 'no publiques sin revisar datos, permisos y dependencias'],
+      ['Visión y archivos', 'leer imágenes y documentos junto a la conversación', 'revisar capturas, contratos, diseños o tablas', 'no inventes una página cuando el documento no la contiene'],
+      ['Workbench y API', 'probar instrucciones y conectar Claude con programas', 'comparar versiones y preparar integraciones', 'no copies una clave a frontend o repositorio'],
+      ['Claude Code', 'trabajar sobre un repositorio desde una terminal', 'cambios reales con tests, diff y control de versiones', 'no le des acceso sin una copia y una rama de trabajo'],
+    ],
+  },
+  'nano-banana': {
+    intro: 'Nano Banana es una herramienta independiente para crear y editar imágenes con instrucciones y referencias. La ficha se centra en controlar identidad visual, composición, texto, variantes y revisión, sin mezclarla con la página de Gemini.',
+    units: 'generaciones, ediciones, resolución, créditos y límites del plan',
+    selection: 'modo de generación para una imagen nueva, edición para conservar una referencia, composición para controlar sujeto y cámara, texto visible para carteles y variantes controladas para comparar cambios sin perder la versión aprobada',
+    catalog: [
+      ['Texto a imagen', 'crear una imagen a partir de una descripción', 'conceptos, campañas, fondos y escenas nuevas', 'no esperes texto pequeño perfecto sin revisarlo'],
+      ['Imagen de referencia', 'usar una imagen para conservar sujeto, producto o estilo', 'variantes de una pieza que ya existe', 'no uses una imagen sin permiso o sin revisar su licencia'],
+      ['Edición localizada', 'cambiar solo una zona y conservar el resto', 'limpiar fondos, sustituir objetos o corregir una composición', 'no pidas cinco cambios incompatibles en una sola instrucción'],
+      ['Consistencia', 'mantener rasgos, ropa, producto o paleta entre imágenes', 'series, catálogos y personajes recurrentes', 'no dependas de una frase vaga para identidad exacta'],
+      ['Composición y cámara', 'controlar encuadre, escala, lente, luz y profundidad', 'crear imágenes listas para una pieza concreta', 'no confundas estilo con instrucciones de encuadre'],
+      ['Texto visible', 'pedir rótulos, carteles, portadas o etiquetas', 'mockups y piezas donde el texto es parte de la escena', 'si el texto importa, comprueba cada carácter y prepara una alternativa'],
+      ['Variantes y selección', 'generar opciones comparables y elegir con criterio', 'explorar sin perder una versión aprobada', 'no gastes créditos sin nombrar y guardar las pruebas'],
+      ['Exportación y derechos', 'sacar el archivo final y documentar su origen', 'entregar una pieza con tamaño y formato claros', 'no publiques sin revisar marcas, rostros y uso comercial'],
+    ],
+  },
+  n8n: {
+    intro: 'n8n es el laboratorio principal de automatizaciones: cada flujo tiene un disparador, datos, decisiones, acciones, registro y una forma de detenerse. La academia enseña a construirlo y a repararlo, no solo a conectar cajas.',
+    units: 'ejecuciones, tiempo de servidor, llamadas a APIs, tareas de los servicios y tokens de los modelos',
+    selection: 'Webhook o evento para empezar, Edit Fields para ordenar datos, IF o Switch para decidir, HTTP Request para APIs y aprobación humana antes de acciones irreversibles',
+    catalog: [
+      ['Trigger', 'el evento que pone en marcha el workflow', 'un formulario, webhook, horario, correo o cambio en una app', 'no uses polling si el servicio puede avisar por webhook'],
+      ['Edit Fields', 'seleccionar, renombrar y preparar campos', 'normalizar datos antes de compararlos o enviarlos', 'no pases el objeto entero cuando solo necesitas tres campos'],
+      ['IF y Switch', 'separar caminos según condiciones', 'filtrar entradas, prioridades o estados', 'no escondas una regla crítica dentro de una expresión ilegible'],
+      ['HTTP Request', 'llamar a una API aunque no haya nodo específico', 'conectar servicios y probar endpoints', 'no guardes claves en texto plano ni ignores códigos de error'],
+      ['Modelos de IA', 'interpretar texto, imagen o documentos dentro del flujo', 'clasificar casos que una regla fija no resuelve', 'no metas IA donde una condición estable basta'],
+      ['Datos y memoria', 'guardar estado, identificadores y resultados', 'evitar duplicados y continuar procesos', 'no dependas de la posición de una fila como identificador'],
+      ['Aprobación humana', 'parar el flujo para que alguien confirme', 'enviar, publicar, cobrar o borrar', 'no automatices una acción irreversible sin freno'],
+      ['Error y ejecuciones', 'ver qué ocurrió y recuperar un flujo', 'reintentos, alertas, trazabilidad y mantenimiento', 'no marques un workflow como listo sin probar un fallo'],
+    ],
+  },
+  'base44': {
+    intro: 'Base44 convierte una especificación en una aplicación con pantallas, datos y comportamiento. El aprendizaje está en escribir la especificación, revisar lo que genera, probar estados y conservar una ruta de salida.',
+    selection: 'empieza con la versión mínima que tenga una entrada y una salida visibles, y añade datos, usuarios y automatizaciones después de probar el recorrido',
+    catalog: [['Especificación', 'describir pantallas, datos y reglas', 'convertir una idea en una primera versión comprobable', 'no pidas una aplicación entera con una frase vaga'], ['Pantallas', 'lugares donde el usuario ve y cambia información', 'diseñar el recorrido principal', 'no ocultes errores ni estados vacíos'], ['Datos', 'campos y registros que sostienen la aplicación', 'guardar información que deba volver a aparecer', 'no guardes datos sensibles sin permisos claros'], ['Lógica', 'reglas que cambian lo que ocurre', 'validar, filtrar y calcular', 'no aceptes reglas sin casos de prueba'], ['Usuarios', 'identidad, acceso y permisos', 'separar lo que puede ver cada persona', 'no uses un único usuario para todo'], ['Integraciones', 'conexiones con servicios externos', 'correo, pagos, IA o automatizaciones', 'no conectes producción antes de probar'], ['Publicación', 'poner una versión accesible para otros', 'enseñar una demo o entregar el producto', 'no publiques sin revisar datos de prueba'], ['Exportación', 'guardar código, datos y documentación', 'mantener control si cambias de herramienta', 'no confundas una URL con una copia del proyecto']],
+  },
+}
+
+const TASK_AUTOMATIONS = [
+  ['Clasificar entradas y registrar el resultado', 'cuando llega un formulario, correo o mensaje', 'intermedia'],
+  ['Enviar un aviso solo cuando requiere atención', 'cuando una condición de prioridad se cumple', 'basica'],
+  ['Crear un resumen diario con fuentes', 'a una hora fija con los elementos del día', 'intermedia'],
+  ['Detectar duplicados antes de crear un registro', 'cuando entra un elemento con identificador repetido', 'intermedia'],
+  ['Pedir aprobación antes de enviar o publicar', 'cuando una acción cambia datos o sale al exterior', 'avanzada'],
+  ['Reintentar una llamada y alertar si sigue fallando', 'cuando una API responde con error temporal', 'avanzada'],
+  ['Convertir un archivo en una ficha estructurada', 'cuando aparece un documento nuevo en una carpeta', 'intermedia'],
+  ['Crear tareas de seguimiento y fechas límite', 'cuando se completa una venta, reunión o solicitud', 'basica'],
+  ['Sincronizar dos sistemas sin pisar cambios', 'cuando se crea o actualiza un registro', 'avanzada'],
+  ['Guardar una auditoría de cada ejecución', 'cada vez que el flujo procesa un caso', 'profesional'],
+  ['Parar y avisar cuando falta un dato obligatorio', 'cuando una entrada está incompleta', 'basica'],
+  ['Preparar un informe semanal de consumo', 'al final de cada periodo de trabajo', 'profesional'],
+]
+
+function wordCount(text) { return String(text).trim().split(/\s+/).filter(Boolean).length }
+
+function profileFor(id) {
+  if (TOOL_PROFILES[id]) return TOOL_PROFILES[id]
+  const kind = id.includes('video') || ['higgsfield', 'runway', 'heygen', 'descript'].includes(id) ? 'vídeo' : id.includes('code') || ['python', 'node', 'typescript', 'react', 'vscode', 'cursor', 'codex'].includes(id) ? 'código' : id.includes('automation') || ['zapier', 'make', 'pipedream', 'n8n'].includes(id) ? 'automatización' : id.includes('data') || ['airtable', 'supabase', 'postgres', 'sheets'].includes(id) ? 'datos' : 'contenido y producto'
+  return { ...PROFILE_DEFAULT, intro: `En ${id} se trabaja con ${kind}. Esta guía separa las piezas internas, el momento adecuado para usarlas y las automatizaciones que conectan el resultado con el resto del proyecto.`, selection: `elige la función de ${kind} que produzca el resultado visible más pequeño y deja las conexiones para después de probar`, catalog: PROFILE_DEFAULT.catalog.map(([group, name, useWhen, avoidWhen]) => [group, `${name} dentro de ${id}`, useWhen, avoidWhen]) }
+}
+
+function baseGuideFor(tool) {
+  const meta = DISCOVERED_TOOL_META[tool.id] || { label: tool.label, url: `${tool.id}.com`, kind: 'tool', plain: `${tool.label} es una herramienta que puede formar parte de un proyecto de aprendizaje y trabajo.` }
+  return discoveredGuide(tool.id, meta)
+}
+
+function promptFor(tool, profile, task, index) {
+  const [name, outcome, rule] = task
+  const model = profile.selection.length > 180 ? `${profile.selection.split(';')[0]}; comprueba disponibilidad.` : profile.selection
+  const inside = profile.catalog.slice(0, 3).map(([group, what]) => `${group}: ${what}`).join('; ')
+  let prompt = `Actúa como una persona experta en ${tool.label} que acompaña a alguien que empieza desde cero. Este encargo trata de: ${name.toLowerCase()}. Quiero ${outcome}. No me des una respuesta genérica ni una lista de posibilidades sin decidir: trabaja con mi caso y señala lo que no puedas saber.\n\nMi contexto es el siguiente. Proyecto: [NOMBRE]. Qué hago o qué problema tengo: [DESCRIPCIÓN]. Quién lo utilizará: [PERSONA]. Qué información entra: [ENTRADA]. Qué debe existir al terminar: [SALIDA]. Volumen aproximado: [NÚMERO DE CASOS]. Presupuesto y tiempo disponible: [LÍMITES]. Herramientas que ya tengo: [LISTA]. Datos sensibles o permisos implicados: [DATOS Y PERMISOS].\n\nEmpieza haciéndome solo la primera pregunta que realmente cambie la solución. Espera mi respuesta antes de continuar. Si una palabra técnica es imprescindible, tradúcela al español sencillo la primera vez. No rellenes huecos con una suposición silenciosa. ${rule}\n\nCuando tengas la información suficiente, analiza primero si ${tool.label} es la herramienta adecuada. Explica qué parte del trabajo resuelve y qué parte no. Dentro de ${tool.label}, considera estas piezas: ${inside}. Después elige la función, modelo, modo o espacio de trabajo que usarías. Usa este criterio de selección: ${model}. Si hay dos opciones razonables, compara calidad, velocidad, coste, privacidad, posibilidad de revisar y facilidad de recuperar una versión anterior. No elijas una opción solo por ser la más potente.\n\nDevuelve el trabajo en este orden. Uno: ficha del problema con objetivo, usuario, entrada, salida y criterio de éxito. Dos: plan de preparación con los archivos, datos, permisos y decisiones que tengo que reunir. Tres: instrucciones concretas dentro de ${tool.label}, indicando qué pantalla, botón, campo, nodo o archivo debo abrir y qué valor debo poner. Cuatro: resultado esperado y señales de que algo ha fallado. Cinco: una alternativa manual o con otra herramienta y el motivo por el que la descartas o la recomiendas.\n\nDiseña una prueba antes de usar datos reales. La prueba debe tener un caso normal, un caso incompleto, un duplicado y un caso extremo. Para cada uno dime la entrada exacta, la salida que debería ver, dónde comprobarla y qué decisión tomar si no coincide. Si el resultado puede generar una imagen, vídeo, texto, código, registro, mensaje o ejecución, dime cómo guardo la versión aprobada y cómo vuelvo atrás.\n\nIncluye una sección de seguridad: datos que no debo pegar, permisos mínimos, acciones irreversibles, aprobación humana y forma de detener el proceso. Incluye también una sección de consumo: qué unidad puede descontarse en ${tool.label}, cómo medirla antes y después de una prueba, cómo estimar diez, cien y mil usos y qué dato debe comprobarse en la web oficial porque puede cambiar.\n\nTermina con una entrega que otra persona pueda repetir: nombre de la versión, archivos o enlaces que debe conservar, instrucciones de uso, límites conocidos, errores posibles, responsable y siguiente paso de menos de treinta minutos. No digas que está listo para producción hasta que la prueba tenga resultado y evidencia. Este es el encargo número ${index + 1} de mi biblioteca de trabajo y debe quedar escrito en español natural.`
+  const details = `\n\nDetalle específico de ${tool.label}: separa la decisión de ${name.toLowerCase()} del trabajo posterior. Escribe el nombre visible de cada función, qué campo entra, qué campo sale y cómo se revisa un caso dudoso. Si no está disponible, marca COMPROBAR DISPONIBILIDAD y ofrece una alternativa.`
+  prompt += details
+  if (wordCount(prompt) > 600) prompt = prompt.replace(details, '')
+  while (wordCount(prompt) < 500) prompt += `\n\nAntes de terminar, vuelve a mirar el caso concreto y añade un ejemplo rellenado con datos ficticios, una decisión que no tomarías todavía y la pregunta que tendría que responder una persona responsable antes de compartir el resultado.`
+  return prompt
+}
+
+function automationFor(tool, profile, blueprint, index) {
+  const [name, trigger, difficulty] = blueprint
+  const platform = tool.id === 'n8n' ? 'n8n · workflow importable y prueba manual' : `n8n conectado con ${tool.label}`
+  return {
+    name: `${name} en ${tool.label}`,
+    goal: `Usar ${tool.label} dentro de un flujo que pueda observarse, detenerse y reparar.`,
+    difficulty,
+    platform,
+    trigger: `${trigger}. Define el identificador único antes de activar el flujo.`,
+    steps: [
+      `Recibir la entrada y guardar un registro de prueba con fecha, origen e identificador único.`,
+      `Validar los campos obligatorios; si falta uno, detener el caso y avisar sin ejecutar la acción final.`,
+      `Preparar los datos para ${tool.label}: nombres de campos, formato, tamaño y límites del plan.`,
+      `Ejecutar la operación de ${tool.label} en una cuenta o espacio de pruebas.`,
+      'Comprobar la salida con una condición observable y guardar el enlace, id o respuesta completa.',
+      'Enviar el aviso o crear el registro final solo después de que la comprobación sea correcta.',
+      'Registrar éxito, error, consumo, duración y responsable en una tabla de auditoría.',
+      'Activar una ruta de error con reintento limitado y aviso humano; nunca repetir indefinidamente.',
+    ],
+    code: tool.id === 'n8n' ? `// Nodo Code de n8n: evita duplicados y deja una salida auditable\nconst item = $json;\nconst id = item.id || item.email || item.externalId;\nif (!id) throw new Error('Falta un identificador único');\nreturn [{ json: { ...item, workflowKey: String(id), receivedAt: new Date().toISOString(), needsReview: Boolean(item.needsReview) } }];` : undefined,
+    test: `Ejecuta ${name.toLowerCase()} con un caso normal, uno incompleto, uno repetido y uno extremo. Comprueba que ${tool.label} recibe solo los campos necesarios, que un duplicado no crea una segunda salida y que el error aparece en el historial.`,
+    failure: `Si ${tool.label} cambia el formato, se queda sin crédito o responde con error, conserva la entrada, no repitas la acción irreversible y avisa con el identificador del caso. Revisa primero credenciales, límites, datos y respuesta del servicio.`,
+    credentials: `Cuenta de pruebas de ${tool.label}, credencial con permisos mínimos, cuenta de n8n y una tabla o registro de auditoría. Nunca guardes la clave dentro del código ni en un repositorio público.`,
+    index,
+  }
+}
+
+export function completeToolGuide(existing, tool) {
+  const guide = existing || baseGuideFor(tool)
+  const profile = profileFor(tool.id)
+  guide.catalog = { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: 'Pieza interna', name: group, what, useWhen, avoidWhen, model })) }
+  guide.prompts = PROMPT_TASKS.map((task, index) => ({
+    name: `${task[0]} con ${tool.label}`,
+    prompt: promptFor(tool, profile, task, index),
+    when: `Úsalo cuando quieras ${task[1]}.`,
+    model: profile.selection,
+  }))
+  guide.automations = TASK_AUTOMATIONS.map((item, index) => automationFor(tool, profile, item, index))
+  return guide
 }
 
 /** Añade guías escritas fuera del código, en content/toolguides/. */
