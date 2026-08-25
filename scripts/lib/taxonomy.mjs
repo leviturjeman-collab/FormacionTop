@@ -206,6 +206,13 @@ export function stageFor(relativePath, title = '') {
  */
 export const TOOLS = [
   { id: 'higgsfield', label: 'Higgsfield', icon: 'higgsfield', match: /higgs?field/i },
+  // Herramientas de construccion y creacion con IA que entran en el itinerario.
+  { id: 'lovable', label: 'Lovable', icon: 'react', match: /\blovable\b/i },
+  { id: 'v0', label: 'v0', icon: 'vercel', match: /\bv0\.dev\b|\bv0\b(?= de vercel)/i },
+  { id: 'cursor', label: 'Cursor', icon: 'vscode', match: /\bcursor\b(?!\s*(?:de|del)\s*rat[oó]n)/i },
+  { id: 'elevenlabs', label: 'ElevenLabs', icon: 'replicate', match: /eleven ?labs/i },
+  { id: 'midjourney', label: 'Midjourney', icon: 'replicate', match: /mid ?journey/i },
+  { id: 'runway', label: 'Runway', icon: 'replicate', match: /\brunway\b|\bgen-?[34]\b/i },
   { id: 'openai', label: 'OpenAI', icon: 'openai', match: /\bopenai\b|\bgpt-?[45]|\bchatgpt\b|\bo[13]\b/i },
   { id: 'anthropic', label: 'Anthropic', icon: 'anthropic', match: /\banthropic\b/i },
   { id: 'claude', label: 'Claude', icon: 'claude', match: /\bclaude\b/i },

@@ -407,6 +407,8 @@ for (const lesson of lessons) delete lesson.indexTerms
 
 /* --- Paginas por herramienta --------------------------------------- */
 
+const conItinerario = new Set(cursoFiles.map((leccion) => leccion.tool).filter(Boolean))
+
 const toolPages = TOOLS
   .map((tool) => {
     const inTool = lessons.filter((lesson) => lesson.tools.includes(tool.id))
@@ -420,9 +422,9 @@ const toolPages = TOOLS
       guide: toolGuideFor(tool.id),
     }
   })
-  // Una herramienta con guía escrita siempre tiene página, aunque el material
-  // no la mencione (Higgsfield, por ejemplo, entra por su guía).
-  .filter((tool) => tool.count > 0 || tool.guide)
+  // Una herramienta tiene página si el material la menciona, si tiene guía
+  // escrita, o si tiene itinerario propio de lecciones en content/lecciones.
+  .filter((tool) => tool.count > 0 || tool.guide || conItinerario.has(tool.id))
   .sort((a, b) => b.count - a.count)
 
 /* --- Biblioteca: carpetas del vault -------------------------------- */

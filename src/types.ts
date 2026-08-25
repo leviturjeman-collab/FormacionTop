@@ -429,12 +429,18 @@ export interface CursoLesson {
   id: string
   number: number
   stageId: string
+  /** Herramienta a la que pertenece el itinerario, si la lección va en uno. */
+  tool?: string
+  /** Hueco 1-20 dentro del itinerario de esa herramienta. */
+  slot?: number
   title: string
   promise: string
   minutes: number
   why: string
   theory: { title: string; text: string; analogy?: string; example?: string }[]
   tasks: { title: string; where: string; action: string; prompt?: string; expect: string; stuck?: string }[]
+  /** Lo que se rompe de verdad, con el mensaje tal cual sale y su arreglo. */
+  errors: { message: string; means: string; fix: string }[]
   matters: string[]
   ignore: string[]
   canDo: string[]

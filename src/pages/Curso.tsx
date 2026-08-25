@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   ArrowLeft, ArrowRight, Ban, Check, CheckCircle2, Circle, Clock, Copy,
   HelpCircle, Languages, Lightbulb, Quote, Scale, Sparkles,
-} from 'lucide-react'
+ AlertTriangle } from 'lucide-react'
 import type { CursoLesson } from '../types'
 import { useCourse } from '../course'
 import { href } from '../router'
@@ -59,8 +59,23 @@ export function CursoIndice() {
     )
   }
 
+  // Las lecciones de itinerario se agrupan por herramienta; el resto, por área.
+  const conHerramienta = lecciones.filter((item) => item.tool)
+  const sueltas = lecciones.filter((item) => !item.tool)
+
+  const porHerramienta = [...new Set(conHerramienta.map((item) => item.tool))].map((toolId) => {
+    const pagina = course.toolPages.find((page) => page.id === toolId)
+    return {
+      id: toolId as string,
+      label: pagina?.label || toolId,
+      items: conHerramienta
+        .filter((item) => item.tool === toolId)
+        .sort((a, b) => (a.slot || 0) - (b.slot || 0)),
+    }
+  })
+
   const porArea = course.stages
-    .map((stage) => ({ stage, items: lecciones.filter((item) => item.stageId === stage.id) }))
+    .map((stage) => ({ stage, items: sueltas.filter((item) => item.stageId === stage.id) }))
     .filter((group) => group.items.length)
 
   const totalMin = lecciones.reduce((sum, item) => sum + item.minutes, 0)
@@ -76,6 +91,34 @@ export function CursoIndice() {
           tareas concretas que haces tú. {Math.round(totalMin / 60)} horas en total.
         </p>
       </div>
+
+      {porHerramienta.map(({ id, label, items }) => (
+        <section key={id} className="st-curso-area">
+          <div className="st-section-head">
+            <div>
+              <span className="st-kicker">Itinerario de herramienta</span>
+              <h2>{label}</h2>
+            </div>
+            <span>{items.length} de 20 lecciones</span>
+          </div>
+
+          <ol className="st-curso-list">
+            {items.map((item) => (
+              <li key={item.id}>
+                <a href={href({ name: 'curso', lessonId: item.id })}>
+                  <span className="st-curso-num">{String(item.slot || item.number).padStart(2, '0')}</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.promise}</p>
+                  </div>
+                  <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
+                  <ArrowRight size={14} />
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
 
       {porArea.map(({ stage, items }) => (
         <section key={stage.id} className="st-curso-area">
@@ -251,6 +294,24 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
           </div>
         </div>
       </section>
+
+      {leccion.errors?.length > 0 && (
+        <section className="st-errors">
+          <h3><AlertTriangle size={12} /> Lo que se te va a romper</h3>
+          <p className="st-errors-intro">
+            El mensaje tal y como sale en pantalla, qué significa en castellano y qué hacer.
+          </p>
+          <ol>
+            {leccion.errors.map((fallo) => (
+              <li key={fallo.message}>
+                <code>{fallo.message}</code>
+                <p className="st-error-means"><b>Qué significa</b> {fallo.means}</p>
+                <p className="st-error-fix"><b>Qué haces</b> {fallo.fix}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       <div className="st-matters">
         <div className="st-matters-yes">
