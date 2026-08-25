@@ -251,10 +251,66 @@ export interface ChatPiece {
   turns: { role: string; text: string }[]
 }
 
+/* --- Diagramas propios del itinerario escrito a mano ---------------- */
+
+/** El lienzo de nodos tal y como se ve en n8n, Make o Zapier. */
+export interface CanvasPiece {
+  kind: 'canvas'
+  title: string
+  caption: string
+  nodes: {
+    kind: string
+    label: string
+    note?: string
+    role?: 'trigger' | 'filter' | 'action' | 'error'
+    does: string
+    input: string
+    output: string
+    breaks?: string
+  }[]
+}
+
+/** Cuántos elementos entran y salen de cada paso. */
+export interface DataFlowPiece {
+  kind: 'dataflow'
+  title: string
+  caption: string
+  steps: { label: string; does: string; in: number; out: number; why?: string }[]
+}
+
+/** Una decisión con sus salidas y la consecuencia de cada una. */
+export interface DecisionPiece {
+  kind: 'decision'
+  title: string
+  caption: string
+  question: string
+  branches: { answer: string; then: string; why: string; cost?: string }[]
+}
+
+/** Las zonas de una pantalla, numeradas, sin depender de una captura. */
+export interface ScreenMapPiece {
+  kind: 'screenmap'
+  title: string
+  caption: string
+  areas: { name: string; place: 'left' | 'center' | 'right' | 'top' | 'bottom'; what: string; tip?: string }[]
+}
+
+/** El cambio concreto, línea a línea. */
+export interface BeforeAfterPiece {
+  kind: 'beforeafter'
+  title: string
+  caption: string
+  beforeLabel?: string
+  afterLabel?: string
+  rows: { before: string; after: string }[]
+  gain?: string
+}
+
 export type InteractivePiece =
   | FlowPiece | TerminalPiece | PromptLabPiece | ComparePiece
   | CostCalcPiece | ChunkingPiece | TimelinePiece | CasesPiece | AnatomyPiece | PipelinePiece
   | FileTreePiece | ChecklistPiece | BarsPiece | FlashcardsPiece | ChatPiece
+  | CanvasPiece | DataFlowPiece | DecisionPiece | ScreenMapPiece | BeforeAfterPiece
 
 export interface Lesson {
   id: string
@@ -439,10 +495,19 @@ export interface CursoLesson {
   promise: string
   minutes: number
   why: string
-  theory: { title: string; text: string; analogy?: string; example?: string }[]
+  theory: {
+    title: string
+    text: string
+    analogy?: string
+    example?: string
+    /** El dibujo de ESTE concepto, pegado a su explicación. */
+    visual?: InteractivePiece
+  }[]
   tasks: { title: string; where: string; action: string; prompt?: string; expect: string; stuck?: string }[]
   /** Lo que se rompe de verdad, con el mensaje tal cual sale y su arreglo. */
   errors: { message: string; means: string; fix: string }[]
+  /** Piezas para practicar, al final de la lección. */
+  pieces?: InteractivePiece[]
   matters: string[]
   ignore: string[]
   canDo: string[]

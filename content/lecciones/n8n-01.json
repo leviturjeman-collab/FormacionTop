@@ -12,12 +12,104 @@
     {
       "title": "Un becario que vigila una cosa y hace otras",
       "text": "n8n es un programa donde dibujas un proceso conectando cajas. Una caja vigila algo (que llegue un correo, que sean las ocho de la mañana, que alguien rellene un formulario) y las siguientes hacen cosas (crear una fila, mandar un mensaje, llamar a otro programa). Cuando lo enciendes, eso ocurre solo, sin ti, las veinticuatro horas. No hay que saber programar para montar los primeros: se arrastran cajas y se rellenan campos.",
-      "analogy": "Un becario obsesivo que solo sabe hacer una cosa, pero la hace exactamente igual las mil veces, a las tres de la mañana y en agosto."
+      "analogy": "Un becario obsesivo que solo sabe hacer una cosa, pero la hace exactamente igual las mil veces, a las tres de la mañana y en agosto.",
+      "visual": {
+        "kind": "canvas",
+        "title": "El flujo de Rocío, tal y como se ve en pantalla",
+        "caption": "Pulsa cada caja: verás qué hace, qué recibe y qué devuelve.",
+        "nodes": [
+          {
+            "kind": "Disparador",
+            "label": "Llega un correo",
+            "note": "asunto: PRESUPUESTO ACEPTADO",
+            "role": "trigger",
+            "does": "Vigila el buzón y arranca el flujo en cuanto entra un correo que cumple la condición. Es la única caja que decide CUÁNDO pasa todo lo demás.",
+            "input": "Nada: es el principio. Él mira solo.",
+            "output": "Un correo entero: remitente, asunto, cuerpo y adjuntos.",
+            "breaks": "El asunto viene escrito de otra forma («aceptamos el presupuesto») y no dispara nada. Nadie se entera de que no ha saltado."
+          },
+          {
+            "kind": "Filtro",
+            "label": "¿Es de un cliente?",
+            "note": "corta lo interno y las pruebas",
+            "role": "filter",
+            "does": "Deja pasar solo lo que debe seguir. Va aquí, antes de cualquier acción, porque lo que pase de esta caja va a tocar cosas de verdad.",
+            "input": "El correo que ha entrado.",
+            "output": "El mismo correo, o nada si no cumple.",
+            "breaks": "Si comparas con «es exactamente igual» en vez de «contiene», un espacio de más lo corta todo."
+          },
+          {
+            "kind": "Acción",
+            "label": "Crea la fila",
+            "note": "hoja de presupuestos",
+            "role": "action",
+            "does": "Añade una fila al final de la hoja con el nombre, el importe y la fecha sacados del correo.",
+            "input": "El correo filtrado.",
+            "output": "La fila creada, con su número.",
+            "breaks": "Si el correo no traía importe, escribe una fila con el hueco vacío y nadie lo ve hasta que se factura."
+          },
+          {
+            "kind": "Acción",
+            "label": "Crea la carpeta",
+            "note": "en Drive, con el nombre del cliente",
+            "role": "action",
+            "does": "Crea la carpeta de la obra. Depende del paso anterior, porque usa el nombre ya limpio.",
+            "input": "Los datos del cliente.",
+            "output": "La carpeta y su enlace.",
+            "breaks": "Dos presupuestos del mismo cliente crean dos carpetas iguales si nadie comprueba antes si ya existe."
+          },
+          {
+            "kind": "Aviso",
+            "label": "Avisa al jefe de obra",
+            "note": "WhatsApp",
+            "role": "action",
+            "does": "Manda el mensaje con el nombre, la dirección y el enlace a la carpeta.",
+            "input": "Todo lo anterior junto.",
+            "output": "El mensaje enviado.",
+            "breaks": "Si esta caja falla, la fila y la carpeta YA están creadas. El trabajo está hecho a medias y hay que saberlo."
+          }
+        ]
+      }
     },
     {
       "title": "Lo difícil nunca es el camino bueno",
       "text": "Montar el caso en el que todo va bien te lleva veinte minutos. Lo que separa una automatización que funciona seis meses de una que hay que apagar a la semana son otras tres preguntas: qué pasa si llega un dato incompleto, qué pasa si el mismo caso entra dos veces, y qué pasa si el servicio del otro lado está caído. Una automatización sin respuesta a esas tres no está terminada, está empezada.",
-      "example": "El correo de Rocío a veces llega sin importe porque el cliente lo acepta escribiendo «de acuerdo» y ya está. Si el flujo no contempla eso, escribe una fila con el importe vacío y nadie se entera hasta que se factura."
+      "example": "El correo de Rocío a veces llega sin importe porque el cliente lo acepta escribiendo «de acuerdo» y ya está. Si el flujo no contempla eso, escribe una fila con el importe vacío y nadie se entera hasta que se factura.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "Los tres casos que deciden si esto aguanta",
+        "caption": "Mismo flujo, tres días distintos. Mira cuántas fichas salen de cada paso.",
+        "steps": [
+          {
+            "label": "Día normal",
+            "does": "Entran seis correos y cuatro son de clientes",
+            "in": 6,
+            "out": 4,
+            "why": "El caso bonito, el único que casi todo el mundo prueba. Cuatro entran, cuatro salen, todo cuadra."
+          },
+          {
+            "label": "Día con pruebas",
+            "does": "Dos de los correos son internos y llevan «test»",
+            "in": 6,
+            "out": 4,
+            "why": "El filtro hace su trabajo y corta dos. Sin ese filtro, se habrían creado dos carpetas falsas y se habría avisado al jefe de obra dos veces por nada."
+          },
+          {
+            "label": "Correo sin importe",
+            "does": "El cliente contesta «de acuerdo» y ya está",
+            "in": 1,
+            "out": 1,
+            "why": "Aquí está el problema: la ficha se crea igual, con el importe vacío. El flujo no falla, pero deja un dato incompleto que nadie mira hasta que se factura."
+          },
+          {
+            "label": "El mismo correo dos veces",
+            "does": "Alguien lo marca como no leído",
+            "in": 1,
+            "out": 2,
+            "why": "Entra uno y salen dos: fila duplicada, carpeta duplicada y dos avisos. Es el fallo más común y no se arregla mirando: se arregla comprobando antes de crear."
+          }
+        ]
+      }
     },
     {
       "title": "La mayoría de las automatizaciones útiles no llevan IA dentro",
@@ -27,7 +119,33 @@
     {
       "title": "n8n frente a los de arrastrar cajitas más simples",
       "text": "Zapier y Make son webs donde conectas aplicaciones sin instalar nada y funcionan muy bien para cuatro pasos entre dos apps conocidas. n8n gana en tres situaciones: cuando necesitas lógica de verdad (bucles, condiciones encadenadas, tratar listas), cuando el volumen dispara la factura de los otros porque cobran por tarea, y cuando los datos no pueden salir de tu servidor. A cambio pide más cabeza al principio.",
-      "example": "Un flujo que recorre 500 filas y llama a una API por cada una son 500 tareas en Zapier. En n8n instalado en tu servidor, son 500 vueltas de un bucle y no cuestan nada."
+      "example": "Un flujo que recorre 500 filas y llama a una API por cada una son 500 tareas en Zapier. En n8n instalado en tu servidor, son 500 vueltas de un bucle y no cuestan nada.",
+      "visual": {
+        "kind": "decision",
+        "title": "¿n8n o algo más simple?",
+        "caption": "Contesta con tu caso delante. La respuesta cambia el precio y el trabajo.",
+        "question": "¿Tu proceso necesita repetir algo para cada elemento de una lista?",
+        "branches": [
+          {
+            "answer": "No: son cuatro pasos entre dos aplicaciones",
+            "then": "Zapier o Make te van perfectos",
+            "why": "Para un flujo lineal y de poco volumen, son más rápidos de montar y no tienes que mantener nada. Cambiarte a n8n más adelante es rehacer un flujo, no rehacer tu trabajo.",
+            "cost": "Desde unos 20 € al mes"
+          },
+          {
+            "answer": "Sí, y son listas de decenas o cientos",
+            "then": "n8n, y con diferencia",
+            "why": "En Zapier cada elemento de la lista cuenta como una tarea facturable. Un flujo que recorre 500 filas son 500 tareas allí y una sola ejecución aquí.",
+            "cost": "Gratis instalado por ti"
+          },
+          {
+            "answer": "No lo sé todavía",
+            "then": "Empieza por tu propio ordenador",
+            "why": "n8n instalado en tu portátil es gratis, no te compromete a nada y te deja montar y probar todo el curso. El día que lo tengas claro, exportas un archivo y lo mueves.",
+            "cost": "Cero"
+          }
+        ]
+      }
     },
     {
       "title": "Dos formas de tenerlo, y la diferencia importa",
@@ -210,5 +328,93 @@
       "El interruptor que hace que el flujo funcione solo. Un flujo probado pero sin activar no hace absolutamente nada."
     ]
   ],
-  "next": "Coge la ficha que has escrito y guárdala donde la encuentres mañana. En la lección siguiente decides en dos minutos si n8n es de verdad tu herramienta o si tu caso se resuelve más rápido con Zapier o Make, y a partir de la 03 empieza el montaje."
+  "next": "Coge la ficha que has escrito y guárdala donde la encuentres mañana. En la lección siguiente decides en dos minutos si n8n es de verdad tu herramienta o si tu caso se resuelve más rápido con Zapier o Make, y a partir de la 03 empieza el montaje.",
+  "pieces": [
+    {
+      "kind": "beforeafter",
+      "title": "La mañana de Rocío, antes y después",
+      "caption": "El mismo día de trabajo, con y sin el flujo montado.",
+      "beforeLabel": "Ahora, a mano",
+      "afterLabel": "Con el flujo",
+      "rows": [
+        {
+          "before": "Abre el correo y busca los presupuestos aceptados",
+          "after": "El correo dispara el flujo solo, según entra"
+        },
+        {
+          "before": "Copia nombre e importe a la hoja, uno a uno",
+          "after": "La fila aparece en la hoja con los datos ya puestos"
+        },
+        {
+          "before": "Crea la carpeta en Drive y la nombra a mano",
+          "after": "La carpeta se crea con el nombre del cliente"
+        },
+        {
+          "before": "Escribe al jefe de obra por WhatsApp",
+          "after": "El aviso sale con la dirección y el enlace dentro"
+        },
+        {
+          "before": "Si hay prisa, se salta un paso y la obra empieza sin carpeta",
+          "after": "Los cuatro pasos ocurren siempre, o ninguno y te enteras"
+        }
+      ],
+      "gain": "Once minutos por presupuesto, seis al día: unas veinte horas al mes."
+    },
+    {
+      "kind": "cases",
+      "title": "Prueba tu ficha contra los tres casos",
+      "caption": "Antes de montar nada, comprueba qué haría tu automatización en cada uno.",
+      "cases": [
+        {
+          "id": "feliz",
+          "label": "Caso feliz",
+          "hint": "Todo llega completo y bien escrito",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Es el que todo el mundo prueba y el único que suele funcionar a la primera. Si tu ficha solo contempla este, no está terminada: está empezada."
+            }
+          ]
+        },
+        {
+          "id": "ambiguo",
+          "label": "Caso ambiguo",
+          "hint": "Falta un dato, o llega raro",
+          "parts": [
+            {
+              "type": "p",
+              "text": "El cliente acepta sin decir el importe, el nombre viene con acentos y comillas, el mensaje llega en tres líneas sueltas. Decide ahora qué debe hacer el flujo: ¿crea la ficha con el hueco vacío, se para, o avisa a alguien?"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Qué campo puede faltar y seguir siendo válido",
+                "Qué campo, si falta, obliga a parar",
+                "A quién se avisa cuando se para"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "roto",
+          "label": "Caso roto",
+          "hint": "El mismo caso entra dos veces, o el servicio está caído",
+          "parts": [
+            {
+              "type": "p",
+              "text": "El correo se marca como no leído y vuelve a entrar. O Drive no responde durante diez minutos. Aquí es donde se decide si tu automatización es de fiar."
+            },
+            {
+              "type": "ul",
+              "items": [
+                "¿Se duplica la fila? ¿Se duplica la carpeta?",
+                "Si revienta en el paso 3 de 4, ¿qué queda hecho?",
+                "¿Se entera alguien, o falla en silencio?"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

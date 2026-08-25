@@ -18,6 +18,7 @@ import Pipeline from '../components/Pipeline'
 import { Bars, Chat, Checklist, FileTree, Flashcards } from '../components/Visuals'
 import { ToolStrip } from '../components/Brand'
 import TeacherPanel from '../components/TeacherPanel'
+import Piece from '../components/Piece'
 import Notebook from '../components/Notebook'
 
 export default function Leccion({ slug, level }: { slug: string; level?: LevelId }) {
@@ -132,26 +133,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
       {lesson.interactive.length > 0 && (
         <section className="st-interactive">
           <h2>Practica con esto</h2>
-          {lesson.interactive.map((piece, index) => {
-            switch (piece.kind) {
-              case 'flow': return <FlowDiagram key={index} piece={piece} />
-              case 'terminal': return <Terminal key={index} piece={piece} />
-              case 'promptlab': return <PromptLab key={index} piece={piece} />
-              case 'compare': return <Compare key={index} piece={piece} />
-              case 'costcalc': return <CostCalc key={index} piece={piece} />
-              case 'chunking': return <Chunking key={index} piece={piece} />
-              case 'timeline': return <Timeline key={index} piece={piece} />
-              case 'cases': return <CaseSim key={index} piece={piece} />
-              case 'anatomy': return <Anatomy key={index} piece={piece} />
-              case 'pipeline': return <Pipeline key={index} piece={piece} />
-              case 'filetree': return <FileTree key={index} piece={piece} />
-              case 'checklist': return <Checklist key={index} piece={piece} />
-              case 'bars': return <Bars key={index} piece={piece} />
-              case 'flashcards': return <Flashcards key={index} piece={piece} />
-              case 'chat': return <Chat key={index} piece={piece} />
-              default: return null
-            }
-          })}
+          {lesson.interactive.map((piece, index) => <Piece key={index} piece={piece} />)}
         </section>
       )}
 

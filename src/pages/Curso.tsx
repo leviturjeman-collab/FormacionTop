@@ -8,6 +8,7 @@ import { useCourse } from '../course'
 import { href } from '../router'
 import { store, useLessonProgress } from '../store'
 import Notebook from '../components/Notebook'
+import Piece from '../components/Piece'
 
 /**
  * El curso curado: 50 lecciones escritas a mano, en orden.
@@ -211,6 +212,8 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
             {part.example && (
               <p className="st-curso-example"><b>Por ejemplo:</b> {part.example}</p>
             )}
+            {/* El dibujo va pegado al concepto que explica, no en un anexo. */}
+            {part.visual && <Piece piece={part.visual} />}
           </section>
         ))}
       </div>
@@ -294,6 +297,13 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
           </div>
         </div>
       </section>
+
+      {leccion.pieces?.length ? (
+        <section className="st-interactive">
+          <h2>Practica con esto</h2>
+          {leccion.pieces.map((piece, index) => <Piece key={index} piece={piece} />)}
+        </section>
+      ) : null}
 
       {leccion.errors?.length > 0 && (
         <section className="st-errors">
