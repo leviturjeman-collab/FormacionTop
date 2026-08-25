@@ -22,6 +22,54 @@ const BOM = /^﻿/
  */
 const MOJIBAKE = /Ã[-¿]|Â[ -¿]|â€[]/
 
+
+/**
+ * Titulos legibles.
+ *
+ * Muchos archivos de la biblioteca se llaman como el codigo que documentan
+ * (01_lead_scoring.py, 31-mcp-permission-auditor). Tal cual, en un listado
+ * son ilegibles. Esto los convierte en algo que una persona puede leer sin
+ * inventarse una traduccion: quita numeracion y extension, separa palabras,
+ * respeta las siglas y deja la primera en mayuscula.
+ */
+const SIGLAS = new Set(['ai','api','cli','crm','csv','e2e','gdpr','hitl','html','http','ia','json','llm','mcp','ocr','pii','pdf','pr','qa','rag','rgpd','seo','sla','sql','ssh','ui','ux','vps','yaml'])
+const TAL_CUAL = { n8n: 'n8n', github: 'GitHub', gitlab: 'GitLab', javascript: 'JavaScript', typescript: 'TypeScript', postgres: 'Postgres', supabase: 'Supabase', vercel: 'Vercel', docker: 'Docker', python: 'Python', playwright: 'Playwright', openai: 'OpenAI', claude: 'Claude', gemini: 'Gemini', slack: 'Slack', notion: 'Notion', whatsapp: 'WhatsApp', remotion: 'Remotion', langchain: 'LangChain', ollama: 'Ollama', figma: 'Figma', obsidian: 'Obsidian' }
+
+function pareceNombreDeArchivo(valor) {
+  if (/\.(py|js|mjs|ts|tsx|jsx|json|md|txt|ya?ml|sh|sql)$/i.test(valor)) return true
+  if (/^[a-z0-9]+([-_][a-z0-9]+){2,}$/.test(valor)) return true
+  return /^\d+[a-z]/.test(valor)
+}
+
+export function tituloLegible(valor, rutaRelativa = '') {
+  let base = String(valor || '').trim()
+  if (rutaRelativa && pareceNombreDeArchivo(base)) {
+    // El nombre del archivo conserva los separadores que el titulo perdio.
+    base = rutaRelativa.split('/').at(-1)
+  }
+  // .py.md deja dos extensiones pegadas: se quitan todas.
+  while (/\.(py|js|mjs|ts|tsx|jsx|json|md|txt|ya?ml|sh|sql)$/i.test(base)) {
+    base = base.replace(/\.(py|js|mjs|ts|tsx|jsx|json|md|txt|ya?ml|sh|sql)$/i, '')
+  }
+  base = base
+    .replace(/^\d+[-_. ]+/, '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!base) return String(valor || '').trim()
+  const palabras = base.split(' ').map((palabra) => {
+    const suelta = palabra.toLowerCase()
+    if (TAL_CUAL[suelta]) return TAL_CUAL[suelta]
+    if (SIGLAS.has(suelta)) return suelta.toUpperCase()
+    return palabra
+  })
+  const primera = palabras[0]
+  if (primera && primera === primera.toLowerCase() && !TAL_CUAL[primera.toLowerCase()] && !SIGLAS.has(primera.toLowerCase())) {
+    palabras[0] = primera[0].toUpperCase() + primera.slice(1)
+  }
+  return palabras.join(' ')
+}
+
 export function repairMojibake(text) {
   if (!MOJIBAKE.test(text)) return text
   return text
@@ -298,7 +346,7 @@ export function extract(rawInput, relativePath) {
   return {
     front,
     body,
-    title: plain(titleMatch?.[1] || front.titulo || front.title || fileTitle),
+    title: tituloLegible(plain(titleMatch?.[1] || front.titulo || front.title || fileTitle), relativePath),
     words,
     minutes: Math.max(2, Math.ceil(words / 200)),
     sections: list,
