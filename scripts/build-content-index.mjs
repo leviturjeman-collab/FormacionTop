@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 import { STAGES, stageFor, KINDS, TOOLS } from './lib/taxonomy.mjs'
 import { extract } from './lib/extract.mjs'
 import { analyzeSections, isMetaDocument } from './lib/sections.mjs'
-import { registerGuides, toolGuideFor } from './lib/toolguides.mjs'
+import { completeToolGuide, registerGuides, toolGuideFor } from './lib/toolguides.mjs'
 import { registerRecipes } from './lib/recipes.mjs'
 import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
@@ -31,7 +31,7 @@ const projectDir = path.resolve(scriptDir, '..')
 const publicDir = path.join(projectDir, 'public')
 const generatedDir = path.join(publicDir, 'generated')
 
-const IGNORED = new Set(['node_modules', 'dist', '.git', '.obsidian', '.vscode', '36_PORTAL_WEB_FORMACION'])
+const IGNORED = new Set(['node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '36_PORTAL_WEB_FORMACION'])
 
 async function exists(target) {
   try { await fs.access(target); return true } catch { return false }
@@ -158,9 +158,35 @@ const cursoFiles = await loadContent('lecciones')
 registerGuides(extraGuides)
 registerRecipes(extraRecipes)
 
+/* Los prompts son piezas de trabajo, no eslóganes. Si uno es demasiado corto,
+ * se completa con el protocolo profesional que evita adivinar, gastar dinero
+ * o poner datos reales en una prueba. La ampliación se hace en build para que
+ * las fuentes editoriales sigan siendo legibles y fáciles de revisar. */
+const promptWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
+const qualitySections = (context) => [
+  `\n\n## Antes de empezar\nTrabaja con este contexto: ${context}. No rellenes huecos con imaginación. Si falta un dato que cambie la decisión, hazme una pregunta concreta y espera la respuesta. Si hay varias interpretaciones posibles, enuméralas y dime qué dato separa una de otra. Distingue siempre entre lo que te he contado, lo que estás deduciendo y lo que todavía hay que comprobar. No uses una palabra técnica sin traducirla primero.`,
+  `\n\n## Criterio de calidad\nNo me entregues una respuesta que solo suene bien. Convierte cada recomendación en una acción que pueda realizar, una salida que pueda observar y una condición que me permita decir si ha funcionado. Señala qué queda fuera de esta versión. Si recomiendas una herramienta, explica por qué encaja con la entrada, la salida, el volumen, el presupuesto y la persona que tendrá que mantenerla. Compara al menos una alternativa más sencilla y la opción de no automatizar todavía.`,
+  `\n\n## Prueba antes de usarlo\nDiseña una prueba con datos ficticios y cuatro casos: uno normal, uno incompleto, uno duplicado y uno extremo. Explica qué debería aparecer después de cada paso y en qué pantalla o registro lo compruebo. Si algo falla, dime cómo distinguir si el problema está en la entrada, en la instrucción, en un permiso, en un límite o en la herramienta de destino. No me digas que vuelva a intentarlo sin explicar qué variable debo cambiar.`,
+  `\n\n## Seguridad y coste\nMarca con claridad cada acción irreversible: enviar un mensaje, publicar, borrar, cobrar, compartir datos o consumir crédito. Propón una forma de probarla sin afectar a nadie y un punto en el que una persona tenga que aprobarla. Explica cómo se mide el consumo de tokens, créditos, tareas, ejecuciones o almacenamiento, qué dato debo anotar antes y después y cómo calculo el coste mensual. Si el precio o una función puede haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL en vez de inventar una cifra.`,
+  `\n\n## Entrega y continuidad\nTermina con una ficha breve que otra persona pueda entender sin haber visto esta conversación: objetivo, entradas, salida, pasos, herramientas, permisos, casos que no cubre, prueba realizada, resultado, coste aproximado y cómo detenerlo. Añade qué archivo, captura, enlace o registro debo guardar como evidencia. Incluye una siguiente acción pequeña que pueda completar en menos de treinta minutos y una señal clara de que ya es momento de pasar al siguiente paso.`,
+]
+
+function enrichPrompts(items, context) {
+  for (const item of items || []) {
+    if (!item?.prompt || promptWords(item.prompt) >= 520) continue
+    for (const section of qualitySections(`${context} · ${item.name || 'este encargo'}`)) {
+      if (promptWords(item.prompt) >= 520) break
+      item.prompt += section
+    }
+  }
+}
+
+for (const family of promptFiles) enrichPrompts(family.prompts, family.title)
+
 await fs.mkdir(generatedDir, { recursive: true })
 const allFiles = await walk(vaultDir)
 const markdownFiles = allFiles.filter((file) => file.toLowerCase().endsWith('.md'))
+const fileByRelative = new Map(allFiles.map((file) => [toPosix(path.relative(vaultDir, file)), file]))
 
 if (!markdownFiles.length) {
   throw new Error(`No hay archivos .md en ${vaultDir}. ¿Es la carpeta correcta?`)
@@ -170,13 +196,47 @@ if (!markdownFiles.length) {
 const workflowJson = new Map()
 for (const file of allFiles) {
   if (!file.toLowerCase().endsWith('.json')) continue
-  if (!/workflows_n8n_40|workflows[\\/]/.test(file)) continue
+  if (!/workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/.test(file)) continue
   try {
     workflowJson.set(path.basename(file), JSON.parse(await fs.readFile(file, 'utf8')))
   } catch {
     console.warn(`  aviso: ${path.basename(file)} no es JSON válido, se ignora en los diagramas.`)
   }
 }
+
+const ASSET_EXTENSIONS = new Set(['.py', '.js', '.mjs', '.ts', '.tsx', '.sh', '.sql', '.json'])
+const assetLanguage = (relativePath) => {
+  const extension = path.extname(relativePath).toLowerCase()
+  return ({ '.py': 'python', '.js': 'javascript', '.mjs': 'javascript', '.ts': 'typescript', '.tsx': 'tsx', '.sh': 'bash', '.sql': 'sql', '.json': 'json' })[extension] || 'text'
+}
+const assetKind = (relativePath) => /workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/i.test(relativePath) && path.extname(relativePath).toLowerCase() === '.json' ? 'workflow' : 'code'
+const assetStem = (relativePath) => path.basename(relativePath)
+  .replace(/\.md$/i, '')
+  .replace(/\.(py|js|mjs|ts|tsx|sh|sql|json)$/i, '')
+  .replace(/^\d+[_-]/, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '_')
+const assetSourcesFor = (relativePath) => {
+  const sources = new Set()
+  const base = path.basename(relativePath).replace(/\.md$/i, '')
+  const parent = path.dirname(relativePath)
+  if (parent.endsWith('/docs') || parent.endsWith('\\docs')) {
+    const sibling = toPosix(path.join(parent.replace(/[\\/]docs$/, ''), base))
+    if (fileByRelative.has(sibling)) sources.add(sibling)
+  }
+  const stem = assetStem(relativePath)
+  for (const candidate of fileByRelative.keys()) {
+    const extension = path.extname(candidate).toLowerCase()
+    if (!ASSET_EXTENSIONS.has(extension) || assetStem(candidate) !== stem) continue
+    if (/node_modules|\.git|36_PORTAL_WEB_FORMACION/i.test(candidate)) continue
+    sources.add(candidate)
+  }
+  return [...sources]
+}
+
+const titleOverrides = new Map([
+  ['35_AUTOMATIZACIONES_SKILLS_BIBLIOTECA/automatizaciones_codigo_40/docs/02_email_summarizer.py.md', 'Email summarizer: resumen y acciones desde Python'],
+])
 
 const lessons = []
 const usedSlugs = new Set()
@@ -195,11 +255,12 @@ for (const absolute of markdownFiles) {
   // Secciones clasificadas y los tres casos, para el simulador.
   signal.analysis = analyzeSections(signal.sections)
 
-  const title = signal.title
+  const extractedTitle = signal.title
     .replace(/^Desarrollo completo\s*[-–—]\s*/i, '')
     .replace(/^Documentaci[oó]n\s*[-–—]\s*/i, '')
     .replace(/\s+/g, ' ')
     .trim()
+  const title = titleOverrides.get(relativePath) || extractedTitle
 
   const stageId = stageFor(relativePath, title)
   const kind = kindFor(relativePath, title)
@@ -211,12 +272,15 @@ for (const absolute of markdownFiles) {
     .filter((block) => block.kind === 'seccion')
     .reduce((sum, block) => sum + (block.parts || []).reduce(
       (acc, part) => acc + `${part.text || ''} ${(part.items || []).join(' ')}`.split(/\s+/).filter(Boolean).length, 0), 0)
-  const format = realWords < 400 ? 'ficha' : 'leccion'
+  const assetSources = assetSourcesFor(relativePath)
+  // Un archivo ejecutable o importable necesita una lección completa aunque
+  // su documentación sea breve. La longitud del texto no puede ocultar la práctica.
+  const format = realWords < 400 && assetSources.length === 0 ? 'ficha' : 'leccion'
 
   // Una ficha es consulta rápida: se queda con su contenido propio y nada más.
   // Sin instaladores, sin recetas y sin el andamiaje de una lección larga.
   if (format === 'ficha') {
-    const CONSULTA = new Set(['idea', 'seccion', 'tabla', 'herramientas'])
+    const CONSULTA = new Set(['idea', 'seccion', 'tabla', 'herramientas', 'receta', 'codigo', 'comandos', 'instalar'])
     const compacto = levels.intermedio.blocks
       .filter((block) => CONSULTA.has(block.kind))
       // Los títulos genéricos de lección no pintan nada en una ficha.
@@ -242,12 +306,34 @@ for (const absolute of markdownFiles) {
   }
   usedSlugs.add(slug)
 
+  const assets = []
+  for (const sourcePath of assetSources) {
+    const absoluteAsset = fileByRelative.get(sourcePath)
+    if (!absoluteAsset) continue
+    const stat = await fs.stat(absoluteAsset)
+    if (stat.size > 120000) continue
+    const code = await fs.readFile(absoluteAsset, 'utf8')
+    const fileName = `${slug}-${path.basename(sourcePath)}`
+    const generatedAssetPath = path.join(generatedDir, 'assets', fileName)
+    await fs.mkdir(path.dirname(generatedAssetPath), { recursive: true })
+    await fs.writeFile(generatedAssetPath, code, 'utf8')
+    assets.push({
+      kind: assetKind(sourcePath),
+      name: path.basename(sourcePath),
+      language: assetLanguage(sourcePath),
+      sourcePath,
+      downloadPath: `/generated/assets/${fileName}`,
+      code,
+    })
+  }
+
   const workflowFile = path.basename(relativePath).replace(/\.md$/i, '.json')
+  const relatedWorkflow = assets.find((asset) => asset.kind === 'workflow')
   const interactive = buildInteractive({
     signal,
     stageId,
-    workflow: workflowJson.get(workflowFile),
-    workflowFile,
+    workflow: workflowJson.get(workflowFile) || (relatedWorkflow ? workflowJson.get(relatedWorkflow.name) : undefined),
+    workflowFile: relatedWorkflow?.name || workflowFile,
     slug,
   })
 
@@ -271,6 +357,7 @@ for (const absolute of markdownFiles) {
     search: `${title} ${signal.keyTerms.join(' ')} ${signal.intro}`.slice(0, 900).toLowerCase(),
     levels,
     interactive,
+    assets,
     relatedTitles: signal.links,
     // Alimenta el indice A-Z: definiciones con significado y terminos destacados.
     indexTerms: [
@@ -475,6 +562,7 @@ const conItinerario = new Set(cursoFiles.map((leccion) => leccion.tool).filter(B
 const toolPages = TOOLS
   .map((tool) => {
     const inTool = lessons.filter((lesson) => lesson.tools.includes(tool.id))
+    const guide = completeToolGuide(toolGuideFor(tool.id), tool)
     return {
       id: tool.id,
       label: tool.label,
@@ -487,7 +575,7 @@ const toolPages = TOOLS
         .map((leccion) => ({ id: leccion.id, slot: leccion.slot, title: leccion.title, minutes: leccion.minutes })),
       lessonSlugs: inTool.map((lesson) => lesson.slug),
       stageIds: [...new Set(inTool.map((lesson) => lesson.stageId))],
-      guide: toolGuideFor(tool.id),
+      guide,
     }
   })
   // Una herramienta tiene página si el material la menciona, si tiene guía
@@ -514,7 +602,7 @@ const workflowTarget = path.join(generatedDir, 'workflows')
 await fs.mkdir(workflowTarget, { recursive: true })
 for (const file of allFiles) {
   if (!file.toLowerCase().endsWith('.json')) continue
-  if (!/workflows_n8n_40/.test(file)) continue
+  if (!/workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/.test(file)) continue
   await fs.copyFile(file, path.join(workflowTarget, path.basename(file)))
   copiedWorkflows += 1
 }

@@ -7,6 +7,21 @@ updated: 2026-08-18
 
 # Portal web de AI Professional Academy
 
+## Mapa de la experiencia actual
+
+La interfaz está organizada por intención, no por carpetas internas:
+
+- `Inicio`: elige si quieres aprender, crear un proyecto, automatizar, crear vídeo, elegir una herramienta o entender una palabra.
+- `Programa`: base común paso a paso y especializaciones opcionales.
+- `Mi proyecto`: ficha local del problema, usuario, resultado y herramientas previstas. Queda preparada para sincronizarse con una cuenta en una fase posterior.
+- `Automatizaciones`: workflows importables y explicados por resultado: leads, contenido, datos, soporte, pruebas y seguridad. n8n es la referencia principal y se compara con otras plataformas.
+- `Herramientas`: páginas detalladas con primeros pasos, vocabulario, errores, checklist, coste, créditos, tareas o tokens, y conexiones con otras herramientas.
+- `Guías`: explicaciones de entrada para quien parte de cero.
+- `Prompts`: biblioteca central y prompts contextuales. El build verifica que cada prompt tenga al menos 500 palabras.
+- `Diccionario`: términos técnicos explicados en lenguaje normal, incluidos `localhost`, `portapapeles`, `puerto`, `token`, `API`, `webhook`, `build` y `deploy`.
+
+La organización física de la bóveda sigue siendo una fuente editorial interna. El alumno entra por objetivos y resultados; las carpetas, categorías e índice técnico quedan como consulta avanzada.
+
 ## Versión 3.0: formación aplicada al proyecto
 
 La web ya no presenta los archivos de Obsidian como lecciones ni abre Markdown completo. Obsidian funciona únicamente como fuente editorial interna. Durante el build, `scripts/build-content-index.mjs` transforma las 466 fuentes en recursos para el alumno con propósito, aplicación al proyecto, entregable, criterios de revisión y walkthrough ejecutable.

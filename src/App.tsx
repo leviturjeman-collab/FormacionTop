@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, Compass, GraduationCap, Home, Library, ListOrdered, Loader2, Menu, Presentation, Puzzle, Route as RouteIcon, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { BookOpen, BookMarked, Compass, GraduationCap, Home, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
 import { store, useStudent } from './store'
 import Inicio from './pages/Inicio'
+import MiProyecto from './pages/MiProyecto'
 import Leccion from './pages/Leccion'
 import Buscar from './pages/Buscar'
 import Indice from './pages/Indice'
@@ -78,28 +79,25 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
           <Home size={14} /> Inicio
         </a>
         <a className={is('curso') ? 'active' : ''} href={href({ name: 'curso' })} onClick={onClose}>
-          <GraduationCap size={14} /> El curso
+          <GraduationCap size={14} /> Programa
         </a>
-        <a className={is('guia') ? 'active' : ''} href={href({ name: 'guia' })} onClick={onClose}>
-          <Compass size={14} /> Guías
+        <a className={is('mi-proyecto') ? 'active' : ''} href={href({ name: 'mi-proyecto' })} onClick={onClose}>
+          <BookMarked size={14} /> Mi proyecto
         </a>
         <a className={is('prompts') ? 'active' : ''} href={href({ name: 'prompts' })} onClick={onClose}>
           <Sparkles size={14} /> Prompts
-        </a>
-        <a className={is('ruta') ? 'active' : ''} href={href({ name: 'ruta' })} onClick={onClose}>
-          <RouteIcon size={14} /> Material completo
-        </a>
-        <a className={is('biblioteca') || is('carpeta') ? 'active' : ''} href={href({ name: 'biblioteca' })} onClick={onClose}>
-          <Library size={14} /> Biblioteca
         </a>
         <a className={is('herramientas') || is('herramienta') ? 'active' : ''} href={href({ name: 'herramientas' })} onClick={onClose}>
           <Puzzle size={14} /> Herramientas
         </a>
         <a className={is('indice') ? 'active' : ''} href={href({ name: 'indice' })} onClick={onClose}>
-          <ListOrdered size={14} /> Índice A-Z
+          <ListOrdered size={14} /> Diccionario
         </a>
         <a className={is('progreso') ? 'active' : ''} href={href({ name: 'progreso' })} onClick={onClose}>
           <TrendingUp size={14} /> Progreso
+        </a>
+        <a className={is('guia') ? 'active' : ''} href={href({ name: 'guia' })} onClick={onClose}>
+          <Compass size={14} /> Guías
         </a>
       </nav>
 
@@ -183,6 +181,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const trail = useMemo(() => {
     switch (route.name) {
       case 'inicio': return ['Inicio']
+      case 'mi-proyecto': return ['Mi proyecto']
       case 'ruta': return ['Ruta']
       case 'area': {
         const stage = course.stages.find((item) => item.id === route.stageId)
@@ -208,7 +207,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
         const tool = course.toolPages.find((item) => item.id === route.toolId)
         return ['Herramientas', tool?.label || route.toolId]
       }
-      case 'indice': return ['Índice A-Z', route.letter?.toUpperCase() || ''].filter(Boolean)
+      case 'indice': return ['Diccionario', route.letter?.toUpperCase() || ''].filter(Boolean)
       case 'buscar': return ['Búsqueda', route.query ? `«${route.query}»` : ''].filter(Boolean)
       case 'presentar': return ['Presentación']
       case 'proyecto': return ['Proyecto final']
@@ -217,6 +216,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'guia': return ['Guías']
       case 'curso': return ['El curso']
       case 'progreso': return ['Progreso']
+      default: return ['Academia']
     }
   }, [route, course])
 
@@ -256,6 +256,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
 function Pages({ route }: { route: Route }) {
   switch (route.name) {
     case 'inicio': return <Inicio />
+    case 'mi-proyecto': return <MiProyecto />
     case 'ruta': return <Ruta />
     case 'area': return <Area stageId={route.stageId} route={route} />
     case 'categoria': return <Categoria categoryId={route.categoryId} route={route} />

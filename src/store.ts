@@ -27,6 +27,20 @@ export interface StudentState {
   preferredLevel: LevelId
   lessons: Record<string, LessonProgress>
   lastLesson?: string
+  project?: ProjectProfile
+}
+
+export interface ProjectProfile {
+  name: string
+  goal: string
+  audience: string
+  problem: string
+  outcome: string
+  tools: string
+  toolIds?: string[]
+  projectType?: string
+  promptBrief?: string
+  updatedAt: string
 }
 
 const EMPTY: StudentState = { name: '', teacher: false, preferredLevel: 'basico', lessons: {} }
@@ -81,6 +95,10 @@ export const store = {
   visit(slug: string) {
     if (state.lastLesson === slug) return
     commit({ ...state, lastLesson: slug })
+  },
+
+  setProject(project: ProjectProfile) {
+    commit({ ...state, project })
   },
 
   toggleDone(slug: string, level: LevelId) {

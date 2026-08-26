@@ -72,6 +72,15 @@ export interface Block {
   account?: { url: string; free: string; steps: string[]; warning?: string }
 }
 
+export interface LessonAsset {
+  kind: 'code' | 'workflow'
+  name: string
+  language: string
+  sourcePath: string
+  downloadPath?: string
+  code: string
+}
+
 export interface PracticeStep {
   title: string
   where: string
@@ -334,6 +343,8 @@ export interface Lesson {
   search: string
   levels: Record<LevelId, LessonLevel>
   interactive: InteractivePiece[]
+  /** Archivos ejecutables o importables asociados al material fuente. */
+  assets?: LessonAsset[]
   related: string[]
   authored: boolean
 }
@@ -360,6 +371,28 @@ export interface ToolTemplate {
   code?: string
 }
 
+export interface ToolCatalogItem {
+  group: string
+  name: string
+  what: string
+  useWhen: string
+  avoidWhen?: string
+  model?: string
+}
+
+export interface ToolAutomation {
+  name: string
+  goal: string
+  difficulty: 'basica' | 'intermedia' | 'avanzada' | 'profesional'
+  platform: string
+  trigger: string
+  steps: string[]
+  code?: string
+  test: string
+  failure: string
+  credentials: string
+}
+
 export interface ToolGuide {
   plain: string
   account: { url: string; free: string; steps: [string, string][]; warning?: string }
@@ -377,7 +410,13 @@ export interface ToolGuide {
   /** Errores frecuentes, con el mensaje literal y su arreglo. */
   errors?: [string, string][]
   /** Prompts específicos de esta herramienta. */
-  prompts?: { name: string; prompt: string }[]
+  prompts?: { name: string; prompt: string; when?: string; model?: string; lesson?: string }[]
+  /** Mapa de las piezas que el alumno encontrará dentro de la herramienta. */
+  catalog?: { intro: string; items: ToolCatalogItem[] }
+  /** Automatizaciones relacionadas, alojadas dentro de la ficha de la herramienta. */
+  automations?: ToolAutomation[]
+  /** Cómo se mide el uso: tokens, créditos, tareas, ejecuciones o tiempo. */
+  usage?: { unit: string; explanation: string; examples: string[]; updatedAt?: string }
 }
 
 export interface ToolPage {

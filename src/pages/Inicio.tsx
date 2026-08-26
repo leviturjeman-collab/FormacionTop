@@ -1,4 +1,4 @@
-import { ArrowRight, Clock, PlayCircle } from 'lucide-react'
+import { ArrowRight, BookMarked, BookOpen, Clock, PlayCircle, Puzzle, Search, Workflow } from 'lucide-react'
 import type { LevelId } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href } from '../router'
@@ -38,6 +38,24 @@ export default function Inicio() {
         <div className="st-overall">
           <span>{percent}%</span>
           <small>{totalDone} de {totalLevels} niveles</small>
+        </div>
+      </section>
+
+      <section className="st-start-panel">
+        <div className="st-section-head">
+          <div>
+            <span className="st-kicker">Elige tu objetivo</span>
+            <h2>¿Qué quieres hacer hoy?</h2>
+          </div>
+          <span>Te llevamos al sitio correcto</span>
+        </div>
+        <div className="st-start-grid">
+          <a href={href({ name: 'curso' })}><BookMarked size={19} /><strong>Aprender desde cero</strong><small>Una ruta guiada, en orden y sin suponer conocimientos.</small><ArrowRight size={13} /></a>
+          <a href={href({ name: 'mi-proyecto' })}><Puzzle size={19} /><strong>Crear mi proyecto</strong><small>Define el problema y conviértelo en algo que puedas construir.</small><ArrowRight size={13} /></a>
+          <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={19} /><strong>Automatizar un proceso</strong><small>Entra en n8n y elige un flujo relacionado con tu proyecto.</small><ArrowRight size={13} /></a>
+          <a href={href({ name: 'herramienta', toolId: 'higgsfield', filters: {} })}><PlayCircle size={19} /><strong>Crear vídeo con IA</strong><small>Higgsfield, Runway, ElevenLabs y el flujo completo.</small><ArrowRight size={13} /></a>
+          <a href={href({ name: 'herramientas' })}><Search size={19} /><strong>Elegir una herramienta</strong><small>Compara qué hace cada una y con qué puedes combinarla.</small><ArrowRight size={13} /></a>
+          <a href={href({ name: 'indice' })}><BookOpen size={19} /><strong>Entender una palabra</strong><small>Localhost, tokens, portapapeles, API y todo el vocabulario.</small><ArrowRight size={13} /></a>
         </div>
       </section>
 

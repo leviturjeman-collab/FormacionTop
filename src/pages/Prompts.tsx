@@ -44,6 +44,7 @@ function PromptCard({ prompt }: { prompt: PromptFamily['prompts'][number] }) {
               {copied ? 'Copiado' : 'Copiar el prompt'}
             </button>
             <pre>{prompt.prompt}</pre>
+            <small className="st-prompt-length">{prompt.prompt.trim().split(/\s+/).filter(Boolean).length} palabras · encargo completo con contexto, pruebas, coste y entrega</small>
           </div>
 
           {prompt.fill?.length > 0 && (

@@ -1,265 +1,73 @@
-# Documentacion - 02_email_summarizer.py
+# Email summarizer: resumen y acciones desde Python
 
-Archivo asociado: `02_email_summarizer.py`
+## Qué vas a construir
 
+Un script que recibe un email en JSON y devuelve cuatro cosas que se pueden comprobar: un resumen breve, las acciones detectadas, el número de acciones y una señal para revisión humana. El código real está en `../02_email_summarizer.py` y la lección lo muestra completo para que puedas copiarlo y descargarlo.
 
-<!-- IMPLEMENTACION_DETALLADA_2026_08_18 -->
+La primera versión funciona sin API ni instalación externa. Esto es importante: puedes aprender el recorrido entero y comprobar los errores antes de conectar un modelo o datos reales. Después podrás sustituir únicamente la función que crea el resumen, sin cambiar el formato de entrada ni el contrato de salida.
 
-# Implementacion detallada - 02 Email Summarizer Py
+## Qué entra
 
-## Para que sirve
-
-Esta automatizacion con codigo sirve para convertir una operacion concreta en una funcion repetible. Puede usarse sola, dentro de n8n, en un backend, en una CLI, en GitHub Actions o como parte de un mini repo. Su valor no esta en el numero de lineas, sino en que separa entrada, proceso, salida y errores.
-
-## Como implementarla
-
-1. Leer el archivo de codigo y localizar la funcion principal.
-2. Crear datos ficticios de entrada.
-3. Ejecutar localmente o copiar el bloque en el entorno correspondiente.
-4. Confirmar que la salida tiene formato claro.
-5. Probar entrada vacia o incompleta.
-6. Anadir validacion si falta.
-7. Documentar variables necesarias.
-8. Integrar con workflow, API o test.
-
-## Requisitos
-
-- Runtime correspondiente: Python, Node.js, shell, SQL o Playwright.
-- `.env.example` si usa credenciales.
-- Dataset de prueba.
-- Criterio de terminado.
-- Caso roto documentado.
-
-## Prueba local recomendada
-
-Si es Python:
-
-```bash
-python archivo.py
-```
-
-Si es JavaScript/Node:
-
-```bash
-node archivo.js
-```
-
-Si es shell:
-
-```bash
-bash archivo.sh
-```
-
-Si es SQL, ejecutarlo en una base de prueba, nunca directamente en produccion.
-
-## Caso feliz
-
-Entrada completa, salida estructurada y sin secretos reales. Guardar output como evidencia.
-
-## Caso roto
-
-Entrada vacia, campo ausente, tipo incorrecto, variable no definida o permiso insuficiente.
-
-## Como llevarlo a produccion
-
-- Convertir prints en logs.
-- Anadir control de errores.
-- Separar secretos.
-- Anadir tests.
-- Medir coste si llama LLM.
-- Definir rollback.
-- Documentar propietario.
-
-## Defensa
-
-El alumno debe explicar que automatiza, que input necesita, que output devuelve, como falla y que cambio hizo para hacerlo mas seguro.
-
-<!-- IMPLEMENTACION_AMPLIADA_PROCESO_2026_08_18 -->
-
-## Implementacion operativa ampliada
-
-### 1. Problema que resuelve
-
-**02 Email Summarizer Py** resuelve un problema recurrente: convertir una tarea manual, ambigua o repetitiva en un proceso que pueda ejecutarse con el mismo criterio cada vez. En formacion, esta pieza sirve para que el alumno deje de pensar en "usar IA" como una conversacion suelta y empiece a pensar en sistemas: entrada, validacion, transformacion, salida, evidencia, revision y mejora.
-
-En un contexto real, esta automatizacion puede ahorrar tiempo, reducir errores, acelerar respuesta a clientes o crear una base de conocimiento operativa. Pero su valor depende de que se implemente con limites. Si se conecta a datos reales sin consentimiento, si ejecuta acciones externas sin aprobacion o si no deja logs, la automatizacion no es profesional aunque funcione en demo.
-
-### 2. Donde encaja en un proceso
-
-El flujo recomendado es:
-
-```text
-Entrada -> Validacion -> Normalizacion -> Decision -> Accion -> Registro -> Revision humana si aplica
-```
-
-La entrada puede ser un webhook, CSV, formulario, email, ticket, issue, transcripcion, factura o documento. La validacion comprueba que no falten campos. La normalizacion convierte nombres, fechas, importes o textos a formato estable. La decision puede ser una regla, un LLM o una combinacion. La accion puede ser responder, crear tarea, actualizar CRM, enviar alerta o guardar en base de datos. El registro permite auditar. La revision humana protege acciones sensibles.
-
-### 3. Preparacion antes de implementar
-
-Antes de tocar herramientas, crear una ficha:
-
-```markdown
-Objetivo:
-Usuario:
-Entrada:
-Salida esperada:
-Campos obligatorios:
-Datos sensibles:
-Herramientas:
-Credenciales:
-Caso feliz:
-Caso ambiguo:
-Caso roto:
-Rollback:
-```
-
-Esta ficha evita improvisar. Tambien ayuda a decidir si conviene hacerlo con n8n, script, API, GitHub Actions, backend, skill o proceso manual. La mejor herramienta es la minima que permite repetir, verificar y explicar.
-
-### 4. Implementacion local
-
-Si esta pieza es codigo, implementarla primero localmente con datos ficticios. No conectar APIs reales hasta comprobar formato.
-
-Pasos:
-
-1. Crear carpeta de prueba.
-2. Copiar el archivo o plantilla.
-3. Crear `.env.example`.
-4. Crear un payload ficticio correcto.
-5. Crear un payload roto.
-6. Ejecutar la pieza.
-7. Guardar output.
-8. Anadir manejo de errores.
-9. Documentar que variables necesita.
-10. Preparar una version para clase.
-
-Ejemplo de payload correcto:
-
-```json
-{"id":"demo-001","email":"demo@example.com","need":"automatizar seguimiento","consent":true}
-```
-
-Ejemplo de payload roto:
-
-```json
-{"need":"automatizar seguimiento"}
-```
-
-### 5. Integracion con n8n
-
-Para llevarlo a n8n:
-
-1. Crear Webhook node.
-2. Pegar el payload correcto.
-3. Anadir Code node o HTTP Request node.
-4. Validar campos obligatorios.
-5. Si falta algo, devolver `needs_review`.
-6. Si esta completo, continuar a la accion.
-7. Antes de enviar emails o modificar sistemas, anadir aprobacion humana.
-8. Responder con JSON claro.
-
-Salida recomendada:
+El programa acepta un objeto JSON. `body` es obligatorio; `id`, `sender` y `subject` son opcionales y tienen valores por defecto.
 
 ```json
 {
-  "status":"processed",
-  "category":"demo",
-  "next_action":"review_or_send",
-  "requires_human_approval":true,
-  "evidence":"execution_id_or_log_url"
+  "id": "demo-001",
+  "sender": "ana@ejemplo.com",
+  "subject": "Entrega del proyecto",
+  "body": "La primera version esta lista. Accion: confirmar la fecha de entrega."
 }
 ```
 
-### 6. Integracion con API o backend
+No pegues emails reales de clientes en una prueba de clase. Usa textos ficticios y comprueba qué información queda guardada en la salida.
 
-Si se convierte en endpoint:
+## Qué sale
 
-- Usar `POST` para entradas que modifican estado.
-- Validar JSON antes de procesar.
-- No aceptar campos desconocidos sin revisar.
-- Registrar `request_id`.
-- Devolver errores legibles.
-- Separar secretos del frontend.
+Cuando la entrada es válida, el resultado tiene `status: "processed"`, un `summary`, una lista `actions` y `needs_human_review`. Cuando falta `body` o el JSON no es un objeto, el programa devuelve `status: "needs_review"` y explica el problema sin romper el proceso.
 
-Ejemplo de respuesta de error:
+La revisión humana se activa cuando no se detecta ninguna acción. El script no inventa tareas para completar una salida vacía. Esa decisión es más importante que conseguir que todos los emails parezcan procesados.
 
-```json
-{"ok":false,"error":"missing_required_field","field":"email","action":"send_to_review"}
+## Ejecutarlo en local
+
+Desde la carpeta que contiene el archivo:
+
+```bash
+python 02_email_summarizer.py --demo
 ```
 
-### 7. Seguridad y permisos
+Para probar tu propio caso:
 
-Checklist minimo:
+```bash
+echo '{"subject":"Reunión", "body":"Acción: confirmar asistentes antes del jueves."}' | python 02_email_summarizer.py
+```
 
-- No usar datos reales en clase.
-- No guardar API keys en archivos.
-- No publicar `.env`.
-- Usar scopes minimos.
-- Registrar acciones.
-- Anadir aprobacion humana para side effects.
-- Preparar rollback.
-- Rotar claves si se filtran.
+En PowerShell puedes usar:
 
-Side effects son acciones que cambian el mundo: enviar email, actualizar CRM, cobrar, borrar, publicar, crear tickets, modificar base de datos o contactar usuarios. Esas acciones requieren mas control que una simple clasificacion.
+```powershell
+'{"subject":"Reunión", "body":"Acción: confirmar asistentes antes del jueves."}' | python 02_email_summarizer.py
+```
 
-### 8. Pruebas necesarias
+## Pruebas obligatorias
 
-Probar minimo:
+Haz estas cuatro pruebas y guarda la salida:
 
 | Caso | Entrada | Resultado esperado |
 |---|---|---|
-| Feliz | payload completo | `processed` |
-| Ambiguo | datos incompletos | `needs_review` |
-| Roto | formato incorrecto | error controlado |
-| Seguridad | dato sensible | redaccion o bloqueo |
-| Coste | batch grande | limite o aviso |
+| Normal | `subject` y `body` con una acción | `processed` y una acción en `actions` |
+| Sin acción | `body` informativo | `processed` y `needs_human_review: true` |
+| Sin body | falta `body` | `needs_review` y `invalid_input` |
+| JSON incorrecto | comillas o llaves rotas | `invalid_json` y código de salida 1 |
 
-Si usa LLM, anadir evals:
+## Llevarlo a n8n
 
-```json
-{"input":"lead sin email","expected":"pedir email","fail_if":"inventa email"}
-```
+Importa `email_summarizer.json` desde la biblioteca de workflows. El flujo tiene un Webhook, un nodo Code y una respuesta JSON. El nodo Code replica la misma validación y extracción de acciones del script, así que la versión visual y la versión Python tienen el mismo contrato.
 
-### 9. Produccion
+En el Webhook usa método `POST` y envía `Content-Type: application/json`. Primero prueba con el payload ficticio. Solo después conecta Gmail, Outlook u otra fuente. Antes de enviar respuestas, crear tareas o modificar un CRM, añade una aprobación humana y registra el identificador de ejecución.
 
-Antes de produccion:
+## Límites y siguiente versión
 
-- Revisar logs.
-- Medir coste.
-- Probar 10 casos.
-- Documentar propietario.
-- Preparar alerta.
-- Exportar version.
-- Definir rollback.
-- Crear README de entrega.
+Esta versión extrae acciones mediante reglas sencillas. No interpreta bien ironías, peticiones implícitas ni varios idiomas. Para una segunda versión puedes llamar a un modelo con una clave guardada en una variable de entorno, exigir una salida JSON validada y comparar el resultado con diez emails de prueba. No cambies el esquema de salida sin actualizar también el workflow y sus pruebas.
 
-Una automatizacion profesional debe poder apagarse sin romper el negocio. Si nadie sabe desactivarla, no esta lista.
+## Entrega de la lección
 
-### 10. Como explicarlo al alumno
-
-El alumno debe poder responder:
-
-- Que automatiza.
-- Que no automatiza.
-- Que datos necesita.
-- Que herramienta usa.
-- Que riesgo evita.
-- Que fallo provoco.
-- Que evidencia guardo.
-- Que haria en version 2.
-
-La defensa no debe sonar teorica. Debe sonar como alguien que ha ejecutado, roto y reparado el proceso.
-
-### 11. Variantes utiles
-
-Variantes para ampliar:
-
-- Version manual en checklist.
-- Version n8n visual.
-- Version codigo local.
-- Version API.
-- Version con base de datos.
-- Version con LLM.
-- Version con aprobacion humana.
-- Version con observabilidad.
-
-Cada variante debe mantener el mismo criterio: entrada clara, salida verificable y fallo controlado.
+Guarda el archivo Python, el JSON de n8n y las cuatro salidas de prueba. Tu explicación debe responder: qué campo es obligatorio, qué ocurre cuando falta, cómo se detecta una acción, cuándo interviene una persona y qué cambiarías antes de usar emails reales.

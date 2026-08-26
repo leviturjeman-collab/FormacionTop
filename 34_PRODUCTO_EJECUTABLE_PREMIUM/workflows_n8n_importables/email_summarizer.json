@@ -1,75 +1,41 @@
 {
-  "name": "Email Summarizer",
+  "name": "Email summarizer · resumen y acciones",
   "nodes": [
     {
-      "parameters": {
-        "path": "email-summarizer",
-        "httpMethod": "POST"
-      },
+      "parameters": { "path": "email-summarizer", "httpMethod": "POST", "responseMode": "responseNode" },
       "id": "webhook",
-      "name": "Webhook",
+      "name": "Entrada de email",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        0,
-        0
-      ]
+      "typeVersion": 2,
+      "position": [0, 0]
     },
     {
       "parameters": {
-        "functionCode": "return [{ json: { ...$json, processed: true, priority: $json.email ? 'media' : 'bloqueado' } }];"
+        "jsCode": "const input = $json.body && typeof $json.body === 'object' ? $json.body : $json;\nconst body = String(input.body || '').trim();\nif (!body) {\n  return [{ json: { ok: false, status: 'needs_review', error: 'invalid_input', message: 'Falta el campo obligatorio body.', actions: [] } }];\n}\nconst sentences = body.split(/(?<=[.!?])\\s+/).map((item) => item.trim()).filter(Boolean);\nconst actions = [];\nfor (const line of body.split(/[\\n.;!?]+/)) {\n  const clean = line.trim().replace(/^[-*]\\s*/, '');\n  const match = clean.match(/(?:accion|acción|tarea|pendiente|hacer|necesito|please|need to)\\b[:\\s-]*(.+)/i);\n  if (match && !actions.includes(match[1].trim())) actions.push(match[1].trim());\n}\nreturn [{ json: { ok: true, status: 'processed', email_id: String(input.id || 'webhook-email'), sender: String(input.sender || 'desconocido'), subject: String(input.subject || 'Sin asunto'), summary: (sentences.slice(0, 2).join(' ').slice(0, 360) || 'Sin texto suficiente.'), actions: actions.slice(0, 5), action_count: Math.min(actions.length, 5), needs_human_review: actions.length === 0 } }];"
       },
-      "id": "code",
-      "name": "Validate and classify",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [
-        260,
-        0
-      ]
+      "id": "summarize",
+      "name": "Validar, resumir y extraer acciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 0]
     },
     {
-      "parameters": {},
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
       "id": "respond",
-      "name": "Respond",
+      "name": "Responder con JSON",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [
-        520,
-        0
-      ]
+      "position": [620, 0]
     }
   ],
   "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Validate and classify",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate and classify": {
-      "main": [
-        [
-          {
-            "node": "Respond",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "Entrada de email": { "main": [[{ "node": "Validar, resumir y extraer acciones", "type": "main", "index": 0 }]] },
+    "Validar, resumir y extraer acciones": { "main": [[{ "node": "Responder con JSON", "type": "main", "index": 0 }]] }
   },
-  "settings": {
-    "executionOrder": "v1"
-  },
+  "settings": { "executionOrder": "v1" },
   "meta": {
-    "purpose": "Resumir emails largos",
+    "purpose": "Resumir emails y extraer acciones sin inventar datos",
     "academy": "AI Professional Academy",
-    "case_roto": "payload sin email o sin campo principal"
+    "test_payload": { "id": "demo-001", "subject": "Entrega", "body": "Acción: confirmar la fecha antes del viernes." }
   }
 }

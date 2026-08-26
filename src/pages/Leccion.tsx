@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
-import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Clock, FileText, FolderTree, Target, TriangleAlert } from 'lucide-react'
-import type { LevelId } from '../types'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Clock, Copy, Download, FileText, FolderTree, Target, TriangleAlert } from 'lucide-react'
+import type { LessonAsset, LevelId } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href, navigate } from '../router'
 import { store, useLessonProgress, useStudent } from '../store'
@@ -20,6 +20,36 @@ import { ToolStrip } from '../components/Brand'
 import TeacherPanel from '../components/TeacherPanel'
 import Piece from '../components/Piece'
 import Notebook from '../components/Notebook'
+
+function AssetCode({ asset }: { asset: LessonAsset }) {
+  const [copied, setCopied] = useState(false)
+  const copy = () => {
+    navigator.clipboard?.writeText(asset.code).then(
+      () => {
+        setCopied(true)
+        window.setTimeout(() => setCopied(false), 1600)
+      },
+      () => setCopied(false),
+    )
+  }
+
+  return (
+    <div className="st-asset-code">
+      <div className="st-asset-code-head">
+        <div>
+          <span className="st-kicker">{asset.kind === 'workflow' ? 'Workflow importable' : 'Código real de la lección'}</span>
+          <strong>{asset.name}</strong>
+          <small>{asset.sourcePath}</small>
+        </div>
+        <div className="st-asset-actions">
+          <button type="button" onClick={copy}><Copy size={13} /> {copied ? 'Copiado' : 'Copiar código'}</button>
+          {asset.downloadPath && <a href={asset.downloadPath} download={asset.name}><Download size={13} /> Descargar</a>}
+        </div>
+      </div>
+      <pre><code>{asset.code}</code></pre>
+    </div>
+  )
+}
 
 export default function Leccion({ slug, level }: { slug: string; level?: LevelId }) {
   const course = useCourse()
@@ -127,6 +157,22 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
       )}
 
       {student.teacher && <TeacherPanel lesson={lesson} level={active} />}
+
+      {lesson.assets && lesson.assets.length > 0 && (
+        <section className="st-lesson-assets">
+          <div className="st-section-head">
+            <div>
+              <span className="st-kicker">Material ejecutable</span>
+              <h2>Lo que tienes que usar</h2>
+            </div>
+            <span>{lesson.assets.length} archivos asociados</span>
+          </div>
+          <p className="st-assets-intro">Estos son los archivos reales vinculados a esta lección. Lee primero la explicación, después copia el archivo y prueba el caso de ejemplo con datos ficticios.</p>
+          <div className="st-assets-list">
+            {lesson.assets.map((asset) => <AssetCode key={asset.sourcePath} asset={asset} />)}
+          </div>
+        </section>
+      )}
 
       <Blocks blocks={content.blocks} />
 

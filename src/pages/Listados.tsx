@@ -1,4 +1,6 @@
-import type { Block, LevelId, Lesson, ToolPage } from '../types'
+import { useState } from 'react'
+import { ArrowRight } from 'lucide-react'
+import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href, type Route } from '../router'
 import { useStudent } from '../store'
@@ -330,10 +332,12 @@ export function Herramientas() {
               <BrandMark icon={tool.icon} size={24} />
               <div>
                 <strong>{tool.label}</strong>
-                {escritas > 0 ? (
-                  <span className="st-tool-itinerary">Itinerario · {escritas} de 20 lecciones</span>
+                {tool.guide ? (
+                  <span>{tool.guide.prompts?.length || 0} prompts · {tool.guide.automations?.length || 0} automatizaciones · guía completa</span>
+                ) : escritas > 0 ? (
+                  <span className="st-tool-itinerary">Itinerario · {escritas} lecciones</span>
                 ) : (
-                  <span>Itinerario pendiente · {tool.count} de material antiguo</span>
+                  <span>{tool.count} lecciones de consulta</span>
                 )}
               </div>
             </a>
@@ -392,8 +396,11 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
             </div>
           </div>
           <Blocks blocks={guideBlocks(tool.guide, tool.label)} />
+          <ToolInside guide={tool.guide} label={tool.label} />
         </>
       )}
+
+      <ToolConnections tool={tool.id} />
 
       <div className="st-section-head">
         <h2>Lecciones sobre {tool.label}</h2>
@@ -409,16 +416,6 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
 function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Block[] {
   const blocks: Block[] = [
     { kind: 'idea', title: `Qué es ${label}, sin tecnicismos`, text: guide.plain },
-    {
-      kind: 'cuenta',
-      title: 'Cómo crear tu cuenta, paso a paso',
-      account: {
-        url: guide.account.url,
-        free: guide.account.free,
-        steps: guide.account.steps.map(([paso, como]) => `${paso} — ${como}`),
-        warning: guide.account.warning,
-      },
-    },
     {
       kind: 'primeros',
       title: 'Lo primero que tienes que hacer dentro',
@@ -477,14 +474,140 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
     })
   }
 
+  blocks.push({
+    kind: 'comprobar',
+    title: `Checklist antes de usar ${label} en un proyecto real`,
+    items: [
+      `Sé qué problema resuelve ${label} y cuál no.`,
+      'He probado primero con datos ficticios o una copia.',
+      'Sé dónde mirar el resultado, el historial o el error.',
+      'Tengo claro cómo detenerlo, deshacerlo o recuperar una copia.',
+      'He comprobado permisos, privacidad y uso comercial.',
+      'He apuntado cómo se mide el coste antes de repetirlo muchas veces.',
+    ],
+  })
+
+  blocks.push({
+    kind: 'coste',
+    title: 'Precio, créditos, tareas y tokens',
+    text: usageText(guide, label),
+    items: usageItems(guide, label),
+  })
+
+  blocks.push({
+    kind: 'cuenta',
+    title: 'Cuenta, plan y acceso',
+    account: {
+      url: guide.account.url,
+      free: guide.account.free,
+      steps: guide.account.steps.map(([paso, como]) => `${paso} — ${como}`),
+      warning: guide.account.warning,
+    },
+  })
+
   for (const item of guide.prompts || []) {
     blocks.push({
       kind: 'codigo',
       title: `Prompt: ${item.name}`,
+      text: [item.when, item.model ? `Elección recomendada: ${item.model}.` : ''].filter(Boolean).join(' '),
       code: item.prompt,
       lang: 'prompt',
     })
   }
 
   return blocks
+}
+
+function ToolInside({ guide, label }: { guide: ToolGuide; label: string }) {
+  return (
+    <>
+      {guide.catalog?.items?.length ? (
+        <section className="st-tool-inside">
+          <div className="st-section-head">
+            <div><span className="st-kicker">Dentro de {label}</span><h2>Qué hay aquí y cuándo usarlo</h2></div>
+            <span>{guide.catalog.items.length} piezas explicadas</span>
+          </div>
+          <p className="st-tool-inside-intro">{guide.catalog.intro}</p>
+          <div className="st-inside-grid">
+            {guide.catalog.items.map((item) => (
+              <article key={`${item.group}-${item.name}`} className="st-inside-card">
+                <span>{item.group}</span>
+                <h3>{item.name}</h3>
+                <p>{item.what}</p>
+                <div><strong>Úsalo cuando</strong><p>{item.useWhen}</p></div>
+                {item.model && <div><strong>Cómo elegir</strong><p>{item.model}</p></div>}
+                {item.avoidWhen && <div className="st-inside-avoid"><strong>No lo uses así</strong><p>{item.avoidWhen}</p></div>}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {guide.automations?.length ? <AutomationLibrary automations={guide.automations} label={label} /> : null}
+    </>
+  )
+}
+
+function AutomationLibrary({ automations, label }: { automations: ToolAutomation[]; label: string }) {
+  return (
+    <section className="st-automation-library">
+      <div className="st-section-head">
+        <div><span className="st-kicker">Flujos dentro de la herramienta</span><h2>Automatizaciones que puedes construir con {label}</h2></div>
+        <span>{automations.length} recorridos</span>
+      </div>
+      <p className="st-tool-inside-intro">Cada recorrido tiene un disparador, una validación, una acción observable y una ruta de recuperación. Las conexiones reales necesitan tus propias credenciales y primero se prueban con datos ficticios.</p>
+      <div className="st-automation-grid">
+        {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} />)}
+      </div>
+    </section>
+  )
+}
+
+function AutomationCard({ automation }: { automation: ToolAutomation }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <article className={`st-automation-card${open ? ' open' : ''}`}>
+      <button type="button" className="st-automation-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        <span><strong>{automation.name}</strong><small>{automation.difficulty} · {automation.platform}</small></span>
+        <span>{open ? '−' : '+'}</span>
+      </button>
+      {open && <div className="st-automation-body"><p>{automation.goal}</p><dl><div><dt>Disparador</dt><dd>{automation.trigger}</dd></div><div><dt>Credenciales</dt><dd>{automation.credentials}</dd></div></dl><h4>Pasos del flujo</h4><ol>{automation.steps.map((step, index) => <li key={index}><span>{index + 1}</span>{step}</li>)}</ol>{automation.code && <div className="st-code"><em>n8n · Code</em><pre><code>{automation.code}</code></pre></div>}<div className="st-automation-test"><strong>Prueba</strong><p>{automation.test}</p><strong>Si falla</strong><p>{automation.failure}</p></div></div>}
+    </article>
+  )
+}
+
+function usageText(guide: NonNullable<ToolPage['guide']>, label: string) {
+  return guide.usage?.explanation || `Antes de pagar o activar nada, comprueba cómo mide el uso ${label}. Las herramientas de texto suelen contar tokens; las de vídeo suelen gastar créditos; las plataformas de automatización cuentan tareas o ejecuciones; y las herramientas locales no cobran por abrirlas, aunque las llamadas a APIs conectadas sí pueden tener coste. Las cifras cambian, así que esta guía enseña a medir el consumo dentro de la propia herramienta y a trabajar con un límite.`
+}
+
+function usageItems(guide: NonNullable<ToolPage['guide']>, label: string) {
+  return guide.usage?.examples || [
+    `${label}: una prueba corta con datos ficticios antes de hacer una ejecución real.`,
+    `Una repetición controlada para comprobar cuánto consume una unidad de trabajo.`,
+    `Un registro con fecha, modelo o plan, entrada, salida y consumo aproximado.`,
+    `Un límite de gasto o de ejecuciones antes de dejarlo funcionando solo.`,
+    `La fecha de la última comprobación: precios, límites y nombres de planes pueden cambiar.`,
+  ]
+}
+
+const CONNECTIONS: Record<string, string[]> = {
+  higgsfield: ['runway', 'elevenlabs', 'n8n'],
+  n8n: ['openai', 'gmail', 'sheets', 'slack', 'supabase', 'github'],
+  openai: ['n8n', 'supabase', 'github', 'higgsfield'],
+  base44: ['openai', 'supabase', 'github', 'vercel'],
+  lovable: ['supabase', 'github', 'vercel'],
+  v0: ['github', 'vercel', 'supabase'],
+}
+
+function ToolConnections({ tool }: { tool: string }) {
+  const course = useCourse()
+  const connected = (CONNECTIONS[tool] || ['n8n', 'openai', 'github']).map((id) => course.toolPages.find((item) => item.id === id)).filter(Boolean) as ToolPage[]
+  if (!connected.length) return null
+  return (
+    <section className="st-tool-connections">
+      <div className="st-section-head"><div><span className="st-kicker">También puedes hacerlo con</span><h2>Herramientas relacionadas</h2></div><span>Selecciona una para ver su guía</span></div>
+      <div className="st-tool-connection-grid">
+        {connected.map((item) => <a key={item.id} href={href({ name: 'herramienta', toolId: item.id, filters: {} })}><strong>{item.label}</strong><span>{item.guide ? 'Guía disponible' : `${item.count} lecciones`}</span><ArrowRight size={13} /></a>)}
+      </div>
+    </section>
+  )
 }
