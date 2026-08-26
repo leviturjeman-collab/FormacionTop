@@ -333,7 +333,7 @@ export function Herramientas() {
               <div>
                 <strong>{tool.label}</strong>
                 {tool.guide ? (
-                  <span>{tool.guide.prompts?.length || 0} prompts · {tool.guide.automations?.length || 0} automatizaciones · guía completa</span>
+                  <span>{tool.guide.prompts?.length || 0} prompts{tool.guide.automations?.length ? ` · ${tool.guide.automations.length} automatizaciones` : ''} · guía completa</span>
                 ) : escritas > 0 ? (
                   <span className="st-tool-itinerary">Itinerario · {escritas} lecciones</span>
                 ) : (
@@ -504,6 +504,35 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
       warning: guide.account.warning,
     },
   })
+
+  // Antes de la lista de prompts, el modo de empleo: la gente no sabe que
+  // esto se pega en un chat de IA, ni en cual, hasta que alguien se lo dice.
+  if (guide.prompts?.length) {
+    blocks.push({
+      kind: 'comprobar',
+      title: 'Cómo se usan estos prompts',
+      text: 'Un prompt es un encargo escrito para una inteligencia artificial. No se ejecuta aquí: se copia y se pega en un chat de IA. Así:',
+      items: [
+        'Copia el prompt entero con su botón, sin recortarlo: cada línea evita una respuesta genérica.',
+        'Pégalo en el chat de una IA: ChatGPT (chatgpt.com), Claude (claude.ai) o Gemini (gemini.google.com). Cualquiera de los tres vale; abajo tienes cuándo conviene cada uno.',
+        'Antes de enviar, rellena los huecos [ENTRE CORCHETES] con tu caso real. Un hueco sin rellenar es una respuesta inventada.',
+        'Lee la respuesta con criterio: es un borrador de trabajo, no una verdad. Lo que afirme sobre precios, leyes o datos concretos, compruébalo.',
+        'Si el resultado te sirve, guarda el prompt rellenado en tu archivo de prompts: los buenos se reutilizan.',
+      ],
+    })
+    blocks.push({
+      kind: 'palabras',
+      title: 'Qué IA elegir para cada encargo',
+      text: 'Los nombres de los modelos cambian cada pocos meses; esta regla, no. Dentro de cada chat, el selector de modelo distingue el rápido (barato, para lo mecánico) del grande (para razonar).',
+      items: [
+        { term: 'Documentos largos o criterio fino', meaning: 'Claude. Sostiene textos grandes y respuestas con matiz mejor que la media.' },
+        { term: 'Buscar información actual en internet', meaning: 'ChatGPT o Gemini con la búsqueda activada. Claude también busca; comprueba que la función esté activa antes de fiarte de fechas y precios.' },
+        { term: 'Trabajar con lo que ya usas de Google', meaning: 'Gemini, que vive dentro de Gmail, Drive y Docs.' },
+        { term: 'Tarea mecánica y repetitiva', meaning: 'El modelo rápido de cualquiera de los tres: más barato y de sobra para clasificar, resumir o reformatear.' },
+        { term: 'Razonamiento difícil o decisión importante', meaning: 'El modelo grande del chat que uses. Y para lo importante de verdad: pásalo por dos IA distintas y compara.' },
+      ],
+    })
+  }
 
   for (const item of guide.prompts || []) {
     blocks.push({

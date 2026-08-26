@@ -1,3 +1,5 @@
+import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS } from './automations-reales.mjs'
+
 /**
  * Guías completas de herramienta, para alguien que empieza de cero.
  *
@@ -623,7 +625,16 @@ export function completeToolGuide(existing, tool) {
     when: `Úsalo cuando quieras ${task[1]}.`,
     model: profile.selection,
   }))
-  guide.automations = TASK_AUTOMATIONS.map((item, index) => automationFor(tool, profile, item, index))
+  // Las automatizaciones van donde tienen sentido, no en todas por plantilla:
+  // las plataformas llevan el recetario general (son recetas de plataforma),
+  // las conectables llevan las suyas reales, y el resto no lleva la seccion.
+  if (AUTOMATION_PLATFORMS.has(tool.id)) {
+    guide.automations = TASK_AUTOMATIONS.map((item, index) => automationFor(tool, profile, item, index))
+  } else if (REAL_AUTOMATIONS[tool.id]) {
+    guide.automations = REAL_AUTOMATIONS[tool.id]
+  } else {
+    guide.automations = []
+  }
   return guide
 }
 
