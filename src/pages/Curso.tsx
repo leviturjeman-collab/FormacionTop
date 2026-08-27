@@ -81,6 +81,7 @@ export function CursoIndice() {
     .filter((group) => group.items.length)
 
   const totalMin = lecciones.reduce((sum, item) => sum + item.minutes, 0)
+  const requiredMin = sueltas.reduce((sum, item) => sum + item.minutes, 0)
 
   return (
     <div className="st-page">
@@ -88,11 +89,29 @@ export function CursoIndice() {
         <span className="st-kicker">El curso</span>
         <h1>Tu programa, paso a paso</h1>
         <p>
-          Empieza por la base común y avanza hacia un proyecto real. Cada lección mezcla explicación, una tarea
-          concreta y una forma de comprobar que lo has entendido. Las especializaciones de herramientas aparecen
-          aparte para que puedas elegirlas cuando sepas qué quieres construir. Son {Math.round(totalMin / 60)} horas aproximadas.
+          Empieza por la ruta obligatoria y avanza hacia un proyecto real. Son {sueltas.length} lecciones principales,
+          unas {Math.round(requiredMin / 60)} horas. Las otras {conHerramienta.length} lecciones son especializaciones:
+          consúltalas solo cuando el proyecto te pida una herramienta concreta.
         </p>
       </div>
+
+      <section className="st-course-scope">
+        <div>
+          <span>Ruta obligatoria</span>
+          <strong>{sueltas.length} lecciones</strong>
+          <small>Lo que haría cualquier alumno para empezar sin perderse.</small>
+        </div>
+        <div>
+          <span>Especializaciones</span>
+          <strong>{conHerramienta.length} lecciones</strong>
+          <small>ChatGPT, Codex, n8n, Claude, Gemini y otras herramientas.</small>
+        </div>
+        <div>
+          <span>Tiempo estimado</span>
+          <strong>{Math.round(totalMin / 60)} h total</strong>
+          <small>La ruta base tarda unas {Math.round(requiredMin / 60)} h.</small>
+        </div>
+      </section>
 
       <section className="st-program-guide">
         <div><span>01</span><strong>Entender</strong><small>Qué puede hacer la IA y dónde se equivoca.</small></div>

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Ban, Check, Copy, Lightbulb, Search, Sparkles } from 'lucide-react'
+import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles } from 'lucide-react'
 import type { PromptFamily } from '../types'
 import { useCourse } from '../course'
+import { store, useStudent } from '../store'
 
 /**
  * Biblioteca de prompts.
@@ -10,9 +11,41 @@ import { useCourse } from '../course'
  * o Gemini. Cada uno dice cuándo se usa, qué hay que sustituir, qué te va a
  * devolver y qué hacer después con esa respuesta.
  */
-function PromptCard({ prompt }: { prompt: PromptFamily['prompts'][number] }) {
+function PromptCard({ prompt, familyTitle }: { prompt: PromptFamily['prompts'][number]; familyTitle: string }) {
   const [copied, setCopied] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [open, setOpen] = useState(false)
+  const student = useStudent()
+
+  function saveToProject() {
+    const previous = student.project
+    const savedPrompts = [
+      ...(previous?.savedPrompts || []),
+      {
+        id: `${Date.now()}-${prompt.name}`,
+        family: familyTitle,
+        name: prompt.name,
+        prompt: prompt.prompt,
+        savedAt: new Date().toISOString(),
+        source: 'Biblioteca de prompts',
+      },
+    ]
+    store.setProject({
+      name: previous?.name || '',
+      goal: previous?.goal || 'Usar un prompt profesional',
+      audience: previous?.audience || '',
+      problem: previous?.problem || '',
+      outcome: previous?.outcome || 'Guardar una evidencia del resultado',
+      tools: previous?.tools || 'ChatGPT, Claude o Gemini',
+      toolIds: previous?.toolIds || [],
+      projectType: previous?.projectType || 'aprender',
+      promptBrief: previous?.promptBrief || '',
+      savedPrompts,
+      updatedAt: new Date().toISOString(),
+    })
+    setSaved(true)
+    window.setTimeout(() => setSaved(false), 1800)
+  }
 
   return (
     <article className={`st-prompt${open ? ' open' : ''}`}>
@@ -43,6 +76,10 @@ function PromptCard({ prompt }: { prompt: PromptFamily['prompts'][number] }) {
               {copied ? <Check size={12} /> : <Copy size={12} />}
               {copied ? 'Copiado' : 'Copiar el prompt'}
             </button>
+            <button type="button" className="st-prompt-save" onClick={saveToProject}>
+              {saved ? <Check size={12} /> : <Save size={12} />}
+              {saved ? 'Guardado' : 'Guardar en mi proyecto'}
+            </button>
             <pre>{prompt.prompt}</pre>
             <small className="st-prompt-length">{prompt.prompt.trim().split(/\s+/).filter(Boolean).length} palabras · encargo completo con contexto, pruebas, coste y entrega</small>
           </div>
@@ -61,6 +98,12 @@ function PromptCard({ prompt }: { prompt: PromptFamily['prompts'][number] }) {
 
           <p className="st-prompt-expect"><b>Te va a devolver:</b> {prompt.expect}</p>
           {prompt.next && <p className="st-prompt-next"><b>Y después:</b> {prompt.next}</p>}
+          <div className="st-prompt-flow">
+            <span>1. Copia</span>
+            <span>2. Pega en tu IA</span>
+            <span>3. Guarda resultado</span>
+            <span>4. Llévalo a Mi proyecto</span>
+          </div>
         </div>
       )}
     </article>
@@ -101,10 +144,16 @@ export default function Prompts({ familyId }: { familyId?: string }) {
         <span className="st-kicker"><Sparkles size={12} /> Listos para copiar</span>
         <h1>Biblioteca de prompts</h1>
         <p>
-          Prompts escritos para pegarlos tal cual en ChatGPT, Claude o Gemini. Cada uno te dice cuándo usarlo,
-          qué tienes que cambiar y qué esperar de vuelta. No hace falta que sepas programar: escribe y pega.
+          Elige una situación, copia el prompt, úsalo en ChatGPT, Claude o Gemini y guarda el resultado como evidencia.
+          Cada prompt dice cuándo usarlo, qué cambiar y qué esperar de vuelta.
         </p>
       </div>
+
+      <section className="st-prompt-steps" aria-label="Flujo recomendado para usar prompts">
+        <div><span>01</span><strong>Elige situación</strong><small>No busques por herramienta: empieza por lo que quieres resolver.</small></div>
+        <div><span>02</span><strong>Rellena huecos</strong><small>Cambia solo los campos entre corchetes o los datos de tu caso.</small></div>
+        <div><span>03</span><strong>Guarda evidencia</strong><small>Copia el resultado útil en Mi proyecto para no perderlo.</small></div>
+      </section>
 
       <div className="st-filters">
         <div className="st-filter-row">
@@ -160,7 +209,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
           </div>
 
           <div className="st-prompt-list">
-            {encontrados.map((item) => <PromptCard key={item.name} prompt={item} />)}
+            {encontrados.map((item) => <PromptCard key={item.name} prompt={item} familyTitle={familia.title} />)}
           </div>
 
           {familia.tips?.length > 0 && (

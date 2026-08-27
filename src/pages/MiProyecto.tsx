@@ -5,7 +5,7 @@ import {
   MousePointer2, Save, Sparkles, Target, Wrench,
 } from 'lucide-react'
 import { href } from '../router'
-import { ProjectProfile, store, useStudent } from '../store'
+import { ProjectProfile, SavedPrompt, store, useStudent } from '../store'
 import { useCourse } from '../course'
 import type { ToolPage } from '../types'
 
@@ -37,7 +37,7 @@ const OUTCOMES: Choice[] = [
 ]
 
 const EMPTY: ProjectProfile = {
-  name: '', goal: '', audience: '', problem: '', outcome: '', tools: '', toolIds: [], projectType: '', promptBrief: '', updatedAt: '',
+  name: '', goal: '', audience: '', problem: '', outcome: '', tools: '', toolIds: [], projectType: '', promptBrief: '', savedPrompts: [], updatedAt: '',
 }
 
 function selectedLabel(options: Choice[], id: string) {
@@ -71,6 +71,37 @@ Devuélveme primero una ficha breve con objetivo, usuarios, entrada, salida, lí
 No pases todavía a producción. Marca cualquier acción irreversible, conexión con datos reales, publicación, envío o gasto que necesite mi aprobación. Explícame las palabras técnicas en español sencillo y termina con una checklist de revisión.`
 }
 
+function legacySavedPrompts(project?: ProjectProfile): SavedPrompt[] {
+  const raw = project?.promptBrief || ''
+  if (!raw.includes('Prompt guardado desde la biblioteca:')) return []
+  return raw
+    .split(/\n\n---\nPrompt guardado desde la biblioteca: /)
+    .slice(1)
+    .map((chunk, index) => {
+      const [heading, ...rest] = chunk.split('\n\n')
+      const [family, name] = heading.split(' / ')
+      return {
+        id: `legacy-${index}-${name || 'prompt'}`,
+        family: family || 'Biblioteca',
+        name: name || 'Prompt guardado',
+        prompt: rest.join('\n\n').trim(),
+        savedAt: project?.updatedAt || new Date().toISOString(),
+        source: 'Guardado antes de la organización nueva',
+      }
+    })
+    .filter((item) => item.prompt)
+}
+
+function projectSavedPrompts(project?: ProjectProfile): SavedPrompt[] {
+  const seen = new Set<string>()
+  return [...legacySavedPrompts(project), ...(project?.savedPrompts || [])].filter((item) => {
+    const key = `${item.family}-${item.name}-${item.prompt.slice(0, 120)}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 export default function MiProyecto() {
   const student = useStudent()
   const course = useCourse()
@@ -86,6 +117,7 @@ export default function MiProyecto() {
   const suggestions = useMemo(() => toolSuggestion(goal, course.toolPages), [goal, course.toolPages])
   const chosenTools = useMemo(() => selectedTools.map((id) => course.toolPages.find((tool) => tool.id === id)).filter(Boolean) as ToolPage[], [course.toolPages, selectedTools])
   const prompt = useMemo(() => buildPrompt(draft, goal, audience, outcome, chosenTools), [draft, goal, audience, outcome, chosenTools])
+  const savedPrompts = useMemo(() => projectSavedPrompts(student.project), [student.project])
 
   useEffect(() => {
     if (student.project) {
@@ -97,7 +129,7 @@ export default function MiProyecto() {
   }, [student.project])
 
   function save() {
-    store.setProject({ ...draft, audience, outcome, goal: selectedLabel(GOALS, goal), tools: chosenTools.map((tool) => tool.label).join(', '), toolIds: selectedTools, projectType: goal, promptBrief: prompt, updatedAt: new Date().toISOString() })
+    store.setProject({ ...draft, audience, outcome, goal: selectedLabel(GOALS, goal), tools: chosenTools.map((tool) => tool.label).join(', '), toolIds: selectedTools, projectType: goal, promptBrief: prompt, savedPrompts: student.project?.savedPrompts || draft.savedPrompts || [], updatedAt: new Date().toISOString() })
     setSaved(true)
   }
 
@@ -141,8 +173,69 @@ export default function MiProyecto() {
         <footer className="st-wizard-actions"><button type="button" className="st-btn-ghost" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0}><ArrowLeft size={13} /> Atrás</button>{step < 5 ? <button type="button" className="st-btn" onClick={next} disabled={!canContinue}>{step === 4 ? 'Preparar mi ruta' : 'Continuar'} <ArrowRight size={13} /></button> : <button type="button" className="st-btn" onClick={save}><Save size={13} /> Guardar ruta</button>}</footer>
       </section>
 
+      <SavedPromptsPanel prompts={savedPrompts} />
+
       <p className="st-project-storage">Por ahora la ficha se guarda solo en este navegador. La estructura queda preparada para sincronizarla con una cuenta online más adelante.</p>
     </div>
+  )
+}
+
+function SavedPromptsPanel({ prompts }: { prompts: SavedPrompt[] }) {
+  const [openId, setOpenId] = useState<string | null>(prompts[0]?.id || null)
+  const [copied, setCopied] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!openId && prompts[0]) setOpenId(prompts[0].id)
+  }, [openId, prompts])
+
+  return (
+    <section className="st-project-prompts">
+      <div className="st-section-head">
+        <div>
+          <span className="st-kicker">Biblioteca del proyecto</span>
+          <h2>Prompts guardados</h2>
+        </div>
+        <a href={href({ name: 'kits' })}>Ver kits institucionales <ArrowRight size={13} /></a>
+      </div>
+      {prompts.length ? (
+        <div className="st-saved-prompts">
+          <div className="st-saved-prompt-list">
+            {prompts.map((prompt) => (
+              <button key={prompt.id} type="button" className={openId === prompt.id ? 'on' : ''} onClick={() => setOpenId(prompt.id)}>
+                <span>{prompt.family}</span>
+                <strong>{prompt.name}</strong>
+                <small>{new Date(prompt.savedAt).toLocaleDateString('es-ES')}</small>
+              </button>
+            ))}
+          </div>
+          {prompts.map((prompt) => openId === prompt.id ? (
+            <article key={prompt.id} className="st-saved-prompt-detail">
+              <span className="st-kicker">{prompt.source || 'Prompt guardado'}</span>
+              <h3>{prompt.name}</h3>
+              <p>{prompt.family}</p>
+              <button
+                type="button"
+                className="st-btn"
+                onClick={() => {
+                  navigator.clipboard?.writeText(prompt.prompt)
+                  setCopied(prompt.id)
+                  window.setTimeout(() => setCopied(null), 1600)
+                }}
+              >
+                <Clipboard size={12} /> {copied === prompt.id ? 'Copiado' : 'Copiar prompt'}
+              </button>
+              <pre>{prompt.prompt}</pre>
+            </article>
+          ) : null)}
+        </div>
+      ) : (
+        <div className="st-empty">
+          <h2>Aún no has guardado prompts</h2>
+          <p>Guarda prompts desde la biblioteca o desde un kit institucional y aparecerán aquí, dentro de tu proyecto.</p>
+          <a className="st-btn" href={href({ name: 'prompts' })}>Ir a Prompts</a>
+        </div>
+      )}
+    </section>
   )
 }
 

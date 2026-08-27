@@ -40,7 +40,17 @@ export interface ProjectProfile {
   toolIds?: string[]
   projectType?: string
   promptBrief?: string
+  savedPrompts?: SavedPrompt[]
   updatedAt: string
+}
+
+export interface SavedPrompt {
+  id: string
+  family: string
+  name: string
+  prompt: string
+  savedAt: string
+  source?: string
 }
 
 const EMPTY: StudentState = { name: '', teacher: false, preferredLevel: 'basico', lessons: {} }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, BookMarked, Compass, GraduationCap, Home, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, Home, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
@@ -14,6 +14,7 @@ import Presentar from './pages/Presentar'
 import Proyecto from './pages/Proyecto'
 import Deck from './pages/Deck'
 import Prompts from './pages/Prompts'
+import Kits from './pages/Kits'
 import Guia from './pages/Guia'
 import { CursoIndice, CursoLeccion } from './pages/Curso'
 import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
@@ -86,6 +87,9 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         </a>
         <a className={is('prompts') ? 'active' : ''} href={href({ name: 'prompts' })} onClick={onClose}>
           <Sparkles size={14} /> Prompts
+        </a>
+        <a className={is('kits') ? 'active' : ''} href={href({ name: 'kits' })} onClick={onClose}>
+          <Boxes size={14} /> Kits institucionales
         </a>
         <a className={is('herramientas') || is('herramienta') ? 'active' : ''} href={href({ name: 'herramientas' })} onClick={onClose}>
           <Puzzle size={14} /> Herramientas
@@ -213,6 +217,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'proyecto': return ['Proyecto final']
       case 'deck': return ['Presentación']
       case 'prompts': return ['Prompts']
+      case 'kits': return ['Kits institucionales']
       case 'guia': return ['Guías']
       case 'curso': return ['El curso']
       case 'progreso': return ['Progreso']
@@ -236,7 +241,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       <div className="st-header-actions">
         <a className="st-project-switch" href={href({ name: 'buscar', query: '', filters: {} })}>
           <BookOpen size={12} />
-          {course.stats.lessons} lecciones · {course.stats.categories} categorías
+          Ruta guiada · biblioteca de apoyo
         </a>
         <button
           type="button"
@@ -265,6 +270,7 @@ function Pages({ route }: { route: Route }) {
     case 'proyecto': return <Proyecto stageId={route.stageId} />
     case 'deck': return <Deck deckId={route.deckId} />
     case 'prompts': return <Prompts familyId={route.familyId} />
+    case 'kits': return <Kits />
     case 'guia': return <Guia guideId={route.guideId} />
     case 'curso': return route.lessonId ? <CursoLeccion lessonId={route.lessonId} /> : <CursoIndice />
     case 'biblioteca': return <Biblioteca />
@@ -311,7 +317,7 @@ function Shell() {
 
       <footer className="st-foot">
         <p>
-          {course.stats.lessons} lecciones · {course.stats.categories} categorías · {course.stats.quizQuestions.toLocaleString('es-ES')} preguntas ·
+          Ruta principal, especializaciones y biblioteca de consulta ·
           generado desde «{course.vaultName}» el {new Date(course.generatedAt).toLocaleDateString('es-ES')}
         </p>
         <p>
