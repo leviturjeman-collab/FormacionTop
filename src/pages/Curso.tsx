@@ -7,6 +7,7 @@ import type { CursoLesson } from '../types'
 import { useCourse } from '../course'
 import { href } from '../router'
 import { store, useLessonProgress } from '../store'
+import { BrandMark } from '../components/Brand'
 import Notebook from '../components/Notebook'
 import Piece from '../components/Piece'
 
@@ -41,6 +42,8 @@ function Prompt({ text }: { text: string }) {
   )
 }
 
+const countText = (count: number, singular: string, plural: string) => `${count} ${count === 1 ? singular : plural}`
+
 /* ------------------------------------------------------------------ *
  * ÍNDICE DEL CURSO                                                    *
  * ------------------------------------------------------------------ */
@@ -65,16 +68,26 @@ export function CursoIndice() {
   const conHerramienta = lecciones.filter((item) => item.tool)
   const sueltas = lecciones.filter((item) => !item.tool)
 
-  const porHerramienta = [...new Set(conHerramienta.map((item) => item.tool))].map((toolId) => {
-    const pagina = course.toolPages.find((page) => page.id === toolId)
-    return {
-      id: toolId as string,
-      label: pagina?.label || toolId,
-      items: conHerramienta
-        .filter((item) => item.tool === toolId)
-        .sort((a, b) => (a.slot || 0) - (b.slot || 0)),
-    }
-  })
+  const porHerramienta = course.toolPages
+    .map((pagina) => {
+      const items = conHerramienta
+        .filter((item) => item.tool === pagina.id)
+        .sort((a, b) => (a.slot || 0) - (b.slot || 0))
+      return {
+        id: pagina.id,
+        label: pagina.label,
+        icon: pagina.icon,
+        count: pagina.count,
+        guidePrompts: pagina.guide?.prompts?.length || 0,
+        automations: pagina.guide?.automations?.length || 0,
+        hasGuide: Boolean(pagina.guide),
+        items,
+      }
+    })
+    .filter((tool) => tool.items.length || tool.count || tool.hasGuide)
+    .sort((a, b) => Number(Boolean(b.items.length)) - Number(Boolean(a.items.length)) || b.count - a.count || a.label.localeCompare(b.label, 'es'))
+
+  const herramientasConRuta = porHerramienta.filter((tool) => tool.items.length)
 
   const porArea = course.stages
     .map((stage) => ({ stage, items: sueltas.filter((item) => item.stageId === stage.id) }))
@@ -90,8 +103,8 @@ export function CursoIndice() {
         <h1>Tu programa, paso a paso</h1>
         <p>
           Empieza por la ruta obligatoria y avanza hacia un proyecto real. Son {sueltas.length} lecciones principales,
-          unas {Math.round(requiredMin / 60)} horas. Las otras {conHerramienta.length} lecciones son especializaciones:
-          consúltalas solo cuando el proyecto te pida una herramienta concreta.
+          unas {Math.round(requiredMin / 60)} horas. Después tienes {porHerramienta.length} fichas de herramienta con
+          prompts, automatizaciones, errores y materiales de consulta para usar solo cuando el proyecto lo pida.
         </p>
       </div>
 
@@ -102,9 +115,9 @@ export function CursoIndice() {
           <small>Lo que haría cualquier alumno para empezar sin perderse.</small>
         </div>
         <div>
-          <span>Especializaciones</span>
-          <strong>{conHerramienta.length} lecciones</strong>
-          <small>ChatGPT, Codex, n8n, Claude, Gemini y otras herramientas.</small>
+          <span>Herramientas</span>
+          <strong>{porHerramienta.length} fichas</strong>
+          <small>{conHerramienta.length} lecciones de itinerario, más guías, prompts y automatizaciones.</small>
         </div>
         <div>
           <span>Tiempo estimado</span>
@@ -155,18 +168,58 @@ export function CursoIndice() {
 
       <section className="st-curso-divider">
         <span className="st-kicker">Especializaciones · opcionales</span>
-        <h2>Ahora sí: aprende una herramienta concreta</h2>
-        <p>Elige una cuando tengas un proyecto o una tarea concreta. No necesitas estudiar todas para empezar.</p>
+        <h2>Ahora sí: elige una herramienta concreta</h2>
+        <p>
+          Aquí sí aparece todo el catálogo. Si una herramienta ya tiene ruta paso a paso, verás sus lecciones debajo.
+          Si todavía no tiene itinerario, entra en su ficha: allí están sus prompts, automatizaciones, primeros pasos y errores típicos.
+        </p>
       </section>
 
-      {porHerramienta.map(({ id, label, items }) => (
+      <section className="st-program-tools" aria-label="Herramientas disponibles">
+        <div className="st-program-tools-grid">
+          {porHerramienta.map(({ id, label, icon, count, guidePrompts, automations, items }) => (
+            <a
+              key={id}
+              className="st-program-tool-card"
+              data-itinerary={items.length ? 'true' : undefined}
+              href={href({ name: 'herramienta', toolId: id, filters: {} })}
+            >
+              <BrandMark icon={icon} size={22} />
+              <span>
+                <strong>{label}</strong>
+                <small>
+                  {items.length
+                    ? `${countText(items.length, 'lección', 'lecciones')} paso a paso`
+                    : count
+                      ? `${countText(count, 'recurso', 'recursos')} de consulta`
+                      : 'Guía práctica disponible'}
+                </small>
+              </span>
+              <em>
+                {guidePrompts ? <b>{guidePrompts} prompts</b> : null}
+                {automations ? <b>{automations} automatizaciones</b> : null}
+                {count ? <b>{count} recursos</b> : null}
+              </em>
+              <ArrowRight size={13} />
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section className="st-curso-divider st-curso-divider-sub">
+        <span className="st-kicker">Rutas ya escritas</span>
+        <h2>Lecciones paso a paso</h2>
+        <p>Estas herramientas ya tienen itinerario lineal dentro del Programa. El resto se estudia desde su ficha de herramienta.</p>
+      </section>
+
+      {herramientasConRuta.map(({ id, label, items }) => (
         <section key={id} className="st-curso-area">
           <div className="st-section-head">
             <div>
               <span className="st-kicker">Ruta de herramienta</span>
               <h2>{label}</h2>
             </div>
-            <span>{items.length} lecciones disponibles</span>
+            <span>{countText(items.length, 'lección disponible', 'lecciones disponibles')}</span>
           </div>
 
           <ol className="st-curso-list">
