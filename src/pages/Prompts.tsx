@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles } from 'lucide-react'
-import type { PromptFamily } from '../types'
+import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
 import { store, useStudent } from '../store'
 
@@ -11,7 +11,7 @@ import { store, useStudent } from '../store'
  * o Gemini. Cada uno dice cuándo se usa, qué hay que sustituir, qué te va a
  * devolver y qué hacer después con esa respuesta.
  */
-function PromptCard({ prompt, familyTitle }: { prompt: PromptFamily['prompts'][number]; familyTitle: string }) {
+function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: string }) {
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState(false)
   const [open, setOpen] = useState(false)
@@ -22,12 +22,12 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptFamily['prompts'][n
     const savedPrompts = [
       ...(previous?.savedPrompts || []),
       {
-        id: `${Date.now()}-${prompt.name}`,
+        id: prompt.id || `${Date.now()}-${prompt.name}`,
         family: familyTitle,
         name: prompt.name,
         prompt: prompt.prompt,
         savedAt: new Date().toISOString(),
-        source: 'Biblioteca de prompts',
+        source: prompt.source ? `Biblioteca de prompts · ${prompt.source}` : 'Biblioteca de prompts',
       },
     ]
     store.setProject({
@@ -51,6 +51,12 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptFamily['prompts'][n
     <article className={`st-prompt${open ? ' open' : ''}`}>
       <button type="button" className="st-prompt-head" onClick={() => setOpen((value) => !value)}>
         <div>
+          {(prompt.toolLabel || prompt.source) && (
+            <span className="st-prompt-card-meta">
+              {prompt.toolLabel && <b>{prompt.toolLabel}</b>}
+              {prompt.source && <b>{prompt.source}</b>}
+            </span>
+          )}
           <strong>{prompt.name}</strong>
           <span>{prompt.when}</span>
         </div>
@@ -112,22 +118,64 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptFamily['prompts'][n
 
 export default function Prompts({ familyId }: { familyId?: string }) {
   const course = useCourse()
-  const familias = course.prompts || []
+  const baseFamilias = course.prompts || []
+  const allPromptsFamily = useMemo<PromptFamily>(() => ({
+    id: 'todo-banco-institucional',
+    title: 'Todo el banco',
+    intro: 'Vista completa de la biblioteca institucional. Usa el filtro de herramienta para ver los 50 prompts de una herramienta concreta o busca por tarea, riesgo, entrega o proceso.',
+    model: 'Usa una IA con buen razonamiento y contexto largo. Para decisiones sensibles, compara con otra IA y conserva evidencia.',
+    prompts: baseFamilias.flatMap((item) => item.prompts),
+    canDo: [
+      'Reunir en una sola vista los prompts de todas las categorías, herramientas y fuentes.',
+      'Filtrar por herramienta para ver el banco completo de una tecnología concreta.',
+      'Buscar por proceso, entrega, riesgo, dato o tarea cuando no sabes en qué categoría cae.',
+    ],
+    cantDo: [
+      'No sustituye la elección de categoría cuando quieres trabajar con foco.',
+      'No evita revisar privacidad, coste y aprobación humana antes de usar datos reales.',
+      'No confirma precios ni funciones recientes del proveedor.',
+    ],
+    tips: [
+      'Para ver los 50 prompts de una herramienta, elige esta vista y después selecciona la herramienta.',
+      'Para estudiar por intención, usa una categoría concreta como Automatizar o Seguridad.',
+      'Guarda en Mi proyecto solo los prompts que de verdad vayas a usar.',
+    ],
+  }), [baseFamilias])
+  const familias = useMemo(() => [allPromptsFamily, ...baseFamilias], [allPromptsFamily, baseFamilias])
   const [query, setQuery] = useState('')
-  const [active, setActive] = useState(familyId || familias[0]?.id)
+  const [selectedTool, setSelectedTool] = useState('all')
+  const [active, setActive] = useState(familyId || allPromptsFamily.id)
 
   const familia = familias.find((item) => item.id === active) || familias[0]
+  const totalPrompts = baseFamilias.reduce((sum, item) => sum + item.prompts.length, 0)
+
+  const toolOptions = useMemo(() => {
+    if (!familia) return []
+    const byId = new Map<string, string>()
+    for (const item of familia.prompts) {
+      if (!item.toolId || !item.toolLabel) continue
+      byId.set(item.toolId, item.toolLabel)
+    }
+    return [...byId.entries()]
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => (a.id === 'general' ? -1 : b.id === 'general' ? 1 : a.label.localeCompare(b.label, 'es')))
+  }, [familia])
+
+  const activeTool = selectedTool === 'all' || toolOptions.some((item) => item.id === selectedTool)
+    ? selectedTool
+    : 'all'
 
   const encontrados = useMemo(() => {
     if (!familia) return []
     const needle = query.trim().toLowerCase()
-    if (!needle) return familia.prompts
-    return familia.prompts.filter((item) =>
-      `${item.name} ${item.when} ${item.prompt}`.toLowerCase().includes(needle),
-    )
-  }, [familia, query])
+    return familia.prompts.filter((item) => {
+      if (activeTool !== 'all' && item.toolId !== activeTool) return false
+      if (!needle) return true
+      return `${item.name} ${item.when} ${item.prompt} ${item.toolLabel || ''} ${item.source || ''}`.toLowerCase().includes(needle)
+    })
+  }, [activeTool, familia, query])
 
-  if (!familias.length) {
+  if (!baseFamilias.length) {
     return (
       <div className="st-page">
         <div className="st-empty">
@@ -144,8 +192,8 @@ export default function Prompts({ familyId }: { familyId?: string }) {
         <span className="st-kicker"><Sparkles size={12} /> Listos para copiar</span>
         <h1>Biblioteca de prompts</h1>
         <p>
-          Elige una situación, copia el prompt, úsalo en ChatGPT, Claude o Gemini y guarda el resultado como evidencia.
-          Cada prompt dice cuándo usarlo, qué cambiar y qué esperar de vuelta.
+          Banco institucional centralizado: {totalPrompts} prompts para copiar, pegar y rellenar con corchetes.
+          Elige qué quieres hacer, filtra por herramienta y guarda el resultado como evidencia.
         </p>
       </div>
 
@@ -169,6 +217,19 @@ export default function Prompts({ familyId }: { familyId?: string }) {
               <b>{item.prompts.length}</b>
             </button>
           ))}
+        </div>
+        <div className="st-filter-row">
+          <span>Herramienta</span>
+          <label className="st-prompt-tool-select">
+            <select value={activeTool} onChange={(event) => setSelectedTool(event.target.value)}>
+              <option value="all">Todas las herramientas ({familia?.prompts.length || 0})</option>
+              {toolOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label} ({familia?.prompts.filter((prompt) => prompt.toolId === item.id).length || 0})
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         <div className="st-filter-row">
           <span>Buscar</span>
@@ -209,7 +270,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
           </div>
 
           <div className="st-prompt-list">
-            {encontrados.map((item) => <PromptCard key={item.name} prompt={item} familyTitle={familia.title} />)}
+            {encontrados.map((item) => <PromptCard key={item.id || item.name} prompt={item} familyTitle={familia.title} />)}
           </div>
 
           {familia.tips?.length > 0 && (

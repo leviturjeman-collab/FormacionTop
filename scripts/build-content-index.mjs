@@ -25,6 +25,7 @@ import { registerRecipes } from './lib/recipes.mjs'
 import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
 import { buildCategories, buildGlossaryIndex, categoryKeyFor, sectionFor, SECTIONS } from './lib/categories.mjs'
+import { buildInstitutionalPromptLibrary } from './lib/institutional-prompts.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const projectDir = path.resolve(scriptDir, '..')
@@ -583,6 +584,9 @@ const toolPages = TOOLS
   .filter((tool) => tool.count > 0 || tool.guide || conItinerario.has(tool.id))
   .sort((a, b) => b.count - a.count)
 
+const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles)
+for (const family of promptLibrary) enrichPrompts(family.prompts, family.title)
+
 /* --- Biblioteca: carpetas del vault -------------------------------- */
 
 const folders = [...new Set(lessons.map((lesson) => lesson.folder))]
@@ -642,7 +646,7 @@ const course = {
   categories,
   projects: areaProjects,
   decks: deckFiles,
-  prompts: promptFiles,
+  prompts: promptLibrary,
   guides: guideFiles,
   curso: cursoFiles.sort((a, b) => (a.number || 0) - (b.number || 0)),
   toolPages,

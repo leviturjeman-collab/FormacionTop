@@ -26,8 +26,15 @@ check(course.folders.length > 0, 'No se ha generado ninguna carpeta para la bibl
 check(course.tools?.length > 0, 'Falta el catálogo de herramientas en course.json.')
 for (const family of course.prompts || []) {
   for (const prompt of family.prompts || []) {
-    check(countWords(prompt.prompt) >= 500, `El prompt «${prompt.name}» tiene menos de 500 palabras.`)
+    check(countWords(prompt.prompt) >= 550, `El prompt «${prompt.name}» tiene menos de 550 palabras.`)
+    check(/\[[^\]]+\]/.test(prompt.prompt), `El prompt institucional «${prompt.name}» no tiene corchetes rellenables.`)
+    check(/institucional/i.test(prompt.prompt), `El prompt «${prompt.name}» no está marcado como institucional.`)
   }
+}
+const libraryPrompts = (course.prompts || []).flatMap((family) => family.prompts || [])
+for (const tool of course.toolPages || []) {
+  const count = libraryPrompts.filter((prompt) => prompt.toolId === tool.id).length
+  check(count >= 50, `La biblioteca solo tiene ${count} prompts para ${tool.label}; se esperaban al menos 50.`)
 }
 for (const tool of course.toolPages || []) {
   for (const prompt of tool.guide?.prompts || []) {

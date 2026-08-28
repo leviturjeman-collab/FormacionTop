@@ -495,13 +495,27 @@ export interface Deck {
   slides: { kind: string; title: string; text?: string; items?: string[]; code?: string; notes?: string }[]
 }
 
+export interface PromptItem {
+  id?: string
+  name: string
+  when: string
+  prompt: string
+  fill: [string, string][]
+  expect: string
+  next?: string
+  categoryId?: string
+  toolId?: string
+  toolLabel?: string
+  source?: string
+}
+
 /** Familia de prompts listos para copiar en ChatGPT, Claude o Gemini. */
 export interface PromptFamily {
   id: string
   title: string
   intro: string
   model: string
-  prompts: { name: string; when: string; prompt: string; fill: [string, string][]; expect: string; next?: string }[]
+  prompts: PromptItem[]
   canDo: string[]
   cantDo: string[]
   tips: string[]
