@@ -4,6 +4,37 @@ import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
 import { store, useStudent } from '../store'
 
+const PROMPT_GROUPS = [
+  {
+    id: 'empezar-decidir',
+    kicker: 'Orientación',
+    title: 'Empezar y decidir',
+    description: 'Para entender el caso, escoger herramienta y convertir una idea en algo que se pueda ejecutar.',
+    families: ['aprender-desde-cero', 'elegir-herramienta', 'crear-proyecto'],
+  },
+  {
+    id: 'construir-conectar',
+    kicker: 'Producción',
+    title: 'Construir y conectar',
+    description: 'Para crear flujos, programar cambios, conectar datos y diseñar agentes con límites claros.',
+    families: ['automatizar', 'programar', 'conectar-datos', 'crear-agentes'],
+  },
+  {
+    id: 'contenido-entrega',
+    kicker: 'Comunicación',
+    title: 'Contenido y entrega',
+    description: 'Para preparar piezas, documentación, manuales y entregas que otra persona pueda usar o aprobar.',
+    families: ['crear-contenido', 'entregar-equipo-cliente'],
+  },
+  {
+    id: 'control-institucional',
+    kicker: 'Gobierno',
+    title: 'Probar, proteger y escalar',
+    description: 'Para revisar fallos, privacidad, coste, permisos y proyectos institucionales completos.',
+    families: ['probar-reparar', 'seguridad-coste-privacidad', 'proyecto-institucional'],
+  },
+]
+
 /**
  * Biblioteca de prompts.
  *
@@ -165,6 +196,22 @@ export default function Prompts({ familyId }: { familyId?: string }) {
     ? selectedTool
     : 'all'
 
+  function selectFamily(id: string) {
+    setActive(id)
+    setQuery('')
+    setSelectedTool('all')
+  }
+
+  const groupedFamilies = useMemo(() => {
+    const byId = new Map(baseFamilias.map((item) => [item.id, item]))
+    return PROMPT_GROUPS
+      .map((group) => ({
+        ...group,
+        items: group.families.map((id) => byId.get(id)).filter(Boolean) as PromptFamily[],
+      }))
+      .filter((group) => group.items.length)
+  }, [baseFamilias])
+
   const encontrados = useMemo(() => {
     if (!familia) return []
     const needle = query.trim().toLowerCase()
@@ -203,24 +250,56 @@ export default function Prompts({ familyId }: { familyId?: string }) {
         <div><span>03</span><strong>Guarda evidencia</strong><small>Copia el resultado útil en Mi proyecto para no perderlo.</small></div>
       </section>
 
-      <div className="st-filters">
-        <div className="st-filter-row">
-          <span>Qué quieres hacer</span>
-          {familias.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`st-chip${item.id === familia?.id ? ' on' : ''}`}
-              onClick={() => { setActive(item.id); setQuery('') }}
-            >
-              {item.title}
-              <b>{item.prompts.length}</b>
-            </button>
-          ))}
+      <section className="st-prompt-navigator" aria-label="Organización de la biblioteca de prompts">
+        <button
+          type="button"
+          className={`st-prompt-overview${familia?.id === allPromptsFamily.id ? ' on' : ''}`}
+          onClick={() => selectFamily(allPromptsFamily.id)}
+        >
+          <span>Vista completa</span>
+          <strong>Todo el banco institucional</strong>
+          <small>Empieza aquí si quieres ver todos los prompts y después filtrar por herramienta.</small>
+          <b>{totalPrompts} prompts</b>
+        </button>
+
+        <div className="st-prompt-panel-grid">
+          {groupedFamilies.map((group, groupIndex) => {
+            const groupActive = group.items.some((item) => item.id === familia?.id)
+            const groupCount = group.items.reduce((sum, item) => sum + item.prompts.length, 0)
+            return (
+              <section key={group.id} className={`st-prompt-panel${groupActive ? ' on' : ''}`}>
+                <div className="st-prompt-panel-head">
+                  <span>{String(groupIndex + 1).padStart(2, '0')} · {group.kicker}</span>
+                  <strong>{group.title}</strong>
+                  <p>{group.description}</p>
+                  <b>{groupCount} prompts</b>
+                </div>
+                <div className="st-prompt-panel-list">
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`st-prompt-panel-row${item.id === familia?.id ? ' on' : ''}`}
+                      onClick={() => selectFamily(item.id)}
+                    >
+                      <span>
+                        <strong>{item.title}</strong>
+                        <small>{item.intro}</small>
+                      </span>
+                      <b>{item.prompts.length}</b>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )
+          })}
         </div>
-        <div className="st-filter-row">
+      </section>
+
+      <section className="st-prompt-refine" aria-label="Filtros de la biblioteca">
+        <label className="st-prompt-refine-field">
           <span>Herramienta</span>
-          <label className="st-prompt-tool-select">
+          <span className="st-prompt-tool-select">
             <select value={activeTool} onChange={(event) => setSelectedTool(event.target.value)}>
               <option value="all">Todas las herramientas ({familia?.prompts.length || 0})</option>
               {toolOptions.map((item) => (
@@ -229,21 +308,20 @@ export default function Prompts({ familyId }: { familyId?: string }) {
                 </option>
               ))}
             </select>
-          </label>
-        </div>
-        <div className="st-filter-row">
-          <span>Buscar</span>
-          <label className="st-piece-search" style={{ flex: 1 }}>
+          </span>
+        </label>
+        <label className="st-prompt-refine-field">
+          <span>Buscar dentro de esta selección</span>
+          <span className="st-piece-search">
             <Search size={13} />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="correo, propuesta, error, web…"
-              style={{ width: '100%' }}
+              placeholder="correo, propuesta, error, web..."
             />
-          </label>
-        </div>
-      </div>
+          </span>
+        </label>
+      </section>
 
       {familia && (
         <>
