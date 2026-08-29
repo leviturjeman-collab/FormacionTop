@@ -25,9 +25,9 @@ const KITS: InstitutionalKit[] = [
     title: 'Sistema operativo de IA para equipo',
     kicker: 'Operaciones internas',
     promise: 'Convierte formularios, correos, aprobaciones y reportes en un circuito medible con revisión humana.',
-    audience: 'equipos de operaciones, soporte, ventas internas o backoffice',
-    tools: ['n8n', 'openai', 'slack', 'gmail', 'sheets', 'supabase', 'postgres'],
-    promptFamilies: ['definir-idea', 'organizar-proyecto', 'arreglar-errores'],
+  audience: 'equipos de operaciones, soporte, ventas internas o backoffice',
+    tools: ['n8n', 'openai', 'slack', 'gmail', 'sheets', 'supabase', 'postgres', 'airtable', 'make', 'zapier'],
+    promptFamilies: ['crear-proyecto', 'automatizar', 'conectar-datos', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente'],
     skillKeywords: ['approval', 'delivery', 'automation', 'workflow', 'source', 'human'],
     phases: ['Mapa del proceso', 'Validación de entradas', 'Automatización con revisión humana', 'Registro, alertas y mejora'],
     deliverables: ['Mapa operativo', 'Workflow importable', 'Política de aprobación', 'Panel de evidencias'],
@@ -38,8 +38,8 @@ const KITS: InstitutionalKit[] = [
     kicker: 'Producto digital',
     promise: 'Une idea, UX, base de datos, autenticación, despliegue y documentación en una entrega seria.',
     audience: 'academias, consultoras, departamentos internos o clientes con usuarios reales',
-    tools: ['lovable', 'base44', 'v0', 'react', 'supabase', 'github', 'vercel'],
-    promptFamilies: ['crear-web', 'definir-idea', 'pedir-cambios'],
+    tools: ['lovable', 'base44', 'bolt', 'replit', 'v0', 'react', 'tailwind', 'supabase', 'github', 'vercel'],
+    promptFamilies: ['crear-proyecto', 'programar', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente'],
     skillKeywords: ['frontend', 'delivery', 'portfolio', 'testing', 'env', 'deploy'],
     phases: ['Brief y alcance', 'Interfaz navegable', 'Datos y permisos', 'Deploy con checklist'],
     deliverables: ['Brief funcional', 'Prototipo navegable', 'README de entrega', 'Checklist de producción'],
@@ -50,8 +50,8 @@ const KITS: InstitutionalKit[] = [
     kicker: 'Conocimiento propio',
     promise: 'Ordena documentos, prepara consultas verificables y evita que el sistema invente respuestas.',
     audience: 'equipos con documentación, expedientes, manuales, contratos o bases de conocimiento',
-    tools: ['notebooklm', 'claude', 'openai', 'langchain', 'supabase', 'postgres'],
-    promptFamilies: ['datos-propios', 'arreglar-errores', 'organizar-proyecto'],
+    tools: ['notebooklm', 'claude', 'openai', 'langchain', 'supabase', 'postgres', 'obsidian', 'notion'],
+    promptFamilies: ['conectar-datos', 'crear-agentes', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente'],
     skillKeywords: ['rag', 'source', 'credibility', 'json', 'documents', 'eval'],
     phases: ['Inventario documental', 'Preparación de fuentes', 'Consulta con citas', 'Evaluación contra casos reales'],
     deliverables: ['Catálogo de fuentes', 'Prompt de consulta', 'Casos de evaluación', 'Guía de límites'],
@@ -62,8 +62,8 @@ const KITS: InstitutionalKit[] = [
     kicker: 'Comunicación y venta',
     promise: 'Transforma una idea o sesión en textos, deck, vídeo corto, piezas sociales y guion comercial.',
     audience: 'creadores, formadores, agencias, consultores o departamentos de marketing',
-    tools: ['chatgpt', 'canva', 'gamma', 'higgsfield', 'runway', 'elevenlabs', 'descript'],
-    promptFamilies: ['contenido-negocio', 'trabajo-diario', 'pedir-cambios'],
+    tools: ['openai', 'nano-banana', 'seedance-2-5', 'canva', 'gamma', 'higgsfield', 'runway', 'elevenlabs', 'descript', 'figma'],
+    promptFamilies: ['crear-contenido', 'crear-proyecto', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente'],
     skillKeywords: ['video', 'brief', 'delivery', 'portfolio', 'presentation', 'content'],
     phases: ['Idea y ángulo', 'Guion y estructura', 'Producción visual', 'Revisión y distribución'],
     deliverables: ['Calendario editorial', 'Deck', 'Guion de vídeo', 'Pack de publicación'],
@@ -75,7 +75,7 @@ const KITS: InstitutionalKit[] = [
     promise: 'Combina Codex, Claude Code, GitHub, testing y despliegue para construir con control.',
     audience: 'programadores, equipos técnicos y perfiles no técnicos que necesitan supervisar entregas',
     tools: ['codex', 'claude-code', 'github', 'cursor', 'python', 'typescript', 'docker', 'vercel'],
-    promptFamilies: ['pedir-cambios', 'arreglar-errores', 'organizar-proyecto'],
+    promptFamilies: ['programar', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente', 'crear-agentes'],
     skillKeywords: ['review', 'debug', 'testing', 'github', 'docker', 'release', 'security'],
     phases: ['Especificación', 'Implementación asistida', 'Revisión y pruebas', 'Release con rollback'],
     deliverables: ['Issue o plan técnico', 'Diff revisado', 'Pruebas', 'Notas de release'],
@@ -86,8 +86,8 @@ const KITS: InstitutionalKit[] = [
     kicker: 'Datos operativos',
     promise: 'Normaliza leads, tickets o facturas y crea reporting con trazabilidad y control de coste.',
     audience: 'ventas, soporte, administración, dirección o equipos con datos dispersos',
-    tools: ['airtable', 'sheets', 'n8n', 'openai', 'supabase', 'slack'],
-    promptFamilies: ['datos-propios', 'contenido-negocio', 'arreglar-errores'],
+    tools: ['airtable', 'sheets', 'n8n', 'openai', 'supabase', 'postgres', 'slack', 'gmail'],
+    promptFamilies: ['conectar-datos', 'automatizar', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente'],
     skillKeywords: ['csv', 'report', 'invoice', 'lead', 'cost', 'gdpr', 'progress'],
     phases: ['Modelo de datos', 'Limpieza y validación', 'Automatización del reporte', 'Alertas y auditoría'],
     deliverables: ['Schema de datos', 'Workflow de limpieza', 'Reporte semanal', 'Control de privacidad'],
@@ -98,10 +98,6 @@ function toolById(course: Course, id: string) {
   return course.toolPages.find((tool) => tool.id === id)
 }
 
-function familyById(course: Course, id: string) {
-  return course.prompts.find((family) => family.id === id)
-}
-
 function relevantSkills(course: Course, kit: InstitutionalKit): Lesson[] {
   const needles = [...kit.skillKeywords, ...kit.tools].map((item) => item.toLowerCase())
   const skillish = course.lessons.filter((lesson) => {
@@ -109,10 +105,10 @@ function relevantSkills(course: Course, kit: InstitutionalKit): Lesson[] {
     const isSkill = /skill|workflow|automatiz|proceso|auditoria|entregable|plantilla/.test(haystack)
     return isSkill && needles.some((needle) => haystack.includes(needle))
   })
-  if (skillish.length) return skillish.slice(0, 12)
+  if (skillish.length) return skillish.slice(0, 20)
   return course.lessons
     .filter((lesson) => /35_AUTOMATIZACIONES|skills|workflow/i.test(`${lesson.sourcePath} ${lesson.folder}`))
-    .slice(0, 12)
+    .slice(0, 20)
 }
 
 function kitTools(course: Course, kit: InstitutionalKit): ToolPage[] {
@@ -120,7 +116,26 @@ function kitTools(course: Course, kit: InstitutionalKit): ToolPage[] {
 }
 
 function kitPromptFamilies(course: Course, kit: InstitutionalKit): PromptFamily[] {
-  return kit.promptFamilies.map((id) => familyById(course, id)).filter(Boolean) as PromptFamily[]
+  const wantedTools = new Set(kit.tools)
+  const wantedCategories = new Set(kit.promptFamilies)
+  const scored = course.prompts
+    .map((family) => {
+      let score = 0
+      if (family.toolId && wantedTools.has(family.toolId)) score += 20
+      if (family.categoryId && wantedCategories.has(family.categoryId)) score += 12
+      if (family.sectionId === 'prompts-generales' && family.categoryId && wantedCategories.has(family.categoryId)) score += 4
+      return { family, score }
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.family.title.localeCompare(b.family.title, 'es'))
+  const seen = new Set<string>()
+  return scored
+    .map((item) => item.family)
+    .filter((family) => {
+      if (seen.has(family.id)) return false
+      seen.add(family.id)
+      return true
+    })
 }
 
 function kitAutomations(tools: ToolPage[]) {
@@ -237,8 +252,8 @@ export default function Kits() {
           </header>
 
           <div className="st-kit-metrics">
-            <div><span>Prompts globales</span><strong>{promptFamilies.reduce((sum, family) => sum + family.prompts.length, 0)}</strong></div>
-            <div><span>Prompts herramienta</span><strong>{toolPrompts.length}</strong></div>
+            <div><span>Lotes de prompts</span><strong>{promptFamilies.length}</strong></div>
+            <div><span>Prompts recomendados</span><strong>{promptFamilies.reduce((sum, family) => sum + family.prompts.length, 0)}</strong></div>
             <div><span>Automatizaciones</span><strong>{automations.length}</strong></div>
             <div><span>Skills/procesos</span><strong>{skills.length}</strong></div>
           </div>
@@ -276,11 +291,11 @@ export default function Kits() {
                 {promptFamilies.map((family) => (
                   <a key={family.id} href={href({ name: 'prompts', familyId: family.id })}>
                     <Sparkles size={14} />
-                    <span><strong>{family.title}</strong><small>{family.prompts.length} prompts listos</small></span>
+                    <span><strong>{family.title}</strong><small>{family.prompts.length} prompts · {family.blockDescription || family.intro}</small></span>
                     <ArrowRight size={13} />
                   </a>
                 ))}
-                {toolPrompts.slice(0, 8).map(({ tool, prompt }) => (
+                {toolPrompts.slice(0, 18).map(({ tool, prompt }) => (
                   <a key={`${tool.id}-${prompt.name}`} href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
                     <Wrench size={14} />
                     <span><strong>{prompt.name}</strong><small>{tool.label} · {prompt.when || 'Prompt de herramienta'}</small></span>
@@ -293,7 +308,7 @@ export default function Kits() {
             <section>
               <div className="st-section-head"><div><span className="st-kicker">Automatizaciones</span><h2>Flujos candidatos</h2></div></div>
               <div className="st-kit-resource-list">
-                {automations.slice(0, 10).map(({ tool, automation }) => (
+                {automations.slice(0, 24).map(({ tool, automation }) => (
                   <a key={`${tool.id}-${automation.name}`} href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
                     <Workflow size={14} />
                     <span><strong>{automation.name}</strong><small>{tool.label} · {automation.difficulty} · {automation.trigger}</small></span>

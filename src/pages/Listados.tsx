@@ -619,7 +619,9 @@ function usageItems(guide: NonNullable<ToolPage['guide']>, label: string) {
 }
 
 const CONNECTIONS: Record<string, string[]> = {
-  higgsfield: ['runway', 'elevenlabs', 'n8n'],
+  higgsfield: ['seedance-2-5', 'runway', 'elevenlabs', 'n8n'],
+  'nano-banana': ['seedance-2-5', 'canva', 'figma', 'higgsfield', 'runway'],
+  'seedance-2-5': ['nano-banana', 'higgsfield', 'runway', 'elevenlabs', 'canva'],
   n8n: ['openai', 'gmail', 'sheets', 'slack', 'supabase', 'github'],
   openai: ['n8n', 'supabase', 'github', 'higgsfield'],
   base44: ['openai', 'supabase', 'github', 'vercel'],

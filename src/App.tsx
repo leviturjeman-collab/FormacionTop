@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, Home, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, Home, KeyRound, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
@@ -15,6 +15,7 @@ import Proyecto from './pages/Proyecto'
 import Deck from './pages/Deck'
 import Prompts from './pages/Prompts'
 import Kits from './pages/Kits'
+import Admin from './pages/Admin'
 import Guia from './pages/Guia'
 import { CursoIndice, CursoLeccion } from './pages/Curso'
 import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
@@ -91,6 +92,11 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         <a className={is('kits') ? 'active' : ''} href={href({ name: 'kits' })} onClick={onClose}>
           <Boxes size={14} /> Kits institucionales
         </a>
+        {(student.teacher || is('admin')) && (
+          <a className={is('admin') ? 'active' : ''} href={href({ name: 'admin' })} onClick={onClose}>
+            <KeyRound size={14} /> Súper admin
+          </a>
+        )}
         <a className={is('herramientas') || is('herramienta') ? 'active' : ''} href={href({ name: 'herramientas' })} onClick={onClose}>
           <Puzzle size={14} /> Herramientas
         </a>
@@ -218,6 +224,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'deck': return ['Presentación']
       case 'prompts': return ['Prompts']
       case 'kits': return ['Kits institucionales']
+      case 'admin': return ['Súper administrador']
       case 'guia': return ['Guías']
       case 'curso': return ['El curso']
       case 'progreso': return ['Progreso']
@@ -271,6 +278,7 @@ function Pages({ route }: { route: Route }) {
     case 'deck': return <Deck deckId={route.deckId} />
     case 'prompts': return <Prompts familyId={route.familyId} />
     case 'kits': return <Kits />
+    case 'admin': return <Admin />
     case 'guia': return <Guia guideId={route.guideId} />
     case 'curso': return route.lessonId ? <CursoLeccion lessonId={route.lessonId} /> : <CursoIndice />
     case 'biblioteca': return <Biblioteca />

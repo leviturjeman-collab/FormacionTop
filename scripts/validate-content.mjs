@@ -25,6 +25,7 @@ check(course.stages.length === 10, `Hay ${course.stages.length} etapas; se esper
 check(course.folders.length > 0, 'No se ha generado ninguna carpeta para la biblioteca.')
 check(course.tools?.length > 0, 'Falta el catálogo de herramientas en course.json.')
 for (const family of course.prompts || []) {
+  check((family.prompts || []).length <= 50, `La categoria de prompts «${family.title}» tiene ${family.prompts?.length || 0}; debe tener como máximo 50.`)
   for (const prompt of family.prompts || []) {
     check(countWords(prompt.prompt) >= 550, `El prompt «${prompt.name}» tiene menos de 550 palabras.`)
     check(/\[[^\]]+\]/.test(prompt.prompt), `El prompt institucional «${prompt.name}» no tiene corchetes rellenables.`)

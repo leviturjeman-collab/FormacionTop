@@ -207,6 +207,7 @@ export function stageFor(relativePath, title = '') {
 export const TOOLS = [
   { id: 'higgsfield', label: 'Higgsfield', icon: 'higgsfield', match: /higgs?field/i },
   { id: 'nano-banana', label: 'Nano Banana', icon: 'replicate', match: /nano ?banana/i },
+  { id: 'seedance-2-5', label: 'Seedance 2.5', icon: 'replicate', match: /seedance(?:\s|-)2\.?5|seedance|sidans(?:\s|-)2\.?5|sidans/i },
   { id: 'base44', label: 'Base44', icon: 'react', match: /base ?44/i },
   { id: 'bolt', label: 'Bolt.new', icon: 'react', match: /bolt\.new|bolts+ai/i },
   { id: 'replit', label: 'Replit', icon: 'nodedotjs', match: /replit|replit agent/i },

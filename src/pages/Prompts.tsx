@@ -1,39 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
 import { store, useStudent } from '../store'
 
-const PROMPT_GROUPS = [
-  {
-    id: 'empezar-decidir',
-    kicker: 'Orientación',
-    title: 'Empezar y decidir',
-    description: 'Para entender el caso, escoger herramienta y convertir una idea en algo que se pueda ejecutar.',
-    families: ['aprender-desde-cero', 'elegir-herramienta', 'crear-proyecto'],
-  },
-  {
-    id: 'construir-conectar',
-    kicker: 'Producción',
-    title: 'Construir y conectar',
-    description: 'Para crear flujos, programar cambios, conectar datos y diseñar agentes con límites claros.',
-    families: ['automatizar', 'programar', 'conectar-datos', 'crear-agentes'],
-  },
-  {
-    id: 'contenido-entrega',
-    kicker: 'Comunicación',
-    title: 'Contenido y entrega',
-    description: 'Para preparar piezas, documentación, manuales y entregas que otra persona pueda usar o aprobar.',
-    families: ['crear-contenido', 'entregar-equipo-cliente'],
-  },
-  {
-    id: 'control-institucional',
-    kicker: 'Gobierno',
-    title: 'Probar, proteger y escalar',
-    description: 'Para revisar fallos, privacidad, coste, permisos y proyectos institucionales completos.',
-    families: ['probar-reparar', 'seguridad-coste-privacidad', 'proyecto-institucional'],
-  },
-]
+type SearchResult = { prompt: PromptItem; family: PromptFamily }
 
 /**
  * Biblioteca de prompts.
@@ -150,47 +121,55 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
 export default function Prompts({ familyId }: { familyId?: string }) {
   const course = useCourse()
   const baseFamilias = course.prompts || []
-  const allPromptsFamily = useMemo<PromptFamily>(() => ({
-    id: 'todo-banco-institucional',
-    title: 'Todo el banco',
-    intro: 'Vista completa de la biblioteca institucional. Usa el filtro de herramienta para ver los 50 prompts de una herramienta concreta o busca por tarea, riesgo, entrega o proceso.',
-    model: 'Usa una IA con buen razonamiento y contexto largo. Para decisiones sensibles, compara con otra IA y conserva evidencia.',
-    prompts: baseFamilias.flatMap((item) => item.prompts),
-    canDo: [
-      'Reunir en una sola vista los prompts de todas las categorías, herramientas y fuentes.',
-      'Filtrar por herramienta para ver el banco completo de una tecnología concreta.',
-      'Buscar por proceso, entrega, riesgo, dato o tarea cuando no sabes en qué categoría cae.',
-    ],
-    cantDo: [
-      'No sustituye la elección de categoría cuando quieres trabajar con foco.',
-      'No evita revisar privacidad, coste y aprobación humana antes de usar datos reales.',
-      'No confirma precios ni funciones recientes del proveedor.',
-    ],
-    tips: [
-      'Para ver los 50 prompts de una herramienta, elige esta vista y después selecciona la herramienta.',
-      'Para estudiar por intención, usa una categoría concreta como Automatizar o Seguridad.',
-      'Guarda en Mi proyecto solo los prompts que de verdad vayas a usar.',
-    ],
-  }), [baseFamilias])
-  const familias = useMemo(() => [allPromptsFamily, ...baseFamilias], [allPromptsFamily, baseFamilias])
   const [query, setQuery] = useState('')
   const [selectedTool, setSelectedTool] = useState('all')
-  const [active, setActive] = useState(familyId || allPromptsFamily.id)
+  const [active, setActive] = useState(familyId || '')
 
-  const familia = familias.find((item) => item.id === active) || familias[0]
+  const activeId = active || familyId || baseFamilias[0]?.id || ''
+  const familia = baseFamilias.find((item) => item.id === activeId) || baseFamilias[0]
   const totalPrompts = baseFamilias.reduce((sum, item) => sum + item.prompts.length, 0)
 
+  const promptSections = useMemo(() => {
+    const byId = new Map<string, {
+      id: string
+      title: string
+      description: string
+      families: PromptFamily[]
+    }>()
+    for (const family of baseFamilias) {
+      const id = family.sectionId || 'otros'
+      const current = byId.get(id) || {
+        id,
+        title: family.sectionTitle || 'Otros bloques',
+        description: family.sectionDescription || 'Bloques de prompts institucionales agrupados por uso.',
+        families: [],
+      }
+      current.families.push(family)
+      byId.set(id, current)
+    }
+    return [...byId.values()].map((section) => ({
+      ...section,
+      families: section.families.sort((a, b) =>
+        (a.toolLabel || a.blockTitle || a.title).localeCompare(b.toolLabel || b.blockTitle || b.title, 'es'),
+      ),
+    }))
+  }, [baseFamilias])
+
+  const allPromptEntries = useMemo<SearchResult[]>(
+    () => baseFamilias.flatMap((family) => family.prompts.map((prompt) => ({ prompt, family }))),
+    [baseFamilias],
+  )
+
   const toolOptions = useMemo(() => {
-    if (!familia) return []
     const byId = new Map<string, string>()
-    for (const item of familia.prompts) {
-      if (!item.toolId || !item.toolLabel) continue
-      byId.set(item.toolId, item.toolLabel)
+    for (const { prompt } of allPromptEntries) {
+      if (!prompt.toolId || !prompt.toolLabel) continue
+      byId.set(prompt.toolId, prompt.toolLabel)
     }
     return [...byId.entries()]
       .map(([id, label]) => ({ id, label }))
       .sort((a, b) => (a.id === 'general' ? -1 : b.id === 'general' ? 1 : a.label.localeCompare(b.label, 'es')))
-  }, [familia])
+  }, [allPromptEntries])
 
   const activeTool = selectedTool === 'all' || toolOptions.some((item) => item.id === selectedTool)
     ? selectedTool
@@ -202,25 +181,27 @@ export default function Prompts({ familyId }: { familyId?: string }) {
     setSelectedTool('all')
   }
 
-  const groupedFamilies = useMemo(() => {
-    const byId = new Map(baseFamilias.map((item) => [item.id, item]))
-    return PROMPT_GROUPS
-      .map((group) => ({
-        ...group,
-        items: group.families.map((id) => byId.get(id)).filter(Boolean) as PromptFamily[],
-      }))
-      .filter((group) => group.items.length)
-  }, [baseFamilias])
-
-  const encontrados = useMemo(() => {
-    if (!familia) return []
+  const searchResults = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    return familia.prompts.filter((item) => {
-      if (activeTool !== 'all' && item.toolId !== activeTool) return false
+    return allPromptEntries.filter(({ prompt, family }) => {
+      if (activeTool !== 'all' && prompt.toolId !== activeTool) return false
       if (!needle) return true
-      return `${item.name} ${item.when} ${item.prompt} ${item.toolLabel || ''} ${item.source || ''}`.toLowerCase().includes(needle)
+      return `${prompt.name} ${prompt.when} ${prompt.prompt} ${prompt.toolLabel || ''} ${prompt.source || ''} ${family.title} ${family.blockDescription || ''}`.toLowerCase().includes(needle)
     })
-  }, [activeTool, familia, query])
+  }, [activeTool, allPromptEntries, query])
+
+  const familyPrompts = useMemo<SearchResult[]>(() => {
+    if (!familia) return []
+    return familia.prompts.map((prompt) => ({ prompt, family: familia }))
+  }, [familia])
+
+  useEffect(() => {
+    if (familyId && familyId !== active) setActive(familyId)
+  }, [active, familyId])
+
+  const showingGlobalResults = query.trim().length > 0 || activeTool !== 'all'
+  const visibles = showingGlobalResults ? searchResults.slice(0, 120) : familyPrompts
+  const exactToolCount = activeTool === 'all' ? 0 : allPromptEntries.filter(({ prompt }) => prompt.toolId === activeTool).length
 
   if (!baseFamilias.length) {
     return (
@@ -240,53 +221,71 @@ export default function Prompts({ familyId }: { familyId?: string }) {
         <h1>Biblioteca de prompts</h1>
         <p>
           Banco institucional centralizado: {totalPrompts} prompts para copiar, pegar y rellenar con corchetes.
-          Elige qué quieres hacer, filtra por herramienta y guarda el resultado como evidencia.
+          Cada bloque es pequeño, explicado y limitado a 50 prompts como máximo.
         </p>
       </div>
 
       <section className="st-prompt-steps" aria-label="Flujo recomendado para usar prompts">
-        <div><span>01</span><strong>Elige situación</strong><small>No busques por herramienta: empieza por lo que quieres resolver.</small></div>
-        <div><span>02</span><strong>Rellena huecos</strong><small>Cambia solo los campos entre corchetes o los datos de tu caso.</small></div>
-        <div><span>03</span><strong>Guarda evidencia</strong><small>Copia el resultado útil en Mi proyecto para no perderlo.</small></div>
+        <div><span>01</span><strong>Entra en un bloque</strong><small>Cada panel agrupa una intención concreta o una herramienta, sin mezclar 200 prompts.</small></div>
+        <div><span>02</span><strong>Busca si dudas</strong><small>Escribe cualquier palabra: correo, error, privacidad, vídeo, RAG, web, propuesta...</small></div>
+        <div><span>03</span><strong>Guarda evidencia</strong><small>Copia el prompt, rellena corchetes y guarda el resultado útil en Mi proyecto.</small></div>
+      </section>
+
+      <section className="st-prompt-refine st-prompt-refine-top" aria-label="Buscar en toda la biblioteca">
+        <label className="st-prompt-refine-field">
+          <span>Buscar en todo el banco</span>
+          <span className="st-piece-search">
+            <Search size={13} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="correo, error, web, privacidad, RAG, vídeo..."
+            />
+          </span>
+        </label>
+        <label className="st-prompt-refine-field">
+          <span>Herramienta o contexto</span>
+          <span className="st-prompt-tool-select">
+            <select value={activeTool} onChange={(event) => setSelectedTool(event.target.value)}>
+              <option value="all">Todas las herramientas ({totalPrompts})</option>
+              {toolOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label} ({allPromptEntries.filter(({ prompt }) => prompt.toolId === item.id).length})
+                </option>
+              ))}
+            </select>
+          </span>
+        </label>
       </section>
 
       <section className="st-prompt-navigator" aria-label="Organización de la biblioteca de prompts">
-        <button
-          type="button"
-          className={`st-prompt-overview${familia?.id === allPromptsFamily.id ? ' on' : ''}`}
-          onClick={() => selectFamily(allPromptsFamily.id)}
-        >
-          <span>Vista completa</span>
-          <strong>Todo el banco institucional</strong>
-          <small>Empieza aquí si quieres ver todos los prompts y después filtrar por herramienta.</small>
-          <b>{totalPrompts} prompts</b>
-        </button>
-
-        <div className="st-prompt-panel-grid">
-          {groupedFamilies.map((group, groupIndex) => {
-            const groupActive = group.items.some((item) => item.id === familia?.id)
-            const groupCount = group.items.reduce((sum, item) => sum + item.prompts.length, 0)
+        <div className="st-prompt-map">
+          {promptSections.map((section, sectionIndex) => {
+            const sectionActive = section.families.some((family) => family.id === familia?.id)
+            const sectionCount = section.families.reduce((sum, family) => sum + family.prompts.length, 0)
             return (
-              <section key={group.id} className={`st-prompt-panel${groupActive ? ' on' : ''}`}>
-                <div className="st-prompt-panel-head">
-                  <span>{String(groupIndex + 1).padStart(2, '0')} · {group.kicker}</span>
-                  <strong>{group.title}</strong>
-                  <p>{group.description}</p>
-                  <b>{groupCount} prompts</b>
+              <section key={section.id} className={`st-prompt-section${sectionActive ? ' on' : ''}`}>
+                <div className="st-prompt-section-head">
+                  <span>{String(sectionIndex + 1).padStart(2, '0')}</span>
+                  <div>
+                    <strong>{section.title}</strong>
+                    <p>{section.description}</p>
+                  </div>
+                  <b>{section.families.length} bloques · {sectionCount} prompts</b>
                 </div>
-                <div className="st-prompt-panel-list">
-                  {group.items.map((item) => (
+                <div className="st-prompt-block-grid">
+                  {section.families.map((family) => (
                     <button
-                      key={item.id}
+                      key={family.id}
                       type="button"
-                      className={`st-prompt-panel-row${item.id === familia?.id ? ' on' : ''}`}
-                      onClick={() => selectFamily(item.id)}
+                      className={`st-prompt-block${family.id === familia?.id ? ' on' : ''}`}
+                      onClick={() => selectFamily(family.id)}
                     >
-                      <span>
-                        <strong>{item.title}</strong>
-                        <small>{item.intro}</small>
-                      </span>
-                      <b>{item.prompts.length}</b>
+                      <span>{family.source || family.sectionTitle || 'Bloque institucional'}</span>
+                      <strong>{family.blockTitle || family.title}</strong>
+                      <small><b>Para qué:</b> {family.useCase || family.intro}</small>
+                      <em>{family.audience || 'Alumnos, responsables y equipos que necesitan una entrega verificable.'}</em>
+                      <i>{family.prompts.length} prompts</i>
                     </button>
                   ))}
                 </div>
@@ -296,62 +295,51 @@ export default function Prompts({ familyId }: { familyId?: string }) {
         </div>
       </section>
 
-      <section className="st-prompt-refine" aria-label="Filtros de la biblioteca">
-        <label className="st-prompt-refine-field">
-          <span>Herramienta</span>
-          <span className="st-prompt-tool-select">
-            <select value={activeTool} onChange={(event) => setSelectedTool(event.target.value)}>
-              <option value="all">Todas las herramientas ({familia?.prompts.length || 0})</option>
-              {toolOptions.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label} ({familia?.prompts.filter((prompt) => prompt.toolId === item.id).length || 0})
-                </option>
-              ))}
-            </select>
-          </span>
-        </label>
-        <label className="st-prompt-refine-field">
-          <span>Buscar dentro de esta selección</span>
-          <span className="st-piece-search">
-            <Search size={13} />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="correo, propuesta, error, web..."
-            />
-          </span>
-        </label>
-      </section>
-
       {familia && (
         <>
           <section className="st-prompt-intro">
-            <h2>{familia.title}</h2>
-            <p>{familia.intro}</p>
+            <span className="st-kicker">{showingGlobalResults ? 'Resultados' : familia.sectionTitle || 'Bloque seleccionado'}</span>
+            <h2>{showingGlobalResults ? 'Resultados de búsqueda' : familia.title}</h2>
+            <p>
+              {showingGlobalResults
+                ? `Se está buscando en toda la biblioteca. ${activeTool !== 'all' ? `Filtro activo: ${toolOptions.find((item) => item.id === activeTool)?.label || activeTool}, ${exactToolCount} prompts disponibles.` : 'Puedes combinar texto libre y herramienta.'}`
+                : familia.intro}
+            </p>
             <p className="st-prompt-model"><Lightbulb size={12} /> {familia.model}</p>
           </section>
 
-          <div className="st-matters">
-            <div className="st-matters-yes">
-              <strong><Check size={11} /> Esto sí lo hace bien</strong>
-              <ul>{familia.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
+          {!showingGlobalResults && (
+            <div className="st-matters">
+              <div className="st-matters-yes">
+                <strong><Check size={11} /> Esto sí lo hace bien</strong>
+                <ul>{familia.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+              <div className="st-matters-no">
+                <strong><Ban size={11} /> Esto no lo hace</strong>
+                <ul>{familia.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
             </div>
-            <div className="st-matters-no">
-              <strong><Ban size={11} /> Esto no lo hace</strong>
-              <ul>{familia.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
-            </div>
-          </div>
+          )}
 
           <div className="st-section-head">
-            <h2>Los prompts</h2>
-            <span>{encontrados.length} de {familia.prompts.length}</span>
+            <h2>{showingGlobalResults ? 'Prompts encontrados' : 'Los 50 prompts del bloque'}</h2>
+            <span>{showingGlobalResults ? `${searchResults.length} encontrados${searchResults.length > visibles.length ? ` · mostrando ${visibles.length}` : ''}` : `${visibles.length} prompts`}</span>
           </div>
 
           <div className="st-prompt-list">
-            {encontrados.map((item) => <PromptCard key={item.id || item.name} prompt={item} familyTitle={familia.title} />)}
+            {visibles.map(({ prompt, family }) => (
+              <PromptCard key={`${family.id}-${prompt.id || prompt.name}`} prompt={prompt} familyTitle={family.title} />
+            ))}
           </div>
 
-          {familia.tips?.length > 0 && (
+          {!visibles.length && (
+            <div className="st-empty">
+              <h2>No encuentro nada con esa búsqueda</h2>
+              <p>Prueba con una palabra más amplia: error, datos, correo, proyecto, web, coste, seguridad o entrega.</p>
+            </div>
+          )}
+
+          {!showingGlobalResults && familia.tips?.length > 0 && (
             <section className="st-block st-block-ejemplo">
               <h3><Lightbulb size={15} /> Tres cosas que cambian el resultado</h3>
               <ol className="st-example">

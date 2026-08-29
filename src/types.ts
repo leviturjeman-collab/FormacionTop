@@ -519,6 +519,19 @@ export interface PromptFamily {
   canDo: string[]
   cantDo: string[]
   tips: string[]
+  /** Bloque visual de la biblioteca de prompts. */
+  sectionId?: string
+  sectionTitle?: string
+  sectionDescription?: string
+  /** Categoria o herramienta que agrupa este lote. Cada lote debe ser pequeno. */
+  categoryId?: string
+  blockTitle?: string
+  blockDescription?: string
+  useCase?: string
+  audience?: string
+  toolId?: string
+  toolLabel?: string
+  source?: string
 }
 
 /** Guía fundamental: teoría corta y después tareas concretas. */

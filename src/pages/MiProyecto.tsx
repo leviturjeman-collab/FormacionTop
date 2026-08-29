@@ -13,13 +13,13 @@ type GoalId = 'aprender' | 'web' | 'app' | 'automatizar' | 'contenido' | 'datos'
 type Choice = { id: string; label: string; description: string }
 
 const GOALS: Array<Choice & { id: GoalId; tools: string[] }> = [
-  { id: 'aprender', label: 'Aprender desde cero', description: 'Quiero entender el proceso y hacer un primer proyecto guiado.', tools: ['chatgpt', 'claude', 'openai'] },
+  { id: 'aprender', label: 'Aprender desde cero', description: 'Quiero entender el proceso y hacer un primer proyecto guiado.', tools: ['openai', 'claude', 'gemini'] },
   { id: 'web', label: 'Crear una web', description: 'Una página, portfolio, tienda o presencia profesional.', tools: ['framer', 'lovable', 'v0', 'base44'] },
   { id: 'app', label: 'Crear una aplicación', description: 'Una herramienta con pantallas, usuarios, datos o lógica.', tools: ['base44', 'lovable', 'bolt', 'replit', 'v0'] },
   { id: 'automatizar', label: 'Automatizar un proceso', description: 'Que algo ocurra solo cuando llegue un correo, formulario o dato.', tools: ['n8n', 'make', 'zapier', 'pipedream'] },
-  { id: 'contenido', label: 'Crear contenido', description: 'Textos, imágenes, presentaciones, audio o vídeo.', tools: ['chatgpt', 'canva', 'nano-banana', 'higgsfield', 'gamma'] },
-  { id: 'datos', label: 'Trabajar con documentos y datos', description: 'Investigar, ordenar, consultar o convertir información propia.', tools: ['notebooklm', 'claude', 'chatgpt', 'airtable', 'supabase'] },
-  { id: 'no-se', label: 'Todavía no lo sé', description: 'Quiero que la academia me ayude a descubrir el camino.', tools: ['chatgpt', 'claude', 'n8n'] },
+  { id: 'contenido', label: 'Crear contenido', description: 'Textos, imágenes, presentaciones, audio o vídeo.', tools: ['openai', 'nano-banana', 'seedance-2-5', 'higgsfield', 'canva', 'gamma'] },
+  { id: 'datos', label: 'Trabajar con documentos y datos', description: 'Investigar, ordenar, consultar o convertir información propia.', tools: ['notebooklm', 'claude', 'openai', 'airtable', 'supabase'] },
+  { id: 'no-se', label: 'Todavía no lo sé', description: 'Quiero que la academia me ayude a descubrir el camino.', tools: ['openai', 'claude', 'n8n'] },
 ]
 
 const AUDIENCES: Choice[] = [

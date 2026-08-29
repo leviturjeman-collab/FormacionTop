@@ -356,7 +356,8 @@ export const TOOL_GUIDES = {
  * pueden ampliar sin cambiar la navegación.
  */
 const DISCOVERED_TOOL_META = {
-  'nano-banana': { label: 'Nano Banana', url: 'ai.google.dev', kind: 'image', plain: 'Nano Banana aparece aquí como una herramienta independiente del curso para crear y editar imágenes con instrucciones y referencias. Sirve para pasar de una idea visual a variantes controladas, pero hay que revisar composición, texto, identidad, derechos y consumo antes de publicar.' },
+  'nano-banana': { label: 'Nano Banana', url: 'ai.google.dev', kind: 'image', plain: 'Nano Banana aparece aquí como una herramienta independiente del curso para crear y editar imágenes con instrucciones y referencias. En la documentación actual se trata como la familia/capacidad de imagen de Gemini, incluyendo Gemini 2.5 Flash Image y versiones posteriores; por eso el curso obliga a comprobar el modelo exacto antes de presupuestar o entregar. Sirve para pasar de una idea visual a variantes controladas, pero hay que revisar composición, texto, identidad, derechos, marcas de agua y consumo antes de publicar.' },
+  'seedance-2-5': { label: 'Seedance 2.5', url: 'seed.bytedance.com', kind: 'video', plain: 'Seedance 2.5 aparece aquí como herramienta independiente de vídeo generativo. Sirve para convertir una idea, una imagen o una secuencia de planos en vídeo con movimiento, audio y continuidad, pero hay que revisar créditos, derechos, personas identificables, coherencia entre planos, sonido y uso comercial antes de enseñar o publicar.' },
   base44: { label: 'Base44', url: 'base44.com', kind: 'apps', plain: 'Un constructor de aplicaciones que convierte una descripción en una aplicación funcional con pantallas, datos y lógica. Sirve para prototipos y productos pequeños, pero hay que revisar qué ha creado antes de usarlo con datos reales.' },
   bolt: { label: 'Bolt.new', url: 'bolt.new', kind: 'apps', plain: 'Un constructor web que trabaja desde el navegador: describes una página o aplicación y genera una primera versión que puedes ver, editar y publicar. Es útil para prototipos rápidos, siempre que guardes el código y revises cada cambio.' },
   replit: { label: 'Replit', url: 'replit.com', kind: 'apps', plain: 'Un entorno de programación en el navegador con un agente que puede crear aplicaciones a partir de una conversación. Te da una ruta rápida de idea a demo, pero la versión que entregues debe quedar respaldada en GitHub y probada fuera del chat.' },
@@ -512,7 +513,7 @@ const TOOL_PROFILES = {
     ],
   },
   'nano-banana': {
-    intro: 'Nano Banana es una herramienta independiente para crear y editar imágenes con instrucciones y referencias. La ficha se centra en controlar identidad visual, composición, texto, variantes y revisión, sin mezclarla con la página de Gemini.',
+    intro: 'Nano Banana es la ficha práctica de imagen generativa del curso: crear y editar imágenes con instrucciones, referencias y control institucional. En Gemini puede aparecer con modelos distintos, así que la primera decisión es anotar el modelo exacto y la fecha. Se centra en identidad visual, composición, texto, variantes, revisión, marca de agua y derechos, sin esconderlo dentro de la página general de Gemini.',
     units: 'generaciones, ediciones, resolución, créditos y límites del plan',
     selection: 'modo de generación para una imagen nueva, edición para conservar una referencia, composición para controlar sujeto y cámara, texto visible para carteles y variantes controladas para comparar cambios sin perder la versión aprobada',
     catalog: [
@@ -524,6 +525,21 @@ const TOOL_PROFILES = {
       ['Texto visible', 'pedir rótulos, carteles, portadas o etiquetas', 'mockups y piezas donde el texto es parte de la escena', 'si el texto importa, comprueba cada carácter y prepara una alternativa'],
       ['Variantes y selección', 'generar opciones comparables y elegir con criterio', 'explorar sin perder una versión aprobada', 'no gastes créditos sin nombrar y guardar las pruebas'],
       ['Exportación y derechos', 'sacar el archivo final y documentar su origen', 'entregar una pieza con tamaño y formato claros', 'no publiques sin revisar marcas, rostros y uso comercial'],
+    ],
+  },
+  'seedance-2-5': {
+    intro: 'Seedance 2.5 es una herramienta de vídeo generativo que debe aprenderse como una mesa de montaje: brief, plano, movimiento, duración, continuidad, audio, revisión y exportación. La ficha evita tratar el vídeo como magia; cada generación tiene coste, descarte y criterio de aprobación.',
+    units: 'créditos, segundos generados, resolución, audio, variantes y límites del plan',
+    selection: 'empieza con un plano corto y una referencia visual cuando exista; usa texto a vídeo solo para explorar, imagen a vídeo cuando necesites continuidad visual, y secuencia/storyboard cuando el resultado tenga varios planos conectados',
+    catalog: [
+      ['Texto a vídeo', 'crear un plano desde una descripción escrita', 'probar una idea visual rápida o un plano que no existe todavía', 'no lo uses para una campaña final sin referencias ni pruebas'],
+      ['Imagen a vídeo', 'animar una imagen manteniendo sujeto, estilo y encuadre de partida', 'producto, retrato, local, pieza gráfica o escena aprobada', 'no esperes continuidad perfecta si la imagen base está mal compuesta'],
+      ['Storyboard', 'ordenar varios planos antes de generar', 'anuncios, piezas formativas, reels, demos y vídeos institucionales', 'no generes plano a plano sin saber cómo se unirán después'],
+      ['Movimiento de cámara', 'definir travelling, zoom, giro, paneo o plano estático', 'dar intención al vídeo y evitar movimiento aleatorio', 'no mezcles tres movimientos fuertes en cinco segundos'],
+      ['Audio y ritmo', 'planificar voz, música, silencio, cortes y velocidad', 'cuando el vídeo debe explicar o vender algo', 'no dejes el audio para el final si condiciona la duración'],
+      ['Continuidad visual', 'mantener personaje, objeto, color, luz y dirección entre planos', 'series, marca, producto y campañas', 'no cambies de referencia visual en cada generación'],
+      ['Revisión de artefactos', 'detectar deformaciones, manos, texto, logos, parpadeos y cambios raros', 'antes de enseñar al cliente o publicar', 'no apruebes un vídeo por impresión general sin verlo fotograma a fotograma'],
+      ['Exportación y derechos', 'guardar versión, formato, uso permitido, fuente y coste', 'entregar una pieza profesional', 'no publiques personas identificables, marcas o material de cliente sin permiso'],
     ],
   },
   n8n: {
@@ -563,11 +579,26 @@ const TASK_AUTOMATIONS = [
   ['Preparar un informe semanal de consumo', 'al final de cada periodo de trabajo', 'profesional'],
 ]
 
+const CREATIVE_WORKFLOW_TOOLS = new Set(['nano-banana', 'seedance-2-5', 'higgsfield', 'runway', 'canva', 'gamma', 'elevenlabs', 'descript', 'figma'])
+
+const CREATIVE_AUTOMATIONS = [
+  ['Convertir un brief institucional en una carpeta de producción', 'cuando se aprueba una campaña, clase, propuesta o pieza formativa', 'intermedia'],
+  ['Crear variantes con aprobación humana', 'cuando una idea visual necesita tres opciones comparables antes de gastar presupuesto', 'basica'],
+  ['Registrar derechos, fuente y uso permitido', 'cuando se genera o edita una imagen, vídeo, voz, plantilla o material de marca', 'profesional'],
+  ['Pasar una imagen aprobada a storyboard', 'cuando una pieza visual debe convertirse en vídeo, demo o reel institucional', 'intermedia'],
+  ['Revisar artefactos antes de enseñar al cliente', 'cuando termina una generación visual y todavía no se ha aprobado', 'intermedia'],
+  ['Medir créditos y coste por pieza', 'cada vez que se genera una variante o una versión exportable', 'profesional'],
+  ['Preparar entrega multiformato', 'cuando una pieza aprobada debe salir en web, presentación, redes o aula', 'intermedia'],
+  ['Pedir revisión de marca antes de publicar', 'cuando el resultado incluye logo, colores, persona, producto o promesa comercial', 'avanzada'],
+  ['Crear ficha de aprendizaje para el alumno', 'cuando un estudiante guarda el prompt, resultado, error y mejora aplicada', 'basica'],
+  ['Archivar versión final y versión editable', 'cuando una pieza queda aceptada y tiene que poder repetirse después', 'profesional'],
+]
+
 function wordCount(text) { return String(text).trim().split(/\s+/).filter(Boolean).length }
 
 function profileFor(id) {
   if (TOOL_PROFILES[id]) return TOOL_PROFILES[id]
-  const kind = id.includes('video') || ['higgsfield', 'runway', 'heygen', 'descript'].includes(id) ? 'vídeo' : id.includes('code') || ['python', 'node', 'typescript', 'react', 'vscode', 'cursor', 'codex'].includes(id) ? 'código' : id.includes('automation') || ['zapier', 'make', 'pipedream', 'n8n'].includes(id) ? 'automatización' : id.includes('data') || ['airtable', 'supabase', 'postgres', 'sheets'].includes(id) ? 'datos' : 'contenido y producto'
+  const kind = id.includes('video') || ['higgsfield', 'runway', 'heygen', 'descript', 'seedance-2-5'].includes(id) ? 'vídeo' : id.includes('code') || ['python', 'node', 'typescript', 'react', 'vscode', 'cursor', 'codex'].includes(id) ? 'código' : id.includes('automation') || ['zapier', 'make', 'pipedream', 'n8n'].includes(id) ? 'automatización' : id.includes('data') || ['airtable', 'supabase', 'postgres', 'sheets'].includes(id) ? 'datos' : 'contenido y producto'
   return { ...PROFILE_DEFAULT, intro: `En ${id} se trabaja con ${kind}. Esta guía separa las piezas internas, el momento adecuado para usarlas y las automatizaciones que conectan el resultado con el resto del proyecto.`, selection: `elige la función de ${kind} que produzca el resultado visible más pequeño y deja las conexiones para después de probar`, catalog: PROFILE_DEFAULT.catalog.map(([group, name, useWhen, avoidWhen]) => [group, `${name} dentro de ${id}`, useWhen, avoidWhen]) }
 }
 
@@ -630,6 +661,8 @@ export function completeToolGuide(existing, tool) {
   // las conectables llevan las suyas reales, y el resto no lleva la seccion.
   if (AUTOMATION_PLATFORMS.has(tool.id)) {
     guide.automations = TASK_AUTOMATIONS.map((item, index) => automationFor(tool, profile, item, index))
+  } else if (CREATIVE_WORKFLOW_TOOLS.has(tool.id)) {
+    guide.automations = CREATIVE_AUTOMATIONS.map((item, index) => automationFor(tool, profile, item, index))
   } else if (REAL_AUTOMATIONS[tool.id]) {
     guide.automations = REAL_AUTOMATIONS[tool.id]
   } else {

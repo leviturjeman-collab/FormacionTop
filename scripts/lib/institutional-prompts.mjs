@@ -61,6 +61,59 @@ const CATEGORY_META = [
   },
 ]
 
+const CATEGORY_BY_ID = new Map(CATEGORY_META.map((meta) => [meta.id, meta]))
+
+const TOOL_SECTIONS = [
+  {
+    id: 'asistentes-modelos',
+    title: 'Asistentes IA y modelos',
+    description: 'Herramientas para pensar, redactar, revisar, comparar modelos y trabajar con asistentes sin perder criterio.',
+    toolIds: ['openai', 'claude', 'anthropic', 'gemini', 'codex', 'claude-code', 'copilot', 'perplexity', 'ollama', 'huggingface', 'notebooklm', 'replicate'],
+    useCase: 'Decidir, redactar, analizar, revisar y documentar trabajo institucional con IA.',
+    audience: 'Alumnos, docentes, dirección, consultores y equipos mixtos.',
+  },
+  {
+    id: 'automatizacion-comunicacion',
+    title: 'Automatización y comunicación',
+    description: 'Herramientas que conectan formularios, correos, avisos, aprobaciones, mensajes y tareas repetidas.',
+    toolIds: ['n8n', 'zapier', 'make', 'pipedream', 'slack', 'gmail', 'telegram', 'whatsapp'],
+    useCase: 'Convertir procesos repetidos en flujos medibles, auditables y con freno humano.',
+    audience: 'Operaciones, soporte, ventas, administración, atención al cliente y backoffice.',
+  },
+  {
+    id: 'apps-codigo-deploy',
+    title: 'Apps, código y despliegue',
+    description: 'Herramientas para construir interfaces, repositorios, integraciones, pruebas y publicaciones reales.',
+    toolIds: ['lovable', 'base44', 'bolt', 'replit', 'framer', 'v0', 'cursor', 'github', 'python', 'node', 'typescript', 'react', 'vscode', 'tailwind', 'docker', 'vercel', 'colab'],
+    useCase: 'Pasar de idea a producto navegable, probado, versionado y desplegado.',
+    audience: 'Builders, perfiles técnicos, founders, alumnos avanzados y equipos que entregan software.',
+  },
+  {
+    id: 'datos-conocimiento',
+    title: 'Datos, documentos y conocimiento',
+    description: 'Herramientas para ordenar fuentes, tablas, bases de datos, documentos y conocimiento interno.',
+    toolIds: ['airtable', 'sheets', 'supabase', 'postgres', 'langchain', 'obsidian', 'notion'],
+    useCase: 'Preparar datos institucionales para búsqueda, reporting, RAG, auditoría y toma de decisiones.',
+    audience: 'Equipos con documentación, CRM, operaciones, reporting, investigación o bases de conocimiento.',
+  },
+  {
+    id: 'contenido-visual',
+    title: 'Contenido, imagen, vídeo y venta',
+    description: 'Herramientas para piezas visuales, presentaciones, vídeo, voz, campañas y comunicación profesional.',
+    toolIds: ['higgsfield', 'nano-banana', 'seedance-2-5', 'canva', 'heygen', 'descript', 'gamma', 'elevenlabs', 'midjourney', 'runway', 'figma'],
+    useCase: 'Crear piezas revisables, coherentes con la marca y listas para enseñar o vender.',
+    audience: 'Marketing, formación, agencias, creadores, consultores y equipos comerciales.',
+  },
+]
+
+const GENERAL_SECTION = {
+  id: 'prompts-generales',
+  title: 'Prompts generales del curso',
+  description: 'Prompts que vienen de la biblioteca anterior, del programa y de los kits maestros, separados en lotes pequenos.',
+  useCase: 'Trabajar por intención cuando todavía no sabes qué herramienta toca.',
+  audience: 'Cualquier alumno o responsable que quiera copiar, pegar y rellenar corchetes.',
+}
+
 const BASE_FILL = [
   ['[INSTITUCION]', 'Nombre o tipo de organización: academia, despacho, clínica, administración, pyme, departamento interno o cliente.'],
   ['[AREA_EQUIPO]', 'Área que usará el resultado: dirección, operaciones, marketing, ventas, soporte, formación, legal, producto, tecnología o administración.'],
@@ -159,6 +212,12 @@ const KIT_SCENARIOS = [
   ['CRM, datos y reporting institucional', 'conectar captación, datos, seguimiento, reporting y decisiones comerciales sin perder trazabilidad'],
 ]
 
+const SOURCE_LABELS = {
+  'Biblioteca anterior': 'Biblioteca anterior',
+  Programa: 'Programa',
+  'Kits institucionales': 'Kits institucionales',
+}
+
 function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length
 }
@@ -181,6 +240,38 @@ function categoryForToolPrompt(name) {
   if (/documentar|entregar/.test(text)) return 'entregar-equipo-cliente'
   if (/web|aplicaci[oó]n|interfaz|proyecto/.test(text)) return 'crear-proyecto'
   return 'aprender-desde-cero'
+}
+
+function slug(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'general'
+}
+
+function chunks(items, size = 50) {
+  const out = []
+  for (let index = 0; index < items.length; index += size) out.push(items.slice(index, index + size))
+  return out
+}
+
+function sectionForTool(tool) {
+  return TOOL_SECTIONS.find((section) => section.toolIds.includes(tool.id)) || TOOL_SECTIONS[0]
+}
+
+function summarizeCategories(entries) {
+  const counts = new Map()
+  for (const entry of entries) {
+    const title = CATEGORY_BY_ID.get(entry.categoryId)?.title || entry.categoryId || 'General'
+    counts.set(title, (counts.get(title) || 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'))
+    .slice(0, 5)
+    .map(([title, count]) => `${title} (${count})`)
+    .join(', ')
 }
 
 function promptCore(tool, task, index) {
@@ -306,39 +397,79 @@ function importKitPrompt([title, outcome], index) {
   }
 }
 
-function makeFamily(meta) {
+function makeFamily(meta, extra = {}) {
   return {
     id: meta.id,
     title: meta.title,
     intro: meta.intro,
     model: BASE_MODEL,
     prompts: [],
+    categoryId: meta.categoryId || meta.id,
     ...FAMILY_GUIDANCE,
+    ...extra,
   }
 }
 
 export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFiles = []) {
-  const families = new Map(CATEGORY_META.map((meta) => [meta.id, makeFamily(meta)]))
   const toolById = new Map((toolPages || []).map((tool) => [tool.id, tool]))
+  const generalEntries = []
+  const output = []
 
-  const push = (entry) => {
-    const family = families.get(entry.categoryId)
-    if (family) family.prompts.push(entry)
+  const pushGeneral = (entry) => {
+    if (CATEGORY_BY_ID.has(entry.categoryId)) generalEntries.push(entry)
   }
 
   for (const family of baseFamilies || []) {
     for (const [index, prompt] of (family.prompts || []).entries()) {
-      push(importBasePrompt(family, prompt, index))
+      pushGeneral(importBasePrompt(family, prompt, index))
     }
   }
 
   for (const [index, kit] of KIT_SCENARIOS.entries()) {
-    push(importKitPrompt(kit, index))
+    pushGeneral(importKitPrompt(kit, index))
   }
 
   for (const lesson of cursoFiles || []) {
     for (const [index, task] of (lesson.tasks || []).filter((item) => item.prompt).entries()) {
-      push(importCoursePrompt(lesson, task, index, toolById))
+      pushGeneral(importCoursePrompt(lesson, task, index, toolById))
+    }
+  }
+
+  for (const meta of CATEGORY_META) {
+    const entries = generalEntries.filter((entry) => entry.categoryId === meta.id)
+    if (!entries.length) continue
+    const bySource = new Map()
+    for (const entry of entries) {
+      const source = SOURCE_LABELS[entry.source] || entry.source || 'General'
+      if (!bySource.has(source)) bySource.set(source, [])
+      bySource.get(source).push(entry)
+    }
+    for (const [source, sourceEntries] of bySource.entries()) {
+      const sourceChunks = chunks(sourceEntries, 50)
+      for (const [index, group] of sourceChunks.entries()) {
+        const suffix = sourceChunks.length > 1 ? ` ${index + 1}` : ''
+        output.push(makeFamily(
+          {
+            id: `general-${meta.id}-${slug(source)}${suffix ? `-${index + 1}` : ''}`,
+            title: `${meta.title} · ${source}${suffix}`,
+            intro: `${group.length} prompts institucionales de ${source.toLowerCase()} para ${meta.intro.toLowerCase()}`,
+            categoryId: meta.id,
+          },
+          {
+            sectionId: GENERAL_SECTION.id,
+            sectionTitle: GENERAL_SECTION.title,
+            sectionDescription: GENERAL_SECTION.description,
+            blockTitle: `${meta.title}: ${source}${suffix}`,
+            blockDescription: `Lote pequeno con ${group.length} prompts. Contiene ${meta.intro.toLowerCase()}`,
+            useCase: GENERAL_SECTION.useCase,
+            audience: GENERAL_SECTION.audience,
+            toolId: 'general',
+            toolLabel: 'General institucional',
+            source,
+            prompts: group,
+          },
+        ))
+      }
     }
   }
 
@@ -356,8 +487,45 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
       fallbackIndex += 1
     }
 
-    for (const entry of entries.slice(0, 50)) push(entry)
+    const section = sectionForTool(tool)
+    const prompts = entries.slice(0, 50)
+    output.push(makeFamily(
+      {
+        id: `herramienta-${tool.id}`,
+        title: `${tool.label} · 50 prompts`,
+        intro: `50 prompts institucionales para usar ${tool.label} dentro de proyectos reales, con corchetes rellenables, prueba, evidencia, coste, privacidad y entrega.`,
+        categoryId: 'herramienta',
+      },
+      {
+        sectionId: section.id,
+        sectionTitle: section.title,
+        sectionDescription: section.description,
+        blockTitle: tool.label,
+        blockDescription: `Lote cerrado de 50 prompts. Reparte el trabajo entre ${summarizeCategories(prompts)}.`,
+        useCase: section.useCase,
+        audience: section.audience,
+        toolId: tool.id,
+        toolLabel: tool.label,
+        source: 'Herramienta',
+        prompts,
+        canDo: [
+          `Trabajar con ${tool.label} sin empezar por botones sueltos: primero problema, entrada, salida, prueba y evidencia.`,
+          'Elegir el prompt por intención concreta y adaptar el lenguaje a principiantes, dirección o equipo técnico.',
+          'Conectar la herramienta con el resto del proyecto institucional sin olvidar privacidad, coste y mantenimiento.',
+        ],
+        cantDo: [
+          'No sustituye la revisión oficial de precios, planes, permisos o funciones recientes del proveedor.',
+          'No convierte una cuenta personal en sistema institucional sin política de datos, aprobación y registro.',
+          'No activa acciones sensibles sin prueba con datos ficticios y aprobación humana.',
+        ],
+        tips: [
+          `Si no sabes por dónde empezar con ${tool.label}, usa primero los prompts de aprender, comparar y definir proyecto.`,
+          'Después filtra dentro del lote por automatizar, datos, agentes, seguridad, prueba o entrega.',
+          'Guarda solo los prompts que produzcan una evidencia útil para Mi proyecto.',
+        ],
+      },
+    ))
   }
 
-  return [...families.values()].filter((family) => family.prompts.length)
+  return output.filter((family) => family.prompts.length)
 }
