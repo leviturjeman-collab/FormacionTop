@@ -155,6 +155,7 @@ const deckFiles = await loadContent('decks')
 const promptFiles = await loadContent('prompts')
 const guideFiles = await loadContent('guias')
 const cursoFiles = await loadContent('lecciones')
+const kitFiles = await loadContent('kits')
 
 registerGuides(extraGuides)
 registerRecipes(extraRecipes)
@@ -631,6 +632,7 @@ const course = {
     terms: glossaryIndex.length,
     projects: areaProjects.length,
     decks: deckFiles.length,
+    kits: kitFiles.length,
     sourceWords: lessons.reduce((sum, lesson) => sum + lesson.sourceWords, 0),
     quizQuestions: lessons.reduce(
       (sum, lesson) => sum + LEVELS.reduce((acc, level) => acc + lesson.levels[level].quiz.length, 0),
@@ -649,6 +651,7 @@ const course = {
   prompts: promptLibrary,
   guides: guideFiles,
   curso: cursoFiles.sort((a, b) => (a.number || 0) - (b.number || 0)),
+  kits: kitFiles.sort((a, b) => (a.order || 0) - (b.order || 0)),
   toolPages,
   glossaryIndex,
   folders,

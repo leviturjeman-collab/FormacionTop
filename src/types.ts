@@ -582,6 +582,174 @@ export interface CursoLesson {
   next?: string
 }
 
+/* --- Kits institucionales ------------------------------------------
+ * Un kit tiene que bastarse solo: el alumno entra, define SU proyecto
+ * con el brief, y sale con el sistema montado sin abrir otra pestaña.
+ * Por eso los prompts van con su texto literal aqui dentro, y cada paso
+ * trae la ruta sin programar y la version en codigo. */
+
+/** Un hueco que el alumno rellena antes de pegar el prompt. */
+export interface KitFill {
+  slot: string
+  what: string
+  example: string
+}
+
+export interface KitPrompt {
+  id: string
+  name: string
+  when: string
+  prompt: string
+  fill: KitFill[]
+  expect: string
+  stuck?: string
+}
+
+export interface KitCode {
+  lang: string
+  file?: string
+  code: string
+  note: string
+}
+
+export interface KitStep {
+  title: string
+  minutes: number
+  where: string
+  action: string
+  /** La ruta sin programar. Es la principal. */
+  nocode?: string
+  /** La misma cosa en codigo, para quien quiera bajar. */
+  code?: KitCode
+  /** Id de un prompt de kit.prompts que se usa en este paso. */
+  promptId?: string
+  expect: string
+  stuck?: string
+}
+
+export interface KitPhase {
+  id: string
+  title: string
+  goal: string
+  minutes: number
+  steps: KitStep[]
+  deliverable: string
+  done: string[]
+}
+
+/** Mismo sistema con tres alcances, para que el proyecto quepa en el tiempo real. */
+export interface KitScope {
+  id: string
+  label: string
+  what: string
+  time: string
+  cost: string
+  skip: string
+}
+
+export interface KitLayer {
+  layer: string
+  what: string
+  nocode: string
+  code: string
+  why: string
+}
+
+export interface KitStackChoice {
+  need: string
+  nocode: string
+  code: string
+  pick: string
+}
+
+export interface KitEntity {
+  entity: string
+  fields: [string, string][]
+  note: string
+}
+
+export interface KitRisk {
+  risk: string
+  sign: string
+  fix: string
+}
+
+export interface KitDeliverable {
+  name: string
+  what: string
+  template: string
+}
+
+export interface KitPrice {
+  tier: string
+  what: string
+  price: string
+  note: string
+}
+
+export interface KitCost {
+  item: string
+  free: string
+  paid: string
+  note: string
+}
+
+export interface KitDefense {
+  question: string
+  answer: string
+}
+
+export interface KitWorkflow {
+  name: string
+  what: string
+  needs: string[]
+  /** El flujo de n8n tal cual. La pagina lo convierte a texto para el boton de copiar. */
+  flow: Record<string, unknown>
+  fill: [string, string][]
+  careful: string[]
+}
+
+export interface KitTestCase {
+  name: string
+  input: string
+  expect: string
+}
+
+export interface InstitutionalKit {
+  id: string
+  title: string
+  kicker: string
+  promise: string
+  audience: string
+  /** Que es esto, en cristiano, para quien no sabe de que va. */
+  plain: string
+  /** Ejemplos abiertos de proyectos que salen de aqui. */
+  fits: string[]
+  notFor: string[]
+  scopes: KitScope[]
+  /** El cuestionario de arranque: convierte "quiero algo" en un proyecto definido. */
+  brief: KitPrompt
+  architecture: KitLayer[]
+  stack: KitStackChoice[]
+  data: KitEntity[]
+  phases: KitPhase[]
+  prompts: KitPrompt[]
+  workflows: KitWorkflow[]
+  testData: KitTestCase[]
+  costs: KitCost[]
+  legal: string[]
+  risks: KitRisk[]
+  delivery: KitDeliverable[]
+  pricing: KitPrice[]
+  defend: KitDefense[]
+  words: [string, string][]
+  /** Enlaces al resto del portal. */
+  tools: string[]
+  promptFamilies: string[]
+  skillKeywords: string[]
+  deliverables: string[]
+}
+
 export interface Course {
   generatedAt: string
   vaultName: string
@@ -609,6 +777,7 @@ export interface Course {
   prompts: PromptFamily[]
   guides: Guide[]
   curso: CursoLesson[]
+  kits: InstitutionalKit[]
   toolPages: ToolPage[]
   glossaryIndex: GlossaryEntry[]
   folders: Folder[]
