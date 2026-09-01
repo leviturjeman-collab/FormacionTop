@@ -302,30 +302,40 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       <div className="st-blocks">
         {leccion.theory.map((part, index) => (
-          <section key={index} className="st-block st-block-seccion">
-            <h3><Lightbulb size={15} /> {part.title}</h3>
-            <p className="st-part-text">{part.text}</p>
-            {part.analogy && (
-              <p className="st-guide-analogy"><Quote size={13} /> <span>{part.analogy}</span></p>
-            )}
-            {part.example && (
-              <p className="st-curso-example"><b>Por ejemplo:</b> {part.example}</p>
-            )}
-            {/* El dibujo va pegado al concepto que explica, no en un anexo. */}
-            {part.visual && <Piece piece={part.visual} />}
-          </section>
+          <details key={index} className="st-block st-block-seccion" open={index === 0}>
+            <summary>
+              <span><Lightbulb size={15} /><strong>{part.title}</strong></span>
+              <span className="st-block-summary-meta"><i>Abrir</i></span>
+            </summary>
+            <div className="st-block-body">
+              <p className="st-part-text">{part.text}</p>
+              {part.analogy && (
+                <p className="st-guide-analogy"><Quote size={13} /> <span>{part.analogy}</span></p>
+              )}
+              {part.example && (
+                <p className="st-curso-example"><b>Por ejemplo:</b> {part.example}</p>
+              )}
+              {/* El dibujo va pegado al concepto que explica, no en un anexo. */}
+              {part.visual && <Piece piece={part.visual} />}
+            </div>
+          </details>
         ))}
       </div>
 
       {leccion.words?.length > 0 && (
-        <section className="st-block st-block-palabras">
-          <h3><Languages size={15} /> Las palabras que vas a leer, en cristiano</h3>
-          <dl className="st-words">
-            {leccion.words.map(([term, meaning]) => (
-              <div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>
-            ))}
-          </dl>
-        </section>
+        <details className="st-block st-block-palabras">
+          <summary>
+            <span><Languages size={15} /><strong>Las palabras que vas a leer, en cristiano</strong></span>
+            <span className="st-block-summary-meta"><b>{leccion.words.length}</b><i>Abrir</i></span>
+          </summary>
+          <div className="st-block-body">
+            <dl className="st-words">
+              {leccion.words.map(([term, meaning]) => (
+                <div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>
+              ))}
+            </dl>
+          </div>
+        </details>
       )}
 
       <section className="st-tasks">
@@ -361,41 +371,51 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                   </div>
                 </div>
 
-                <p className="st-task-action">{task.action}</p>
-                {task.prompt && <Prompt text={task.prompt} />}
-                <p className="st-task-expected"><b>Tienes que ver:</b> {task.expect}</p>
-                {task.stuck && (
-                  <p className="st-task-stuck">
-                    <HelpCircle size={12} />
-                    <span><b>Si no te sale:</b> {task.stuck}</span>
-                  </p>
-                )}
-                <Notebook
-                  slug={`curso:${lessonId}`}
-                  level="intermedio"
-                  noteKey={String(index)}
-                  label="Qué te ha salido"
-                  placeholder="Pega aquí el resultado o apunta lo que has decidido…"
-                />
+                <details className="st-task-detail" open={index === 0 || hecha}>
+                  <summary>Ver instrucciones, prompt y evidencia</summary>
+                  <div>
+                    <p className="st-task-action">{task.action}</p>
+                    {task.prompt && <Prompt text={task.prompt} />}
+                    <p className="st-task-expected"><b>Tienes que ver:</b> {task.expect}</p>
+                    {task.stuck && (
+                      <p className="st-task-stuck">
+                        <HelpCircle size={12} />
+                        <span><b>Si no te sale:</b> {task.stuck}</span>
+                      </p>
+                    )}
+                    <Notebook
+                      slug={`curso:${lessonId}`}
+                      level="intermedio"
+                      noteKey={String(index)}
+                      label="Qué te ha salido"
+                      placeholder="Pega aquí el resultado o apunta lo que has decidido…"
+                    />
+                  </div>
+                </details>
               </li>
             )
           })}
         </ol>
       </section>
 
-      <section className="st-block st-block-importa">
-        <h3><Scale size={15} /> Lo que importa y lo que no</h3>
-        <div className="st-matters">
-          <div className="st-matters-yes">
-            <strong><Check size={11} /> Presta atención a esto</strong>
-            <ul>{leccion.matters.map((item) => <li key={item}>{item}</li>)}</ul>
-          </div>
-          <div className="st-matters-no">
-            <strong><Ban size={11} /> Puedes ignorar esto</strong>
-            <ul>{leccion.ignore.map((item) => <li key={item}>{item}</li>)}</ul>
+      <details className="st-block st-block-importa">
+        <summary>
+          <span><Scale size={15} /><strong>Lo que importa y lo que no</strong></span>
+          <span className="st-block-summary-meta"><b>{leccion.matters.length + leccion.ignore.length}</b><i>Abrir</i></span>
+        </summary>
+        <div className="st-block-body">
+          <div className="st-matters">
+            <div className="st-matters-yes">
+              <strong><Check size={11} /> Presta atención a esto</strong>
+              <ul>{leccion.matters.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+            <div className="st-matters-no">
+              <strong><Ban size={11} /> Puedes ignorar esto</strong>
+              <ul>{leccion.ignore.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
           </div>
         </div>
-      </section>
+      </details>
 
       {leccion.pieces?.length ? (
         <section className="st-interactive">
@@ -422,16 +442,24 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         </section>
       )}
 
-      <div className="st-matters">
-        <div className="st-matters-yes">
-          <strong><Check size={11} /> Esto la IA sí lo hace bien</strong>
-          <ul>{leccion.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
+      <details className="st-block st-block-importa">
+        <summary>
+          <span><Check size={15} /><strong>Atajos prácticos y límites</strong></span>
+          <span className="st-block-summary-meta"><b>{leccion.canDo.length + leccion.cantDo.length}</b><i>Abrir</i></span>
+        </summary>
+        <div className="st-block-body">
+          <div className="st-matters">
+            <div className="st-matters-yes">
+              <strong><Check size={11} /> Esto la IA sí lo hace bien</strong>
+              <ul>{leccion.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+            <div className="st-matters-no">
+              <strong><Ban size={11} /> Esto no lo hace</strong>
+              <ul>{leccion.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          </div>
         </div>
-        <div className="st-matters-no">
-          <strong><Ban size={11} /> Esto no lo hace</strong>
-          <ul>{leccion.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
-        </div>
-      </div>
+      </details>
 
       {leccion.next && (
         <p className="st-curso-next"><ArrowRight size={13} /> <span>{leccion.next}</span></p>

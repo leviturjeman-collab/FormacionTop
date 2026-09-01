@@ -468,6 +468,22 @@ const PROMPT_TASKS = [
   ['Documentar y entregar', 'preparar una entrega que otra persona pueda usar, revisar y mantener', 'Incluye instalación, uso, límites, coste, secretos, recuperación y responsable.'],
 ]
 
+const EXTRA_PROMPT_TASKS = [
+  ['Elegir herramienta antes de empezar', 'decidir si esta herramienta encaja o si conviene una alternativa más simple', 'Compara necesidad real, coste, permisos, mantenimiento y evidencia antes de elegir.'],
+  ['Preparar un briefing reutilizable', 'convertir una idea en un documento breve que se pueda reutilizar en nuevos encargos', 'Incluye contexto fijo, decisiones tomadas, límites y criterios de aprobación.'],
+  ['Crear una checklist de revisión', 'tener una lista corta para aprobar o rechazar la salida antes de usarla', 'La checklist debe detectar errores visibles, permisos, datos sensibles, coste y salida incompleta.'],
+  ['Convertir una salida en plantilla', 'transformar un buen resultado en una plantilla que otra persona pueda repetir', 'Separa lo fijo de lo variable y deja huecos claros entre corchetes.'],
+  ['Diseñar una prueba con datos ficticios', 'ensayar el proceso completo sin tocar datos reales ni publicar nada', 'Usa casos normal, incompleto, duplicado, extremo y uno que deba parar.'],
+  ['Comparar dos versiones', 'decidir qué versión es mejor con criterios observables y no por intuición', 'Define criterios antes de mirar los resultados y conserva ambas evidencias.'],
+  ['Preparar una demo para cliente', 'enseñar el resultado sin exponer secretos, datos reales ni promesas falsas', 'Incluye guion, recorrido feliz, fallo controlado y límites conocidos.'],
+  ['Reducir coste sin perder calidad', 'identificar qué partes gastan más y cómo bajar consumo sin romper el resultado', 'Separa volumen, modelo, créditos, reintentos, tamaño de entrada y trabajo repetido.'],
+  ['Crear documentación para mantenimiento', 'dejar instrucciones para arreglar o repetir el trabajo cuando tú no estés', 'Incluye responsable, credenciales, pruebas, errores frecuentes y recuperación.'],
+  ['Auditar privacidad y permisos', 'revisar qué datos entran, quién los ve y qué permisos has concedido', 'Marca datos personales, secretos, retención, enlaces públicos y acciones irreversibles.'],
+]
+
+const MIN_TOOL_PROMPTS = 25
+const NO_PROMPT_TOOLS = new Set(['wispr-flow'])
+
 const PROFILE_DEFAULT = {
   intro: 'Esta ficha no se queda en el nombre del producto: te enseña qué piezas hay dentro, qué decisión resuelve cada una y cómo encaja en un proyecto completo.',
   units: 'tokens, créditos, tareas o ejecuciones',
@@ -591,6 +607,20 @@ const TASK_AUTOMATIONS = [
   ['Guardar una auditoría de cada ejecución', 'cada vez que el flujo procesa un caso', 'profesional'],
   ['Parar y avisar cuando falta un dato obligatorio', 'cuando una entrada está incompleta', 'basica'],
   ['Preparar un informe semanal de consumo', 'al final de cada periodo de trabajo', 'profesional'],
+  ['Crear un borrador y dejarlo para revisión humana', 'cuando llega una petición que requiere respuesta pero no envío automático', 'intermedia'],
+  ['Mover adjuntos a una carpeta ordenada', 'cuando entra un correo o formulario con archivos', 'basica'],
+  ['Extraer facturas y marcar excepciones', 'cuando aparece una factura nueva en una carpeta o buzón', 'avanzada'],
+  ['Actualizar un CRM desde una conversación', 'cuando se cierra una llamada, reunión o chat con un cliente', 'intermedia'],
+  ['Crear un ticket de soporte con prioridad', 'cuando entra una incidencia por correo, formulario o chat', 'intermedia'],
+  ['Escalar un caso si no hay respuesta', 'cuando una tarea lleva demasiadas horas sin avanzar', 'basica'],
+  ['Publicar contenido solo después de aprobarlo', 'cuando una pieza queda revisada por una persona', 'avanzada'],
+  ['Generar variantes de contenido y elegir la mejor', 'cuando se aprueba una idea base de campaña', 'intermedia'],
+  ['Vigilar una web o API y abrir incidente', 'cada pocos minutos o cuando un monitor detecta caída', 'avanzada'],
+  ['Limpiar y normalizar una base de datos', 'cuando se importa un CSV, hoja o exportación externa', 'intermedia'],
+  ['Enviar onboarding personalizado', 'cuando se crea un usuario, cliente o alumno nuevo', 'basica'],
+  ['Preparar una reunión con contexto', 'antes de un evento del calendario', 'intermedia'],
+  ['Cerrar el día con pendientes y bloqueos', 'al final de la jornada laboral', 'basica'],
+  ['Rotar secretos y comprobar credenciales', 'según calendario o aviso de caducidad', 'profesional'],
 ]
 
 function wordCount(text) { return String(text).trim().split(/\s+/).filter(Boolean).length }
@@ -670,6 +700,43 @@ function generatedPromptsFor(tool, profile) {
   }))
 }
 
+function ensureMinimumToolPrompts(guide, tool, profile) {
+  if (NO_PROMPT_TOOLS.has(tool.id)) return guide.prompts || []
+  const prompts = Array.isArray(guide.prompts) ? guide.prompts : []
+  const used = new Set(prompts.map((item) => String(item?.name || '').trim().toLowerCase()).filter(Boolean))
+  const candidates = [...PROMPT_TASKS, ...EXTRA_PROMPT_TASKS]
+  let index = prompts.length
+
+  for (const task of candidates) {
+    if (prompts.length >= MIN_TOOL_PROMPTS) break
+    const name = `${task[0]} con ${tool.label}`
+    if (used.has(name.toLowerCase())) continue
+    prompts.push({
+      name,
+      prompt: promptFor(tool, profile, task, index),
+      when: `Úsalo cuando quieras ${task[1]}.`,
+      model: profile.selection,
+    })
+    used.add(name.toLowerCase())
+    index += 1
+  }
+
+  while (prompts.length < MIN_TOOL_PROMPTS) {
+    const round = prompts.length - candidates.length + 1
+    const task = PROMPT_TASKS[prompts.length % PROMPT_TASKS.length]
+    const name = `${task[0]} aplicado a un caso ${round} con ${tool.label}`
+    prompts.push({
+      name,
+      prompt: promptFor(tool, profile, task, index),
+      when: `Úsalo cuando necesites una variante aplicada a un caso real distinto.`,
+      model: profile.selection,
+    })
+    index += 1
+  }
+
+  return prompts
+}
+
 function automationFor(tool, profile, blueprint, index) {
   const [name, trigger, difficulty] = blueprint
   const platform = tool.id === 'n8n' ? 'n8n · workflow importable y prueba manual' : `n8n conectado con ${tool.label}`
@@ -702,6 +769,7 @@ export function completeToolGuide(existing, tool) {
   const profile = profileFor(tool.id)
   guide.catalog = { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: 'Pieza interna', name: group, what, useWhen, avoidWhen, model })) }
   if (!Array.isArray(guide.prompts)) guide.prompts = generatedPromptsFor(tool, profile)
+  guide.prompts = ensureMinimumToolPrompts(guide, tool, profile)
   guide.prompts = enrichToolPrompts(guide.prompts, tool, profile)
   // Las automatizaciones van donde tienen sentido, no en todas por plantilla:
   // las plataformas llevan el recetario general (son recetas de plataforma),

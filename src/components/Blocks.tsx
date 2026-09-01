@@ -75,12 +75,25 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
       {blocks.map((block, index) => {
         if (block.kind === 'instalar') return <Install key={index} block={block} />
         const Icon = ICONS[(block.icon as BlockKind) || block.kind] || ICONS[block.kind] || Lightbulb
+        const itemCount =
+          block.kind === 'tabla' ? block.table?.rows.length || 0
+          : block.kind === 'importa' ? (block.matters?.length || 0) + (block.ignore?.length || 0)
+          : block.kind === 'cuenta' ? block.account?.steps.length || 0
+          : block.parts?.length || strings(block.items).length || block.lines?.length || block.errors?.length || 0
         return (
-          <section key={`${block.kind}-${index}`} className={`st-block st-block-${block.kind}`}>
-            <h3>
-              {block.app ? <BrandMark icon={block.app.icon} size={16} /> : <Icon size={15} />}
-              {block.title}
-            </h3>
+          <details key={`${block.kind}-${index}`} className={`st-block st-block-${block.kind}`} open={index === 0}>
+            <summary>
+              <span>
+                {block.app ? <BrandMark icon={block.app.icon} size={16} /> : <Icon size={15} />}
+                <strong>{block.title}</strong>
+              </span>
+              <span className="st-block-summary-meta">
+                {itemCount ? <b>{itemCount}</b> : null}
+                <i>Abrir</i>
+              </span>
+            </summary>
+
+            <div className="st-block-body">
 
             {block.text && <p>{block.text}</p>}
 
@@ -276,7 +289,8 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
                 </table>
               </div>
             )}
-          </section>
+            </div>
+          </details>
         )
       })}
     </div>

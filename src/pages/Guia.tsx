@@ -102,25 +102,35 @@ export default function Guia({ guideId }: { guideId?: string }) {
 
       <div className="st-blocks">
         {guia.theory.map((part, index) => (
-          <section key={index} className="st-block st-block-seccion">
-            <h3><Lightbulb size={15} /> {part.title}</h3>
-            <p className="st-part-text">{part.text}</p>
-            {part.analogy && (
-              <p className="st-guide-analogy"><Quote size={13} /> <span>{part.analogy}</span></p>
-            )}
-          </section>
+          <details key={index} className="st-block st-block-seccion" open={index === 0}>
+            <summary>
+              <span><Lightbulb size={15} /><strong>{part.title}</strong></span>
+              <span className="st-block-summary-meta"><i>Abrir</i></span>
+            </summary>
+            <div className="st-block-body">
+              <p className="st-part-text">{part.text}</p>
+              {part.analogy && (
+                <p className="st-guide-analogy"><Quote size={13} /> <span>{part.analogy}</span></p>
+              )}
+            </div>
+          </details>
         ))}
       </div>
 
       {guia.words?.length > 0 && (
-        <section className="st-block st-block-palabras">
-          <h3><Languages size={15} /> Las palabras que vas a leer, en cristiano</h3>
-          <dl className="st-words">
-            {guia.words.map(([term, meaning]) => (
-              <div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>
-            ))}
-          </dl>
-        </section>
+        <details className="st-block st-block-palabras">
+          <summary>
+            <span><Languages size={15} /><strong>Las palabras que vas a leer, en cristiano</strong></span>
+            <span className="st-block-summary-meta"><b>{guia.words.length}</b><i>Abrir</i></span>
+          </summary>
+          <div className="st-block-body">
+            <dl className="st-words">
+              {guia.words.map(([term, meaning]) => (
+                <div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>
+              ))}
+            </dl>
+          </div>
+        </details>
       )}
 
       <section className="st-tasks">
@@ -157,31 +167,44 @@ export default function Guia({ guideId }: { guideId?: string }) {
                   </div>
                 </div>
 
-                <p className="st-task-action">{task.action}</p>
-                {task.prompt && <TaskPrompt text={task.prompt} />}
-                <p className="st-task-expected"><b>Tienes que ver:</b> {task.expect}</p>
-                {task.stuck && (
-                  <p className="st-task-stuck">
-                    <HelpCircle size={12} />
-                    <span><b>Si no te sale:</b> {task.stuck}</span>
-                  </p>
-                )}
+                <details className="st-task-detail" open={index === 0 || hecha}>
+                  <summary>Ver instrucciones, prompt y evidencia</summary>
+                  <div>
+                    <p className="st-task-action">{task.action}</p>
+                    {task.prompt && <TaskPrompt text={task.prompt} />}
+                    <p className="st-task-expected"><b>Tienes que ver:</b> {task.expect}</p>
+                    {task.stuck && (
+                      <p className="st-task-stuck">
+                        <HelpCircle size={12} />
+                        <span><b>Si no te sale:</b> {task.stuck}</span>
+                      </p>
+                    )}
+                  </div>
+                </details>
               </li>
             )
           })}
         </ol>
       </section>
 
-      <div className="st-matters">
-        <div className="st-matters-yes">
-          <strong><Check size={11} /> Esto sí puedes hacerlo</strong>
-          <ul>{guia.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
+      <details className="st-block st-block-importa">
+        <summary>
+          <span><Check size={15} /><strong>Atajos y cosas que importan</strong></span>
+          <span className="st-block-summary-meta"><b>{guia.canDo.length + guia.cantDo.length}</b><i>Abrir</i></span>
+        </summary>
+        <div className="st-block-body">
+          <div className="st-matters">
+            <div className="st-matters-yes">
+              <strong><Check size={11} /> Esto sí puedes hacerlo</strong>
+              <ul>{guia.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+            <div className="st-matters-no">
+              <strong><Ban size={11} /> Esto todavía no</strong>
+              <ul>{guia.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          </div>
         </div>
-        <div className="st-matters-no">
-          <strong><Ban size={11} /> Esto todavía no</strong>
-          <ul>{guia.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
-        </div>
-      </div>
+      </details>
 
       <nav className="st-lesson-nav">
         {anterior ? (

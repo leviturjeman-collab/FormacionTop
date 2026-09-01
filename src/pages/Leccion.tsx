@@ -230,16 +230,21 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                   </div>
                 </div>
 
-                <p className="st-task-action">{step.action}</p>
-                <p className="st-task-expected"><b>Tienes que ver:</b> {step.expected}</p>
+                <details className="st-task-detail" open={index === 0 || hecha}>
+                  <summary>Ver instrucciones y evidencia</summary>
+                  <div>
+                    <p className="st-task-action">{step.action}</p>
+                    <p className="st-task-expected"><b>Tienes que ver:</b> {step.expected}</p>
 
-                <Notebook
-                  slug={slug}
-                  level={active}
-                  noteKey={String(index)}
-                  label={`Qué te ha salido`}
-                  placeholder="Pega aquí el resultado, o escribe qué has decidido…"
-                />
+                    <Notebook
+                      slug={slug}
+                      level={active}
+                      noteKey={String(index)}
+                      label={`Qué te ha salido`}
+                      placeholder="Pega aquí el resultado, o escribe qué has decidido…"
+                    />
+                  </div>
+                </details>
               </li>
             )
           })}

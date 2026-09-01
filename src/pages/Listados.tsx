@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Check, ChevronDown, Clipboard, Search } from 'lucide-react'
 import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href, type Route } from '../router'
@@ -505,45 +505,6 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
     },
   })
 
-  // Antes de la lista de prompts, el modo de empleo: la gente no sabe que
-  // esto se pega en un chat de IA, ni en cual, hasta que alguien se lo dice.
-  if (guide.prompts?.length) {
-    blocks.push({
-      kind: 'comprobar',
-      title: 'Cómo se usan estos prompts',
-      text: 'Un prompt es un encargo escrito para una inteligencia artificial. No se ejecuta aquí: se copia y se pega en un chat de IA. Así:',
-      items: [
-        'Copia el prompt entero con su botón, sin recortarlo: cada línea evita una respuesta genérica.',
-        'Pégalo en el chat de una IA: ChatGPT (chatgpt.com), Claude (claude.ai) o Gemini (gemini.google.com). Cualquiera de los tres vale; abajo tienes cuándo conviene cada uno.',
-        'Antes de enviar, rellena los huecos [ENTRE CORCHETES] con tu caso real. Un hueco sin rellenar es una respuesta inventada.',
-        'Lee la respuesta con criterio: es un borrador de trabajo, no una verdad. Lo que afirme sobre precios, leyes o datos concretos, compruébalo.',
-        'Si el resultado te sirve, guarda el prompt rellenado en tu archivo de prompts: los buenos se reutilizan.',
-      ],
-    })
-    blocks.push({
-      kind: 'palabras',
-      title: 'Qué IA elegir para cada encargo',
-      text: 'Los nombres de los modelos cambian cada pocos meses; esta regla, no. Dentro de cada chat, el selector de modelo distingue el rápido (barato, para lo mecánico) del grande (para razonar).',
-      items: [
-        { term: 'Documentos largos o criterio fino', meaning: 'Claude. Sostiene textos grandes y respuestas con matiz mejor que la media.' },
-        { term: 'Buscar información actual en internet', meaning: 'ChatGPT o Gemini con la búsqueda activada. Claude también busca; comprueba que la función esté activa antes de fiarte de fechas y precios.' },
-        { term: 'Trabajar con lo que ya usas de Google', meaning: 'Gemini, que vive dentro de Gmail, Drive y Docs.' },
-        { term: 'Tarea mecánica y repetitiva', meaning: 'El modelo rápido de cualquiera de los tres: más barato y de sobra para clasificar, resumir o reformatear.' },
-        { term: 'Razonamiento difícil o decisión importante', meaning: 'El modelo grande del chat que uses. Y para lo importante de verdad: pásalo por dos IA distintas y compara.' },
-      ],
-    })
-  }
-
-  for (const item of guide.prompts || []) {
-    blocks.push({
-      kind: 'codigo',
-      title: `Prompt: ${item.name}`,
-      text: [item.when, item.model ? `Elección recomendada: ${item.model}.` : ''].filter(Boolean).join(' '),
-      code: item.prompt,
-      lang: 'prompt',
-    })
-  }
-
   return blocks
 }
 
@@ -571,8 +532,85 @@ function ToolInside({ guide, label }: { guide: ToolGuide; label: string }) {
           </div>
         </section>
       ) : null}
+      {guide.prompts?.length ? <ToolPromptLibrary prompts={guide.prompts} label={label} /> : null}
       {guide.automations?.length ? <AutomationLibrary automations={guide.automations} label={label} /> : null}
     </>
+  )
+}
+
+type ToolPrompt = NonNullable<ToolGuide['prompts']>[number]
+
+function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: string }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [selected, setSelected] = useState(0)
+  const [copied, setCopied] = useState(false)
+  const filtered = prompts.filter((prompt) => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return true
+    return `${prompt.name} ${prompt.when || ''} ${prompt.model || ''} ${prompt.prompt}`.toLowerCase().includes(needle)
+  })
+  const active = filtered[Math.min(selected, Math.max(0, filtered.length - 1))] || filtered[0] || prompts[0]
+
+  function copyPrompt() {
+    if (!active?.prompt) return
+    navigator.clipboard?.writeText(active.prompt)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1400)
+  }
+
+  return (
+    <section className={`st-tool-prompts${open ? ' open' : ''}`}>
+      <button type="button" className="st-tool-prompts-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        <span>
+          <small>Prompts de {label}</small>
+          <strong>{prompts.length} prompts listos para copiar</strong>
+        </span>
+        <span>{open ? 'Ocultar' : 'Abrir'} <ChevronDown size={14} /></span>
+      </button>
+      {open && (
+        <div className="st-tool-prompts-panel">
+          <aside>
+            <label className="st-tool-prompt-search">
+              <Search size={13} />
+              <input value={query} onChange={(event) => { setQuery(event.target.value); setSelected(0) }} placeholder="Filtrar prompts..." />
+            </label>
+            <div className="st-tool-prompt-list">
+              {filtered.map((prompt, index) => (
+                <button key={`${prompt.name}-${index}`} type="button" className={prompt === active ? 'on' : ''} onClick={() => setSelected(index)}>
+                  <strong>{String(index + 1).padStart(2, '0')}</strong>
+                  <span>{prompt.name}</span>
+                </button>
+              ))}
+              {!filtered.length && <p>No hay prompts con ese filtro.</p>}
+            </div>
+          </aside>
+          {active && (
+            <article className="st-tool-prompt-detail">
+              <header>
+                <div>
+                  <span className="st-kicker">Prompt seleccionado</span>
+                  <h3>{active.name}</h3>
+                  {(active.when || active.model) && <p>{[active.when, active.model ? `Elección recomendada: ${active.model}.` : ''].filter(Boolean).join(' ')}</p>}
+                </div>
+                <button type="button" className="st-btn" onClick={copyPrompt}>
+                  {copied ? <Check size={13} /> : <Clipboard size={13} />}
+                  {copied ? 'Copiado' : 'Copiar'}
+                </button>
+              </header>
+              <details>
+                <summary>Ver el prompt completo</summary>
+                <pre><code>{active.prompt}</code></pre>
+              </details>
+              <div className="st-tool-prompt-help">
+                <strong>Cómo usarlo</strong>
+                <span>Cópialo entero, rellena los huecos entre corchetes y pégalo en ChatGPT, Claude o Gemini. Lo importante se comprueba antes de usar datos reales.</span>
+              </div>
+            </article>
+          )}
+        </div>
+      )}
+    </section>
   )
 }
 
