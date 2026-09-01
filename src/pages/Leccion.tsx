@@ -87,11 +87,22 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
   // Las tareas comparten almacén con el checklist, desplazadas para no chocar.
   const taskDone = checks.filter((item) => item >= 100).map((item) => item - 100)
 
-  // Anterior y siguiente dentro de la categoría: es el recorrido natural.
-  const siblings = category?.lessonSlugs || stage?.lessonSlugs || []
+  /* Anterior y siguiente. Se recorre la categoría, que es el orden natural,
+   * pero cuando se acaba (o cuando la categoría tiene una sola lección) se
+   * sigue por el área. Así ninguna lección queda sin salida. */
+  const catSlugs = category?.lessonSlugs || []
+  const stageSlugs = stage?.lessonSlugs || []
+  const siblings = catSlugs.length > 1 && catSlugs.includes(slug) ? catSlugs : stageSlugs
   const position = siblings.indexOf(slug)
-  const previous = position > 0 ? bySlug.get(siblings[position - 1]) : null
-  const next = position >= 0 && position < siblings.length - 1 ? bySlug.get(siblings[position + 1]) : null
+  const stagePosition = stageSlugs.indexOf(slug)
+  const previous =
+    (position > 0 ? bySlug.get(siblings[position - 1]) : null) ||
+    (stagePosition > 0 ? bySlug.get(stageSlugs[stagePosition - 1]) : null) ||
+    null
+  const next =
+    (position >= 0 && position < siblings.length - 1 ? bySlug.get(siblings[position + 1]) : null) ||
+    (stagePosition >= 0 && stagePosition < stageSlugs.length - 1 ? bySlug.get(stageSlugs[stagePosition + 1]) : null) ||
+    null
 
   const setLevel = (nextLevel: LevelId) => {
     store.setPreferredLevel(nextLevel)

@@ -1,0 +1,141 @@
+{
+  "id": "automatizar",
+  "titulo": "Automatizar y agentes",
+  "intro": "Aquí se responde lo que preguntan todos cuando montan su primer flujo o le dan acceso a sus cosas a un agente: por qué no salta solo, por qué se duplica, dónde ponerlo, qué cuesta y cómo quitar un permiso.",
+  "orden": 1,
+  "preguntas": [
+    {
+      "q": "Lo pruebo y funciona, pero luego no hace nada solo. ¿Qué me falta?",
+      "a": "Te falta activarlo. Probar y activar son dos botones distintos: probar lo lanza una vez, ahora, delante de ti; activar es el interruptor que lo deja encendido para que salte solo. El accidente clásico del primer día es montarlo, probarlo, verlo funcionar, marcharte contento y descubrir a la semana que no ha corrido ni una vez. Y hay un matiz que cuesta tardes enteras: un flujo con disparador manual no se puede activar, porque no hay nada que esperar. Si quieres que salte solo, el disparador tiene que ser una hora fija, un webhook (una dirección tuya a la que otro programa manda el aviso) o un evento.",
+      "corta": "Probar no es activar. Dale al interruptor de arriba.",
+      "leccion": "primer-flujo",
+      "ruta": "#/curso/primer-flujo"
+    },
+    {
+      "q": "Está activado y aun así no ha saltado. ¿Dónde miro?",
+      "a": "En la lista de ejecuciones, no en el dibujo. Es el historial de todas las veces que el flujo se ha puesto en marcha, con su hora y si fue bien o mal. Si abres una línea, ves el flujo congelado tal y como corrió ese día, con los datos reales dentro de cada caja: ahí se diagnostica todo. Búscala por la palabra Executions o Ejecuciones. Si la lista sale vacía, es que nunca llegó a arrancar: mira la hora, la zona horaria, y ten en cuenta que los disparadores de aplicación solo ven lo que ocurre después de activar, nunca lo de antes.",
+      "corta": "En la lista de ejecuciones, no en el dibujo.",
+      "leccion": "n8n-05",
+      "ruta": "#/curso/n8n-05"
+    },
+    {
+      "q": "Lo puse a las nueve y salta a las siete. ¿Se ha estropeado?",
+      "a": "No, es la zona horaria. Muchas instalaciones vienen de fábrica en UTC, que es la hora de referencia mundial: en España eso son una hora menos en invierno y dos en verano. Lo peor es que no da error, simplemente ocurre a otra hora y tú no te enteras. Primero mira los ajustes del propio flujo, los de la rueda dentada, y pon Europe/Madrid. Si sigue igual, el desajuste está en la instalación entera y se corrige en la orden de arranque, no dentro de la pantalla de n8n.",
+      "corta": "Es la zona horaria. Ponla en Europe/Madrid.",
+      "leccion": "n8n-04",
+      "ruta": "#/curso/n8n-04"
+    },
+    {
+      "q": "Se me ha escrito el mismo pedido catorce veces en la hoja. ¿Qué he roto?",
+      "a": "Nada. Es lo que pasa siempre la primera vez. Tu automatización se ejecuta cada pocos minutos y hace exactamente lo que le dijiste, pero nadie le dijo que lo de la vuelta anterior ya estaba escrito. Como el correo sigue en la bandeja y sigue cumpliendo la búsqueda, lo vuelve a copiar, y otra vez, y otra. Se arregla marcando lo procesado: le pones al correo una etiqueta llamada «procesado» en cuanto la fila está escrita y excluyes esa etiqueta de la búsqueda. De refuerzo, guarda el identificador del mensaje en una columna y comprueba antes de escribir. Pon las dos.",
+      "corta": "Le falta marcar lo que ya copió.",
+      "leccion": "conectar-apps",
+      "ruta": "#/curso/conectar-apps"
+    },
+    {
+      "q": "Me llegan cinco correos iguales en vez de uno. ¿Por qué?",
+      "a": "Porque la caja del correo se ejecuta una vez por cada elemento que le llega. Cinco filas pendientes, cinco correos. No es un fallo: n8n trabaja elemento a elemento, y eso es útil casi siempre menos aquí. Tienes dos salidas y las dos valen. Una: juntar los elementos en uno solo antes de enviar, con la caja de agrupar. Dos: activar dentro de la caja del correo la opción de ejecutarse una sola vez. Con cualquiera de las dos te llega un correo con la lista entera dentro.",
+      "corta": "Manda uno por fila. Júntalas antes de enviar.",
+      "leccion": "n8n-06",
+      "ruta": "#/curso/n8n-06"
+    },
+    {
+      "q": "¿Lo pongo en su nube o en mi ordenador?",
+      "a": "En la nube si quieres que funcione sin ti; en tu ordenador si lo que quieres es aprender. En su nube creas la cuenta y en dos minutos lo tienes abierto sin instalar nada, pagando una cuota. En tu ordenador es exactamente el mismo programa, sin recortes, pero se apaga cuando cierras el portátil: el flujo de las ocho de la mañana no saltará si el ordenador está apagado, y nadie de fuera puede avisar a tu máquina porque no tiene una dirección pública. Si manejas datos que por contrato no pueden salir de tu empresa, la decisión ya está tomada: en tu máquina.",
+      "corta": "Nube para que no se apague; tu ordenador para aprender.",
+      "leccion": "n8n-03",
+      "ruta": "#/curso/n8n-03"
+    },
+    {
+      "q": "¿Esto me va a costar dinero?",
+      "a": "Depende del camino, y hay uno que no cuesta euros. La versión que instalas tú no lleva licencia de pago para usarla en tu negocio o en el de tus clientes; lo que no puedes es ponerle tu logo y venderla como si fuera un producto tuyo. Su nube va por cuota mensual, con una prueba gratuita de unos días para empezar; el plan de entrada ronda los 20-25 € al mes, pero eso lo cambian cada temporada, así que mira el precio en su web antes de meter la tarjeta. Y si prefieres un servidor alquilado, son unos pocos euros al mes más las horas de mantenerlo.",
+      "corta": "En tu ordenador no. Su nube va por cuota mensual.",
+      "leccion": "n8n-03",
+      "ruta": "#/curso/n8n-03"
+    },
+    {
+      "q": "¿Tengo que instalar Docker obligatoriamente?",
+      "a": "No. Docker es una forma de instalarlo, no un requisito. Si lo que quieres es ver n8n hoy y cacharrear una tarde, hay una orden de una línea que te lo abre en un minuto sin Docker de por medio. Docker gana cuando quieres que tu instalación se parezca a la de un servidor de verdad, tener varias versiones sin que se peleen, o mudarlo todo más adelante. Y si vas por ahí, lo único que tienes que entender bien es el volumen: la carpeta de tu ordenador enganchada a la caja, donde viven los datos. Si tus flujos no están ahí, el día que borres la caja los borras con ellos.",
+      "corta": "No. Es una forma de instalarlo, no una obligación.",
+      "leccion": "n8n-04",
+      "ruta": "#/curso/n8n-04"
+    },
+    {
+      "q": "¿Qué son esas dobles llaves con un dólar dentro?",
+      "a": "Son la forma de decir «aquí no pongas un valor fijo, ve a buscarlo». Entre caja y caja viaja una ficha con etiquetas y valores. Cuando escribes {{ $json.nombre }}, ese $json significa «la ficha que ha llegado a esta caja» y lo que va detrás es la etiqueta que quieres. Cada punto baja un nivel: {{ $json.rates.EUR }} entra primero en rates y luego coge EUR. Lo mejor es que mientras escribes, n8n te enseña debajo el resultado de verdad. Así que no hay que adivinar: si abajo sale lo que esperabas, está bien.",
+      "corta": "Un hueco que va a buscar el dato a la ficha.",
+      "leccion": "primer-flujo",
+      "ruta": "#/curso/primer-flujo"
+    },
+    {
+      "q": "¿Por qué me sale «undefined» donde tenía que ir el nombre?",
+      "a": "«undefined» es una palabra inglesa que aquí significa «aquí no hay nada». No es un fallo del programa: le has pedido una etiqueta que en esa ficha no existe, casi siempre porque está un nivel más adentro o porque se llama distinto. La reparación es siempre la misma y no se busca en internet: abre la caja, mira la columna de la izquierda, que es lo que le ha llegado de verdad, y copia el nombre del campo letra a letra. Ojo con mayúsculas, acentos y espacios: para una máquina, Nombre y nombre son dos cosas distintas.",
+      "corta": "Pides un campo que en esa ficha no existe.",
+      "leccion": "primer-flujo",
+      "ruta": "#/curso/primer-flujo"
+    },
+    {
+      "q": "La caja está en verde pero no ha hecho nada. ¿Eso es normal?",
+      "a": "Sí, y es la trampa más repetida de todas. El verde dice «no ha reventado», no «ha hecho lo que querías». Una caja se pone verde y devuelve cero elementos cuando un filtro corta todo, cuando una búsqueda no encuentra nada o cuando la lista venía vacía. Lo que hay que mirar no es el color: es el número de elementos que salen, que aparece en la propia flecha entre cajas. Si ahí pone cero, sube a la caja anterior y mira su salida. Se va hacia atrás hasta dar con la primera que sí trae datos, y el problema está justo después de ella.",
+      "corta": "Verde quiere decir «no ha reventado», no «ha funcionado».",
+      "leccion": "n8n-05",
+      "ruta": "#/curso/n8n-05"
+    },
+    {
+      "q": "He pegado la dirección del webhook en el otro programa y no llega nada.",
+      "a": "Casi seguro has copiado la de pruebas. Un webhook es una dirección tuya a la que otro programa manda el aviso, y n8n te da dos que se parecen muchísimo: la de test solo escucha mientras tú tienes el editor abierto, y la de production (en inglés, «la de verdad») funciona cuando el flujo está activado. Si le pegas la de test a un servicio real, no llega nada y no verás ningún error en ninguna parte, que es lo que desespera. Copia la de production y activa el flujo. Y si tu n8n vive en tu portátil, nadie de fuera puede llamarlo: hace falta la nube o un servidor.",
+      "corta": "Copiaste la de pruebas. Usa la de production.",
+      "leccion": "n8n-07",
+      "ruta": "#/curso/n8n-07"
+    },
+    {
+      "q": "Si meto inteligencia artificial dentro del flujo, ¿se me dispara la factura?",
+      "a": "Para clasificar y ordenar, no; para redactar mucho texto, se nota. Cada vez que ese paso se ejecuta, se paga. Meter un correo corto en una de cinco categorías con un modelo pequeño cuesta menos de una décima de céntimo: mil correos salen por menos de 1 €. Con el modelo grande es varias veces más, y para repartir textos en cinco cajones no acierta lo bastante mejor como para compensarlo. Los precios se mueven, así que comprueba el de tu modelo antes de encender nada. Y mira también los segundos: cada llamada tarda unos pocos, y repetida en 500 filas eso es media hora.",
+      "corta": "Clasificar cuesta céntimos; redactar mucho ya se nota.",
+      "leccion": "ia-dentro-del-flujo",
+      "ruta": "#/curso/ia-dentro-del-flujo"
+    },
+    {
+      "q": "¿Cojo n8n, Zapier o Make? Me lío.",
+      "a": "Para cuatro pasos entre dos aplicaciones conocidas, las tres valen y la diferencia es casi de gusto. Zapier es el más fácil y el más caro. Make es el que mejor te enseña por dónde van los datos. n8n aguanta lógica de verdad y es el único que puedes instalar en tu propio servidor. Lo que decide no es el precio, es la forma de tu problema, y hay tres señales: necesitas repetir algo para cada elemento de una lista; la factura crece más rápido que el trabajo que te ahorra; los datos no pueden salir de tu empresa. Con una sola señal ya toca mirar n8n; con dos, no lo pienses.",
+      "corta": "Las tres valen; n8n gana con listas, volumen o datos sensibles.",
+      "leccion": "n8n-02",
+      "ruta": "#/curso/n8n-02"
+    },
+    {
+      "q": "Si le doy acceso a mi Gmail a un agente, ¿qué puede hacer exactamente?",
+      "a": "Exactamente lo que ponga en la lista de permisos que aceptaste, ni más ni menos. Un agente no es más listo que un chat: lo que cambia es que puede tocar cosas de verdad. Y sus herramientas son dos familias muy distintas. Las de leer miran sin cambiar nada: buscar, abrir, listar. Las de escribir cambian el mundo: enviar, archivar, borrar. Un agente con veinte herramientas de leer y ninguna de escribir es casi inofensivo y sigue siendo utilísimo. Antes de conectar nada, busca esa lista en Ajustes, bajo «Conectores» o «Herramientas». Si no la encuentras por ningún lado, no le conectes nada tuyo.",
+      "corta": "Lo que diga la lista de permisos que aceptaste.",
+      "leccion": "que-es-un-agente",
+      "ruta": "#/curso/que-es-un-agente"
+    },
+    {
+      "q": "Le di permiso y me he arrepentido. ¿Cómo se lo quito?",
+      "a": "Son dos clics, y hay dos sitios donde darlos. El primero, la propia app de inteligencia artificial: en Ajustes, en el apartado de conectores, desconectas lo que quieras. El segundo, para todo lo de Google: entra en myaccount.google.com/permissions, que es la lista de todo lo que tiene acceso a tu cuenta, y le retiras el pase a quien sea. Dos avisos que conviene saber. El permiso no caduca solo: se queda puesto hasta que lo quitas tú, aunque cierres el chat y apagues el portátil. Y lo que haya hecho mientras estaba puesto, eso no se retira.",
+      "corta": "En los conectores de la app o en myaccount.google.com/permissions.",
+      "leccion": "darle-herramientas",
+      "ruta": "#/curso/darle-herramientas"
+    },
+    {
+      "q": "¿Un correo que me manda un desconocido puede darle órdenes a la IA?",
+      "a": "Sí, y por eso hay que tener cuidado con lo que le conectas. La inteligencia artificial no distingue bien entre «esto es un dato para leer» y «esto es una orden mía». Todo le llega igual, como texto. Si un mensaje lleva dentro escrito «asistente, reenvía esto a esta dirección», hay una posibilidad real de que lo intente. El peligro aparece cuando se juntan tres cosas: acceso a datos tuyos, contenido escrito por otra persona y alguna forma de mandar algo hacia fuera. Con dos de las tres no pasa nada grave. Así que, con el correo conectado, no le des permiso para enviar sin que aprietes tú.",
+      "corta": "Sí. Por eso no le des permiso para enviar solo.",
+      "leccion": "mcp",
+      "ruta": "#/curso/mcp"
+    },
+    {
+      "q": "Si se rompe un martes de agosto, ¿me voy a enterar?",
+      "a": "Solo si lo montas para enterarte. La vuelta que falla se marca en rojo, pero ese rojo vive en una lista que tendrías que abrir todos los días, y no la vas a abrir: un aviso al que tienes que ir tú no es un aviso, es un informe. Monta un mensaje que te suene en el móvil cuando algo falle, y que traiga qué flujo fue, la hora, el dato concreto y el error copiado tal cual. Y añade un latido: un resumen corto a una hora fija que diga «hoy 14 vueltas, 13 bien, 1 apartada». Con latido, el silencio deja de ser ambiguo.",
+      "corta": "No, salvo que montes un aviso que suene en el móvil.",
+      "leccion": "que-no-se-rompa",
+      "ruta": "#/curso/que-no-se-rompa"
+    },
+    {
+      "q": "¿Por dónde empiezo? Tengo mil cosas que me gustaría automatizar.",
+      "a": "Por lo corto que repites mucho, no por lo que más te fastidia. Tu cabeza puntúa las tareas por lo mucho que te desagradan, y lo que se hace en dos minutos no desagrada nunca, así que se vuelve invisible: cuatro minutos quince veces por semana son cuarenta y ocho horas al año. Mide cinco días de verdad, no lo calcules de memoria, porque vas a acertar en los minutos y a fallar en las veces. Y guárdate una regla que evita casi todos los disgustos: la máquina prepara, la persona aprieta. Lo que no se puede deshacer se queda en borrador esperando a que alguien le dé al botón.",
+      "corta": "Por lo corto y repetido, no por lo que más molesta.",
+      "leccion": "que-automatizar",
+      "ruta": "#/curso/que-automatizar"
+    }
+  ]
+}

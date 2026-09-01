@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles } from 'lucide-react'
+import { Ban, Check, ChevronDown, Copy, Lightbulb, Save, Search, Sparkles } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
 import { store, useStudent } from '../store'
@@ -124,6 +124,10 @@ export default function Prompts({ familyId }: { familyId?: string }) {
   const [query, setQuery] = useState('')
   const [selectedTool, setSelectedTool] = useState('all')
   const [active, setActive] = useState(familyId || '')
+  /* El navegador salía entero desplegado: 72 bloques antes del primer prompt.
+   * Ahora solo se abre una sección, y de entrada ninguna. */
+  const [seccionAbierta, setSeccionAbierta] = useState<string | null>(null)
+  const [cuantos, setCuantos] = useState(20)
 
   const activeId = active || familyId || baseFamilias[0]?.id || ''
   const familia = baseFamilias.find((item) => item.id === activeId) || baseFamilias[0]
@@ -176,6 +180,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
     : 'all'
 
   function selectFamily(id: string) {
+    setCuantos(20)
     setActive(id)
     setQuery('')
     setSelectedTool('all')
@@ -200,7 +205,9 @@ export default function Prompts({ familyId }: { familyId?: string }) {
   }, [active, familyId])
 
   const showingGlobalResults = query.trim().length > 0 || activeTool !== 'all'
-  const visibles = showingGlobalResults ? searchResults.slice(0, 120) : familyPrompts
+  const encontrados = showingGlobalResults ? searchResults : familyPrompts
+  const visibles = encontrados.slice(0, cuantos)
+  const quedan = encontrados.length - visibles.length
   const exactToolCount = activeTool === 'all' ? 0 : allPromptEntries.filter(({ prompt }) => prompt.toolId === activeTool).length
 
   if (!baseFamilias.length) {
@@ -220,13 +227,13 @@ export default function Prompts({ familyId }: { familyId?: string }) {
         <span className="st-kicker"><Sparkles size={12} /> Listos para copiar</span>
         <h1>Biblioteca de prompts</h1>
         <p>
-          Banco institucional centralizado: {totalPrompts} prompts para copiar, pegar y rellenar con corchetes.
-          Cada bloque es pequeño, explicado y limitado a 50 prompts como máximo.
+          {totalPrompts} prompts escritos para copiar, pegar y rellenar los huecos entre corchetes. Están
+          repartidos en bloques: abre solo el que necesites. Si no sabes en cuál mirar, busca por una palabra.
         </p>
       </div>
 
       <section className="st-prompt-steps" aria-label="Flujo recomendado para usar prompts">
-        <div><span>01</span><strong>Entra en un bloque</strong><small>Cada panel agrupa una intención concreta o una herramienta, sin mezclar 200 prompts.</small></div>
+        <div><span>01</span><strong>Abre un bloque</strong><small>Cada bloque va de una cosa: una tarea o una herramienta. Pulsa el título para desplegarlo.</small></div>
         <div><span>02</span><strong>Busca si dudas</strong><small>Escribe cualquier palabra: correo, error, privacidad, vídeo, RAG, web, propuesta...</small></div>
         <div><span>03</span><strong>Guarda evidencia</strong><small>Copia el prompt, rellena corchetes y guarda el resultado útil en Mi proyecto.</small></div>
       </section>
@@ -263,16 +270,24 @@ export default function Prompts({ familyId }: { familyId?: string }) {
           {promptSections.map((section, sectionIndex) => {
             const sectionActive = section.families.some((family) => family.id === familia?.id)
             const sectionCount = section.families.reduce((sum, family) => sum + family.prompts.length, 0)
-            return (
-              <section key={section.id} className={`st-prompt-section${sectionActive ? ' on' : ''}`}>
-                <div className="st-prompt-section-head">
+            const abierta = seccionAbierta === section.id || (seccionAbierta === null && sectionActive)
+              return (
+              <section key={section.id} className={`st-prompt-section${sectionActive ? ' on' : ''}${abierta ? ' abierta' : ''}`}>
+                <button
+                  type="button"
+                  className="st-prompt-section-head"
+                  aria-expanded={abierta}
+                  onClick={() => setSeccionAbierta(abierta ? '' : section.id)}
+                >
                   <span>{String(sectionIndex + 1).padStart(2, '0')}</span>
                   <div>
                     <strong>{section.title}</strong>
                     <p>{section.description}</p>
                   </div>
                   <b>{section.families.length} bloques · {sectionCount} prompts</b>
-                </div>
+                  <ChevronDown size={14} className={abierta ? 'st-prompt-chevron on' : 'st-prompt-chevron'} />
+                </button>
+                {abierta && (
                 <div className="st-prompt-block-grid">
                   {section.families.map((family) => (
                     <button
@@ -289,6 +304,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
                     </button>
                   ))}
                 </div>
+                )}
               </section>
             )
           })}
@@ -322,8 +338,8 @@ export default function Prompts({ familyId }: { familyId?: string }) {
           )}
 
           <div className="st-section-head">
-            <h2>{showingGlobalResults ? 'Prompts encontrados' : 'Los 50 prompts del bloque'}</h2>
-            <span>{showingGlobalResults ? `${searchResults.length} encontrados${searchResults.length > visibles.length ? ` · mostrando ${visibles.length}` : ''}` : `${visibles.length} prompts`}</span>
+            <h2>{showingGlobalResults ? 'Prompts encontrados' : `Los ${encontrados.length} prompts de este bloque`}</h2>
+            <span>{quedan > 0 ? `Viendo ${visibles.length} de ${encontrados.length}` : `${encontrados.length} prompts`}</span>
           </div>
 
           <div className="st-prompt-list">
@@ -331,6 +347,12 @@ export default function Prompts({ familyId }: { familyId?: string }) {
               <PromptCard key={`${family.id}-${prompt.id || prompt.name}`} prompt={prompt} familyTitle={family.title} />
             ))}
           </div>
+
+          {quedan > 0 && (
+            <button type="button" className="st-prompt-mas" onClick={() => setCuantos((v) => v + 20)}>
+              Ver {Math.min(20, quedan)} prompts más · quedan {quedan}
+            </button>
+          )}
 
           {!visibles.length && (
             <div className="st-empty">

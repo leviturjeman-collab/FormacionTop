@@ -4,12 +4,13 @@
     {
       "parameters": {
         "path": "crm-updater",
-        "httpMethod": "POST"
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
       },
       "id": "webhook",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         0,
         0
@@ -17,19 +18,22 @@
     },
     {
       "parameters": {
-        "functionCode": "return [{ json: { ...$json, processed: true, priority: $json.email ? 'media' : 'bloqueado' } }];"
+        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"CRM Updater\",\n    category: \"_defecto\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
       },
       "id": "code",
       "name": "Validate and classify",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         260,
         0
       ]
     },
     {
-      "parameters": {},
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
       "id": "respond",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
@@ -71,5 +75,23 @@
     "purpose": "Actualizar CRM ficticio",
     "academy": "AI Professional Academy",
     "case_roto": "payload sin email o sin campo principal"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "referencia": "PRUEBA-0001",
+          "nombre": "Caso de ejemplo",
+          "email": "prueba@ejemplo.es",
+          "mensaje": "Texto de prueba para ver el flujo funcionando.",
+          "fecha": "2026-09-01"
+        }
+      }
+    ]
   }
 }

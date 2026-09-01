@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, Home, KeyRound, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
@@ -9,6 +9,7 @@ import MiProyecto from './pages/MiProyecto'
 import Leccion from './pages/Leccion'
 import Buscar from './pages/Buscar'
 import Indice from './pages/Indice'
+import Preguntas from './pages/Preguntas'
 import Progreso from './pages/Progreso'
 import Presentar from './pages/Presentar'
 import Proyecto from './pages/Proyecto'
@@ -99,6 +100,9 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         )}
         <a className={is('herramientas') || is('herramienta') ? 'active' : ''} href={href({ name: 'herramientas' })} onClick={onClose}>
           <Puzzle size={14} /> Herramientas
+        </a>
+        <a className={is('preguntas') ? 'active' : ''} href={href({ name: 'preguntas' })} onClick={onClose}>
+          <HelpCircle size={14} /> Preguntas
         </a>
         <a className={is('indice') ? 'active' : ''} href={href({ name: 'indice' })} onClick={onClose}>
           <ListOrdered size={14} /> Diccionario
@@ -217,6 +221,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
         const tool = course.toolPages.find((item) => item.id === route.toolId)
         return ['Herramientas', tool?.label || route.toolId]
       }
+      case 'preguntas': return ['Preguntas']
       case 'indice': return ['Diccionario', route.letter?.toUpperCase() || ''].filter(Boolean)
       case 'buscar': return ['Búsqueda', route.query ? `«${route.query}»` : ''].filter(Boolean)
       case 'presentar': return ['Presentación']
@@ -285,6 +290,7 @@ function Pages({ route }: { route: Route }) {
     case 'carpeta': return <Carpeta folderId={route.folderId} route={route} />
     case 'herramientas': return <Herramientas />
     case 'herramienta': return <Herramienta toolId={route.toolId} route={route} />
+    case 'preguntas': return <Preguntas />
     case 'indice': return <Indice letter={route.letter} />
     case 'buscar': return <Buscar query={route.query} route={route} />
     case 'progreso': return <Progreso />
@@ -295,6 +301,19 @@ function Shell() {
   const route = useRoute()
   const course = useCourse()
   const [menuOpen, setMenuOpen] = useState(false)
+  const routeKey = useMemo(() => {
+    switch (route.name) {
+      case 'area': return `${route.name}:${route.stageId}`
+      case 'categoria': return `${route.name}:${route.categoryId}:${JSON.stringify(route.filters)}`
+      case 'herramienta': return `${route.name}:${route.toolId}:${JSON.stringify(route.filters)}`
+      case 'leccion': return `${route.name}:${route.slug}:${route.level}`
+      case 'buscar': return `${route.name}:${route.query}:${JSON.stringify(route.filters)}`
+      case 'carpeta': return `${route.name}:${route.folderId}:${JSON.stringify(route.filters)}`
+      case 'guia': return `${route.name}:${route.guideId || 'indice'}`
+      case 'curso': return `${route.name}:${route.lessonId || 'indice'}`
+      default: return route.name
+    }
+  }, [route])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -306,6 +325,78 @@ function Shell() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  useEffect(() => {
+    const selector = [
+      '.st-page-title',
+      '.st-welcome',
+      '.st-overall',
+      '.st-area-head',
+      '.st-section-head',
+      '.st-block',
+      '.st-panel',
+      '.st-next-card',
+      '.st-area-preview a',
+      '.st-stat-row > div',
+      '.st-stat-list div',
+      '.st-lesson-row',
+      '.st-cat-card',
+      '.st-tool-card',
+      '.st-program-tool-card',
+      '.st-program-step',
+      '.st-program-tools-grid > a',
+      '.st-search-hit',
+      '.st-search-overview div',
+      '.st-prompt',
+      '.st-prompt-family',
+      '.st-task-list > li',
+      '.st-practice-step',
+      '.st-glossary > div',
+      '.st-tool-inside',
+      '.st-tool-inside-card',
+      '.st-automation-library',
+      '.st-automation-card',
+      '.st-automation-list a',
+      '.st-dictionary-note',
+      '.st-term-list button',
+      '.st-station',
+      '.st-checkitems button',
+      '.st-choice-grid button',
+      '.st-tool-choice',
+      '.st-page p',
+      '.st-page li',
+      '.st-page dt',
+      '.st-page dd',
+      '.st-page th',
+      '.st-page td',
+      '.st-page label',
+      '.st-page input',
+      '.st-page select',
+      '.st-page textarea',
+      '.st-page code',
+      '.st-page pre',
+      '.st-page a',
+      '.st-page button',
+    ].join(',')
+    const elements = Array.from(document.querySelectorAll<HTMLElement>(selector))
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach((element) => element.classList.add('st-inview'))
+      return
+    }
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        entry.target.classList.add('st-inview')
+        observer.unobserve(entry.target)
+      }
+    }, { threshold: 0.08, rootMargin: '0px 0px -8% 0px' })
+    elements.forEach((element, index) => {
+      element.classList.add('st-reveal')
+      element.style.setProperty('--st-reveal-delay', `${Math.min(index % 8, 5) * 28}ms`)
+      observer.observe(element)
+    })
+    return () => observer.disconnect()
+  }, [route])
 
   // Las presentaciones ocupan la pantalla entera: sin barra lateral ni cabecera.
   if (route.name === 'presentar') return <Presentar slug={route.slug} level={route.level} />
@@ -319,7 +410,11 @@ function Shell() {
       <div className="student-main">
         <Header route={route} onMenu={() => setMenuOpen(true)} />
         <main>
-          <Pages route={route} />
+          <div key={routeKey} className="st-route-canvas" data-route={route.name}>
+            <span className="st-motion-rail rail-a" aria-hidden="true" />
+            <span className="st-motion-rail rail-b" aria-hidden="true" />
+            <Pages route={route} />
+          </div>
         </main>
       </div>
 

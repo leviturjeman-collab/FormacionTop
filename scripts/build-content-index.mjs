@@ -156,6 +156,16 @@ const promptFiles = await loadContent('prompts')
 const guideFiles = await loadContent('guias')
 const cursoFiles = await loadContent('lecciones')
 const kitFiles = await loadContent('kits')
+const faqFiles = await loadContent('preguntas')
+
+/* El orden de las preguntas sigue el recorrido del alumno, no el alfabetico
+ * del sistema de archivos: primero lo que se pregunta antes de empezar. */
+const ORDEN_FAQ = ['antes', 'primeros-pasos', 'publicar', 'automatizar', 'dinero-legal']
+for (const grupo of faqFiles) {
+  const puesto = ORDEN_FAQ.indexOf(grupo.id)
+  grupo.orden = puesto === -1 ? ORDEN_FAQ.length : puesto
+}
+faqFiles.sort((a, b) => a.orden - b.orden)
 
 registerGuides(extraGuides)
 registerRecipes(extraRecipes)
@@ -633,6 +643,7 @@ const course = {
     projects: areaProjects.length,
     decks: deckFiles.length,
     kits: kitFiles.length,
+    preguntas: faqFiles.reduce((suma, grupo) => suma + (grupo.preguntas?.length || 0), 0),
     sourceWords: lessons.reduce((sum, lesson) => sum + lesson.sourceWords, 0),
     quizQuestions: lessons.reduce(
       (sum, lesson) => sum + LEVELS.reduce((acc, level) => acc + lesson.levels[level].quiz.length, 0),
@@ -652,6 +663,7 @@ const course = {
   guides: guideFiles,
   curso: cursoFiles.sort((a, b) => (a.number || 0) - (b.number || 0)),
   kits: kitFiles.sort((a, b) => (a.order || 0) - (b.order || 0)),
+  preguntas: faqFiles,
   toolPages,
   glossaryIndex,
   folders,

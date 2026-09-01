@@ -750,6 +750,24 @@ export interface InstitutionalKit {
   deliverables: string[]
 }
 
+/** Una pregunta de alumno, con su respuesta y la leccion que la desarrolla. */
+export interface FaqItem {
+  q: string
+  a: string
+  /** La respuesta en una linea, para quien solo quiere el si o el no. */
+  corta?: string
+  leccion?: string | null
+  ruta?: string | null
+}
+
+export interface FaqGroup {
+  id: string
+  titulo: string
+  intro: string
+  orden: number
+  preguntas: FaqItem[]
+}
+
 export interface Course {
   generatedAt: string
   vaultName: string
@@ -778,6 +796,7 @@ export interface Course {
   guides: Guide[]
   curso: CursoLesson[]
   kits: InstitutionalKit[]
+  preguntas: FaqGroup[]
   toolPages: ToolPage[]
   glossaryIndex: GlossaryEntry[]
   folders: Folder[]

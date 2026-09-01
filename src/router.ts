@@ -33,6 +33,7 @@ export type Route =
   | { name: 'carpeta'; folderId: string; filters: Filters }
   | { name: 'herramientas' }
   | { name: 'herramienta'; toolId: string; filters: Filters }
+  | { name: 'preguntas' }
   | { name: 'indice'; letter?: string }
   | { name: 'buscar'; query: string; filters: Filters }
   | { name: 'progreso' }
@@ -114,6 +115,8 @@ export function parseHash(hash: string): Route {
       return { name: 'herramientas' }
     case 'herramienta':
       return segments[1] ? { name: 'herramienta', toolId: segments[1], filters } : { name: 'herramientas' }
+    case 'preguntas':
+      return { name: 'preguntas' }
     case 'indice':
       return { name: 'indice', letter: segments[1] }
     case 'buscar':
@@ -163,6 +166,8 @@ export function href(route: Route): string {
       return '#/herramientas'
     case 'herramienta':
       return `#/herramienta/${encodeURIComponent(route.toolId)}${writeFilters(route.filters)}`
+    case 'preguntas':
+      return '#/preguntas'
     case 'indice':
       return route.letter ? `#/indice/${encodeURIComponent(route.letter)}` : '#/indice'
     case 'buscar': {

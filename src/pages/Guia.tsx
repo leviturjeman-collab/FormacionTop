@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Ban, Check, CheckCircle2, Circle, Clock, Copy, HelpCircle, Languages, Lightbulb, Quote } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Ban, Check, CheckCircle2, Circle, Clock, Copy, HelpCircle, Languages, Lightbulb, List, Quote } from 'lucide-react'
 import type { Guide } from '../types'
 import { useCourse } from '../course'
 import { href } from '../router'
@@ -79,6 +79,13 @@ export default function Guia({ guideId }: { guideId?: string }) {
 
   const percent = Math.round((done.length / Math.max(1, guia.tasks.length)) * 100)
 
+  /* Las guias son una secuencia, asi que se puede ir a la de al lado sin
+   * pasar por el indice. Antes no habia forma de avanzar. */
+  const todas = course.guides || []
+  const puesto = todas.findIndex((item) => item.id === guia.id)
+  const anterior = puesto > 0 ? todas[puesto - 1] : null
+  const siguiente = puesto >= 0 && puesto < todas.length - 1 ? todas[puesto + 1] : null
+
   return (
     <article className="st-lesson">
       <header className="st-lesson-head">
@@ -88,6 +95,8 @@ export default function Guia({ guideId }: { guideId?: string }) {
         <div className="st-lesson-meta">
           <span><Clock size={11} /> {guia.minutes} min</span>
           <span>{guia.tasks.length} tareas</span>
+          {puesto >= 0 && <span>Guía {puesto + 1} de {todas.length}</span>}
+          <a className="st-volver" href={href({ name: 'guia' })}><List size={11} /> Todas las guías</a>
         </div>
       </header>
 
@@ -173,6 +182,21 @@ export default function Guia({ guideId }: { guideId?: string }) {
           <ul>{guia.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
         </div>
       </div>
+
+      <nav className="st-lesson-nav">
+        {anterior ? (
+          <a href={href({ name: 'guia', guideId: anterior.id })}>
+            <ArrowLeft size={14} />
+            <span><em>Anterior</em><b>{anterior.title}</b></span>
+          </a>
+        ) : <span />}
+        {siguiente && (
+          <a className="next" href={href({ name: 'guia', guideId: siguiente.id })}>
+            <span><em>Siguiente</em><b>{siguiente.title}</b></span>
+            <ArrowRight size={14} />
+          </a>
+        )}
+      </nav>
     </article>
   )
 }

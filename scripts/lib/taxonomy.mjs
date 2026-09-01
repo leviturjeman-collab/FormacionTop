@@ -215,6 +215,7 @@ export const TOOLS = [
   { id: 'canva', label: 'Canva', icon: 'figma', match: /canva/i },
   { id: 'heygen', label: 'HeyGen', icon: 'replicate', match: /heygen/i },
   { id: 'descript', label: 'Descript', icon: 'replicate', match: /descript/i },
+  { id: 'wispr-flow', label: 'Wispr Flow', icon: 'wisprflow', match: /wispr\s*flow|\bwispr\b|dictado\s+por\s+voz|voice[- ]to[- ]text/i },
   { id: 'gamma', label: 'Gamma', icon: 'replicate', match: /gamma\.app|gamma ai/i },
   { id: 'pipedream', label: 'Pipedream', icon: 'n8n', match: /pipedream/i },
   { id: 'notebooklm', label: 'NotebookLM', icon: 'googlegemini', match: /notebooklm/i },

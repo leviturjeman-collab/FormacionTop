@@ -102,9 +102,9 @@ export function CursoIndice() {
         <span className="st-kicker">El curso</span>
         <h1>Tu programa, paso a paso</h1>
         <p>
-          Empieza por la ruta obligatoria y avanza hacia un proyecto real. Son {sueltas.length} lecciones principales,
-          unas {Math.round(requiredMin / 60)} horas. Después tienes {porHerramienta.length} fichas de herramienta con
-          prompts, automatizaciones, errores y materiales de consulta para usar solo cuando el proyecto lo pida.
+          Son {sueltas.length} lecciones, en orden, unas {Math.round(requiredMin / 60)} horas en total. Hazlas de una
+          en una. Luego hay una ficha por cada herramienta ({porHerramienta.length} en total), con sus prompts y sus
+          errores típicos: no las mires hasta que tu proyecto te pida una.
         </p>
       </div>
 
@@ -127,10 +127,10 @@ export function CursoIndice() {
       </section>
 
       <section className="st-program-guide">
-        <div><span>01</span><strong>Entender</strong><small>Qué puede hacer la IA y dónde se equivoca.</small></div>
-        <div><span>02</span><strong>Definir</strong><small>Qué problema quieres resolver y qué resultado esperas.</small></div>
-        <div><span>03</span><strong>Construir</strong><small>Una primera versión pequeña y comprobable.</small></div>
-        <div><span>04</span><strong>Entregar</strong><small>Pruebas, documentación, seguridad y siguiente versión.</small></div>
+        <div><span>→</span><strong>Entender</strong><small>Qué puede hacer la IA y dónde se equivoca.</small></div>
+        <div><span>→</span><strong>Definir</strong><small>Qué problema quieres resolver y qué resultado esperas.</small></div>
+        <div><span>→</span><strong>Construir</strong><small>Una primera versión pequeña y comprobable.</small></div>
+        <div><span>✓</span><strong>Entregar</strong><small>Pruebas, documentación, seguridad y siguiente versión.</small></div>
       </section>
 
       <section className="st-curso-divider">
@@ -142,17 +142,23 @@ export function CursoIndice() {
         <section key={stage.id} className="st-curso-area">
           <div className="st-section-head">
             <div>
-              <span className="st-kicker">{stage.number} · {stage.tagline}</span>
+              <span className="st-kicker">Bloque {stage.number} · {stage.tagline}</span>
               <h2>{stage.title}</h2>
             </div>
-            <span>{items.length} lecciones</span>
+            <span>
+              {items.length > 1
+                ? `Lecciones ${String(items[0].number).padStart(2, '0')} a ${String(items[items.length - 1].number).padStart(2, '0')}`
+                : `Lección ${String(items[0].number).padStart(2, '0')}`}
+            </span>
           </div>
 
           <ol className="st-curso-list">
             {items.map((item) => (
               <li key={item.id}>
                 <a href={href({ name: 'curso', lessonId: item.id })}>
-                  <span className="st-curso-num">{String(item.number).padStart(2, '0')}</span>
+                  <span className="st-curso-num" aria-label={`Lección ${item.number} de ${sueltas.length}`}>
+                    {String(item.number).padStart(2, '0')}
+                  </span>
                   <div>
                     <strong>{item.title}</strong>
                     <p>{item.promise}</p>
@@ -209,7 +215,7 @@ export function CursoIndice() {
       <section className="st-curso-divider st-curso-divider-sub">
         <span className="st-kicker">Rutas ya escritas</span>
         <h2>Lecciones paso a paso</h2>
-        <p>Estas herramientas ya tienen itinerario lineal dentro del Programa. El resto se estudia desde su ficha de herramienta.</p>
+        <p>Estas herramientas ya tienen sus lecciones puestas en orden. Las demás se estudian desde su ficha, cuando te hagan falta.</p>
       </section>
 
       {herramientasConRuta.map(({ id, label, items }) => (
@@ -226,7 +232,9 @@ export function CursoIndice() {
             {items.map((item) => (
               <li key={item.id}>
                 <a href={href({ name: 'curso', lessonId: item.id })}>
-                  <span className="st-curso-num">{String(item.slot || item.number).padStart(2, '0')}</span>
+                  <span className="st-curso-num st-curso-num-paso">
+                    Paso {String(item.slot || item.number).padStart(2, '0')}
+                  </span>
                   <div>
                     <strong>{item.title}</strong>
                     <p>{item.promise}</p>

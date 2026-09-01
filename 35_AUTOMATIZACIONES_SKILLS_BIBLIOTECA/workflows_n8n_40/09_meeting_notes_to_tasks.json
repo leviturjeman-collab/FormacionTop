@@ -4,12 +4,13 @@
     {
       "parameters": {
         "path": "09-meeting-notes-to-tasks",
-        "httpMethod": "POST"
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
       },
       "id": "trigger",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         0,
         0
@@ -17,12 +18,12 @@
     },
     {
       "parameters": {
-        "functionCode": "const input = $json || {};\nreturn [{ json: { ...input, workflow: '09 Meeting Notes To Tasks', category: 'productividad', status: input.email === '' ? 'needs_review' : 'processed', checked_at: new Date().toISOString() } }];"
+        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"09 Meeting Notes To Tasks\",\n    category: \"productividad\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
       },
       "id": "process",
       "name": "Validate process and enrich",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         280,
         0
@@ -55,17 +56,6 @@
         ]
       ]
     },
-    "Schedule": {
-      "main": [
-        [
-          {
-            "node": "Validate process and enrich",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Validate process and enrich": {
       "main": [
         [
@@ -85,5 +75,23 @@
     "academy": "AI Professional Academy",
     "category": "productividad",
     "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "asunto": "Resumen del día",
+          "responsable": "Marta",
+          "email": "marta@ejemplo.es",
+          "pendientes": 3,
+          "fecha": "2026-09-01"
+        }
+      }
+    ]
   }
 }

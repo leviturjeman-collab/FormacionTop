@@ -2,22 +2,32 @@
   "name": "AI Academy - Lead triage example",
   "nodes": [
     {
-      "parameters": { "path": "lead-triage-demo", "httpMethod": "POST", "responseMode": "responseNode" },
+      "parameters": {
+        "path": "lead-triage-demo",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
       "id": "webhook-lead",
       "name": "Webhook Lead",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json; const missing = []; for (const field of ['lead_id','name','email','message','source']) { if (!item[field]) missing.push(field); } return [{ json: { ...item, missing_fields: missing, needs_human_review: missing.length > 0 } }];"
+        "jsCode": "// Un webhook entrega { headers, params, query, body }: el lead va en body.\n// Antes se leia la raiz, asi que los cinco campos salian siempre ausentes.\nconst item = $input.first().json.body ?? $input.first().json;\n\nconst REQUERIDOS = ['lead_id', 'name', 'email', 'message', 'source'];\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\nconst missing = REQUERIDOS.filter((campo) => {\n  const valor = item[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{ json: { ...item, missing_fields: missing, needs_human_review: missing.length > 0 } }];"
       },
       "id": "validate-lead",
       "name": "Validate Lead",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [520, 300]
+      "position": [
+        520,
+        300
+      ]
     },
     {
       "parameters": {
@@ -28,14 +38,55 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [800, 300]
+      "position": [
+        800,
+        300
+      ]
     }
   ],
   "connections": {
-    "Webhook Lead": { "main": [[{ "node": "Validate Lead", "type": "main", "index": 0 }]] },
-    "Validate Lead": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+    "Webhook Lead": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {},
-  "versionId": "educational-demo"
+  "versionId": "educational-demo",
+  "pinData": {
+    "Webhook Lead": [
+      {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "referencia": "PRUEBA-0001",
+          "nombre": "Caso de ejemplo",
+          "email": "prueba@ejemplo.es",
+          "mensaje": "Texto de prueba para ver el flujo funcionando.",
+          "fecha": "2026-09-01"
+        }
+      }
+    ]
+  }
 }

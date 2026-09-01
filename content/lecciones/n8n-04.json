@@ -5,13 +5,13 @@
   "number": 204,
   "stageId": "automatizacion",
   "title": "Instalarlo en tu ordenador con Docker, paso a paso",
-  "promise": "Tendrás n8n corriendo dentro de Docker, con tus flujos y tus credenciales guardados en un sitio que sobrevive a borrar el contenedor, con la clave de cifrado a salvo, la zona horaria puesta y un ensayo de apagar y volver a encender ya hecho con tus propias manos.",
+  "promise": "Tendrás n8n funcionando dentro de Docker. Tus flujos y tus credenciales quedarán guardados en una carpeta que sobrevive a borrar el contenedor. Tendrás la clave de cifrado a salvo y la zona horaria puesta. Y habrás hecho tú mismo, con tus manos, el ensayo de apagarlo y volver a encenderlo.",
   "minutes": 45,
-  "why": "Sergio automatiza pedidos para una tienda de material de hostelería en Zaragoza. Tenía n8n en Docker, con nueve flujos y catorce credenciales conectadas: Gmail, Drive, la API del almacén, el banco. Un martes actualizó a una versión nueva siguiendo un tutorial que decía «borra el contenedor y crea uno nuevo». Lo hizo. Al arrancar, n8n estaba recién instalado: sin flujos, sin credenciales y sin usuarios. Tres semanas de trabajo. No había hecho nada mal según el tutorial; lo que le faltaba era una línea en la orden de arranque, la que dice dónde guardar los datos fuera del contenedor. Esta lección existe para que a ti no te pase.",
+  "why": "Sergio automatiza pedidos para una tienda de material de hostelería en Zaragoza. Tenía n8n en Docker, con nueve flujos y catorce credenciales conectadas: Gmail, Drive, la API del almacén (la conexión directa con el programa del almacén) y el banco. Un martes actualizó a una versión nueva siguiendo un tutorial que decía «borra el contenedor y crea uno nuevo». Lo hizo. Al arrancar, n8n estaba recién instalado: sin flujos, sin credenciales y sin usuarios. Tres semanas de trabajo. Según el tutorial no había hecho nada mal. Le faltaba una línea en la orden de arranque: la que dice dónde guardar los datos fuera del contenedor. Esta lección existe para que a ti no te pase.",
   "theory": [
     {
       "title": "Qué es Docker y por qué molestarse",
-      "text": "Docker es un programa que ejecuta otros programas dentro de cajas cerradas. Cada caja lleva dentro todo lo que ese programa necesita: su versión exacta de todo, sus dependencias, su configuración. Ni ensucia tu ordenador ni depende de lo que tú tengas instalado. La consecuencia práctica: n8n en Docker se comporta igual en tu portátil que en un servidor, y el día que lo muevas no habrá sorpresas de «en mi máquina funcionaba».",
+      "text": "Docker es un programa que ejecuta otros programas dentro de cajas cerradas. Cada caja lleva dentro todo lo que ese programa necesita: su versión exacta de todo, su configuración y sus dependencias. Las dependencias son los otros programas de los que tira para funcionar. Ni ensucia tu ordenador ni depende de lo que tú tengas instalado. La consecuencia práctica: n8n en Docker se comporta igual en tu portátil que en un servidor. El día que lo muevas no habrá sorpresas de «en mi máquina funcionaba».",
       "analogy": "Un cámping-gas con su bombona y su cazo dentro. No dependes de que la casa tenga cocina, ni de qué cocina sea.",
       "visual": {
         "kind": "beforeafter",
@@ -46,7 +46,7 @@
     },
     {
       "title": "La distinción que le costó tres semanas a Sergio: imagen, contenedor y volumen",
-      "text": "Son tres cosas distintas y confundirlas es lo que borra proyectos. La IMAGEN es el molde: el n8n descargado, igual para todo el mundo, de solo lectura. El CONTENEDOR es la caja funcionando, hecha a partir de ese molde: se crea, se para y se borra constantemente, y es normal borrarla. El VOLUMEN es una carpeta de tu ordenador enganchada a la caja, donde viven los datos: eso es lo único que sobrevive. Si tus flujos están dentro del contenedor y no en un volumen, el día que borres el contenedor los borras con él.",
+      "text": "Son tres cosas distintas y confundirlas es lo que borra proyectos. La IMAGEN es el molde: el n8n descargado, igual para todo el mundo y de solo lectura, o sea, que tú nunca lo cambias. El CONTENEDOR es la caja funcionando, hecha a partir de ese molde. Se crea, se para y se borra constantemente, y borrarla es lo normal. El VOLUMEN es una carpeta de tu ordenador enganchada a la caja, y ahí es donde viven los datos. Es lo único que sobrevive. Si tus flujos están dentro del contenedor y no en un volumen, el día que borres el contenedor los borras con él.",
       "analogy": "La imagen es el plano de la casa, el contenedor es la casa construida y el volumen es la caja fuerte anclada al suelo. Puedes tirar la casa y volver a levantarla; la caja fuerte sigue ahí con lo de dentro.",
       "visual": {
         "kind": "canvas",
@@ -89,7 +89,7 @@
     },
     {
       "title": "La clave de cifrado: la otra mitad de la copia de seguridad",
-      "text": "n8n guarda tus credenciales cifradas, y la llave para descifrarlas se genera sola la primera vez. Si un día restauras tus datos en otra instalación con una llave distinta, verás tus credenciales en la lista pero no funcionarán: n8n no puede abrirlas. Por eso la clave se fija a mano desde el principio y se guarda en el gestor de contraseñas junto a la copia. Una copia de los datos sin su clave es media copia.",
+      "text": "n8n guarda tus credenciales cifradas. La llave para descifrarlas se genera sola la primera vez. Si un día restauras tus datos en otra instalación con una llave distinta, verás tus credenciales en la lista pero no funcionarán. n8n no puede abrirlas. Por eso fijas tú la clave a mano desde el principio y la guardas en el gestor de contraseñas, junto a la copia. Una copia de los datos sin su clave es media copia.",
       "example": "El síntoma es desconcertante: la credencial de Gmail aparece con su nombre, pero cualquier flujo que la use falla diciendo que no está autorizado.",
       "visual": {
         "kind": "cases",
@@ -150,7 +150,7 @@
     },
     {
       "title": "Los puertos: por qué 5678 y qué significa esa dirección",
-      "text": "Cuando arrancas el contenedor le dices «lo que llegue al puerto 5678 de mi ordenador, mándalo al 5678 de la caja». Eso es lo que hace que puedas abrir http://localhost:5678 en el navegador y ver n8n. Si ese número ya lo ocupa otro programa, el arranque falla con un mensaje sobre el puerto. Y lo importante: localhost solo existe para ti. Nadie de fuera puede entrar por ahí, lo cual es una ventaja de seguridad y una limitación para los webhooks.",
+      "text": "Cuando arrancas el contenedor le dices «lo que llegue al puerto 5678 de mi ordenador, mándalo al 5678 de la caja». Eso es lo que hace que puedas abrir http://localhost:5678 en el navegador y ver n8n. Si ese número ya lo ocupa otro programa, el arranque falla con un mensaje sobre el puerto. Y lo importante: localhost solo existe para ti. Nadie de fuera puede entrar por ahí. Para la seguridad es una ventaja. Para los webhooks (los avisos que otro servicio le manda a tu n8n cuando pasa algo) es una limitación.",
       "analogy": "Es el número del portal de un edificio. Solo un timbre por número, y desde la calle de otro barrio no se oye.",
       "visual": {
         "kind": "screenmap",
@@ -180,12 +180,12 @@
     },
     {
       "title": "La zona horaria se pone en el arranque, no después",
-      "text": "El contenedor viene en UTC de fábrica. Si no se le dice lo contrario, todo lo programado va desplazado una hora en invierno y dos en verano respecto a España, y lo peor es que no falla: simplemente ocurre a otra hora. Se arregla pasándole la zona horaria en la propia orden de arranque, con dos variables. Ponerlo desde el principio ahorra semanas de desconcierto.",
+      "text": "El contenedor viene de fábrica en UTC, la hora de referencia mundial. En España eso es una hora menos en invierno y dos menos en verano. Si no le dices lo contrario, todo lo que programes ocurrirá desplazado. Y lo peor es que no falla: simplemente pasa a otra hora. Lo arreglas pasándole la zona horaria en la propia orden de arranque, con dos ajustes. Ponerlo desde el principio te ahorra semanas de desconcierto.",
       "example": "Un flujo puesto a las 08:00 en verano salta a las 06:00 reales. Nadie lo nota hasta que el aviso de la mañana llega antes de que abra la oficina."
     },
     {
       "title": "Actualizar es tirar la caja y levantar otra, y por eso el volumen importa",
-      "text": "En Docker no se actualiza «por dentro»: se descarga la imagen nueva, se para el contenedor viejo, se borra y se crea uno nuevo con la imagen nueva. Suena agresivo y es lo normal. Todo depende de que tus datos estén en el volumen: si lo están, el contenedor nuevo los encuentra y no notas nada; si no, empiezas de cero. Es exactamente el punto donde Sergio perdió tres semanas.",
+      "text": "En Docker no actualizas «por dentro». Descargas la imagen nueva, paras el contenedor viejo, lo borras y creas uno nuevo con la imagen nueva. Suena agresivo y es lo normal. Todo depende de que tus datos estén en el volumen. Si lo están, el contenedor nuevo los encuentra y no notas nada. Si no lo están, empiezas de cero. Es exactamente el punto donde Sergio perdió tres semanas.",
       "analogy": "Cambiar el coche por uno nuevo. Si tus cosas están en el maletero, se van con el coche viejo al desguace; si están en tu casa, te las llevas al nuevo.",
       "visual": {
         "kind": "dataflow",
@@ -225,7 +225,7 @@
     },
     {
       "title": "Cuándo Docker te sobra",
-      "text": "Si lo único que quieres es ver n8n hoy y cacharrear una tarde, npx n8n te lo abre en un minuto y no necesitas nada de esto. Docker gana cuando quieres que la instalación se parezca a la de producción, cuando quieres varias versiones sin que se peleen, o cuando vas a mover esto a un servidor más adelante. Si estás en el primer caso, salta a la lección 05 sin culpa.",
+      "text": "Si lo único que quieres es ver n8n hoy y cacharrear una tarde, la orden npx n8n (una forma de probarlo sin instalar nada fijo) te lo abre en un minuto. No necesitas nada de esto. Docker gana en tres casos. Cuando quieres que tu instalación se parezca a la definitiva, la que acabará funcionando de verdad. Cuando quieres varias versiones sin que se peleen. O cuando vas a mover esto a un servidor más adelante. Si estás en el primer caso, salta a la lección 05 sin culpa.",
       "example": "Mucha gente aprende con npx durante dos semanas y monta Docker el día que decide poner un flujo a funcionar de verdad.",
       "visual": {
         "kind": "decision",
@@ -256,7 +256,7 @@
     },
     {
       "title": "Lo que Docker no te da",
-      "text": "Docker no hace copias de seguridad, no te avisa si el contenedor se para y no protege nada si borras el volumen. Tampoco convierte tu portátil en un servidor: sigue apagándose cuando lo cierras. Docker resuelve el aislamiento y la reproducibilidad, y esas dos cosas nada más. El resto sigue siendo tuyo y se ve en las lecciones 45 y 46.",
+      "text": "Docker no hace copias de seguridad, no te avisa si el contenedor se para y no protege nada si borras el volumen. Tampoco convierte tu portátil en un servidor: sigue apagándose cuando lo cierras. Docker resuelve dos cosas y nada más: aislar n8n del resto de tu ordenador y que funcione igual en cualquier sitio. Lo demás sigue siendo cosa tuya, y lo ves en las lecciones 45 y 46.",
       "analogy": "Un buen maletero no evita que se te olviden las llaves dentro."
     }
   ],
@@ -266,14 +266,14 @@
       "where": "docker.com, sección Docker Desktop",
       "action": "Descarga la versión de tu sistema y instálala con las opciones por defecto. En Windows te pedirá activar WSL2 (una capa de Linux dentro de Windows): acepta, y reinicia si te lo pide. Al terminar, abre la aplicación de Docker Desktop y espera a que la ballena de la barra deje de moverse. Docker tiene que estar ABIERTO para que nada de esto funcione: no basta con instalarlo.",
       "expect": "El icono de la ballena fijo y, dentro de la aplicación, un panel sin contenedores.",
-      "stuck": "Si en Windows se queja de la virtualización, hay que activarla en la BIOS. Es un ajuste del arranque del ordenador y hay que buscarlo por el modelo de placa."
+      "stuck": "Si en Windows se queja de la virtualización, actívala en la BIOS, el menú de ajustes que aparece justo antes de arrancar el ordenador. Cómo entrar en él depende del modelo de placa: búscalo con el nombre de tu ordenador."
     },
     {
       "title": "Comprueba que Docker responde desde la terminal",
       "where": "En PowerShell (Windows) o Terminal (Mac)",
       "action": "Escribe docker --version y pulsa Enter. Después docker run hello-world. La segunda descarga una caja diminuta de prueba, la ejecuta y te escribe un mensaje de saludo. Si ese mensaje aparece, todo lo demás de esta lección va a funcionar.",
       "expect": "Un número de versión, y luego un párrafo que empieza por «Hello from Docker!».",
-      "stuck": "Si dice que no puede conectar con el demonio de Docker, es que Docker Desktop no está abierto. Ábrelo y espera a que arranque del todo."
+      "stuck": "Si dice que no puede conectar con el demonio de Docker (el motor que trabaja por detrás), es que Docker Desktop no está abierto. Ábrelo y espera a que arranque del todo."
     },
     {
       "title": "Crea la carpeta donde van a vivir tus datos",
@@ -307,7 +307,7 @@
     {
       "title": "Comprueba que la zona horaria ha entrado",
       "where": "En n8n, en Settings",
-      "action": "Busca el ajuste de zona horaria y comprueba que pone Europe/Madrid. Si pone UTC o América, es que las dos variables del arranque no llegaron bien: para el contenedor, bórralo y vuelve a arrancarlo revisando esas dos líneas.",
+      "action": "Busca el ajuste de zona horaria y comprueba que pone Europe/Madrid. Si pone UTC o una zona de América, es que las dos líneas de zona horaria del arranque no llegaron bien. Para el contenedor, bórralo y vuelve a arrancarlo revisando esas dos líneas.",
       "expect": "Europe/Madrid, sin haberlo tocado a mano: tiene que venir puesto desde el arranque.",
       "stuck": "Para borrar y repetir: docker stop n8n y luego docker rm n8n. Tus datos están en la carpeta, así que no pierdes nada."
     },
@@ -335,7 +335,7 @@
     {
       "title": "Aprende a apagarlo y encenderlo sin borrar nada",
       "where": "En la terminal",
-      "action": "docker stop n8n lo apaga sin borrarlo. docker start n8n lo vuelve a encender con todo dentro. Practica las dos ahora mismo, porque las vas a usar cada semana y porque la gente confunde stop con rm y ahí es donde empiezan los disgustos. La que borra es rm; la que apaga es stop.",
+      "action": "docker stop n8n lo apaga sin borrarlo. docker start n8n lo vuelve a encender con todo dentro. Practica las dos ahora mismo. Las vas a usar cada semana. Y mucha gente confunde stop con rm: ahí es donde empiezan los disgustos. La que borra es rm; la que apaga es stop.",
       "expect": "Después de stop, localhost:5678 no responde. Después de start, vuelve con todo tal cual.",
       "stuck": "Si start dice que no existe el contenedor, es que lo borraste con rm. No pasa nada: vuelve a lanzar la orden de la tarea 5 y tus datos siguen en la carpeta."
     },
@@ -349,16 +349,16 @@
     {
       "title": "Guarda la orden de arranque donde la encuentres",
       "where": "En un archivo de texto, junto a tu carpeta de datos",
-      "action": "Crea un archivo arrancar-n8n.txt y pega dentro tu orden completa, con tu clave y tu ruta, y una línea diciendo qué hace. Es lo que vas a copiar cada vez que actualices, y es lo que le pasarás a otra persona si algún día lo tiene que levantar ella.",
+      "action": "Crea un archivo arrancar-n8n.txt y pega dentro tu orden completa, con tu clave y tu ruta, y una línea diciendo qué hace. Es lo que vas a copiar cada vez que actualices. Y es lo que le pasarás a otra persona si algún día lo tiene que levantar ella.",
       "expect": "Un archivo de texto con la orden lista para copiar.",
-      "stuck": "No lo subas nunca a internet: dentro va tu clave de cifrado. Si lo guardas en un repositorio, la clave va aparte."
+      "stuck": "No lo subas nunca a internet: dentro va tu clave de cifrado. Si lo guardas en un repositorio de código, como GitHub, la clave va aparte."
     },
     {
       "title": "Haz tu primera copia de seguridad hoy",
       "where": "En el explorador de archivos",
       "action": "Para el contenedor con docker stop n8n, copia la carpeta n8n-datos entera a otro sitio (un disco externo, tu Drive) y arráncalo otra vez. Eso es una copia de seguridad completa. Guárdala junto a la clave de cifrado, porque las dos cosas se necesitan la una a la otra.",
       "expect": "Una copia fechada de la carpeta, en un sitio distinto del ordenador donde corre n8n.",
-      "stuck": "Se para antes de copiar porque copiar una base de datos en uso puede dar una copia a medias. Treinta segundos apagado no le hacen daño a nadie."
+      "stuck": "Paras el contenedor antes de copiar porque copiar una base de datos mientras se está usando puede dar una copia a medias. Treinta segundos apagado no le hacen daño a nadie."
     }
   ],
   "errors": [
@@ -430,12 +430,12 @@
     "Las dos variables de zona horaria en el arranque. Si faltan, nada falla y todo ocurre a otra hora, que es mucho peor: un error que no da error se tarda semanas en descubrir."
   ],
   "ignore": [
-    "Docker Compose durante las primeras semanas. Es la forma ordenada de arrancar varios servicios a la vez y merece la pena cuando añadas una base de datos aparte, pero con una sola orden de docker run tienes n8n funcionando igual y con menos piezas que entender.",
-    "Cambiar la base de datos de SQLite a PostgreSQL. La que trae de fábrica aguanta muchísimo más de lo que crees, y la mudanza tiene sentido cuando el volumen aprieta o cuando montas varios trabajadores. No antes.",
-    "Los proxys inversos, los certificados y los dominios propios. Todo eso es de la lección 46, cuando esto salga de tu ordenador. Meterlo ahora es resolver un problema que no tienes y no llegar nunca a montar un flujo."
+    "Docker Compose durante las primeras semanas. Es la forma ordenada de arrancar varios servicios a la vez. Merece la pena cuando añadas una base de datos aparte. Pero con una sola orden de docker run tienes n8n funcionando igual y con menos piezas que entender.",
+    "Cambiar la base de datos de SQLite a PostgreSQL. La que trae de fábrica, SQLite, aguanta muchísimo más de lo que crees. La mudanza tiene sentido cuando tengas mucho trabajo encima, o cuando montes varios n8n repartiéndose las ejecuciones. No antes.",
+    "Los proxys inversos, los certificados y los dominios propios: todo lo que hace falta para entrar en n8n desde fuera con una dirección segura y tuya. Eso es de la lección 46, cuando esto salga de tu ordenador. Meterlo ahora es resolver un problema que no tienes y no llegar nunca a montar un flujo."
   ],
   "canDo": [
-    "Darte una instalación idéntica a la que tendrás en un servidor, de forma que lo que montes hoy en tu portátil funcione igual el día que lo muevas, sin sorpresas de configuración.",
+    "Darte una instalación idéntica a la que tendrás en un servidor. Lo que montes hoy en tu portátil funcionará igual el día que lo muevas, sin sorpresas de configuración.",
     "Permitirte borrar y recrear la instalación entera en veinte segundos sin perder nada, que es lo que hace que actualizar deje de dar miedo.",
     "Aislar n8n de tu ordenador: ni instala cosas por ahí, ni depende de qué versión de nada tengas tú, ni se pelea con otros programas.",
     "Dejarte volver a una versión anterior con solo cambiar una etiqueta al final de la orden, si una actualización rompe algo."

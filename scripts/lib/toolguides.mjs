@@ -370,6 +370,7 @@ const DISCOVERED_TOOL_META = {
   notebooklm: { label: 'NotebookLM', url: 'notebooklm.google.com', kind: 'knowledge', plain: 'Un espacio para conversar con documentos que tú aportas, con respuestas apoyadas en esas fuentes. Es útil para estudiar y sintetizar material, pero hay que comprobar siempre la cita y el alcance de los documentos.' },
   airtable: { label: 'Airtable', url: 'airtable.com', kind: 'data', plain: 'Una base de datos visual que se parece a una hoja de cálculo, pero permite relaciones, vistas, permisos y automatizaciones. Es una buena pieza intermedia para proyectos que han crecido más que una hoja.' },
   notion: { label: 'Notion', url: 'notion.so', kind: 'knowledge', plain: 'Un espacio para organizar documentos, bases de datos ligeras, proyectos y conocimiento. Funciona bien como centro de trabajo, siempre que definas qué información vive allí y cómo se actualiza.' },
+  'wispr-flow': { label: 'Wispr Flow', url: 'wisprflow.ai', kind: 'voice', plain: 'Wispr Flow es una aplicación de dictado con IA: hablas de forma natural y convierte tu voz en texto claro dentro de otras apps. Sirve para escribir más rápido correos, prompts, notas, mensajes y borradores, pero no es una plataforma de automatización ni un generador de contenido autónomo.' },
 }
 
 function discoveredGuide(id, meta) {
@@ -562,6 +563,19 @@ const TOOL_PROFILES = {
     selection: 'empieza con la versión mínima que tenga una entrada y una salida visibles, y añade datos, usuarios y automatizaciones después de probar el recorrido',
     catalog: [['Especificación', 'describir pantallas, datos y reglas', 'convertir una idea en una primera versión comprobable', 'no pidas una aplicación entera con una frase vaga'], ['Pantallas', 'lugares donde el usuario ve y cambia información', 'diseñar el recorrido principal', 'no ocultes errores ni estados vacíos'], ['Datos', 'campos y registros que sostienen la aplicación', 'guardar información que deba volver a aparecer', 'no guardes datos sensibles sin permisos claros'], ['Lógica', 'reglas que cambian lo que ocurre', 'validar, filtrar y calcular', 'no aceptes reglas sin casos de prueba'], ['Usuarios', 'identidad, acceso y permisos', 'separar lo que puede ver cada persona', 'no uses un único usuario para todo'], ['Integraciones', 'conexiones con servicios externos', 'correo, pagos, IA o automatizaciones', 'no conectes producción antes de probar'], ['Publicación', 'poner una versión accesible para otros', 'enseñar una demo o entregar el producto', 'no publiques sin revisar datos de prueba'], ['Exportación', 'guardar código, datos y documentación', 'mantener control si cambias de herramienta', 'no confundas una URL con una copia del proyecto']],
   },
+  'wispr-flow': {
+    intro: 'Wispr Flow no se aprende como una automatización: se aprende como una nueva forma de escribir. La página se centra en instalación, botón de dictado, edición posterior, vocabulario propio, privacidad, idiomas y cuándo conviene volver al teclado.',
+    units: 'minutos dictados, palabras generadas, límites del plan y dispositivos conectados',
+    selection: 'úsalo cuando el cuello de botella sea teclear o pasar una idea hablada a texto; evita usarlo para contenido sensible, reuniones sin consentimiento o tareas que necesitan formato exacto a la primera',
+    catalog: [
+      ['Dictado en cualquier app', 'convertir voz en texto dentro del campo donde ya estabas escribiendo', 'emails, Slack, WhatsApp, ChatGPT, documentos y notas rápidas', 'no lo trates como un chatbot: no decide por ti, escribe lo que dices mejorado'],
+      ['Botón o atajo de hablar', 'activar y parar la escucha cuando tú decides', 'capturar ideas sin cambiar de ventana', 'no dejes el micrófono abierto en conversaciones privadas'],
+      ['Limpieza automática', 'quitar muletillas, puntuar y ordenar frases habladas', 'pasar de una explicación oral a texto presentable', 'no aceptes nombres propios, cifras o tecnicismos sin revisar'],
+      ['Vocabulario personal', 'aprender nombres, jerga y palabras que repites', 'trabajos con clientes, marcas, productos o términos técnicos', 'no metas datos sensibles solo para entrenar comodidad'],
+      ['Idiomas y mezcla de idiomas', 'dictar en muchos idiomas y alternar según el contexto', 'equipos bilingües, alumnos y creadores que hablan más rápido de lo que escriben', 'no supongas que todos los idiomas puntúan igual de bien'],
+      ['Privacidad y permisos', 'gestionar micrófono, datos de voz y tratamiento del texto', 'antes de usarlo con clientes, alumnos o llamadas', 'no grabes ni transcribas a personas sin base legal o permiso explícito'],
+    ],
+  },
 }
 
 const TASK_AUTOMATIONS = [
@@ -579,22 +593,27 @@ const TASK_AUTOMATIONS = [
   ['Preparar un informe semanal de consumo', 'al final de cada periodo de trabajo', 'profesional'],
 ]
 
-const CREATIVE_WORKFLOW_TOOLS = new Set(['nano-banana', 'seedance-2-5', 'higgsfield', 'runway', 'canva', 'gamma', 'elevenlabs', 'descript', 'figma'])
-
-const CREATIVE_AUTOMATIONS = [
-  ['Convertir un brief institucional en una carpeta de producción', 'cuando se aprueba una campaña, clase, propuesta o pieza formativa', 'intermedia'],
-  ['Crear variantes con aprobación humana', 'cuando una idea visual necesita tres opciones comparables antes de gastar presupuesto', 'basica'],
-  ['Registrar derechos, fuente y uso permitido', 'cuando se genera o edita una imagen, vídeo, voz, plantilla o material de marca', 'profesional'],
-  ['Pasar una imagen aprobada a storyboard', 'cuando una pieza visual debe convertirse en vídeo, demo o reel institucional', 'intermedia'],
-  ['Revisar artefactos antes de enseñar al cliente', 'cuando termina una generación visual y todavía no se ha aprobado', 'intermedia'],
-  ['Medir créditos y coste por pieza', 'cada vez que se genera una variante o una versión exportable', 'profesional'],
-  ['Preparar entrega multiformato', 'cuando una pieza aprobada debe salir en web, presentación, redes o aula', 'intermedia'],
-  ['Pedir revisión de marca antes de publicar', 'cuando el resultado incluye logo, colores, persona, producto o promesa comercial', 'avanzada'],
-  ['Crear ficha de aprendizaje para el alumno', 'cuando un estudiante guarda el prompt, resultado, error y mejora aplicada', 'basica'],
-  ['Archivar versión final y versión editable', 'cuando una pieza queda aceptada y tiene que poder repetirse después', 'profesional'],
-]
-
 function wordCount(text) { return String(text).trim().split(/\s+/).filter(Boolean).length }
+
+function enrichToolPrompts(prompts, tool, profile) {
+  for (const item of prompts || []) {
+    if (!item?.prompt || wordCount(item.prompt) >= 500) continue
+    const sections = [
+      `\n\n## Antes de usarlo en ${tool.label}\nTrabaja con mi caso concreto y no rellenes huecos con imaginación. Si falta una decisión que cambia el resultado, hazme una pregunta corta antes de continuar. Traduce cualquier palabra técnica la primera vez que aparezca y separa claramente lo que sabes, lo que estás suponiendo y lo que debo comprobar en la herramienta real.`,
+      `\n\n## Prueba mínima\nAntes de tocar datos reales, diseña una prueba con datos ficticios. Incluye un caso normal, uno incompleto, uno duplicado y uno extremo. Para cada caso dime qué entrada preparo, qué salida debería ver, dónde la compruebo dentro de ${tool.label} y qué hago si no coincide.`,
+      `\n\n## Seguridad, coste y límites\nIndica qué datos no debo pegar, qué permisos son necesarios, qué acciones serían irreversibles y cómo detenería el trabajo si sale mal. Explica cómo medir el consumo relacionado con ${profile.units || 'el plan de la herramienta'} y marca como COMPROBAR EN LA WEB OFICIAL cualquier precio, límite o nombre de función que pueda haber cambiado.`,
+      `\n\n## Entrega reutilizable\nTermina con una ficha breve para guardar en mi proyecto: objetivo, entrada, salida esperada, pasos dentro de ${tool.label}, criterio de aprobación, errores posibles, evidencia que debo conservar y siguiente acción de menos de treinta minutos. Si ${tool.label} no es la herramienta adecuada para mi caso, dilo claro y recomienda la alternativa mínima.`,
+    ]
+    for (const section of sections) {
+      if (wordCount(item.prompt) >= 500) break
+      item.prompt += section
+    }
+    while (wordCount(item.prompt) < 500) {
+      item.prompt += `\n\nAñade un ejemplo completo con datos ficticios, escrito como si yo fuera a hacerlo ahora mismo. El ejemplo debe incluir una entrada concreta, la salida exacta que debería aparecer, el punto donde debo revisarla, una decisión que no tomarías todavía y una señal clara para parar antes de gastar dinero, publicar, enviar o conectar datos reales.`
+    }
+  }
+  return prompts
+}
 
 function profileFor(id) {
   if (TOOL_PROFILES[id]) return TOOL_PROFILES[id]
@@ -617,6 +636,38 @@ function promptFor(tool, profile, task, index) {
   if (wordCount(prompt) > 600) prompt = prompt.replace(details, '')
   while (wordCount(prompt) < 500) prompt += `\n\nAntes de terminar, vuelve a mirar el caso concreto y añade un ejemplo rellenado con datos ficticios, una decisión que no tomarías todavía y la pregunta que tendría que responder una persona responsable antes de compartir el resultado.`
   return prompt
+}
+
+const DEFAULT_PROMPT_TASKS = ['Definir un problema real', 'Investigar y comparar opciones', 'Diagnosticar un error', 'Evaluar calidad', 'Documentar y entregar']
+const TOOL_PROMPT_TASKS = {
+  openai: ['Definir un problema real', 'Analizar información propia', 'Escribir una pieza profesional', 'Crear una imagen', 'Automatizar un proceso', 'Evaluar calidad', 'Documentar y entregar'],
+  claude: ['Analizar información propia', 'Revisar y mejorar un texto', 'Hacer un cambio de código', 'Diagnosticar un error', 'Documentar y entregar'],
+  'claude-code': ['Hacer un cambio de código', 'Diagnosticar un error', 'Evaluar calidad', 'Documentar y entregar'],
+  codex: ['Hacer un cambio de código', 'Diagnosticar un error', 'Evaluar calidad', 'Documentar y entregar'],
+  github: ['Hacer un cambio de código', 'Diagnosticar un error', 'Evaluar calidad', 'Documentar y entregar'],
+  docker: ['Diagnosticar un error', 'Preparar datos y estructura', 'Evaluar calidad', 'Documentar y entregar'],
+  'nano-banana': ['Crear una imagen', 'Editar una imagen de referencia', 'Evaluar calidad', 'Documentar y entregar'],
+  higgsfield: ['Planificar un vídeo', 'Crear un storyboard', 'Evaluar calidad', 'Documentar y entregar'],
+  runway: ['Planificar un vídeo', 'Crear un storyboard', 'Evaluar calidad', 'Documentar y entregar'],
+  'seedance-2-5': ['Planificar un vídeo', 'Crear un storyboard', 'Evaluar calidad', 'Documentar y entregar'],
+  n8n: ['Automatizar un proceso', 'Diagnosticar un error', 'Evaluar calidad', 'Documentar y entregar'],
+  zapier: ['Automatizar un proceso', 'Diagnosticar un error', 'Documentar y entregar'],
+  make: ['Automatizar un proceso', 'Diagnosticar un error', 'Documentar y entregar'],
+  pipedream: ['Automatizar un proceso', 'Diagnosticar un error', 'Documentar y entregar'],
+  'wispr-flow': [],
+}
+
+function generatedPromptsFor(tool, profile) {
+  const wanted = TOOL_PROMPT_TASKS[tool.id] || DEFAULT_PROMPT_TASKS
+  const tasks = wanted
+    .map((name) => PROMPT_TASKS.find((task) => task[0] === name))
+    .filter(Boolean)
+  return tasks.map((task, index) => ({
+    name: `${task[0]} con ${tool.label}`,
+    prompt: promptFor(tool, profile, task, index),
+    when: `Úsalo cuando quieras ${task[1]}.`,
+    model: profile.selection,
+  }))
 }
 
 function automationFor(tool, profile, blueprint, index) {
@@ -650,19 +701,16 @@ export function completeToolGuide(existing, tool) {
   const guide = existing || baseGuideFor(tool)
   const profile = profileFor(tool.id)
   guide.catalog = { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: 'Pieza interna', name: group, what, useWhen, avoidWhen, model })) }
-  guide.prompts = PROMPT_TASKS.map((task, index) => ({
-    name: `${task[0]} con ${tool.label}`,
-    prompt: promptFor(tool, profile, task, index),
-    when: `Úsalo cuando quieras ${task[1]}.`,
-    model: profile.selection,
-  }))
+  if (!Array.isArray(guide.prompts)) guide.prompts = generatedPromptsFor(tool, profile)
+  guide.prompts = enrichToolPrompts(guide.prompts, tool, profile)
   // Las automatizaciones van donde tienen sentido, no en todas por plantilla:
   // las plataformas llevan el recetario general (son recetas de plataforma),
   // las conectables llevan las suyas reales, y el resto no lleva la seccion.
-  if (AUTOMATION_PLATFORMS.has(tool.id)) {
+  // Si una guia declara automations: [] de forma explicita, se respeta.
+  if (Array.isArray(guide.automations)) {
+    guide.automations = guide.automations
+  } else if (AUTOMATION_PLATFORMS.has(tool.id)) {
     guide.automations = TASK_AUTOMATIONS.map((item, index) => automationFor(tool, profile, item, index))
-  } else if (CREATIVE_WORKFLOW_TOOLS.has(tool.id)) {
-    guide.automations = CREATIVE_AUTOMATIONS.map((item, index) => automationFor(tool, profile, item, index))
   } else if (REAL_AUTOMATIONS[tool.id]) {
     guide.automations = REAL_AUTOMATIONS[tool.id]
   } else {

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Clock, ChevronRight } from 'lucide-react'
 import type { Lesson, LevelId } from '../types'
 import { useCourse } from '../course'
@@ -54,15 +55,34 @@ export function LessonRow({ lesson, level, showCategory = true }: { lesson: Less
   )
 }
 
+/** Cuántas filas se enseñan antes de pedir permiso para seguir. */
+const TANDA = 20
+
 export default function LessonList({ lessons, level, showCategory = true }: { lessons: Lesson[]; level: LevelId; showCategory?: boolean }) {
+  /* Un área puede traer 103 lecciones y una carpeta 124. Pintarlas todas
+   * convierte la página en un scroll interminable, así que se enseñan de
+   * veinte en veinte. */
+  const [cuantas, setCuantas] = useState(TANDA)
+
   if (!lessons.length) {
     return <p className="st-empty">Ninguna lección coincide con estos filtros. Quita alguno para ver más.</p>
   }
+
+  const visibles = lessons.slice(0, cuantas)
+  const quedan = lessons.length - visibles.length
+
   return (
-    <div className="st-lesson-rows">
-      {lessons.map((lesson) => (
-        <LessonRow key={lesson.slug} lesson={lesson} level={level} showCategory={showCategory} />
-      ))}
-    </div>
+    <>
+      <div className="st-lesson-rows">
+        {visibles.map((lesson) => (
+          <LessonRow key={lesson.slug} lesson={lesson} level={level} showCategory={showCategory} />
+        ))}
+      </div>
+      {quedan > 0 && (
+        <button type="button" className="st-lesson-mas" onClick={() => setCuantas((valor) => valor + TANDA)}>
+          Ver {Math.min(TANDA, quedan)} lecciones más · quedan {quedan}
+        </button>
+      )}
+    </>
   )
 }

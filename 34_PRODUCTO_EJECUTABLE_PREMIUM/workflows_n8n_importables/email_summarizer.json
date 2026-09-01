@@ -2,12 +2,19 @@
   "name": "Email summarizer · resumen y acciones",
   "nodes": [
     {
-      "parameters": { "path": "email-summarizer", "httpMethod": "POST", "responseMode": "responseNode" },
+      "parameters": {
+        "path": "email-summarizer",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
       "id": "webhook",
       "name": "Entrada de email",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -17,25 +24,79 @@
       "name": "Validar, resumir y extraer acciones",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [300, 0]
+      "position": [
+        300,
+        0
+      ]
     },
     {
-      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
       "id": "respond",
       "name": "Responder con JSON",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [620, 0]
+      "position": [
+        620,
+        0
+      ]
     }
   ],
   "connections": {
-    "Entrada de email": { "main": [[{ "node": "Validar, resumir y extraer acciones", "type": "main", "index": 0 }]] },
-    "Validar, resumir y extraer acciones": { "main": [[{ "node": "Responder con JSON", "type": "main", "index": 0 }]] }
+    "Entrada de email": {
+      "main": [
+        [
+          {
+            "node": "Validar, resumir y extraer acciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar, resumir y extraer acciones": {
+      "main": [
+        [
+          {
+            "node": "Responder con JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "meta": {
     "purpose": "Resumir emails y extraer acciones sin inventar datos",
     "academy": "AI Professional Academy",
-    "test_payload": { "id": "demo-001", "subject": "Entrega", "body": "Acción: confirmar la fecha antes del viernes." }
+    "test_payload": {
+      "id": "demo-001",
+      "subject": "Entrega",
+      "body": "Acción: confirmar la fecha antes del viernes."
+    }
+  },
+  "pinData": {
+    "Entrada de email": [
+      {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "referencia": "PRUEBA-0001",
+          "nombre": "Caso de ejemplo",
+          "email": "prueba@ejemplo.es",
+          "mensaje": "Texto de prueba para ver el flujo funcionando.",
+          "fecha": "2026-09-01"
+        }
+      }
+    ]
   }
 }

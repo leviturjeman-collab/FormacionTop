@@ -624,6 +624,7 @@ const CONNECTIONS: Record<string, string[]> = {
   'seedance-2-5': ['nano-banana', 'higgsfield', 'runway', 'elevenlabs', 'canva'],
   n8n: ['openai', 'gmail', 'sheets', 'slack', 'supabase', 'github'],
   openai: ['n8n', 'supabase', 'github', 'higgsfield'],
+  'wispr-flow': ['openai', 'claude', 'gemini', 'gmail', 'slack'],
   base44: ['openai', 'supabase', 'github', 'vercel'],
   lovable: ['supabase', 'github', 'vercel'],
   v0: ['github', 'vercel', 'supabase'],

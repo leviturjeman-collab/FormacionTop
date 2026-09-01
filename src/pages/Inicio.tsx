@@ -13,32 +13,39 @@ export default function Inicio() {
   const student = useStudent()
   const level: LevelId = student.preferredLevel || 'basico'
 
-  const totalDone = Object.values(student.lessons).reduce((sum, item) => sum + item.done.length, 0)
-  const totalLevels = course.stats.lessons * 3
-  const percent = totalLevels ? Math.round((totalDone / totalLevels) * 100) : 0
-  const coreLessons = (course.curso || []).filter((item) => !item.tool).length
-  const toolLessons = (course.curso || []).filter((item) => item.tool).length
+  const cursoLessons = course.curso || []
+  const core = cursoLessons.filter((item) => !item.tool)
+  /** Una lección del programa está hecha cuando el alumno ha marcado todas sus tareas. */
+  const isDone = (item: { id: string; tasks: unknown[] }) => {
+    const marked = student.lessons['curso:' + item.id]?.checks?.intermedio || []
+    return item.tasks.length > 0 && marked.length >= item.tasks.length
+  }
+  const doneCount = core.filter(isDone).length
+  const percent = core.length ? Math.round((doneCount / core.length) * 100) : 0
+  const coreLessons = core.length
+  const toolLessons = cursoLessons.filter((item) => item.tool).length
 
-  const last = student.lastLesson ? bySlug.get(student.lastLesson) : null
-  const firstStage = course.stages[0]
-  const suggested = last || bySlug.get(firstStage.coreSlugs[0] || firstStage.lessonSlugs[0])
-  const content = suggested?.levels[level]
-  const suggestedCategory = suggested ? course.categories.find((item) => item.id === suggested.categoryId) : null
+  /* La tarjeta grande de la portada apuntaba a coreSlugs[0] del área 01, que es
+   * un README interno del vault. Ahora apunta a la primera lección del programa
+   * que el alumno no haya terminado, que es lo que de verdad le toca hacer. */
+  const nextLesson = core.find((item) => !isDone(item)) || core[core.length - 1]
+  const started = doneCount > 0
+
 
   return (
     <div className="st-page">
       <section className="st-welcome">
         <div>
           <span className="st-kicker">Espacio de trabajo</span>
-          <h1>{last ? 'Sigue donde lo dejaste.' : 'Empieza por una ruta simple.'}</h1>
+          <h1>{started ? 'Sigue donde lo dejaste.' : 'Empieza por aquí.'}</h1>
           <p>
-            La ruta principal tiene <strong>{coreLessons} lecciones obligatorias</strong>. El resto de la academia queda
-            como apoyo: herramientas, prompts, automatizaciones, diccionario y materiales para cuando los necesites.
+            El curso son <strong>{coreLessons} lecciones</strong>, en orden. Todo lo demás (herramientas, prompts,
+            automatizaciones y diccionario) está ahí para cuando lo necesites. No hace falta mirarlo antes.
           </p>
         </div>
         <div className="st-overall">
           <span>{percent}%</span>
-          <small>{totalDone} de {totalLevels} niveles</small>
+          <small>Llevas {doneCount} de {coreLessons} lecciones</small>
         </div>
       </section>
 
@@ -46,17 +53,17 @@ export default function Inicio() {
         <div className="st-section-head">
           <div>
             <span className="st-kicker">Primer paso</span>
-            <h2>Elige una de estas tres entradas</h2>
+            <h2>Elige por dónde entras</h2>
           </div>
           <span>Lo demás puede esperar</span>
         </div>
         <div className="st-start-grid st-start-grid-main">
-          <a href={href({ name: 'curso' })}><BookMarked size={19} /><strong>Seguir la ruta guiada</strong><small>{coreLessons} lecciones en orden para entender, construir y entregar sin perderte.</small><ArrowRight size={13} /></a>
-          <a href={href({ name: 'mi-proyecto' })}><Puzzle size={19} /><strong>Crear mi proyecto</strong><small>Define tu idea y recibe una ruta, herramientas y un prompt específico.</small><ArrowRight size={13} /></a>
-          <a href={href({ name: 'prompts' })}><Sparkles size={19} /><strong>Usar un prompt</strong><small>Elige una situación, copia el prompt y guarda el resultado como evidencia.</small><ArrowRight size={13} /></a>
+          <a href={href({ name: 'curso' })}><BookMarked size={19} /><strong>Seguir la ruta guiada</strong><small>{coreLessons} lecciones en orden. Si no sabes por dónde empezar, es por aquí.</small><ArrowRight size={13} /></a>
+          <a href={href({ name: 'mi-proyecto' })}><Puzzle size={19} /><strong>Crear mi proyecto</strong><small>Cuéntanos tu idea y te decimos qué lecciones y qué herramientas te tocan.</small><ArrowRight size={13} /></a>
+          <a href={href({ name: 'prompts' })}><Sparkles size={19} /><strong>Usar un prompt</strong><small>Elige lo que quieres pedirle a la IA y copia el texto ya escrito.</small><ArrowRight size={13} /></a>
         </div>
         <div className="st-support-strip" aria-label="Recursos de apoyo">
-          <a href={href({ name: 'kits' })}><Sparkles size={14} /> Kits institucionales</a>
+          <a href={href({ name: 'kits' })}><Sparkles size={14} /> Proyectos grandes</a>
           <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /> Automatizar</a>
           <a href={href({ name: 'herramienta', toolId: 'higgsfield', filters: {} })}><PlayCircle size={14} /> Crear vídeo</a>
           <a href={href({ name: 'herramientas' })}><Search size={14} /> Herramientas</a>
@@ -69,23 +76,22 @@ export default function Inicio() {
           <div className="st-section-head" style={{ marginTop: 0 }}>
             <div>
               <span className="st-kicker">Continúa por aquí</span>
-              <h2>{last ? 'Tu última lección' : 'Tu primera lección'}</h2>
+              <h2>{started ? 'Tu siguiente lección' : 'Empieza por esta'}</h2>
             </div>
           </div>
 
-          {suggested && content && (
-            <a className="st-next-card" href={href({ name: 'leccion', slug: suggested.slug, level })}>
+          {nextLesson && (
+            <a className="st-next-card" href={href({ name: 'curso', lessonId: nextLesson.id })}>
               <div className="st-next-type">
                 <PlayCircle size={20} />
-                <span>{suggested.kindLabel}</span>
+                <span>Lección {nextLesson.number}</span>
               </div>
               <div>
-                <h3>{suggested.title}</h3>
-                <p>{content.headline}</p>
+                <h3>{nextLesson.title}</h3>
+                <p>{nextLesson.promise}</p>
                 <div className="st-meta">
-                  <span><Clock size={10} /> {content.minutes} min</span>
-                  {suggestedCategory && <span>{suggestedCategory.label}</span>}
-                  <span>Nivel {level}</span>
+                  <span><Clock size={10} /> {nextLesson.minutes} min</span>
+                  <span>{doneCount} de {coreLessons} hechas</span>
                 </div>
               </div>
               <ArrowRight size={16} />
@@ -98,9 +104,9 @@ export default function Inicio() {
           <h2>Qué hay detrás</h2>
           <div className="st-support-map">
             <a href={href({ name: 'curso' })}><BookMarked size={14} /><span><strong>{coreLessons} lecciones guiadas</strong><small>La ruta que sí conviene seguir en orden.</small></span></a>
-            <a href={href({ name: 'herramientas' })}><FolderSearch size={14} /><span><strong>{toolLessons} especializaciones</strong><small>Solo cuando ya sabes qué quieres construir.</small></span></a>
-            <a href={href({ name: 'buscar', query: '', filters: {} })}><Search size={14} /><span><strong>{course.stats.lessons} recursos de apoyo</strong><small>Biblioteca para buscar cuando te bloquees.</small></span></a>
-            <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /><span><strong>{course.stats.workflows} workflows y demos</strong><small>Material ejecutable para practicar.</small></span></a>
+            <a href={href({ name: 'herramientas' })}><FolderSearch size={14} /><span><strong>{toolLessons} lecciones de herramienta</strong><small>Ábrelas cuando ya sepas qué quieres hacer.</small></span></a>
+            <a href={href({ name: 'buscar', query: '', filters: {} })}><Search size={14} /><span><strong>{course.stats.lessons} fichas de consulta</strong><small>Para buscar algo concreto cuando te atasques.</small></span></a>
+            <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /><span><strong>{course.stats.workflows} ejemplos ya hechos</strong><small>Automatizaciones que puedes copiar y usar.</small></span></a>
           </div>
           <div className="st-brand-row" aria-label="Herramientas que cubre el curso">
             {SHOWCASE.map((icon) => <BrandMark key={icon} icon={icon} size={16} />)}
