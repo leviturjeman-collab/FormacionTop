@@ -423,7 +423,12 @@ export interface ToolPage {
   id: string
   label: string
   icon: string
+  /** Lecciones seleccionadas para la ficha pública de la herramienta. */
   count: number
+  /** Material interno total que menciona la herramienta antes de curarlo. */
+  totalCount?: number
+  /** Límite de lecciones visibles por herramienta. */
+  maxLessons?: number
   /** Las 20 lecciones escritas a mano de esta herramienta, si ya las tiene. */
   itinerary?: { id: string; slot?: number; title: string; minutes: number }[]
   lessonSlugs: string[]

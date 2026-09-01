@@ -35,6 +35,8 @@ for (const family of course.prompts || []) {
 }
 const libraryPrompts = (course.prompts || []).flatMap((family) => family.prompts || [])
 for (const tool of course.toolPages || []) {
+  const maxLessons = tool.maxLessons || 25
+  check((tool.lessonSlugs || []).length <= maxLessons, `${tool.label} muestra ${tool.lessonSlugs?.length || 0} lecciones; el máximo es ${maxLessons}.`)
   if (MANUAL_ONLY_TOOLS.has(tool.id)) continue
 
   const count = libraryPrompts.filter((prompt) => prompt.toolId === tool.id).length

@@ -23,7 +23,7 @@ export default function Inicio() {
   const doneCount = core.filter(isDone).length
   const percent = core.length ? Math.round((doneCount / core.length) * 100) : 0
   const coreLessons = core.length
-  const toolLessons = cursoLessons.filter((item) => item.tool).length
+  const organizedTools = course.toolPages.length
 
   /* La tarjeta grande de la portada apuntaba a coreSlugs[0] del área 01, que es
    * un README interno del vault. Ahora apunta a la primera lección del programa
@@ -104,8 +104,8 @@ export default function Inicio() {
           <h2>Qué hay detrás</h2>
           <div className="st-support-map">
             <a href={href({ name: 'curso' })}><BookMarked size={14} /><span><strong>{coreLessons} lecciones guiadas</strong><small>La ruta que sí conviene seguir en orden.</small></span></a>
-            <a href={href({ name: 'herramientas' })}><FolderSearch size={14} /><span><strong>{toolLessons} lecciones de herramienta</strong><small>Ábrelas cuando ya sepas qué quieres hacer.</small></span></a>
-            <a href={href({ name: 'buscar', query: '', filters: {} })}><Search size={14} /><span><strong>{course.stats.lessons} fichas de consulta</strong><small>Para buscar algo concreto cuando te atasques.</small></span></a>
+            <a href={href({ name: 'herramientas' })}><FolderSearch size={14} /><span><strong>{organizedTools} herramientas organizadas</strong><small>Cada ficha muestra como máximo 25 lecciones para evitar paredes de scroll.</small></span></a>
+            <a href={href({ name: 'buscar', query: '', filters: {} })}><Search size={14} /><span><strong>{course.stats.fichas} fichas de consulta</strong><small>Para buscar algo concreto cuando te atasques.</small></span></a>
             <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /><span><strong>{course.stats.workflows} ejemplos ya hechos</strong><small>Automatizaciones que puedes copiar y usar.</small></span></a>
           </div>
           <div className="st-brand-row" aria-label="Herramientas que cubre el curso">

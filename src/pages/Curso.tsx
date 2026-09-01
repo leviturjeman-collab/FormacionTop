@@ -78,6 +78,8 @@ export function CursoIndice() {
         label: pagina.label,
         icon: pagina.icon,
         count: pagina.count,
+        totalCount: pagina.totalCount ?? pagina.count,
+        maxLessons: pagina.maxLessons ?? 25,
         guidePrompts: pagina.guide?.prompts?.length || 0,
         automations: pagina.guide?.automations?.length || 0,
         hasGuide: Boolean(pagina.guide),
@@ -183,7 +185,7 @@ export function CursoIndice() {
 
       <section className="st-program-tools" aria-label="Herramientas disponibles">
         <div className="st-program-tools-grid">
-          {porHerramienta.map(({ id, label, icon, count, guidePrompts, automations, items }) => (
+          {porHerramienta.map(({ id, label, icon, count, totalCount, maxLessons, guidePrompts, automations, items }) => (
             <a
               key={id}
               className="st-program-tool-card"
@@ -197,14 +199,14 @@ export function CursoIndice() {
                   {items.length
                     ? `${countText(items.length, 'lección', 'lecciones')} paso a paso`
                     : count
-                      ? `${countText(count, 'recurso', 'recursos')} de consulta`
+                      ? `${countText(count, 'lección seleccionada', 'lecciones seleccionadas')}${totalCount > count ? ` de ${totalCount}` : ''}`
                       : 'Guía práctica disponible'}
                 </small>
               </span>
               <em>
                 {guidePrompts ? <b>{guidePrompts} prompts</b> : null}
                 {automations ? <b>{automations} automatizaciones</b> : null}
-                {count ? <b>{count} recursos</b> : null}
+                {count ? <b>máx. {maxLessons} lecciones</b> : null}
               </em>
               <ArrowRight size={13} />
             </a>

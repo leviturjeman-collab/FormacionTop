@@ -828,23 +828,45 @@ for (const lesson of lessons) delete lesson.indexTerms
 /* --- Paginas por herramienta --------------------------------------- */
 
 const conItinerario = new Set(cursoFiles.map((leccion) => leccion.tool).filter(Boolean))
+const MAX_TOOL_LESSONS = 25
+
+function toolLessonScore(lesson) {
+  let score = 0
+  if (lesson.authored) score += 1000
+  if (lesson.format === 'leccion') score += 260
+  if (lesson.kind === 'workflow') score += 220
+  if (lesson.assets?.some((asset) => asset.kind === 'workflow')) score += 180
+  if (lesson.interactive?.some((piece) => piece.kind === 'flow' || piece.kind === 'canvas')) score += 120
+  if (/automatizaci[oó]n|workflow|n8n|webhook|agente|deploy|datos/i.test(`${lesson.title} ${lesson.search}`)) score += 70
+  score += Math.min(lesson.realWords || 0, 2000) / 10
+  return score
+}
 
 const toolPages = TOOLS
   .map((tool) => {
     const inTool = lessons.filter((lesson) => lesson.tools.includes(tool.id))
+    const selectedLessons = [...inTool]
+      .sort((a, b) =>
+        toolLessonScore(b) - toolLessonScore(a) ||
+        (b.sourceWords - a.sourceWords) ||
+        a.title.localeCompare(b.title, 'es'),
+      )
+      .slice(0, MAX_TOOL_LESSONS)
     const guide = completeToolGuide(toolGuideFor(tool.id), tool)
     return {
       id: tool.id,
       label: tool.label,
       icon: tool.icon,
-      count: inTool.length,
+      count: selectedLessons.length,
+      totalCount: inTool.length,
+      maxLessons: MAX_TOOL_LESSONS,
       // Las lecciones del itinerario escrito a mano cuentan aparte.
       itinerary: cursoFiles
         .filter((leccion) => leccion.tool === tool.id)
         .sort((a, b) => (a.slot || 0) - (b.slot || 0))
         .map((leccion) => ({ id: leccion.id, slot: leccion.slot, title: leccion.title, minutes: leccion.minutes })),
-      lessonSlugs: inTool.map((lesson) => lesson.slug),
-      stageIds: [...new Set(inTool.map((lesson) => lesson.stageId))],
+      lessonSlugs: selectedLessons.map((lesson) => lesson.slug),
+      stageIds: [...new Set(selectedLessons.map((lesson) => lesson.stageId))],
       guide,
     }
   })

@@ -333,11 +333,11 @@ export function Herramientas() {
               <div>
                 <strong>{tool.label}</strong>
                 {tool.guide ? (
-                  <span>{tool.guide.prompts?.length || 0} prompts{tool.guide.automations?.length ? ` · ${tool.guide.automations.length} automatizaciones` : ''} · guía completa</span>
+                  <span>{tool.count ? `${tool.count} lecciones · ` : ''}{tool.guide.prompts?.length || 0} prompts{tool.guide.automations?.length ? ` · ${tool.guide.automations.length} automatizaciones` : ''} · guía completa</span>
                 ) : escritas > 0 ? (
                   <span className="st-tool-itinerary">Itinerario · {escritas} lecciones</span>
                 ) : (
-                  <span>{tool.count} lecciones de consulta</span>
+                  <span>{tool.count} lecciones seleccionadas</span>
                 )}
               </div>
             </a>
@@ -368,6 +368,8 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   }
 
   const all = tool.lessonSlugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Lesson[]
+  const totalAvailable = tool.totalCount ?? tool.count
+  const hiddenCount = Math.max(0, totalAvailable - tool.count)
   const filters = 'filters' in route ? route.filters : {}
   const shown = applyFilters(all, filters, doneSlugs)
   const progress = useProgressOf(tool.lessonSlugs)
@@ -379,10 +381,13 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
         <div>
           <span className="st-kicker">Herramienta</span>
           <h1>{tool.label}</h1>
-          <p>Todo lo que el curso cubre sobre {tool.label}, repartido en {tool.stageIds.length} áreas.</p>
+          <p>
+            Lo esencial de {tool.label}, curado en un máximo de {tool.maxLessons || 25} lecciones de consulta.
+            {hiddenCount ? ` Hay ${hiddenCount} menciones internas más, pero no se muestran aquí para no crear una lista interminable.` : ''}
+          </p>
         </div>
         <div className="st-area-stats">
-          <div><strong>{tool.count}</strong><small>lecciones</small></div>
+          <div><strong>{tool.count}</strong><small>seleccionadas</small></div>
           <div><strong>{progress.percent}%</strong><small>completado</small></div>
         </div>
       </header>
@@ -403,8 +408,8 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
       <ToolConnections tool={tool.id} />
 
       <div className="st-section-head">
-        <h2>Lecciones sobre {tool.label}</h2>
-        <span>{shown.length} de {all.length}</span>
+        <h2>Lecciones seleccionadas sobre {tool.label}</h2>
+        <span>{shown.length} de {all.length}{hiddenCount ? ` · ${hiddenCount} fuera del listado` : ''}</span>
       </div>
       <Filters route={route} lessons={all} hide={['tool']} />
       <LessonList lessons={shown} level={level} />
@@ -511,6 +516,13 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
 function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string; toolId: string }) {
   const [selected, setSelected] = useState<NonNullable<ToolGuide['catalog']>['items'][number] | null>(null)
 
+  function jumpToAutomations() {
+    setSelected(null)
+    window.setTimeout(() => {
+      document.getElementById('automatizaciones')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 40)
+  }
+
   return (
     <>
       {guide.catalog?.items?.length ? (
@@ -550,7 +562,7 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
                 </dl>
                 <div className="st-focus-actions">
                   {guide.prompts?.length ? <a className="st-btn" href={`#/prompts/herramienta-${encodeURIComponent(toolId)}`}>Ver prompts de {label}</a> : null}
-                  {guide.automations?.length ? <a className="st-btn-ghost" href="#automatizaciones">Ver automatizaciones</a> : null}
+                  {guide.automations?.length ? <button type="button" className="st-btn-ghost" onClick={jumpToAutomations}>Ver automatizaciones</button> : null}
                 </div>
               </article>
             </div>
