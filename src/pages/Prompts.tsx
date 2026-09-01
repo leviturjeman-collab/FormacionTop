@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Ban, Check, ChevronDown, Copy, Lightbulb, Save, Search, Sparkles } from 'lucide-react'
+import { Ban, Check, ChevronDown, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
 import { store, useStudent } from '../store'
@@ -62,55 +62,68 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
           <strong>{prompt.name}</strong>
           <span>{prompt.when}</span>
         </div>
-        <em>{open ? 'Ocultar' : 'Ver el prompt'}</em>
+        <em>Ver el prompt</em>
       </button>
 
       {open && (
-        <div className="st-prompt-body">
-          <div className="st-prompt-text">
-            <button
-              type="button"
-              className="st-prompt-copy"
-              onClick={() => {
-                navigator.clipboard?.writeText(prompt.prompt).then(
-                  () => {
-                    setCopied(true)
-                    window.setTimeout(() => setCopied(false), 1800)
-                  },
-                  () => setCopied(false),
-                )
-              }}
-            >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? 'Copiado' : 'Copiar el prompt'}
-            </button>
-            <button type="button" className="st-prompt-save" onClick={saveToProject}>
-              {saved ? <Check size={12} /> : <Save size={12} />}
-              {saved ? 'Guardado' : 'Guardar en mi proyecto'}
-            </button>
-            <pre>{prompt.prompt}</pre>
-            <small className="st-prompt-length">{prompt.prompt.trim().split(/\s+/).filter(Boolean).length} palabras · encargo completo con contexto, pruebas, coste y entrega</small>
-          </div>
+        <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={`Prompt ${prompt.name}`}>
+          <button type="button" className="st-focus-backdrop" onClick={() => setOpen(false)} aria-label="Cerrar" />
+          <div className="st-focus-sheet st-prompt-modal">
+            <header>
+              <div>
+                <span className="st-kicker">{familyTitle}</span>
+                <h3>{prompt.name}</h3>
+                <p>{prompt.when}</p>
+              </div>
+              <button type="button" className="st-icon-close" onClick={() => setOpen(false)} aria-label="Cerrar prompt"><X size={16} /></button>
+            </header>
+            <div className="st-prompt-body">
+              <div className="st-prompt-text">
+                <button
+                  type="button"
+                  className="st-prompt-copy"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(prompt.prompt).then(
+                      () => {
+                        setCopied(true)
+                        window.setTimeout(() => setCopied(false), 1800)
+                      },
+                      () => setCopied(false),
+                    )
+                  }}
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  {copied ? 'Copiado' : 'Copiar el prompt'}
+                </button>
+                <button type="button" className="st-prompt-save" onClick={saveToProject}>
+                  {saved ? <Check size={12} /> : <Save size={12} />}
+                  {saved ? 'Guardado' : 'Guardar en mi proyecto'}
+                </button>
+                <pre>{prompt.prompt}</pre>
+                <small className="st-prompt-length">{prompt.prompt.trim().split(/\s+/).filter(Boolean).length} palabras · encargo completo con contexto, pruebas, coste y entrega</small>
+              </div>
 
-          {prompt.fill?.length > 0 && (
-            <dl className="st-prompt-fill">
-              <dt className="st-prompt-fill-title">Lo que tienes que sustituir</dt>
-              {prompt.fill.map(([hueco, que]) => (
-                <div key={hueco}>
-                  <dt><code>{hueco}</code></dt>
-                  <dd>{que}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
+              {prompt.fill?.length > 0 && (
+                <dl className="st-prompt-fill">
+                  <dt className="st-prompt-fill-title">Lo que tienes que sustituir</dt>
+                  {prompt.fill.map(([hueco, que]) => (
+                    <div key={hueco}>
+                      <dt><code>{hueco}</code></dt>
+                      <dd>{que}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
 
-          <p className="st-prompt-expect"><b>Te va a devolver:</b> {prompt.expect}</p>
-          {prompt.next && <p className="st-prompt-next"><b>Y después:</b> {prompt.next}</p>}
-          <div className="st-prompt-flow">
-            <span>1. Copia</span>
-            <span>2. Pega en tu IA</span>
-            <span>3. Guarda resultado</span>
-            <span>4. Llévalo a Mi proyecto</span>
+              <p className="st-prompt-expect"><b>Te va a devolver:</b> {prompt.expect}</p>
+              {prompt.next && <p className="st-prompt-next"><b>Y después:</b> {prompt.next}</p>}
+              <div className="st-prompt-flow">
+                <span>1. Copia</span>
+                <span>2. Pega en tu IA</span>
+                <span>3. Guarda resultado</span>
+                <span>4. Llévalo a Mi proyecto</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -290,9 +303,9 @@ export default function Prompts({ familyId }: { familyId?: string }) {
                 {abierta && (
                 <div className="st-prompt-block-grid">
                   {section.families.map((family) => (
-                    <button
+                    <a
                       key={family.id}
-                      type="button"
+                      href={`#/prompts/${encodeURIComponent(family.id)}`}
                       className={`st-prompt-block${family.id === familia?.id ? ' on' : ''}`}
                       onClick={() => selectFamily(family.id)}
                     >
@@ -301,7 +314,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
                       <small><b>Para qué:</b> {family.useCase || family.intro}</small>
                       <em>{family.audience || 'Alumnos, responsables y equipos que necesitan una entrega verificable.'}</em>
                       <i>{family.prompts.length} prompts</i>
-                    </button>
+                    </a>
                   ))}
                 </div>
                 )}

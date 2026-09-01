@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight, Check, ChevronDown, Clipboard, Search } from 'lucide-react'
+import { ArrowRight, Check, ChevronDown, Clipboard, Search, X } from 'lucide-react'
 import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href, type Route } from '../router'
@@ -396,7 +396,7 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
             </div>
           </div>
           <Blocks blocks={guideBlocks(tool.guide, tool.label)} />
-          <ToolInside guide={tool.guide} label={tool.label} />
+          <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} />
         </>
       )}
 
@@ -508,11 +508,13 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
   return blocks
 }
 
-function ToolInside({ guide, label }: { guide: ToolGuide; label: string }) {
+function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string; toolId: string }) {
+  const [selected, setSelected] = useState<NonNullable<ToolGuide['catalog']>['items'][number] | null>(null)
+
   return (
     <>
       {guide.catalog?.items?.length ? (
-        <section className="st-tool-inside">
+        <section className="st-tool-inside" id="piezas">
           <div className="st-section-head">
             <div><span className="st-kicker">Dentro de {label}</span><h2>Qué hay aquí y cuándo usarlo</h2></div>
             <span>{guide.catalog.items.length} piezas explicadas</span>
@@ -520,16 +522,39 @@ function ToolInside({ guide, label }: { guide: ToolGuide; label: string }) {
           <p className="st-tool-inside-intro">{guide.catalog.intro}</p>
           <div className="st-inside-grid">
             {guide.catalog.items.map((item) => (
-              <article key={`${item.group}-${item.name}`} className="st-inside-card">
+              <button key={`${item.group}-${item.name}`} type="button" className="st-inside-card" onClick={() => setSelected(item)}>
                 <span>{item.group}</span>
                 <h3>{item.name}</h3>
                 <p>{item.what}</p>
                 <div><strong>Úsalo cuando</strong><p>{item.useWhen}</p></div>
-                {item.model && <div><strong>Cómo elegir</strong><p>{item.model}</p></div>}
-                {item.avoidWhen && <div className="st-inside-avoid"><strong>No lo uses así</strong><p>{item.avoidWhen}</p></div>}
-              </article>
+                <em className="st-card-action">Abrir ficha</em>
+              </button>
             ))}
           </div>
+          {selected && (
+            <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={`Ficha de ${selected.name}`}>
+              <button type="button" className="st-focus-backdrop" onClick={() => setSelected(null)} aria-label="Cerrar" />
+              <article className="st-focus-sheet">
+                <header>
+                  <div>
+                    <span className="st-kicker">{selected.group} · {label}</span>
+                    <h3>{selected.name}</h3>
+                    <p>{selected.what}</p>
+                  </div>
+                  <button type="button" className="st-icon-close" onClick={() => setSelected(null)} aria-label="Cerrar ficha"><X size={16} /></button>
+                </header>
+                <dl className="st-focus-dl">
+                  <div><dt>Úsalo cuando</dt><dd>{selected.useWhen}</dd></div>
+                  {selected.model && <div><dt>Cómo elegir</dt><dd>{selected.model}</dd></div>}
+                  {selected.avoidWhen && <div><dt>No lo uses así</dt><dd>{selected.avoidWhen}</dd></div>}
+                </dl>
+                <div className="st-focus-actions">
+                  {guide.prompts?.length ? <a className="st-btn" href={`#/prompts/herramienta-${encodeURIComponent(toolId)}`}>Ver prompts de {label}</a> : null}
+                  {guide.automations?.length ? <a className="st-btn-ghost" href="#automatizaciones">Ver automatizaciones</a> : null}
+                </div>
+              </article>
+            </div>
+          )}
         </section>
       ) : null}
       {guide.prompts?.length ? <ToolPromptLibrary prompts={guide.prompts} label={label} /> : null}
@@ -560,7 +585,7 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
   }
 
   return (
-    <section className={`st-tool-prompts${open ? ' open' : ''}`}>
+    <section className={`st-tool-prompts${open ? ' open' : ''}`} id="prompts-herramienta">
       <button type="button" className="st-tool-prompts-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
         <span>
           <small>Prompts de {label}</small>
@@ -615,29 +640,51 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
 }
 
 function AutomationLibrary({ automations, label }: { automations: ToolAutomation[]; label: string }) {
+  const [selected, setSelected] = useState<ToolAutomation | null>(null)
   return (
-    <section className="st-automation-library">
+    <section className="st-automation-library" id="automatizaciones">
       <div className="st-section-head">
         <div><span className="st-kicker">Flujos dentro de la herramienta</span><h2>Automatizaciones que puedes construir con {label}</h2></div>
         <span>{automations.length} recorridos</span>
       </div>
       <p className="st-tool-inside-intro">Cada recorrido tiene un disparador, una validación, una acción observable y una ruta de recuperación. Las conexiones reales necesitan tus propias credenciales y primero se prueban con datos ficticios.</p>
       <div className="st-automation-grid">
-        {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} />)}
+        {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} onOpen={() => setSelected(automation)} />)}
       </div>
+      {selected && (
+        <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={`Automatización ${selected.name}`}>
+          <button type="button" className="st-focus-backdrop" onClick={() => setSelected(null)} aria-label="Cerrar" />
+          <article className="st-focus-sheet st-focus-sheet-wide">
+            <header>
+              <div>
+                <span className="st-kicker">{selected.difficulty} · {selected.platform}</span>
+                <h3>{selected.name}</h3>
+                <p>{selected.goal}</p>
+              </div>
+              <button type="button" className="st-icon-close" onClick={() => setSelected(null)} aria-label="Cerrar automatización"><X size={16} /></button>
+            </header>
+            <dl className="st-focus-dl">
+              <div><dt>Disparador</dt><dd>{selected.trigger}</dd></div>
+              <div><dt>Credenciales</dt><dd>{selected.credentials}</dd></div>
+            </dl>
+            <h4>Pasos del flujo</h4>
+            <ol className="st-focus-steps">{selected.steps.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}</ol>
+            {selected.code && <div className="st-code"><em>n8n · Code</em><pre><code>{selected.code}</code></pre></div>}
+            <div className="st-automation-test"><strong>Prueba</strong><p>{selected.test}</p><strong>Si falla</strong><p>{selected.failure}</p></div>
+          </article>
+        </div>
+      )}
     </section>
   )
 }
 
-function AutomationCard({ automation }: { automation: ToolAutomation }) {
-  const [open, setOpen] = useState(false)
+function AutomationCard({ automation, onOpen }: { automation: ToolAutomation; onOpen: () => void }) {
   return (
-    <article className={`st-automation-card${open ? ' open' : ''}`}>
-      <button type="button" className="st-automation-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+    <article className="st-automation-card">
+      <button type="button" className="st-automation-toggle" onClick={onOpen}>
         <span><strong>{automation.name}</strong><small>{automation.difficulty} · {automation.platform}</small></span>
-        <span>{open ? '−' : '+'}</span>
+        <span>→</span>
       </button>
-      {open && <div className="st-automation-body"><p>{automation.goal}</p><dl><div><dt>Disparador</dt><dd>{automation.trigger}</dd></div><div><dt>Credenciales</dt><dd>{automation.credentials}</dd></div></dl><h4>Pasos del flujo</h4><ol>{automation.steps.map((step, index) => <li key={index}><span>{index + 1}</span>{step}</li>)}</ol>{automation.code && <div className="st-code"><em>n8n · Code</em><pre><code>{automation.code}</code></pre></div>}<div className="st-automation-test"><strong>Prueba</strong><p>{automation.test}</p><strong>Si falla</strong><p>{automation.failure}</p></div></div>}
     </article>
   )
 }

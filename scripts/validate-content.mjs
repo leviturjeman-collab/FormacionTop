@@ -19,6 +19,7 @@ const check = (condition, message) => { if (!condition) problems.push(message) }
 const course = JSON.parse(await fs.readFile(path.join(publicDir, 'course.json'), 'utf8'))
 
 const countWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
+const MANUAL_ONLY_TOOLS = new Set(['wispr-flow'])
 
 check(course.lessons.length >= 300, `Solo hay ${course.lessons.length} lecciones; se esperaban al menos 300.`)
 check(course.stages.length === 10, `Hay ${course.stages.length} etapas; se esperaban 10.`)
@@ -34,6 +35,8 @@ for (const family of course.prompts || []) {
 }
 const libraryPrompts = (course.prompts || []).flatMap((family) => family.prompts || [])
 for (const tool of course.toolPages || []) {
+  if (MANUAL_ONLY_TOOLS.has(tool.id)) continue
+
   const count = libraryPrompts.filter((prompt) => prompt.toolId === tool.id).length
   check(count >= 50, `La biblioteca solo tiene ${count} prompts para ${tool.label}; se esperaban al menos 50.`)
 }

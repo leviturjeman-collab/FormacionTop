@@ -62,6 +62,7 @@ const CATEGORY_META = [
 ]
 
 const CATEGORY_BY_ID = new Map(CATEGORY_META.map((meta) => [meta.id, meta]))
+const MANUAL_ONLY_TOOLS = new Set(['wispr-flow'])
 
 const TOOL_SECTIONS = [
   {
@@ -474,6 +475,8 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
   }
 
   for (const tool of toolPages || []) {
+    if (MANUAL_ONLY_TOOLS.has(tool.id)) continue
+
     const imported = (tool.guide?.prompts || [])
       .slice(0, 20)
       .map((prompt, index) => importToolPrompt(tool, prompt, index))
