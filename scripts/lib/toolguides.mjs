@@ -1,5 +1,7 @@
 import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS } from './automations-reales.mjs'
 
+const MAX_TOOL_AUTOMATIONS = 25
+
 /**
  * Guías completas de herramienta, para alguien que empieza de cero.
  *
@@ -776,11 +778,11 @@ export function completeToolGuide(existing, tool) {
   // las conectables llevan las suyas reales, y el resto no lleva la seccion.
   // Si una guia declara automations: [] de forma explicita, se respeta.
   if (Array.isArray(guide.automations)) {
-    guide.automations = guide.automations
+    guide.automations = guide.automations.slice(0, MAX_TOOL_AUTOMATIONS)
   } else if (AUTOMATION_PLATFORMS.has(tool.id)) {
-    guide.automations = TASK_AUTOMATIONS.map((item, index) => automationFor(tool, profile, item, index))
+    guide.automations = TASK_AUTOMATIONS.slice(0, MAX_TOOL_AUTOMATIONS).map((item, index) => automationFor(tool, profile, item, index))
   } else if (REAL_AUTOMATIONS[tool.id]) {
-    guide.automations = REAL_AUTOMATIONS[tool.id]
+    guide.automations = REAL_AUTOMATIONS[tool.id].slice(0, MAX_TOOL_AUTOMATIONS)
   } else {
     guide.automations = []
   }

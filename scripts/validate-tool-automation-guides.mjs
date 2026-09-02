@@ -10,6 +10,7 @@ const course = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/course.json'),
 const PLATFORM_TOOLS = new Set(['n8n', 'zapier', 'make', 'pipedream'])
 const MUST_STAY_MANUAL = new Set(['wispr-flow'])
 const MIN_PLATFORM_AUTOMATIONS = 25
+const MAX_TOOL_AUTOMATIONS = 25
 const REQUIRED_FIELDS = ['name', 'goal', 'difficulty', 'platform', 'trigger', 'test', 'failure', 'credentials']
 const DIFFICULTIES = new Set(['basica', 'intermedia', 'avanzada', 'profesional'])
 const problems = []
@@ -28,6 +29,10 @@ for (const tool of course.toolPages || []) {
 
   if (PLATFORM_TOOLS.has(tool.id) && automations.length < MIN_PLATFORM_AUTOMATIONS) {
     problem(tool, `tiene ${automations.length} automatizaciones; mínimo esperado ${MIN_PLATFORM_AUTOMATIONS}`)
+  }
+
+  if (automations.length > MAX_TOOL_AUTOMATIONS) {
+    problem(tool, `tiene ${automations.length} automatizaciones; máximo esperado ${MAX_TOOL_AUTOMATIONS}`)
   }
 
   if (MUST_STAY_MANUAL.has(tool.id) && automations.length !== 0) {

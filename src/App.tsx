@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
-import type { LevelId } from './types'
+import type { CursoLesson, LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
 import { store, useStudent } from './store'
@@ -27,26 +27,39 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
   const course = useCourse()
   const student = useStudent()
   const [query, setQuery] = useState('')
+  const cursoBase = [...(course.curso || [])].filter((lesson) => !lesson.tool).sort((a, b) => a.number - b.number)
+  const defaultCursoStage = cursoBase[0]?.stageId || course.stages[0]?.id || null
   const [expanded, setExpanded] = useState<string | null>(() =>
     route.name === 'area' ? route.stageId
     : route.name === 'categoria' ? course.categories.find((item) => item.id === route.categoryId)?.stageId || null
+    : route.name === 'curso' && route.lessonId ? course.curso.find((lesson) => lesson.id === route.lessonId)?.stageId || null
+    : route.name === 'curso' ? defaultCursoStage
     : null,
   )
 
   // El área de la página actual se despliega sola al navegar.
   useEffect(() => {
     if (route.name === 'area') setExpanded(route.stageId)
+    if (route.name === 'curso' && !route.lessonId) setExpanded(defaultCursoStage)
+    if (route.name === 'curso' && route.lessonId) {
+      const lesson = course.curso.find((item) => item.id === route.lessonId)
+      if (lesson) setExpanded(lesson.stageId)
+    }
     if (route.name === 'categoria') {
       const stage = course.categories.find((item) => item.id === route.categoryId)?.stageId
       if (stage) setExpanded(stage)
     }
-  }, [route, course.categories])
-
-  const totalDone = Object.values(student.lessons).reduce((sum, item) => sum + item.done.length, 0)
-  const totalLevels = course.stats.lessons * 3
-  const percent = totalLevels ? Math.round((totalDone / totalLevels) * 100) : 0
+  }, [route, course.categories, course.curso, defaultCursoStage])
 
   const is = (name: Route['name']) => route.name === name
+  const isCursoDone = (lesson: CursoLesson) => {
+    const progress = student.lessons['curso:' + lesson.id]
+    if (progress?.done?.includes('intermedio')) return true
+    const marked = progress?.checks?.intermedio || []
+    return lesson.tasks.length > 0 && marked.length >= lesson.tasks.length
+  }
+  const mainDone = cursoBase.filter(isCursoDone).length
+  const percent = cursoBase.length ? Math.round((mainDone / cursoBase.length) * 100) : 0
 
   return (
     <aside className={`st-sidebar${open ? ' open' : ''}`}>
@@ -115,10 +128,12 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         </a>
       </nav>
 
-      <p className="st-side-title">Programa</p>
+      <p className="st-side-title">Ruta principal</p>
       <div className="st-side-tree">
         {course.stages.map((stage) => {
           const isOpen = expanded === stage.id
+          const stageLessons = cursoBase.filter((lesson) => lesson.stageId === stage.id)
+          const stageDone = stageLessons.filter(isCursoDone).length
           const categories = stage.categoryIds
             .map((id) => course.categories.find((category) => category.id === id))
             .filter(Boolean) as typeof course.categories
@@ -126,35 +141,39 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
             <div key={stage.id} className={`st-side-area${isOpen ? ' open' : ''}`}>
               <button type="button" onClick={() => setExpanded(isOpen ? null : stage.id)} aria-expanded={isOpen}>
                 <i>{stage.number}</i>
-                <span>{stage.title}</span>
+                <span>
+                  <strong>{stage.title}</strong>
+                  <small>{stageLessons.length ? `${stageDone}/${stageLessons.length} lecciones` : 'Biblioteca de apoyo'}</small>
+                </span>
                 <i>{isOpen ? '−' : '+'}</i>
               </button>
               {isOpen && (
                 <ul>
-                  {/* Solo las seis categorias con mas contenido: el resto vive en la pagina del area. */}
-                  {[...categories]
-                    .sort((a, b) => b.count - a.count)
-                    .slice(0, 6)
-                    .map((category) => (
-                      <li key={category.id}>
+                  {stageLessons.length ? (
+                    stageLessons.map((lesson) => (
+                      <li key={lesson.id}>
                         <a
-                          className={route.name === 'categoria' && route.categoryId === category.id ? 'active' : ''}
-                          href={href({ name: 'categoria', categoryId: category.id, filters: {} })}
+                          className={route.name === 'curso' && route.lessonId === lesson.id ? 'active' : ''}
+                          data-done={isCursoDone(lesson) ? 'true' : undefined}
+                          href={href({ name: 'curso', lessonId: lesson.id })}
                           onClick={onClose}
                         >
-                          <span>{category.label}</span>
-                          <b>{category.count}</b>
+                          <span>{String(lesson.number).padStart(2, '0')}. {lesson.title}</span>
+                          <b>{isCursoDone(lesson) ? '✓' : '→'}</b>
                         </a>
                       </li>
-                    ))}
+                    ))
+                  ) : (
+                    <li className="st-side-muted">Sin lecciones principales: usa esta área como biblioteca.</li>
+                  )}
                   <li>
                     <a
                       className={route.name === 'area' && route.stageId === stage.id ? 'active' : ''}
                       href={href({ name: 'area', stageId: stage.id, filters: {} })}
                       onClick={onClose}
                     >
-                      <span>{categories.length > 6 ? `Ver las ${categories.length} categorías` : 'Ver el área completa'}</span>
-                      <b>{stage.lessonSlugs.length}</b>
+                      <span>Biblioteca del bloque</span>
+                      <b>{categories.length}</b>
                     </a>
                   </li>
                 </ul>
@@ -166,8 +185,8 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
 
       <div className="st-course-progress">
         <div>
-          <span>Curso completo</span>
-          <strong>{percent}%</strong>
+          <span>Ruta principal</span>
+          <strong>{mainDone}/{cursoBase.length}</strong>
         </div>
         <i><b style={{ width: `${percent}%` }} /></i>
         <div className="st-level-pick" role="group" aria-label="Nivel por defecto">
@@ -231,7 +250,12 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'kits': return ['Kits institucionales']
       case 'admin': return ['Súper administrador']
       case 'guia': return ['Guías']
-      case 'curso': return ['El curso']
+      case 'curso': {
+        if (!route.lessonId) return ['Programa']
+        const lesson = course.curso.find((item) => item.id === route.lessonId)
+        const tool = lesson?.tool ? course.toolPages.find((item) => item.id === lesson.tool) : null
+        return ['Programa', tool?.label || 'Ruta principal', lesson?.title || route.lessonId]
+      }
       case 'progreso': return ['Progreso']
       default: return ['Academia']
     }

@@ -17,7 +17,9 @@ export default function Inicio() {
   const core = cursoLessons.filter((item) => !item.tool)
   /** Una lección del programa está hecha cuando el alumno ha marcado todas sus tareas. */
   const isDone = (item: { id: string; tasks: unknown[] }) => {
-    const marked = student.lessons['curso:' + item.id]?.checks?.intermedio || []
+    const progress = student.lessons['curso:' + item.id]
+    const marked = progress?.checks?.intermedio || []
+    if (progress?.done?.includes('intermedio')) return true
     return item.tasks.length > 0 && marked.length >= item.tasks.length
   }
   const doneCount = core.filter(isDone).length

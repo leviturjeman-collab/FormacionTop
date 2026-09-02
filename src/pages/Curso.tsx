@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import {
-  ArrowLeft, ArrowRight, Ban, Check, CheckCircle2, Circle, Clock, Copy,
-  HelpCircle, Languages, Lightbulb, Quote, Scale, Sparkles,
- AlertTriangle } from 'lucide-react'
+  ArrowLeft, ArrowRight, Ban, BookOpen, Check, CheckCircle2, Circle, Clock, Copy,
+  HelpCircle, Languages, Lightbulb, ListChecks, Quote, Scale, Sparkles, Wrench,
+  AlertTriangle } from 'lucide-react'
 import type { CursoLesson } from '../types'
 import { useCourse } from '../course'
 import { href } from '../router'
-import { store, useLessonProgress } from '../store'
+import { store, useLessonProgress, useStudent } from '../store'
 import { BrandMark } from '../components/Brand'
 import Notebook from '../components/Notebook'
 import Piece from '../components/Piece'
@@ -50,6 +50,7 @@ const countText = (count: number, singular: string, plural: string) => `${count}
 
 export function CursoIndice() {
   const course = useCourse()
+  const student = useStudent()
   const lecciones = [...(course.curso || [])].sort((a, b) => a.number - b.number)
 
   if (!lecciones.length) {
@@ -67,6 +68,15 @@ export function CursoIndice() {
   // cuando el alumno ya entiende qué quiere construir.
   const conHerramienta = lecciones.filter((item) => item.tool)
   const sueltas = lecciones.filter((item) => !item.tool)
+  const isDone = (item: CursoLesson) => {
+    const progress = student.lessons['curso:' + item.id]
+    const marked = progress?.checks?.intermedio || []
+    if (progress?.done?.includes('intermedio')) return true
+    return item.tasks.length > 0 && marked.length >= item.tasks.length
+  }
+  const hechas = sueltas.filter(isDone).length
+  const siguienteBase = sueltas.find((item) => !isDone(item)) || sueltas[0]
+  const etapaActual = siguienteBase?.stageId || porAreaPrimera(course)
 
   const porHerramienta = course.toolPages
     .map((pagina) => {
@@ -95,68 +105,85 @@ export function CursoIndice() {
     .map((stage) => ({ stage, items: sueltas.filter((item) => item.stageId === stage.id) }))
     .filter((group) => group.items.length)
 
-  const totalMin = lecciones.reduce((sum, item) => sum + item.minutes, 0)
   const requiredMin = sueltas.reduce((sum, item) => sum + item.minutes, 0)
 
   return (
     <div className="st-page">
       <div className="st-page-title">
         <span className="st-kicker">El curso</span>
-        <h1>Tu programa, paso a paso</h1>
+        <h1>Programa significa ruta principal</h1>
         <p>
-          Son {sueltas.length} lecciones, en orden, unas {Math.round(requiredMin / 60)} horas en total. Hazlas de una
-          en una. Luego hay una ficha por cada herramienta ({porHerramienta.length} en total), con sus prompts y sus
-          errores típicos: no las mires hasta que tu proyecto te pida una.
+          Aquí no tienes que estudiar todo lo que existe en la web. Programa es la ruta principal: {sueltas.length}
+          lecciones para aprender el método. Las herramientas, prompts y automatizaciones son apoyo para cuando una
+          lección o tu proyecto te pidan usarlas.
         </p>
       </div>
 
+      <section className="st-program-now">
+        <div>
+          <span className="st-kicker">Qué hago ahora</span>
+          <h2>{siguienteBase ? `Siguiente: ${siguienteBase.title}` : 'Empieza por la primera lección'}</h2>
+          <p>
+            Abre una lección, lee solo los bloques que necesites, haz las tareas marcables y vuelve al programa.
+            Si una herramienta te interesa, entra en su ficha desde la zona opcional.
+          </p>
+        </div>
+        <a className="st-btn" href={href({ name: 'curso', lessonId: siguienteBase?.id || sueltas[0]?.id || '' })}>
+          Ir a la lección
+          <ArrowRight size={13} />
+        </a>
+      </section>
+
       <section className="st-course-scope">
         <div>
-          <span>Ruta obligatoria</span>
-          <strong>{sueltas.length} lecciones</strong>
-          <small>Lo que haría cualquier alumno para empezar sin perderse.</small>
+          <span>1. Ruta principal</span>
+          <strong>{hechas}/{sueltas.length} hechas</strong>
+          <small>Lo único que conviene seguir en orden.</small>
         </div>
         <div>
-          <span>Herramientas</span>
+          <span>2. Herramientas</span>
           <strong>{porHerramienta.length} fichas</strong>
-          <small>{conHerramienta.length} lecciones de itinerario, más guías, prompts y automatizaciones.</small>
+          <small>Entras solo cuando una lección o proyecto menciona una herramienta.</small>
         </div>
         <div>
-          <span>Tiempo estimado</span>
-          <strong>{Math.round(totalMin / 60)} h total</strong>
-          <small>La ruta base tarda unas {Math.round(requiredMin / 60)} h.</small>
+          <span>3. Extras</span>
+          <strong>Prompts y flujos</strong>
+          <small>No son deberes: son plantillas para copiar cuando ya sabes qué quieres hacer.</small>
         </div>
       </section>
 
       <section className="st-program-guide">
-        <div><span>→</span><strong>Entender</strong><small>Qué puede hacer la IA y dónde se equivoca.</small></div>
-        <div><span>→</span><strong>Definir</strong><small>Qué problema quieres resolver y qué resultado esperas.</small></div>
-        <div><span>→</span><strong>Construir</strong><small>Una primera versión pequeña y comprobable.</small></div>
-        <div><span>✓</span><strong>Entregar</strong><small>Pruebas, documentación, seguridad y siguiente versión.</small></div>
+        <div><span>1</span><strong>Lee</strong><small>Primero entiende la idea con ejemplos sencillos.</small></div>
+        <div><span>2</span><strong>Haz</strong><small>Después completa las tareas que se pueden marcar.</small></div>
+        <div><span>3</span><strong>Guarda</strong><small>Apunta la evidencia para no perder el resultado.</small></div>
+        <div><span>4</span><strong>Sigue</strong><small>Vuelve aquí y abre la siguiente lección.</small></div>
       </section>
 
       <section className="st-curso-divider">
-        <span className="st-kicker">Ruta principal · obligatoria</span>
-        <h2>Aprende el método antes de elegir herramientas</h2>
-        <p>Estas {sueltas.length} lecciones construyen la base: entender, definir, construir, automatizar y comprobar.</p>
+        <span className="st-kicker">Ruta principal</span>
+        <h2>Abre un bloque y sigue sus lecciones</h2>
+        <p>Los bloques están plegados para que no parezca una biblioteca infinita. Abre el bloque actual y avanza de arriba abajo.</p>
       </section>
       {porArea.map(({ stage, items }) => (
-        <section key={stage.id} className="st-curso-area">
-          <div className="st-section-head">
+        <details key={stage.id} className="st-curso-area" open={stage.id === etapaActual}>
+          <summary className="st-curso-area-head">
             <div>
               <span className="st-kicker">Bloque {stage.number} · {stage.tagline}</span>
               <h2>{stage.title}</h2>
+              <p>{items.length} lecciones de este bloque.</p>
             </div>
             <span>
               {items.length > 1
                 ? `Lecciones ${String(items[0].number).padStart(2, '0')} a ${String(items[items.length - 1].number).padStart(2, '0')}`
                 : `Lección ${String(items[0].number).padStart(2, '0')}`}
             </span>
-          </div>
+          </summary>
 
           <ol className="st-curso-list">
-            {items.map((item) => (
-              <li key={item.id}>
+            {items.map((item) => {
+              const done = isDone(item)
+              return (
+              <li key={item.id} className={done ? 'done' : ''}>
                 <a href={href({ name: 'curso', lessonId: item.id })}>
                   <span className="st-curso-num" aria-label={`Lección ${item.number} de ${sueltas.length}`}>
                     {String(item.number).padStart(2, '0')}
@@ -165,92 +192,104 @@ export function CursoIndice() {
                     <strong>{item.title}</strong>
                     <p>{item.promise}</p>
                   </div>
+                  <span className="st-curso-state">{done ? 'Hecha' : 'Pendiente'}</span>
                   <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
                   <ArrowRight size={14} />
                 </a>
               </li>
-            ))}
+              )
+            })}
           </ol>
-        </section>
+        </details>
       ))}
 
-      <section className="st-curso-divider">
-        <span className="st-kicker">Especializaciones · opcionales</span>
-        <h2>Ahora sí: elige una herramienta concreta</h2>
-        <p>
-          Aquí sí aparece todo el catálogo. Si una herramienta ya tiene ruta paso a paso, verás sus lecciones debajo.
-          Si todavía no tiene itinerario, entra en su ficha: allí están sus prompts, automatizaciones, primeros pasos y errores típicos.
-        </p>
-      </section>
-
-      <section className="st-program-tools" aria-label="Herramientas disponibles">
-        <div className="st-program-tools-grid">
-          {porHerramienta.map(({ id, label, icon, count, totalCount, maxLessons, guidePrompts, automations, items }) => (
-            <a
-              key={id}
-              className="st-program-tool-card"
-              data-itinerary={items.length ? 'true' : undefined}
-              href={href({ name: 'herramienta', toolId: id, filters: {} })}
-            >
-              <BrandMark icon={icon} size={22} />
-              <span>
-                <strong>{label}</strong>
-                <small>
-                  {items.length
-                    ? `${countText(items.length, 'lección', 'lecciones')} paso a paso`
-                    : count
-                      ? `${countText(count, 'lección seleccionada', 'lecciones seleccionadas')}${totalCount > count ? ` de ${totalCount}` : ''}`
-                      : 'Guía práctica disponible'}
-                </small>
-              </span>
-              <em>
-                {guidePrompts ? <b>{guidePrompts} prompts</b> : null}
-                {automations ? <b>{automations} automatizaciones</b> : null}
-                {count ? <b>máx. {maxLessons} lecciones</b> : null}
-              </em>
-              <ArrowRight size={13} />
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <section className="st-curso-divider st-curso-divider-sub">
-        <span className="st-kicker">Rutas ya escritas</span>
-        <h2>Lecciones paso a paso</h2>
-        <p>Estas herramientas ya tienen sus lecciones puestas en orden. Las demás se estudian desde su ficha, cuando te hagan falta.</p>
-      </section>
-
-      {herramientasConRuta.map(({ id, label, items }) => (
-        <section key={id} className="st-curso-area">
-          <div className="st-section-head">
-            <div>
-              <span className="st-kicker">Ruta de herramienta</span>
-              <h2>{label}</h2>
-            </div>
-            <span>{countText(items.length, 'lección disponible', 'lecciones disponibles')}</span>
+      <details className="st-curso-optional">
+        <summary>
+          <div>
+            <span className="st-kicker">Apoyo opcional</span>
+            <h2>Herramientas, prompts y automatizaciones</h2>
+            <p>Abre esto solo cuando necesites una herramienta concreta. No forma parte de la ruta principal.</p>
           </div>
-
-          <ol className="st-curso-list">
-            {items.map((item) => (
-              <li key={item.id}>
-                <a href={href({ name: 'curso', lessonId: item.id })}>
-                  <span className="st-curso-num st-curso-num-paso">
-                    Paso {String(item.slot || item.number).padStart(2, '0')}
-                  </span>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <p>{item.promise}</p>
-                  </div>
-                  <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
-                  <ArrowRight size={14} />
-                </a>
-              </li>
+          <span>{porHerramienta.length} fichas</span>
+        </summary>
+        <section className="st-program-tools" aria-label="Herramientas disponibles">
+          <div className="st-program-tools-grid">
+            {porHerramienta.map(({ id, label, icon, count, totalCount, maxLessons, guidePrompts, automations, items }) => (
+              <a
+                key={id}
+                className="st-program-tool-card"
+                data-itinerary={items.length ? 'true' : undefined}
+                href={href({ name: 'herramienta', toolId: id, filters: {} })}
+              >
+                <BrandMark icon={icon} size={22} />
+                <span>
+                  <strong>{label}</strong>
+                  <small>
+                    {items.length
+                      ? `${countText(items.length, 'lección', 'lecciones')} paso a paso`
+                      : count
+                        ? `${countText(count, 'lección seleccionada', 'lecciones seleccionadas')}${totalCount > count ? ` de ${totalCount}` : ''}`
+                        : 'Guía práctica disponible'}
+                  </small>
+                </span>
+                <em>
+                  {guidePrompts ? <b>{guidePrompts} prompts</b> : null}
+                  {automations ? <b>{automations} automatizaciones</b> : null}
+                  {count ? <b>máx. {maxLessons} lecciones</b> : null}
+                </em>
+                <ArrowRight size={13} />
+              </a>
             ))}
-          </ol>
+          </div>
         </section>
-      ))}
+      </details>
+
+      <details className="st-curso-optional">
+        <summary>
+          <div>
+            <span className="st-kicker">Especializaciones</span>
+            <h2>Rutas de herramienta ya escritas</h2>
+            <p>Son recorridos aparte. Úsalos cuando tu proyecto ya pida trabajar con esa herramienta.</p>
+          </div>
+          <span>{herramientasConRuta.length} rutas</span>
+        </summary>
+
+        {herramientasConRuta.map(({ id, label, items }) => (
+          <section key={id} className="st-curso-tool-route">
+            <div className="st-section-head">
+              <div>
+                <span className="st-kicker">Ruta de herramienta</span>
+                <h2>{label}</h2>
+              </div>
+              <span>{countText(items.length, 'lección disponible', 'lecciones disponibles')}</span>
+            </div>
+
+            <ol className="st-curso-list">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <a href={href({ name: 'curso', lessonId: item.id })}>
+                    <span className="st-curso-num st-curso-num-paso">
+                      Paso {String(item.slot || item.number).padStart(2, '0')}
+                    </span>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <p>{item.promise}</p>
+                    </div>
+                    <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
+                    <ArrowRight size={14} />
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ))}
+      </details>
     </div>
   )
+}
+
+function porAreaPrimera(course: ReturnType<typeof useCourse>) {
+  return course.stages[0]?.id || ''
 }
 
 /* ------------------------------------------------------------------ *
@@ -276,17 +315,23 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
     )
   }
 
-  const posicion = lecciones.indexOf(leccion)
-  const anterior = posicion > 0 ? lecciones[posicion - 1] : null
-  const siguiente = posicion < lecciones.length - 1 ? lecciones[posicion + 1] : null
+  const rutaActual = leccion.tool
+    ? lecciones.filter((item) => item.tool === leccion.tool).sort((a, b) => (a.slot || a.number) - (b.slot || b.number))
+    : lecciones.filter((item) => !item.tool).sort((a, b) => a.number - b.number)
+  const posicion = rutaActual.findIndex((item) => item.id === leccion.id)
+  const anterior = posicion > 0 ? rutaActual[posicion - 1] : null
+  const siguiente = posicion >= 0 && posicion < rutaActual.length - 1 ? rutaActual[posicion + 1] : null
   const stage = course.stages.find((item) => item.id === leccion.stageId)
   const percent = Math.round((hechas.length / Math.max(1, leccion.tasks.length)) * 100)
+  const toolMeta = leccion.tool ? course.toolPages.find((tool) => tool.id === leccion.tool) : null
+  const leccionCompleta = progress.done.includes('intermedio')
 
   return (
     <article className="st-lesson">
+      <a className="st-lesson-back" href={href({ name: 'curso' })}><ArrowLeft size={13} /> Volver al programa</a>
       <header className="st-lesson-head">
         <span className="st-kicker">
-          {leccion.tool ? 'Especialización' : 'Ruta principal'} · lección {String(leccion.number).padStart(2, '0')}{stage ? ` · ${stage.title}` : ''}
+          {leccion.tool ? `Especialización · ${toolMeta?.label || leccion.tool}` : 'Ruta principal'} · {posicion + 1} de {rutaActual.length}{stage ? ` · ${stage.title}` : ''}
         </span>
         <h1>{leccion.title}</h1>
         <p className="st-lesson-headline">{leccion.promise}</p>
@@ -297,9 +342,33 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         </div>
       </header>
 
+      <section className="st-lesson-map">
+        <div>
+          <BookOpen size={15} />
+          <strong>1. Entiende</strong>
+          <small>Lee el primer bloque abierto. Los demás se abren si necesitas más contexto.</small>
+        </div>
+        <div>
+          <ListChecks size={15} />
+          <strong>2. Haz</strong>
+          <small>Completa las tareas de “Tu turno” y marca cada una cuando veas el resultado.</small>
+        </div>
+        <div>
+          <Wrench size={15} />
+          <strong>3. Sigue</strong>
+          <small>{siguiente ? 'Usa el botón “Siguiente” al final.' : 'Esta es la última de esta ruta.'}</small>
+        </div>
+      </section>
+
       <section className="st-curso-why">
         <Sparkles size={14} />
         <p>{leccion.why}</p>
+      </section>
+
+      <section className="st-lesson-section-intro">
+        <span className="st-kicker">Primero entiende esto</span>
+        <h2>La explicación está en bloques plegables</h2>
+        <p>Abre solo lo que necesites. El primer bloque viene abierto para que sepas por dónde empezar.</p>
       </section>
 
       <div className="st-blocks">
@@ -345,6 +414,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
           <div>
             <span className="st-kicker">Tu turno</span>
             <h2>Hazlo paso a paso</h2>
+            <p>Primero abre la instrucción, después haz la acción y al final marca el círculo cuando lo hayas visto en pantalla.</p>
           </div>
           <span className="st-piece-badge" data-full={percent === 100 ? 'true' : undefined}>
             {hechas.length}/{leccion.tasks.length} tareas
@@ -398,6 +468,26 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
             )
           })}
         </ol>
+      </section>
+
+      <section className="st-lesson-complete" data-done={leccionCompleta ? 'true' : undefined}>
+        <div>
+          <span className="st-kicker">Cierre de la lección</span>
+          <h2>{leccionCompleta ? 'Lección completada' : 'Cuando termines, marca la lección'}</h2>
+          <p>
+            Usa este botón cuando hayas leído la explicación y tengas hechas las tareas principales. Sirve para que el
+            Programa sepa por dónde tienes que seguir.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="st-btn"
+          onClick={() => store.toggleDone(`curso:${lessonId}`, 'intermedio')}
+          aria-pressed={leccionCompleta}
+        >
+          {leccionCompleta ? <CheckCircle2 size={15} /> : <Circle size={15} />}
+          {leccionCompleta ? 'Quitar completado' : 'Marcar lección completada'}
+        </button>
       </section>
 
       <details className="st-block st-block-importa">

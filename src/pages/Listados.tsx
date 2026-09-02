@@ -327,13 +327,22 @@ export function Herramientas() {
       <div className="st-tool-grid">
         {course.toolPages.map((tool) => {
           const escritas = tool.itinerary?.length || 0
+          const promptCount = tool.guide?.prompts?.length || 0
+          const automationCount = tool.guide?.automations?.length || 0
           return (
             <a key={tool.id} className="st-tool-card" href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
               <BrandMark icon={tool.icon} size={24} />
               <div>
                 <strong>{tool.label}</strong>
                 {tool.guide ? (
-                  <span>{tool.count ? `${tool.count} lecciones · ` : ''}{tool.guide.prompts?.length || 0} prompts{tool.guide.automations?.length ? ` · ${tool.guide.automations.length} automatizaciones` : ''} · guía completa</span>
+                  <span>
+                    {[
+                      tool.count ? `${tool.count} lecciones` : '',
+                      promptCount ? `${promptCount} prompts` : '',
+                      automationCount ? `${automationCount} automatizaciones` : '',
+                      tool.count || promptCount || automationCount ? 'guía completa' : 'guía manual',
+                    ].filter(Boolean).join(' · ')}
+                  </span>
                 ) : escritas > 0 ? (
                   <span className="st-tool-itinerary">Itinerario · {escritas} lecciones</span>
                 ) : (
@@ -373,6 +382,33 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const filters = 'filters' in route ? route.filters : {}
   const shown = applyFilters(all, filters, doneSlugs)
   const progress = useProgressOf(tool.lessonSlugs)
+  const promptCount = tool.guide?.prompts?.length || 0
+  const automationCount = tool.guide?.automations?.length || 0
+  const toolMapItems = [
+    {
+      id: 'guia-herramienta',
+      title: 'Guía rápida',
+      detail: 'Qué es, para qué sirve y qué no debes tocar todavía.',
+    },
+    ...(all.length ? [{
+      id: 'lecciones-herramienta',
+      title: 'Lecciones',
+      detail: `${tool.count} seleccionadas${hiddenCount ? ` de ${totalAvailable}` : ''}`,
+    }] : []),
+    ...(promptCount ? [{
+      id: 'prompts-herramienta',
+      title: 'Prompts',
+      detail: `${promptCount} listos para copiar`,
+    }] : []),
+    ...(automationCount ? [{
+      id: 'automatizaciones',
+      title: 'Automatizaciones',
+      detail: `${automationCount} flujos explicados`,
+    }] : []),
+  ]
+  const jumpTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <div className="st-page">
@@ -382,37 +418,69 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
           <span className="st-kicker">Herramienta</span>
           <h1>{tool.label}</h1>
           <p>
-            Lo esencial de {tool.label}, curado en un máximo de {tool.maxLessons || 25} lecciones de consulta.
+            {tool.count
+              ? `Lo esencial de ${tool.label}, curado en un máximo de ${tool.maxLessons || 25} lecciones de consulta.`
+              : `${tool.label} funciona como herramienta manual de consulta: primero entiendes qué hace y después la usas solo cuando te ayuda en tu trabajo real.`}
             {hiddenCount ? ` Hay ${hiddenCount} menciones internas más, pero no se muestran aquí para no crear una lista interminable.` : ''}
           </p>
         </div>
         <div className="st-area-stats">
-          <div><strong>{tool.count}</strong><small>seleccionadas</small></div>
-          <div><strong>{progress.percent}%</strong><small>completado</small></div>
+          {tool.count ? (
+            <>
+              <div><strong>{tool.count}</strong><small>seleccionadas</small></div>
+              <div><strong>{progress.percent}%</strong><small>completado</small></div>
+            </>
+          ) : (
+            <>
+              <div><strong>Manual</strong><small>uso guiado</small></div>
+              <div><strong>{automationCount}</strong><small>automatizaciones</small></div>
+            </>
+          )}
         </div>
       </header>
 
+      <section className="st-tool-map" aria-label={`Mapa de ${tool.label}`}>
+        {toolMapItems.map((item, index) => (
+          <button key={item.id} type="button" onClick={() => jumpTo(item.id)}>
+            <span>{index + 1}</span>
+            <strong>{item.title}</strong>
+            <small>{item.detail}</small>
+          </button>
+        ))}
+      </section>
+
       {tool.guide && (
-        <>
+        <section id="guia-herramienta" className="st-tool-guide">
           <div className="st-section-head">
             <div>
               <span className="st-kicker">Empieza aquí</span>
-              <h2>Todo lo que necesitas para arrancar</h2>
+              <h2>Primero entiende la herramienta</h2>
             </div>
           </div>
           <Blocks blocks={guideBlocks(tool.guide, tool.label)} />
-          <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} />
-        </>
+        </section>
       )}
 
-      <ToolConnections tool={tool.id} />
+      {all.length > 0 && (
+        <section id="lecciones-herramienta" className="st-tool-lessons">
+          <div className="st-section-head">
+            <div>
+              <span className="st-kicker">Lecciones dentro de {tool.label}</span>
+              <h2>Estudia solo estas piezas</h2>
+              <p className="st-tool-inside-intro">
+                No son otra ruta obligatoria. Son las lecciones seleccionadas para entender {tool.label} cuando tu proyecto la necesite.
+              </p>
+            </div>
+            <span>{shown.length} de {all.length}{hiddenCount ? ` · ${hiddenCount} guardadas fuera` : ''}</span>
+          </div>
+          <Filters route={route} lessons={all} hide={['tool']} />
+          <LessonList lessons={shown} level={level} />
+        </section>
+      )}
 
-      <div className="st-section-head">
-        <h2>Lecciones seleccionadas sobre {tool.label}</h2>
-        <span>{shown.length} de {all.length}{hiddenCount ? ` · ${hiddenCount} fuera del listado` : ''}</span>
-      </div>
-      <Filters route={route} lessons={all} hide={['tool']} />
-      <LessonList lessons={shown} level={level} />
+      {tool.guide && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} />}
+
+      <ToolConnections tool={tool.id} />
     </div>
   )
 }

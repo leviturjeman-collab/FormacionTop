@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Clock, Copy, Download, FileText, FolderTree, Target, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Circle, Clock, Copy, Download, FileText, FolderTree, ListChecks, Target, TriangleAlert, Wrench } from 'lucide-react'
 import type { LessonAsset, LevelId } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href, navigate } from '../router'
@@ -135,6 +135,24 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
 
         <ToolStrip tools={lesson.tools} size={14} />
       </header>
+
+      <section className={`st-lesson-map${esFicha ? ' st-lesson-map-support' : ''}`}>
+        <div>
+          <BookOpen size={15} />
+          <strong>{esFicha ? '1. Consulta' : '1. Elige nivel'}</strong>
+          <small>{esFicha ? 'Esta página es apoyo puntual. No tienes que estudiarla en orden.' : 'Básico, intermedio o avanzado cambian la profundidad de la explicación.'}</small>
+        </div>
+        <div>
+          <ListChecks size={15} />
+          <strong>{esFicha ? '2. Usa lo necesario' : '2. Haz práctica'}</strong>
+          <small>{esFicha ? 'Copia el archivo, dato o idea que necesites y vuelve a tu tarea.' : 'Completa los pasos marcables y guarda una evidencia corta.'}</small>
+        </div>
+        <div>
+          <Wrench size={15} />
+          <strong>{esFicha ? '3. Vuelve al programa' : '3. No mezcles rutas'}</strong>
+          <small>{esFicha ? 'Si te pierdes, vuelve a Programa o a Mi proyecto.' : 'Esta lección pertenece a su categoría; las herramientas son apoyo aparte.'}</small>
+        </div>
+      </section>
 
       {!esFicha && (
       <div className="st-level-tabs" role="tablist" aria-label="Nivel de la lección">
