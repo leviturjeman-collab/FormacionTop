@@ -470,26 +470,6 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         </ol>
       </section>
 
-      <section className="st-lesson-complete" data-done={leccionCompleta ? 'true' : undefined}>
-        <div>
-          <span className="st-kicker">Cierre de la lección</span>
-          <h2>{leccionCompleta ? 'Lección completada' : 'Cuando termines, marca la lección'}</h2>
-          <p>
-            Usa este botón cuando hayas leído la explicación y tengas hechas las tareas principales. Sirve para que el
-            Programa sepa por dónde tienes que seguir.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="st-btn"
-          onClick={() => store.toggleDone(`curso:${lessonId}`, 'intermedio')}
-          aria-pressed={leccionCompleta}
-        >
-          {leccionCompleta ? <CheckCircle2 size={15} /> : <Circle size={15} />}
-          {leccionCompleta ? 'Quitar completado' : 'Marcar lección completada'}
-        </button>
-      </section>
-
       <details className="st-block st-block-importa">
         <summary>
           <span><Scale size={15} /><strong>Lo que importa y lo que no</strong></span>
@@ -556,6 +536,26 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
       {leccion.next && (
         <p className="st-curso-next"><ArrowRight size={13} /> <span>{leccion.next}</span></p>
       )}
+
+      <section className="st-lesson-complete" data-done={leccionCompleta ? 'true' : undefined}>
+        <div>
+          <span className="st-kicker">Cierre de la lección</span>
+          <h2>{leccionCompleta ? 'Lección completada' : 'Cuando termines, marca la lección'}</h2>
+          <p>
+            Usa este botón al terminar toda la lección. Sirve para que el Programa marque esta pieza como hecha y sepa
+            por dónde tienes que seguir.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="st-btn"
+          onClick={() => store.toggleDone(`curso:${lessonId}`, 'intermedio')}
+          aria-pressed={leccionCompleta}
+        >
+          {leccionCompleta ? <CheckCircle2 size={15} /> : <Circle size={15} />}
+          {leccionCompleta ? 'Quitar completado' : 'Marcar lección completada'}
+        </button>
+      </section>
 
       <nav className="st-lesson-nav">
         {anterior ? (
