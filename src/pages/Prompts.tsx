@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Ban, Check, ChevronDown, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
+import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
 import { store, useStudent } from '../store'
@@ -137,10 +137,9 @@ export default function Prompts({ familyId }: { familyId?: string }) {
   const [query, setQuery] = useState('')
   const [selectedTool, setSelectedTool] = useState('all')
   const [active, setActive] = useState(familyId || '')
-  /* El navegador salía entero desplegado: 72 bloques antes del primer prompt.
-   * Ahora solo se abre una sección, y de entrada ninguna. */
-  const [seccionAbierta, setSeccionAbierta] = useState<string | null>(null)
-  const [cuantos, setCuantos] = useState(20)
+  const firstFamily = baseFamilias.find((item) => item.id === familyId) || baseFamilias[0]
+  const [activeSection, setActiveSection] = useState(firstFamily?.sectionId || 'otros')
+  const [cuantos, setCuantos] = useState(12)
 
   const activeId = active || familyId || baseFamilias[0]?.id || ''
   const familia = baseFamilias.find((item) => item.id === activeId) || baseFamilias[0]
@@ -171,6 +170,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
       ),
     }))
   }, [baseFamilias])
+  const selectedSection = promptSections.find((section) => section.id === activeSection) || promptSections[0]
 
   const allPromptEntries = useMemo<SearchResult[]>(
     () => baseFamilias.flatMap((family) => family.prompts.map((prompt) => ({ prompt, family }))),
@@ -193,10 +193,22 @@ export default function Prompts({ familyId }: { familyId?: string }) {
     : 'all'
 
   function selectFamily(id: string) {
-    setCuantos(20)
+    setCuantos(12)
     setActive(id)
     setQuery('')
     setSelectedTool('all')
+    const family = baseFamilias.find((item) => item.id === id)
+    if (family?.sectionId) setActiveSection(family.sectionId)
+  }
+
+  function selectSection(id: string) {
+    const section = promptSections.find((item) => item.id === id)
+    const first = section?.families[0]
+    setActiveSection(id)
+    setCuantos(12)
+    setQuery('')
+    setSelectedTool('all')
+    if (first) setActive(first.id)
   }
 
   const searchResults = useMemo(() => {
@@ -214,8 +226,11 @@ export default function Prompts({ familyId }: { familyId?: string }) {
   }, [familia])
 
   useEffect(() => {
-    if (familyId && familyId !== active) setActive(familyId)
-  }, [active, familyId])
+    if (!familyId || familyId === active) return
+    setActive(familyId)
+    const family = baseFamilias.find((item) => item.id === familyId)
+    if (family?.sectionId) setActiveSection(family.sectionId)
+  }, [active, baseFamilias, familyId])
 
   const showingGlobalResults = query.trim().length > 0 || activeTool !== 'all'
   const encontrados = showingGlobalResults ? searchResults : familyPrompts
@@ -278,112 +293,113 @@ export default function Prompts({ familyId }: { familyId?: string }) {
         </label>
       </section>
 
-      <section className="st-prompt-navigator" aria-label="Organización de la biblioteca de prompts">
-        <div className="st-prompt-map">
-          {promptSections.map((section, sectionIndex) => {
-            const sectionActive = section.families.some((family) => family.id === familia?.id)
-            const sectionCount = section.families.reduce((sum, family) => sum + family.prompts.length, 0)
-            const abierta = seccionAbierta === section.id || (seccionAbierta === null && sectionActive)
-              return (
-              <section key={section.id} className={`st-prompt-section${sectionActive ? ' on' : ''}${abierta ? ' abierta' : ''}`}>
-                <button
-                  type="button"
-                  className="st-prompt-section-head"
-                  aria-expanded={abierta}
-                  onClick={() => setSeccionAbierta(abierta ? '' : section.id)}
-                >
-                  <span>{String(sectionIndex + 1).padStart(2, '0')}</span>
-                  <div>
-                    <strong>{section.title}</strong>
-                    <p>{section.description}</p>
-                  </div>
-                  <b>{section.families.length} bloques · {sectionCount} prompts</b>
-                  <ChevronDown size={14} className={abierta ? 'st-prompt-chevron on' : 'st-prompt-chevron'} />
-                </button>
-                {abierta && (
-                <div className="st-prompt-block-grid">
-                  {section.families.map((family) => (
-                    <a
-                      key={family.id}
-                      href={`#/prompts/${encodeURIComponent(family.id)}`}
-                      className={`st-prompt-block${family.id === familia?.id ? ' on' : ''}`}
-                      onClick={() => selectFamily(family.id)}
-                    >
-                      <span>{family.source || family.sectionTitle || 'Bloque institucional'}</span>
-                      <strong>{family.blockTitle || family.title}</strong>
-                      <small><b>Para qué:</b> {family.useCase || family.intro}</small>
-                      <em>{family.audience || 'Alumnos, responsables y equipos que necesitan una entrega verificable.'}</em>
-                      <i>{family.prompts.length} prompts</i>
-                    </a>
-                  ))}
-                </div>
-                )}
-              </section>
-            )
-          })}
-        </div>
+      <section className="st-prompt-category-strip" aria-label="Categorías de prompts">
+        {promptSections.map((section, sectionIndex) => {
+          const sectionCount = section.families.reduce((sum, family) => sum + family.prompts.length, 0)
+          const selected = section.id === selectedSection?.id
+          return (
+            <button
+              key={section.id}
+              type="button"
+              className={selected ? 'on' : ''}
+              onClick={() => selectSection(section.id)}
+              aria-pressed={selected}
+            >
+              <span>{String(sectionIndex + 1).padStart(2, '0')}</span>
+              <strong>{section.title}</strong>
+              <small>{section.families.length} bloques · {sectionCount} prompts</small>
+            </button>
+          )
+        })}
       </section>
 
-      {familia && (
-        <>
-          <section className="st-prompt-intro">
-            <span className="st-kicker">{showingGlobalResults ? 'Resultados' : familia.sectionTitle || 'Bloque seleccionado'}</span>
-            <h2>{showingGlobalResults ? 'Resultados de búsqueda' : familia.title}</h2>
-            <p>
-              {showingGlobalResults
-                ? `Se está buscando en toda la biblioteca. ${activeTool !== 'all' ? `Filtro activo: ${toolOptions.find((item) => item.id === activeTool)?.label || activeTool}, ${exactToolCount} prompts disponibles.` : 'Puedes combinar texto libre y herramienta.'}`
-                : familia.intro}
-            </p>
-            <p className="st-prompt-model"><Lightbulb size={12} /> {familia.model}</p>
-          </section>
-
-          {!showingGlobalResults && (
-            <div className="st-matters">
-              <div className="st-matters-yes">
-                <strong><Check size={11} /> Esto sí lo hace bien</strong>
-                <ul>{familia.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
-              </div>
-              <div className="st-matters-no">
-                <strong><Ban size={11} /> Esto no lo hace</strong>
-                <ul>{familia.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
-              </div>
-            </div>
-          )}
-
-          <div className="st-section-head">
-            <h2>{showingGlobalResults ? 'Prompts encontrados' : `Los ${encontrados.length} prompts de este bloque`}</h2>
-            <span>{quedan > 0 ? `Viendo ${visibles.length} de ${encontrados.length}` : `${encontrados.length} prompts`}</span>
+      <section className="st-prompt-workbench">
+        <aside className="st-prompt-family-rail" aria-label="Bloques de la categoría seleccionada">
+          <div className="st-prompt-family-head">
+            <span className="st-kicker">Categoría activa</span>
+            <h2>{selectedSection?.title || 'Prompts'}</h2>
+            <p>{selectedSection?.description || 'Elige un bloque concreto para ver solo sus prompts.'}</p>
           </div>
-
-          <div className="st-prompt-list">
-            {visibles.map(({ prompt, family }) => (
-              <PromptCard key={`${family.id}-${prompt.id || prompt.name}`} prompt={prompt} familyTitle={family.title} />
+          <div className="st-prompt-family-list">
+            {(selectedSection?.families || []).map((family) => (
+              <a
+                key={family.id}
+                href={`#/prompts/${encodeURIComponent(family.id)}`}
+                className={`st-prompt-family-card${family.id === familia?.id ? ' on' : ''}`}
+                onClick={() => selectFamily(family.id)}
+              >
+                <span>{family.source || family.sectionTitle || 'Bloque institucional'}</span>
+                <strong>{family.blockTitle || family.title}</strong>
+                <small>{family.useCase || family.intro}</small>
+                <i>{family.prompts.length} prompts</i>
+              </a>
             ))}
           </div>
+        </aside>
 
-          {quedan > 0 && (
-            <button type="button" className="st-prompt-mas" onClick={() => setCuantos((v) => v + 20)}>
-              Ver {Math.min(20, quedan)} prompts más · quedan {quedan}
-            </button>
-          )}
+        <div className="st-prompt-results-panel">
+          {familia && (
+            <>
+              <section className="st-prompt-intro">
+                <span className="st-kicker">{showingGlobalResults ? 'Resultados' : familia.sectionTitle || 'Bloque seleccionado'}</span>
+                <h2>{showingGlobalResults ? 'Resultados de búsqueda' : familia.title}</h2>
+                <p>
+                  {showingGlobalResults
+                    ? `Se está buscando en toda la biblioteca. ${activeTool !== 'all' ? `Filtro activo: ${toolOptions.find((item) => item.id === activeTool)?.label || activeTool}, ${exactToolCount} prompts disponibles.` : 'Puedes combinar texto libre y herramienta.'}`
+                    : familia.intro}
+                </p>
+                <p className="st-prompt-model"><Lightbulb size={12} /> {familia.model}</p>
+              </section>
 
-          {!visibles.length && (
-            <div className="st-empty">
-              <h2>No encuentro nada con esa búsqueda</h2>
-              <p>Prueba con una palabra más amplia: error, datos, correo, proyecto, web, coste, seguridad o entrega.</p>
-            </div>
-          )}
+              {!showingGlobalResults && (
+                <div className="st-matters">
+                  <div className="st-matters-yes">
+                    <strong><Check size={11} /> Esto sí lo hace bien</strong>
+                    <ul>{familia.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
+                  </div>
+                  <div className="st-matters-no">
+                    <strong><Ban size={11} /> Esto no lo hace</strong>
+                    <ul>{familia.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
+                  </div>
+                </div>
+              )}
 
-          {!showingGlobalResults && familia.tips?.length > 0 && (
-            <section className="st-block st-block-ejemplo">
-              <h3><Lightbulb size={15} /> Tres cosas que cambian el resultado</h3>
-              <ol className="st-example">
-                {familia.tips.map((tip, index) => <li key={tip}><span>{index + 1}</span>{tip}</li>)}
-              </ol>
-            </section>
+              <div className="st-section-head">
+                <h2>{showingGlobalResults ? 'Prompts encontrados' : `Los ${encontrados.length} prompts de este bloque`}</h2>
+                <span>{quedan > 0 ? `Viendo ${visibles.length} de ${encontrados.length}` : `${encontrados.length} prompts`}</span>
+              </div>
+
+              <div className="st-prompt-list">
+                {visibles.map(({ prompt, family }) => (
+                  <PromptCard key={`${family.id}-${prompt.id || prompt.name}`} prompt={prompt} familyTitle={family.title} />
+                ))}
+              </div>
+
+              {quedan > 0 && (
+                <button type="button" className="st-prompt-mas" onClick={() => setCuantos((v) => v + 12)}>
+                  Ver {Math.min(12, quedan)} prompts más · quedan {quedan}
+                </button>
+              )}
+
+              {!visibles.length && (
+                <div className="st-empty">
+                  <h2>No encuentro nada con esa búsqueda</h2>
+                  <p>Prueba con una palabra más amplia: error, datos, correo, proyecto, web, coste, seguridad o entrega.</p>
+                </div>
+              )}
+
+              {!showingGlobalResults && familia.tips?.length > 0 && (
+                <section className="st-block st-block-ejemplo">
+                  <h3><Lightbulb size={15} /> Tres cosas que cambian el resultado</h3>
+                  <ol className="st-example">
+                    {familia.tips.map((tip, index) => <li key={tip}><span>{index + 1}</span>{tip}</li>)}
+                  </ol>
+                </section>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </section>
     </div>
   )
 }
