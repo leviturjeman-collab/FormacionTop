@@ -1,5 +1,53 @@
 # Changelog del portal
 
+> Las entradas anteriores a la 5.0.0 describen versiones retiradas del portal
+> (Mentor, Taller, Recursos, catálogo de 48/466…). Se conservan como historia;
+> el estado actual es el de la entrada más reciente y el README.
+
+## 5.0.0 - 2026-09-03
+
+### Coherencia y organización
+
+- La documentación interna del proyecto (README, changelog, planes de QA,
+  backlog, auditorías) queda excluida del curso: ya no aparece como lección.
+- Todos los contadores de la interfaz se calculan desde el contenido real;
+  `npm run validate` falla si algo descuadra (kits incompletos o clonados,
+  agentes sin prueba, mínimos de workflows y guías, familias duplicadas).
+- Una única fuente de verdad para los workflows n8n:
+  `35_…/workflows_n8n_40/`; retiradas las copias vacías de `34_` y `27_`.
+- Eliminado el portal antiguo (`src/_portal_antiguo/`) y el catálogo huérfano
+  `student-catalog.json`, origen de las cifras desfasadas («150 lecciones»,
+  «12 agentes»). La página Progreso ya no muestra el bloque de quiz vacío.
+
+### Contenido nuevo
+
+- 20 kits institucionales reales (uno por archivo en `content/kits/`), cada
+  uno con arquitectura, fases, prompts, flujo n8n, pruebas, legal, precios y
+  defensa propios. Desaparece la clonación de kits en build.
+- Los 40 workflows n8n reconstruidos con nodos de integración reales
+  (Telegram, WhatsApp Business Cloud, Gmail, Google Sheets, Slack, GitHub,
+  APIs de IA) y guías de credenciales paso a paso.
+- Nueva sección «Agentes»: biblioteca de agentes listos para instalar
+  (Claude Code, GPTs personalizados, n8n y API con código).
+- Nueva guía «¿Dónde está cada cosa?»: el mapa de toda la formación, primera
+  de la sección Guías (ahora con orden pedagógico).
+
+### Prompts
+
+- La biblioteca solo genera encargos pertinentes a cada herramienta: se
+  eliminan las plantillas absurdas («Crear un storyboard con Docker») y el
+  relleno hasta cifras fijas.
+- Fusionados los temas duplicados («… · Programa» / «… · Biblioteca
+  anterior») en una única familia por tema.
+
+### Visual
+
+- Marca «AI Professional Academy» sin caja, con entrada animada palabra a
+  palabra, tinta en movimiento, subrayado que se dibuja y destello periódico.
+- Transiciones de sección más visibles y duraderas (~1,6-2 s), manteniendo el
+  estilo minimalista y respetando `prefers-reduced-motion`.
+- Revisión de espaciados y solapes en escritorio y móvil.
+
 ## 3.0.0 - 2026-08-18
 
 ### Cambio de producto

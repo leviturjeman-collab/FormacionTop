@@ -1,66 +1,339 @@
 {
-  "name": "39 Source Credibility Checker",
+  "name": "39 · Verificador de credibilidad de fuentes",
   "nodes": [
     {
       "parameters": {
-        "path": "39-source-credibility-checker",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 39 · Credibilidad de fuentes\n\nEnvía url + afirmacion al webhook. El flujo descarga la página, extrae señales (dominio, HTTPS, texto) y pide a Claude un veredicto de credibilidad con razones y banderas rojas.\n\nEl veredicto es orientativo: sirve para priorizar qué contrastar a mano, nunca como verdad definitiva.",
+        "width": 460,
+        "height": 240
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_196",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        40
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"39 Source Credibility Checker\",\n    category: \"research\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-39-verificar-fuente",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_197",
+      "name": "Fuente a verificar",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['url', 'afirmacion'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst url = String(b.url || '').trim();\nconst urlValida = url.indexOf('http://') === 0 || url.indexOf('https://') === 0;\nif (!urlValida && url !== '') {\n  faltan.push('url (debe empezar por http:// o https://)');\n}\nconst salida = {\n  url: url,\n  afirmacion: String(b.afirmacion || '').trim().slice(0, 1000),\n  faltan: faltan,\n  valido: faltan.length === 0 && urlValida\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_198",
+      "name": "Validar fuente",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_025",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_199",
+      "name": "¿Petición completa?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "pagina"
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-verificador-fuentes/1.0"
+            }
+          ]
+        }
+      },
+      "id": "nodo_200",
+      "name": "Descargar página",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const origen = $('Validar fuente').item.json;\nconst pagina = String($json.pagina || '');\nconst dominio = origen.url.split('/')[2] || '';\nconst extracto = pagina\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 6000);\nconst sistema = [\n  'Evalúas la credibilidad de una fuente web respecto a una afirmación concreta.',\n  'Ten en cuenta: tipo de dominio, tono, presencia de autor y fechas, si el texto respalda o no la afirmación.',\n  'Sé escéptico: si el extracto no basta para confirmar, dilo. No inventes.',\n  'Responde SOLO con JSON válido:',\n  '{ \"nivel\": \"alta|media|baja\", \"puntuacion\": 0, \"respalda_afirmacion\": \"si|no|parcial\", \"razones\": [\"...\"], \"banderas_rojas\": [\"...\"] }'\n].join('\\n');\nconst peticion_ia = {\n  model: 'claude-opus-5',\n  max_tokens: 1024,\n  system: sistema,\n  messages: [\n    { role: 'user', content: 'URL: ' + origen.url + '\\nDominio: ' + dominio + '\\nHTTPS: ' + (origen.url.indexOf('https://') === 0 ? 'sí' : 'no') + '\\n\\nAFIRMACIÓN A CONTRASTAR:\\n' + origen.afirmacion + '\\n\\nEXTRACTO DE LA PÁGINA:\\n' + extracto }\n  ]\n};\nreturn { json: { dominio: dominio, longitud_extracto: extracto.length, peticion_ia: peticion_ia } };"
+      },
+      "id": "nodo_201",
+      "name": "Analizar señales y preparar IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_ia) }}",
+        "options": {}
+      },
+      "id": "nodo_202",
+      "name": "Evaluar con Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n');\nlet resultado;\ntry {\n  const inicio = texto.indexOf('{');\n  const fin = texto.lastIndexOf('}');\n  resultado = JSON.parse(texto.slice(inicio, fin + 1));\n} catch (e) {\n  resultado = { nivel: 'baja', puntuacion: 0, respalda_afirmacion: 'no', razones: ['respuesta_no_json'], banderas_rojas: [] };\n}\nconst origen = $('Validar fuente').item.json;\nconst salida = {\n  url: origen.url,\n  dominio: $('Analizar señales y preparar IA').item.json.dominio,\n  afirmacion: origen.afirmacion,\n  nivel: resultado.nivel,\n  puntuacion: resultado.puntuacion,\n  respalda_afirmacion: resultado.respalda_afirmacion,\n  razones: (resultado.razones || []).join(' | '),\n  banderas_rojas: (resultado.banderas_rojas || []).join(' | ') || 'ninguna',\n  verificado_en: new Date().toISOString()\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_203",
+      "name": "Componer veredicto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Fuentes"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_204",
+      "name": "Registrar verificación",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1540,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, nivel: $json.nivel, puntuacion: $json.puntuacion, respalda_afirmacion: $json.respalda_afirmacion, razones: $json.razones, banderas_rojas: $json.banderas_rojas } }}",
+        "options": {}
+      },
+      "id": "nodo_205",
+      "name": "Responder veredicto",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        240
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_206",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Fuente a verificar": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar fuente",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar fuente": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Petición completa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Petición completa?": {
+      "main": [
+        [
+          {
+            "node": "Descargar página",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar página": {
+      "main": [
+        [
+          {
+            "node": "Analizar señales y preparar IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analizar señales y preparar IA": {
+      "main": [
+        [
+          {
+            "node": "Evaluar con Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar con Claude": {
+      "main": [
+        [
+          {
+            "node": "Componer veredicto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Componer veredicto": {
+      "main": [
+        [
+          {
+            "node": "Registrar verificación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar verificación": {
+      "main": [
+        [
+          {
+            "node": "Responder veredicto",
             "type": "main",
             "index": 0
           }
@@ -71,13 +344,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "research",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Fuente a verificar": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +353,8 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "url": "https://es.wikipedia.org/wiki/Inteligencia_artificial",
+          "afirmacion": "El término inteligencia artificial se acuñó en 1956."
         }
       }
     ]

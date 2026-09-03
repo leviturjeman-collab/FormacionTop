@@ -1,0 +1,121 @@
+{
+  "id": "evaluador-de-calidad-api",
+  "order": 15,
+  "title": "Evaluador de calidad",
+  "kicker": "Agentes por código",
+  "platform": "api",
+  "platformLabel": "API (código)",
+  "level": "avanzado",
+  "what": "Un script en Python que actúa de juez: le das una salida (una respuesta de soporte, un texto generado por otra IA, un resumen, una traducción) y una lista de criterios escritos por ti, y la evalúa criterio a criterio con la API de Anthropic devolviendo un veredicto JSON estructurado: apto o no apto, puntuación por criterio, evidencia de cada fallo y qué corregir. Es la pieza que convierte «a mí me suena bien» en una revisión repetible, y la base para vigilar en automático la calidad de cualquier proceso con IA que tengas funcionando.",
+  "forWho": "Para quien ya genera contenido o respuestas con IA (u otro proveedor o equipo) y necesita un control de calidad que no dependa de leerlo todo a mano. Compensa desde que produces más texto del que puedes revisar: evalúas todo en automático y las personas solo miran los suspensos y una muestra de los aprobados.",
+  "tools": ["python", "claude"],
+  "capabilities": [
+    "Evalúa una salida contra tus criterios, uno a uno, con puntuación 0-10 y evidencia citada en cada uno",
+    "Devuelve un veredicto global JSON (apto / no_apto / revisar) calculado por tu código a partir de las notas, no por capricho del modelo",
+    "Acepta los criterios en un fichero de texto plano: los cambias sin tocar código",
+    "Distingue criterios eliminatorios (un cero ahí suspende todo) de criterios de calidad ponderable",
+    "Usa claude-sonnet-5 como juez, un modelo fuerte, porque evaluar bien es más difícil que redactar"
+  ],
+  "limits": [
+    "No verifica hechos contra el mundo real: juzga la salida contra tus criterios y el contexto que le pases, no contra internet",
+    "No sustituye del todo la revisión humana: los no_apto y una muestra de los apto deben seguir pasando por personas",
+    "No es un juez neutral perfecto: los jueces IA tienen sesgos (favorecen textos largos y seguros de sí mismos); mide su acuerdo contigo antes de fiarte",
+    "No evalúa código ejecutándolo ni webs navegándolas: juzga texto; para código, los tests son mejor juez"
+  ],
+  "files": [
+    {
+      "name": "evaluador.py",
+      "language": "python",
+      "content": "#!/usr/bin/env python3\n\"\"\"Evaluador de calidad: compara una salida contra tus criterios (API de Anthropic).\n\nUso:\n  python evaluador.py --salida respuesta.txt --criterios criterios.txt\n  python evaluador.py --salida respuesta.txt --criterios criterios.txt --contexto pregunta.txt\n\nRequisitos:\n  pip install anthropic\n  export ANTHROPIC_API_KEY=\"tu-clave\"\n\nFormato de criterios.txt: un criterio por línea. Las líneas que empiezan por\n\"!\" son eliminatorias (nota menor de 5 ahí = no_apto directo). Ejemplo:\n  ! No inventa datos que no estén en el contexto\n  ! Trata al cliente con respeto en todo momento\n  Responde a todo lo que se pregunta\n  Tono cercano y profesional, con tuteo\n  Menos de 150 palabras\n\"\"\"\n\nimport argparse\nimport json\nimport os\nimport sys\nfrom pathlib import Path\n\ntry:\n    import anthropic\nexcept ImportError:\n    sys.exit(\"Falta el SDK de Anthropic. Instálalo con: pip install anthropic\")\n\n# ── Configuración ───────────────────────────────────────────────────────\n\nMODELO = \"claude-sonnet-5\"  # juzgar bien pide un modelo fuerte\nNOTA_APTO = 7.0      # media ponderada mínima para apto\nNOTA_REVISAR = 5.0   # entre esto y NOTA_APTO queda en 'revisar'\nMAX_CARACTERES = 40000\n\nSISTEMA = (\n    \"Eres un evaluador de calidad exigente y justo, en español. \"\n    \"Te doy una SALIDA a evaluar, una lista de CRITERIOS y, a veces, el \"\n    \"CONTEXTO que la originó. Evalúa cada criterio por separado llamando a \"\n    \"la herramienta. Reglas: puntúa de 0 (incumplimiento total) a 10 \"\n    \"(cumplimiento impecable); la evidencia de cada criterio cita texto \"\n    \"literal de la salida (o señala qué falta); no premies la longitud ni \"\n    \"la seguridad del tono: evalúa solo lo que pide el criterio; si un \"\n    \"criterio no aplica a esta salida, puntúa 10 y dilo en la evidencia. \"\n    \"Sé el evaluador que te gustaría tener: duro con los fallos, concreto \"\n    \"en cómo arreglarlos.\"\n)\n\nHERRAMIENTA = {\n    \"name\": \"registrar_evaluacion\",\n    \"description\": \"Registra la evaluación criterio a criterio de la salida.\",\n    \"strict\": True,\n    \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"criterios\": {\n                \"type\": \"array\",\n                \"description\": \"Un elemento por criterio, en el mismo orden recibido.\",\n                \"items\": {\n                    \"type\": \"object\",\n                    \"properties\": {\n                        \"criterio\": {\"type\": \"string\", \"description\": \"El criterio evaluado, literal.\"},\n                        \"nota\": {\"type\": \"number\", \"minimum\": 0, \"maximum\": 10},\n                        \"evidencia\": {\n                            \"type\": \"string\",\n                            \"description\": \"Cita o carencia concreta que justifica la nota.\",\n                        },\n                        \"mejora\": {\n                            \"type\": [\"string\", \"null\"],\n                            \"description\": \"Qué cambiar para subir nota; null si ya es 10.\",\n                        },\n                    },\n                    \"required\": [\"criterio\", \"nota\", \"evidencia\", \"mejora\"],\n                    \"additionalProperties\": False,\n                },\n            },\n            \"resumen\": {\n                \"type\": \"string\",\n                \"description\": \"Valoración global en 2-3 frases.\",\n            },\n        },\n        \"required\": [\"criterios\", \"resumen\"],\n        \"additionalProperties\": False,\n    },\n}\n\n# ── Lógica ──────────────────────────────────────────────────────────────\n\n\ndef leer(ruta: str, obligatorio: bool = True) -> str:\n    if not ruta:\n        return \"\"\n    try:\n        texto = Path(ruta).read_text(encoding=\"utf-8\", errors=\"replace\").strip()\n    except OSError as e:\n        sys.exit(f\"No puedo leer {ruta}: {e}\")\n    if obligatorio and not texto:\n        sys.exit(f\"El fichero {ruta} está vacío.\")\n    return texto\n\n\ndef cargar_criterios(ruta: str) -> list[dict]:\n    \"\"\"Devuelve [{texto, eliminatorio}] a partir del fichero de criterios.\"\"\"\n    criterios = []\n    for linea in leer(ruta).splitlines():\n        linea = linea.strip()\n        if not linea or linea.startswith(\"#\"):\n            continue\n        eliminatorio = linea.startswith(\"!\")\n        criterios.append({\"texto\": linea.lstrip(\"! \").strip(), \"eliminatorio\": eliminatorio})\n    if not criterios:\n        sys.exit(\"El fichero de criterios no tiene ningún criterio.\")\n    return criterios\n\n\ndef evaluar(client: \"anthropic.Anthropic\", salida: str, criterios: list[dict], contexto: str) -> dict:\n    lista = \"\\n\".join(f\"{i + 1}. {c['texto']}\" for i, c in enumerate(criterios))\n    partes = []\n    if contexto:\n        partes.append(f\"CONTEXTO (lo que originó la salida):\\n{contexto}\")\n    partes.append(f\"CRITERIOS:\\n{lista}\")\n    partes.append(f\"SALIDA A EVALUAR:\\n{salida}\")\n    respuesta = client.messages.create(\n        model=MODELO,\n        max_tokens=3000,\n        system=SISTEMA,\n        tools=[HERRAMIENTA],\n        tool_choice={\"type\": \"tool\", \"name\": \"registrar_evaluacion\"},\n        messages=[{\"role\": \"user\", \"content\": \"\\n\\n\".join(partes)}],\n    )\n    for bloque in respuesta.content:\n        if bloque.type == \"tool_use\" and bloque.name == \"registrar_evaluacion\":\n            return dict(bloque.input)\n    raise RuntimeError(\"La API no devolvió la evaluación esperada.\")\n\n\ndef veredicto_final(evaluacion: dict, criterios: list[dict]) -> dict:\n    \"\"\"El veredicto lo calcula el código con reglas fijas, no el modelo.\"\"\"\n    notas = evaluacion.get(\"criterios\", [])\n    if len(notas) != len(criterios):\n        print(\n            f\"AVISO: se esperaban {len(criterios)} criterios y llegaron {len(notas)}; \"\n            \"el veredicto se calcula con los recibidos.\",\n            file=sys.stderr,\n        )\n    eliminatorio_suspendido = False\n    suma = 0.0\n    for i, item in enumerate(notas):\n        nota = float(item.get(\"nota\", 0))\n        suma += nota\n        es_eliminatorio = i < len(criterios) and criterios[i][\"eliminatorio\"]\n        item[\"eliminatorio\"] = es_eliminatorio\n        if es_eliminatorio and nota < 5:\n            eliminatorio_suspendido = True\n    media = round(suma / len(notas), 2) if notas else 0.0\n\n    if eliminatorio_suspendido:\n        veredicto = \"no_apto\"\n    elif media >= NOTA_APTO:\n        veredicto = \"apto\"\n    elif media >= NOTA_REVISAR:\n        veredicto = \"revisar\"\n    else:\n        veredicto = \"no_apto\"\n\n    return {\n        \"veredicto\": veredicto,\n        \"nota_media\": media,\n        \"eliminatorio_suspendido\": eliminatorio_suspendido,\n        \"criterios\": notas,\n        \"resumen\": evaluacion.get(\"resumen\", \"\"),\n    }\n\n\ndef main() -> None:\n    parser = argparse.ArgumentParser(description=\"Evalúa una salida contra tus criterios.\")\n    parser.add_argument(\"--salida\", required=True, help=\"Fichero con el texto a evaluar\")\n    parser.add_argument(\"--criterios\", required=True, help=\"Fichero con un criterio por línea ('!' = eliminatorio)\")\n    parser.add_argument(\"--contexto\", help=\"Fichero opcional con la pregunta/encargo original\")\n    args = parser.parse_args()\n\n    if not os.environ.get(\"ANTHROPIC_API_KEY\"):\n        sys.exit(\n            \"Falta la variable de entorno ANTHROPIC_API_KEY.\\n\"\n            \"Crea la clave en console.anthropic.com y expórtala antes de ejecutar.\"\n        )\n\n    salida = leer(args.salida)\n    contexto = leer(args.contexto, obligatorio=False) if args.contexto else \"\"\n    criterios = cargar_criterios(args.criterios)\n    if len(salida) > MAX_CARACTERES:\n        print(f\"AVISO: salida recortada a {MAX_CARACTERES} caracteres.\", file=sys.stderr)\n        salida = salida[:MAX_CARACTERES]\n\n    client = anthropic.Anthropic()  # lee ANTHROPIC_API_KEY del entorno\n\n    try:\n        evaluacion = evaluar(client, salida, criterios, contexto)\n    except anthropic.AuthenticationError:\n        sys.exit(\"Clave de API inválida o revocada. Revisa ANTHROPIC_API_KEY.\")\n    except anthropic.RateLimitError:\n        sys.exit(\"Límite de peticiones alcanzado. Espera un minuto y reintenta.\")\n    except anthropic.APIStatusError as e:\n        sys.exit(f\"Error de la API ({e.status_code}): {e.message}\")\n    except anthropic.APIConnectionError:\n        sys.exit(\"No hay conexión con la API. Revisa tu red y reintenta.\")\n\n    resultado = veredicto_final(evaluacion, criterios)\n    print(json.dumps(resultado, ensure_ascii=False, indent=2))\n\n    # Código de salida útil para encadenar: 0 apto, 2 revisar, 3 no_apto.\n    sys.exit({\"apto\": 0, \"revisar\": 2, \"no_apto\": 3}[resultado[\"veredicto\"]])\n\n\nif __name__ == \"__main__\":\n    main()\n"
+    },
+    {
+      "name": "README.md",
+      "language": "markdown",
+      "content": "# Evaluador de calidad\n\nJuzga cualquier texto (respuestas de soporte, contenido generado por IA, resúmenes) contra TUS criterios y devuelve un veredicto JSON con nota por criterio, evidencia y mejoras.\n\n## Instalación\n\n```bash\npip install anthropic\nexport ANTHROPIC_API_KEY=\"tu-clave\"\n```\n\n## Uso\n\n1. Escribe tus criterios en `criterios.txt`, uno por línea. Los que empiezan por `!` son eliminatorios:\n\n```\n! No inventa datos que no estén en el contexto\n! Trata al cliente con respeto en todo momento\nResponde a todo lo que se pregunta\nTono cercano y profesional, con tuteo\nMenos de 150 palabras\n```\n\n2. Evalúa:\n\n```bash\npython evaluador.py --salida respuesta.txt --criterios criterios.txt --contexto pregunta.txt\n```\n\nSalida:\n\n```json\n{\n  \"veredicto\": \"revisar\",\n  \"nota_media\": 6.4,\n  \"eliminatorio_suspendido\": false,\n  \"criterios\": [\n    {\"criterio\": \"Responde a todo lo que se pregunta\", \"nota\": 4,\n     \"evidencia\": \"No contesta a la segunda pregunta ('¿puedo cambiar la fecha?')\",\n     \"mejora\": \"Añadir la respuesta sobre el cambio de fecha\", \"eliminatorio\": false}\n  ],\n  \"resumen\": \"Correcta en tono pero incompleta: deja una pregunta sin responder.\"\n}\n```\n\nEl código de salida permite encadenar sin parsear: `0` apto, `2` revisar, `3` no_apto.\n\n```bash\npython evaluador.py --salida r.txt --criterios c.txt || echo \"a revisión humana\"\n```\n\n## Dos decisiones de diseño que importan\n\n- **El modelo puntúa, tu código sentencia.** El veredicto sale de reglas fijas en `veredicto_final()` (media, umbrales, eliminatorios), no del humor del modelo. Cambia los umbrales `NOTA_APTO` y `NOTA_REVISAR` a tu gusto.\n- **Los criterios son un fichero de texto.** Cualquiera del equipo puede afinarlos sin tocar Python. Criterios concretos evalúan mejor: «menos de 150 palabras» funciona; «que sea bueno» no.\n\n## Calibra el juez antes de fiarte\n\nCoge 15 salidas que una persona ya haya juzgado y compara veredictos. Si el juez aprueba cosas que tú suspenderías, endurece los criterios (o divide uno vago en dos concretos) y repite. Un juez sin calibrar es una opinión con formato JSON.\n\n## Para producción\n\n- Evalúa TODO en automático; las personas revisan los `no_apto`, los `revisar` y 1 de cada 10 `apto`.\n- Guarda los JSON con fecha: la evolución de `nota_media` en el tiempo es tu métrica de calidad gratis.\n- Si evalúas miles de salidas, pide a Claude Code que lo adapte a la Batch API (50 % más barato, sin prisa)."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Prepara el entorno",
+      "action": "pip install anthropic (Python 3.9+; el script usa list[dict], disponible desde 3.9).",
+      "expect": "python -c \"import anthropic\" sin errores."
+    },
+    {
+      "title": "Exporta tu clave",
+      "action": "export ANTHROPIC_API_KEY=\"sk-ant-...\" con la clave de console.anthropic.com.",
+      "expect": "echo $ANTHROPIC_API_KEY la muestra en la terminal que vas a usar."
+    },
+    {
+      "title": "Guarda el script y escribe tus criterios",
+      "action": "Copia evaluador.py a tu proyecto y crea criterios.txt con 4-6 criterios reales, marcando con ! los eliminatorios. Sé concreto: cada criterio, una sola cosa comprobable.",
+      "expect": "python evaluador.py --help muestra la ayuda y criterios.txt existe."
+    },
+    {
+      "title": "Primera evaluación",
+      "action": "Guarda en respuesta.txt un texto real que quieras juzgar (y en pregunta.txt su encargo, si lo tienes) y ejecuta: python evaluador.py --salida respuesta.txt --criterios criterios.txt --contexto pregunta.txt",
+      "expect": "El JSON con nota por criterio, evidencias citadas, veredicto y resumen.",
+      "stuck": "Si un criterio recibe notas raras, casi siempre es que el criterio es vago: divídelo en dos concretos."
+    },
+    {
+      "title": "Calibra contra tu propio juicio",
+      "action": "Evalúa 15 salidas que una persona ya haya clasificado como buenas o malas y compara veredictos con los suyos.",
+      "expect": "Acuerdo alto (12-13 de 15 o más). Si no, ajusta criterios y umbrales y repite: estás entrenando al juez, no al revés."
+    },
+    {
+      "title": "Conéctalo a tu circuito",
+      "action": "Usa el código de salida (0/2/3) o el JSON para enrutar: apto sigue su curso, revisar y no_apto van a bandeja humana. Guarda los JSON con fecha.",
+      "expect": "Control de calidad continuo sin leerlo todo, con métricas que puedes enseñar."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "Una respuesta de soporte correcta evaluada con tus criterios.",
+      "expect": "veredicto apto, notas altas con evidencia citada y código de salida 0."
+    },
+    {
+      "name": "Eliminatorio suspendido",
+      "input": "Una salida que inventa un dato, con el criterio «! No inventa datos» en la lista.",
+      "expect": "veredicto no_apto aunque la media sea alta, eliminatorio_suspendido true y la evidencia señalando el dato inventado."
+    },
+    {
+      "name": "Zona gris",
+      "input": "Una salida mediocre: educada pero incompleta.",
+      "expect": "veredicto revisar con nota media entre 5 y 7 y mejoras concretas en los criterios flojos."
+    },
+    {
+      "name": "Criterios vacíos",
+      "input": "Un criterios.txt solo con comentarios (#) o vacío.",
+      "expect": "Error claro «no tiene ningún criterio» sin gastar llamada a la API."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "API de Anthropic",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Clave en la variable de entorno ANTHROPIC_API_KEY, nunca en el script ni en el repositorio.",
+      "cost": "de pago por tokens; una evaluación con claude-sonnet-5 cuesta alrededor de un céntimo, según longitud"
+    }
+  ],
+  "risks": [
+    "Juez sin calibrar tomado por oráculo: aprueba basura con formato bonito. Mitigación: la calibración con 15 casos humanos es parte del setup, y se repite cuando cambien los criterios.",
+    "Sesgos del juez IA: favorece textos largos y seguros. Mitigación: el prompt lo advierte y los criterios concretos lo acotan; vigila si los textos largos puntúan sistemáticamente mejor.",
+    "Optimizar para el juez en vez de para el cliente: el equipo aprende a contentar los criterios, no a trabajar mejor. Mitigación: revisa los criterios cada trimestre contra quejas reales de clientes.",
+    "Evaluar con datos sensibles en las salidas. Mitigación: mismas reglas que siempre: anonimiza lo que no deba viajar a la API y revisa la política de retención de tu cuenta."
+  ],
+  "examples": [
+    {
+      "name": "Evaluación con contexto",
+      "prompt": "python evaluador.py --salida respuesta.txt --criterios criterios.txt --contexto pregunta.txt"
+    },
+    {
+      "name": "Lote de la semana",
+      "prompt": "for f in salidas/*.txt; do python evaluador.py --salida \"$f\" --criterios criterios.txt > \"informes/$(basename $f .txt).json\"; done"
+    },
+    {
+      "name": "Vigilar a otro agente",
+      "prompt": "Encadénalo con el clasificador o el extractor de este catálogo: cada salida generada pasa por evaluador.py y solo las apto siguen sin revisión humana."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion"]
+}

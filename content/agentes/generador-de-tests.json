@@ -1,0 +1,113 @@
+{
+  "id": "generador-de-tests",
+  "order": 2,
+  "title": "Generador de tests",
+  "kicker": "Código y calidad",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "intermedio",
+  "what": "Un subagente de Claude Code que escribe tests para el código que le señales. Primero estudia cómo se testea ya en tu proyecto (framework, carpetas, estilo) y luego genera casos que cubren el camino feliz, los límites y los errores. Ejecuta los tests que escribe y no da el trabajo por terminado hasta que pasan. Te entrega ficheros de test listos y un resumen de qué cubre cada uno y qué dejó fuera.",
+  "forWho": "Para quien tiene código sin tests y le da pereza empezar, o para quien escribe tests pero siempre los mismos tres. Compensa en cualquier proyecto que ya funcione y que te dé miedo tocar: los tests son lo que convierte ese miedo en un aviso concreto.",
+  "tools": ["claude-code", "python", "node"],
+  "capabilities": [
+    "Detecta el framework de tests del proyecto (pytest, vitest, jest...) y escribe en ese estilo, no en el suyo",
+    "Genera casos de camino feliz, casos límite (vacíos, nulos, cero, acentos) y casos de error esperado",
+    "Ejecuta los tests que escribe y corrige hasta que pasan de verdad",
+    "Marca con un comentario los tests que fallan por un bug real del código, en vez de amañarlos para que pasen",
+    "Resume qué queda cubierto y qué no, para que sepas qué falta"
+  ],
+  "limits": [
+    "No toca el código de producción: si un test destapa un bug, lo documenta y te lo cuenta, no lo arregla por su cuenta",
+    "No inventa la intención del código: si una función es ambigua, pregunta qué comportamiento es el correcto antes de fijarlo en un test",
+    "No genera tests de interfaz gráfica ni de extremo a extremo con navegador: se queda en unitarios y de integración ligera",
+    "No garantiza cobertura total: prioriza lo que más duele si se rompe, y te dice qué dejó fuera"
+  ],
+  "files": [
+    {
+      "name": "generador-de-tests.md",
+      "language": "markdown",
+      "content": "---\nname: generador-de-tests\ndescription: Escribe tests para el código indicado siguiendo el framework y el estilo del proyecto, los ejecuta hasta que pasan y reporta la cobertura conseguida. Úsalo cuando una función, módulo o cambio se quede sin tests.\ntools: Read, Grep, Glob, Bash, Write, Edit\n---\n\nEres un ingeniero especializado en escribir tests. Escribes tests, no código de producción: los ficheros fuente del proyecto no se tocan bajo ningún concepto. Hablas en español, claro y directo.\n\n## Proceso, en este orden\n\n1. **Descubre cómo se testea aquí.** Busca la carpeta de tests, el fichero de configuración (pytest.ini, pyproject.toml, vitest.config, package.json...) y lee dos o tres tests existentes. Copia sus convenciones: nombres, estructura, fixtures, aserciones. Si el proyecto no tiene ni un test, elige el framework estándar del lenguaje (pytest en Python, vitest en proyectos Vite, jest en Node clásico) y dilo explícitamente en tu resumen.\n2. **Lee el código a testear entero**, incluidas las funciones que llama. Apunta: entradas posibles, salidas, errores que lanza, efectos secundarios (ficheros, red, base de datos).\n3. **Diseña los casos antes de escribir.** Para cada función pública: un caso de camino feliz con datos realistas, los casos límite que apliquen (lista vacía, texto vacío, cero, negativo, nulo, texto con acentos y eñes), y los casos de error (entrada inválida debe lanzar la excepción documentada, no otra). Los efectos externos (red, base de datos, reloj) se aíslan con mocks o dobles; un test unitario nunca depende de internet.\n4. **Escribe los tests** en la carpeta correcta y con el patrón de nombres del proyecto. Cada test prueba una sola cosa y su nombre dice qué: test_devuelve_vacio_si_no_hay_facturas mejor que test_caso_3.\n5. **Ejecútalos.** Lanza el runner del proyecto solo sobre tus ficheros nuevos. Si un test falla porque el test está mal, corrígelo y repite. Si falla porque el CÓDIGO tiene un bug, no amañes el test: márcalo como test esperado que falla (xfail, test.fails o el mecanismo del framework) con un comentario BUG explicando qué debería pasar, y repórtalo en el resumen.\n6. **Cierra con el resumen** del formato de abajo.\n\n## Criterios que no negocias\n\n- Un test que no puede fallar no es un test: nada de aserciones triviales tipo assert True o expect(x).toBeDefined() como única comprobación.\n- Cero dependencia entre tests: cada uno prepara lo suyo y limpia lo suyo. El orden de ejecución no importa.\n- Datos de prueba realistas y en español cuando el dominio lo sea: «Márquez, S.L.» encuentra más bugs que «foo».\n- Si necesitas fijar un comportamiento ambiguo, pregunta antes de escribir el test. Un test que fija el comportamiento equivocado es peor que ningún test.\n\n## Formato de salida\n\n```\n## Tests generados\n\n- [ruta/al/test_fichero.py] — [n] tests: [una línea de qué cubre]\n\n## Resultado de la ejecución\n[n] pasan · [n] fallan por bug del código (marcados) · comando usado\n\n## Bugs encontrados\n- [fichero:línea] — [qué hace hoy] vs [qué debería hacer]\n\n## Qué queda sin cubrir\n- [hueco y por qué]\n```\n\nSi no encontraste bugs, di «Ninguno» en esa sección. No la borres: su ausencia es información."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Crea la carpeta de agentes",
+      "action": "En la raíz de tu proyecto: mkdir -p .claude/agents",
+      "expect": "Existe la carpeta .claude/agents."
+    },
+    {
+      "title": "Copia el fichero del agente",
+      "action": "Crea .claude/agents/generador-de-tests.md y pega el contenido completo del fichero de arriba, con su cabecera entre --- incluida.",
+      "expect": "El fichero empieza por --- y name: generador-de-tests.",
+      "stuck": "Si el agente no aparece, revisa que no hay espacios antes de las tres rayas de la primera línea."
+    },
+    {
+      "title": "Comprueba que tu proyecto puede ejecutar tests",
+      "action": "Ejecuta a mano el runner de tu proyecto (pytest, npm test...). El agente va a usarlo; si no funciona para ti, tampoco para él.",
+      "expect": "El runner arranca, aunque no haya tests todavía.",
+      "stuck": "Si no tienes runner instalado, pídeselo primero a Claude Code: «instala y configura pytest en este proyecto» (o vitest/jest)."
+    },
+    {
+      "title": "Reinicia Claude Code",
+      "action": "Cierra y vuelve a abrir Claude Code en la carpeta del proyecto para que cargue el agente.",
+      "expect": "Con /agents ves generador-de-tests en la lista."
+    },
+    {
+      "title": "Pídele tests de algo pequeño",
+      "action": "Escribe: «Usa el subagente generador-de-tests para escribir tests de [ruta/al/fichero]». Empieza por un fichero de funciones puras, sin red ni base de datos.",
+      "expect": "Ficheros de test nuevos, la ejecución en verde y el resumen con lo cubierto y lo pendiente.",
+      "stuck": "Si los tests fallan por dependencias que faltan, instálalas con el gestor del proyecto y pídele que reintente."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "Pídele tests para una función que calcula el total de una factura con IVA.",
+      "expect": "Tests de camino feliz, importe cero, importes negativos (error esperado) y redondeo. Todos pasan al ejecutarlos."
+    },
+    {
+      "name": "Función con bug",
+      "input": "Pídele tests para una función que divide sin comprobar el cero.",
+      "expect": "Escribe el test del caso cero, detecta que revienta, lo marca como fallo esperado con comentario BUG y lo lista en «Bugs encontrados» sin tocar la función."
+    },
+    {
+      "name": "Respeta el estilo",
+      "input": "En un proyecto que ya usa pytest con fixtures, pídele tests de un módulo nuevo.",
+      "expect": "Usa pytest y fixtures como los tests existentes, no unittest ni otro estilo."
+    },
+    {
+      "name": "Comportamiento ambiguo",
+      "input": "Pídele tests de una función cuyo comportamiento con entrada vacía no está claro.",
+      "expect": "Pregunta qué debe pasar con la entrada vacía antes de fijarlo en un test."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Suscripción o API de Anthropic para Claude Code",
+      "where": "claude.ai (plan Pro/Max) o console.anthropic.com → API Keys",
+      "how": "Claude Code usa tu sesión de claude.ai o una clave en ANTHROPIC_API_KEY. Nunca en un fichero del repo.",
+      "cost": "Incluido en el plan de pago; por API, céntimos por sesión de generación de tests"
+    }
+  ],
+  "risks": [
+    "Tests que fijan un comportamiento erróneo como si fuera el bueno. Mitigación: lee los nombres de los tests generados y confirma que describen lo que tú quieres que haga el código.",
+    "Cobertura de mentira: muchos tests triviales que no fallan nunca. Mitigación: el prompt lo prohíbe; aun así, abre dos o tres tests al azar y rompe el código a propósito para ver si alguno se entera.",
+    "El agente ejecuta comandos en tu máquina (el runner de tests). Mitigación: revisa qué comando va a lanzar; en proyectos ajenos o recién clonados, ejecuta en un contenedor.",
+    "Tests que dependen de red o de la hora y fallan a ratos. Mitigación: el prompt exige mocks; si ves un test intermitente, pídele que aísle la dependencia."
+  ],
+  "examples": [
+    {
+      "name": "Un fichero concreto",
+      "prompt": "Usa el subagente generador-de-tests para escribir tests de src/servicios/facturas.py."
+    },
+    {
+      "name": "Solo lo que cambió",
+      "prompt": "Usa el subagente generador-de-tests para cubrir con tests las funciones que he tocado en esta rama."
+    },
+    {
+      "name": "Subir cobertura donde duele",
+      "prompt": "Usa el subagente generador-de-tests: busca el módulo más crítico del proyecto sin tests y cúbrelo."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion"]
+}

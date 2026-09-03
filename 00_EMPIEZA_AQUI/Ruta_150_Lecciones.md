@@ -1,5 +1,5 @@
 ﻿---
-titulo: "Ruta 150 Lecciones"
+titulo: "Ruta maestra de lecciones"
 tipo: "indice"
 nivel: "transversal"
 fase: "orientacion"
@@ -9,7 +9,7 @@ fuentes: ["Fuente interna: AI Professional Academy"]
 tags: ["ai-academy", "indice", "transversal", "orientacion"]
 entregable: "mapa de navegacion"
 ---
-# Ruta 150 lecciones
+# Ruta maestra de lecciones
 
 Esta nota es el árbol maestro. No todas las lecciones tienen que producirse como clase independiente desde el día uno, pero cada punto representa una unidad que puede convertirse en documento, slide deck, vídeo, taller o evaluación.
 
@@ -194,11 +194,11 @@ Esta nota es el árbol maestro. No todas las lecciones tienen que producirse com
 150. Certificación interna.
 ---
 
-# Desarrollo completo - Ruta 150 Lecciones
+# Desarrollo completo - Ruta maestra de lecciones
 
 ## Funcion dentro de la academia
 
-Esta nota forma parte de la boveda de Obsidian de AI Professional Academy y debe leerse como material de estudio, no como un simple indice. Su funcion es desarrollar el tema Ruta 150 Lecciones dentro del contexto de formacion profesional de IA, automatizacion, agentes, workflows, documentacion y produccion. El objetivo es que el alumno pueda abrir este archivo, entender que papel ocupa en la formacion, estudiar el concepto con calma, practicarlo y despues convertirlo en una idea propia, un documento, una presentacion, un laboratorio o una pieza de un proyecto final.
+Esta nota forma parte de la boveda de Obsidian de AI Professional Academy y debe leerse como material de estudio, no como un simple indice. Su funcion es desarrollar el tema Ruta maestra de lecciones dentro del contexto de formacion profesional de IA, automatizacion, agentes, workflows, documentacion y produccion. El objetivo es que el alumno pueda abrir este archivo, entender que papel ocupa en la formacion, estudiar el concepto con calma, practicarlo y despues convertirlo en una idea propia, un documento, una presentacion, un laboratorio o una pieza de un proyecto final.
 
 La regla de esta academia es que cada archivo importante debe poder sostener una clase. Eso significa que no basta con enumerar conceptos. Hay que explicar para que sirve el tema, como funciona, que decisiones obliga a tomar, que errores aparecen en la practica y como se verifica que el alumno lo ha entendido. Esta nota sigue esa logica: primero situa el concepto, despues lo convierte en proceso, luego propone una practica, despues introduce errores provocados y finalmente plantea evaluacion y transferencia a trabajo real.
 
@@ -206,7 +206,7 @@ La regla de esta academia es que cada archivo importante debe poder sostener una
 
 El modelo mental recomendado es pensar en cada tema como una pieza dentro de un sistema mayor. Un usuario formula una necesidad. Esa necesidad se convierte en producto, workflow, agente, documento, skill o automatizacion. En ese camino aparecen instrucciones, contexto, herramientas, permisos, datos, coste, revision humana y evaluacion. Si el alumno aprende solo una definicion, podra repetir palabras. Si entiende el sistema, podra disenar soluciones.
 
-Para Ruta 150 Lecciones, la pregunta central es: que cambia en el trabajo del alumno cuando domina este tema. Si el tema es una fuente, debe aprender a usarla para no depender de opiniones genericas. Si es una leccion, debe aprender a explicar y aplicar el concepto. Si es un laboratorio, debe construir algo, romperlo y repararlo. Si es una evaluacion, debe demostrar competencia observable. Si es una plantilla, debe producir materiales consistentes. Si es un modulo, debe conectar varias lecciones en una progresion clara.
+Para Ruta maestra de lecciones, la pregunta central es: que cambia en el trabajo del alumno cuando domina este tema. Si el tema es una fuente, debe aprender a usarla para no depender de opiniones genericas. Si es una leccion, debe aprender a explicar y aplicar el concepto. Si es un laboratorio, debe construir algo, romperlo y repararlo. Si es una evaluacion, debe demostrar competencia observable. Si es una plantilla, debe producir materiales consistentes. Si es un modulo, debe conectar varias lecciones en una progresion clara.
 
 ## Como se trabaja paso a paso
 
@@ -216,13 +216,13 @@ Cuarto, debe aplicar una restriccion realista. Las restricciones son lo que conv
 
 ## Ideas que el alumno puede crear a partir de esta nota
 
-Despues de estudiar Ruta 150 Lecciones, el alumno debe generar ideas propias. Puede convertir el tema en una checklist, una plantilla, una presentacion, una automatizacion, un laboratorio, una skill, un prompt reusable o una parte de su proyecto final. La boveda esta pensada para eso: no es solo contenido para consumir, sino materia prima para producir.
+Despues de estudiar Ruta maestra de lecciones, el alumno debe generar ideas propias. Puede convertir el tema en una checklist, una plantilla, una presentacion, una automatizacion, un laboratorio, una skill, un prompt reusable o una parte de su proyecto final. La boveda esta pensada para eso: no es solo contenido para consumir, sino materia prima para producir.
 
 Ideas posibles: una ficha de una pagina, una presentacion de cinco diapositivas, un laboratorio de 30 minutos, una rubrica de evaluacion, un ejemplo antes/despues, una tabla de errores frecuentes, una arquitectura con permisos, una plantilla para prompts, una skill para agentes o un workflow n8n. El alumno debe elegir una idea y desarrollarla con fuentes oficiales y criterio de verificacion.
 
 ## Evaluacion
 
-La evaluacion minima consiste en demostrar comprension y aplicacion. El alumno debe entregar un artefacto relacionado con Ruta 150 Lecciones, explicar su objetivo, describir como funciona, identificar riesgos, provocar un error y repararlo. La evaluacion avanzada exige justificar decisiones: por que se uso esta herramienta y no otra, que permisos se concedieron, que fuentes se usaron, que coste tiene, que logs quedan y que evals detectarian regresiones.
+La evaluacion minima consiste en demostrar comprension y aplicacion. El alumno debe entregar un artefacto relacionado con Ruta maestra de lecciones, explicar su objetivo, describir como funciona, identificar riesgos, provocar un error y repararlo. La evaluacion avanzada exige justificar decisiones: por que se uso esta herramienta y no otra, que permisos se concedieron, que fuentes se usaron, que coste tiene, que logs quedan y que evals detectarian regresiones.
 
 Criterios de excelencia: claridad, trazabilidad a fuentes oficiales, capacidad de diagnostico, seguridad, control de coste, documentacion y transferencia. Si otra persona puede leer el entregable, reproducirlo y entender sus limites, el alumno va por buen camino.
 
@@ -347,7 +347,7 @@ Este bloque fija el uso correcto de este archivo dentro de la boveda. Sirve para
 
 ### Objetivo operativo
 
-Usar **Ruta 150 Lecciones** para producir el entregable definido en la metadata: **mapa de navegacion**. El archivo debe ayudar a entender, aplicar, verificar y explicar el tema sin depender de memoria externa.
+Usar **Ruta maestra de lecciones** para producir el entregable definido en la metadata: **mapa de navegacion**. El archivo debe ayudar a entender, aplicar, verificar y explicar el tema sin depender de memoria externa.
 
 ### Prerequisitos y materiales
 
@@ -376,4 +376,4 @@ Eliminar o reescribir cualquier parrafo que no cumpla una de estas funciones: ex
 ### Proxima revision
 
 - Revisar este archivo cuando cambien las fuentes oficiales relacionadas o antes de usarlo como material comercial.
-- Si se detecta informacion generica, convertirla en ejemplo especifico de **Ruta 150 Lecciones**.
+- Si se detecta informacion generica, convertirla en ejemplo especifico de **Ruta maestra de lecciones**.

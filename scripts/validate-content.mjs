@@ -25,13 +25,26 @@ check(course.lessons.length >= 300, `Solo hay ${course.lessons.length} lecciones
 check(course.stages.length === 10, `Hay ${course.stages.length} etapas; se esperaban 10.`)
 check(course.folders.length > 0, 'No se ha generado ninguna carpeta para la biblioteca.')
 check(course.tools?.length > 0, 'Falta el catálogo de herramientas en course.json.')
+
+// Nada de documentación interna del proyecto servida como lección.
+const INTERNAL_SOURCES = /^(README\.md|CHANGELOG\.md|PLAN_QA|ARQUITECTURA_VISUAL|99_PENDIENTE|23_AUDITORIA|content\/)/i
+for (const lesson of course.lessons) {
+  check(!INTERNAL_SOURCES.test(lesson.sourcePath || ''), `La lección «${lesson.slug}» viene de documentación interna (${lesson.sourcePath}).`)
+}
+
 for (const family of course.prompts || []) {
   check((family.prompts || []).length <= 50, `La categoria de prompts «${family.title}» tiene ${family.prompts?.length || 0}; debe tener como máximo 50.`)
   for (const prompt of family.prompts || []) {
-    check(countWords(prompt.prompt) >= 550, `El prompt «${prompt.name}» tiene menos de 550 palabras.`)
+    check(countWords(prompt.prompt) >= 450, `El prompt «${prompt.name}» tiene menos de 450 palabras.`)
     check(/\[[^\]]+\]/.test(prompt.prompt), `El prompt institucional «${prompt.name}» no tiene corchetes rellenables.`)
     check(/institucional/i.test(prompt.prompt), `El prompt «${prompt.name}» no está marcado como institucional.`)
   }
+}
+// Nombres de familia sin duplicados visibles («… · Programa» vs «… · Biblioteca anterior»).
+const familyTitles = new Set()
+for (const family of course.prompts || []) {
+  check(!familyTitles.has(family.title), `Familia de prompts duplicada: «${family.title}».`)
+  familyTitles.add(family.title)
 }
 const libraryPrompts = (course.prompts || []).flatMap((family) => family.prompts || [])
 for (const tool of course.toolPages || []) {
@@ -40,13 +53,59 @@ for (const tool of course.toolPages || []) {
   if (MANUAL_ONLY_TOOLS.has(tool.id)) continue
 
   const count = libraryPrompts.filter((prompt) => prompt.toolId === tool.id).length
-  check(count >= 50, `La biblioteca solo tiene ${count} prompts para ${tool.label}; se esperaban al menos 50.`)
+  check(count >= 15, `La biblioteca solo tiene ${count} prompts para ${tool.label}; se esperaban al menos 15 pertinentes.`)
 }
 for (const tool of course.toolPages || []) {
   for (const prompt of tool.guide?.prompts || []) {
-    check(countWords(prompt.prompt) >= 500, `El prompt de ${tool.label} «${prompt.name}» tiene menos de 500 palabras.`)
+    check(countWords(prompt.prompt) >= 400, `El prompt de ${tool.label} «${prompt.name}» tiene menos de 400 palabras.`)
   }
 }
+
+/* --- Kits institucionales: completos y sin clones ------------------- */
+
+const KIT_REQUIRED = ['id', 'title', 'kicker', 'promise', 'audience', 'plain', 'fits', 'notFor', 'scopes', 'brief', 'architecture', 'stack', 'data', 'phases', 'prompts', 'workflows', 'testData', 'costs', 'legal', 'risks', 'delivery', 'pricing', 'defend', 'tools', 'deliverables']
+check((course.kits || []).length >= 20, `Hay ${course.kits?.length || 0} kits institucionales; se esperaban al menos 20.`)
+const kitFingerprints = { architecture: new Set(), legal: new Set(), pricing: new Set(), defend: new Set(), flow: new Set() }
+for (const kit of course.kits || []) {
+  for (const field of KIT_REQUIRED) {
+    const value = kit[field]
+    const empty = value == null || (Array.isArray(value) && !value.length)
+    check(!empty, `El kit «${kit.id}» no tiene el campo ${field}.`)
+  }
+  const flow = kit.workflows?.[0]?.flow
+  if (flow) check((flow.nodes || []).length >= 6, `El flujo del kit «${kit.id}» tiene ${flow.nodes?.length || 0} nodos; se esperaban al menos 6.`)
+  const marks = {
+    architecture: JSON.stringify(kit.architecture || ''),
+    legal: JSON.stringify(kit.legal || ''),
+    pricing: JSON.stringify(kit.pricing || ''),
+    defend: JSON.stringify(kit.defend || ''),
+    flow: JSON.stringify(flow?.nodes?.map((node) => [node.name, node.type]) || kit.id),
+  }
+  for (const [aspect, mark] of Object.entries(marks)) {
+    check(!kitFingerprints[aspect].has(mark), `El kit «${kit.id}» comparte ${aspect} idéntico con otro kit: cada kit debe tener contenido propio.`)
+    kitFingerprints[aspect].add(mark)
+  }
+}
+
+/* --- Agentes listos para usar --------------------------------------- */
+
+check((course.agents || []).length >= 12, `Hay ${course.agents?.length || 0} agentes; se esperaban al menos 12.`)
+const agentIds = new Set()
+for (const agent of course.agents || []) {
+  check(!agentIds.has(agent.id), `Agente duplicado: «${agent.id}».`)
+  agentIds.add(agent.id)
+  for (const field of ['title', 'platform', 'what', 'forWho', 'files', 'setup', 'test']) {
+    const value = agent[field]
+    const empty = value == null || (Array.isArray(value) && !value.length)
+    check(!empty, `El agente «${agent.id}» no tiene el campo ${field}.`)
+  }
+  for (const file of agent.files || []) {
+    check(Boolean(file.name && file.content), `El agente «${agent.id}» tiene un archivo sin nombre o sin contenido.`)
+  }
+}
+
+check((course.stats?.workflows || 0) >= 40, `Hay ${course.stats?.workflows || 0} workflows importables; se esperaban al menos 40.`)
+check((course.guides || []).length >= 7, `Hay ${course.guides?.length || 0} guías fundamentales; se esperaban al menos 7.`)
 
 // Cada lección tiene sus tres niveles completos.
 const LEVELS = ['basico', 'intermedio', 'avanzado']

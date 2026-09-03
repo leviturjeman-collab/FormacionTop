@@ -1,0 +1,123 @@
+{
+  "id": "clasificador-de-casos-api",
+  "order": 13,
+  "title": "Clasificador de casos por API",
+  "kicker": "Agentes por código",
+  "platform": "api",
+  "platformLabel": "API (código)",
+  "level": "intermedio",
+  "what": "Un script en Python que clasifica texto libre (un correo, una incidencia, un mensaje de formulario) en las categorías de tu negocio usando la API de Anthropic con salida estructurada: en lugar de pedirle a la IA «respóndeme en JSON» y cruzar los dedos, el script la obliga a rellenar un esquema fijo con categoría, urgencia, confianza y motivo. El resultado es siempre un JSON válido con los mismos campos, listo para meter en tu base de datos, tu hoja o tu siguiente proceso. Es la pieza «etiquetadora» que aparece en casi todo circuito de IA serio.",
+  "forWho": "Para quien ya escribe algo de Python (o se apoya en Claude Code) y quiere clasificación fiable dentro de sus propios sistemas, sin depender de n8n ni de interfaces. Compensa desde decenas de casos al día: es rápido, barato y programable.",
+  "tools": ["python", "claude"],
+  "capabilities": [
+    "Clasifica cualquier texto en tus categorías con claude-haiku-4-5, rápido y a coste de décimas de céntimo",
+    "Devuelve siempre el mismo JSON: categoria, urgencia, confianza, motivo — forzado por esquema, no por promesas",
+    "Marca como «revisar» los casos donde la confianza no llega al umbral que definas",
+    "Funciona por argumento, por fichero o encadenado con tuberías (cat caso.txt | python clasificador.py)",
+    "Maneja los errores reales de producción: clave mal puesta, límite de peticiones, red caída, con mensajes claros y códigos de salida"
+  ],
+  "limits": [
+    "No decide qué hacer con el caso: etiqueta. Las acciones (responder, asignar, escalar) son de tu sistema y de tus personas",
+    "No aprende de las correcciones por sí solo: si falla en un tipo de caso, el arreglo es ajustar categorías o descripciones en el script",
+    "No es para decisiones con efectos jurídicos sobre personas (despidos, prestaciones, sanciones): ahí la clasificación automática ni de filtro",
+    "Con textos de más de unas 3.000 palabras conviene recortar o trocear antes: el script avisa pero no trocea por ti"
+  ],
+  "files": [
+    {
+      "name": "clasificador.py",
+      "language": "python",
+      "content": "#!/usr/bin/env python3\n\"\"\"Clasificador de casos con salida estructurada (API de Anthropic).\n\nUso:\n  python clasificador.py \"texto del caso\"\n  python clasificador.py --fichero caso.txt\n  cat caso.txt | python clasificador.py\n\nRequisitos:\n  pip install anthropic\n  export ANTHROPIC_API_KEY=\"tu-clave\"   (Windows: set ANTHROPIC_API_KEY=...)\n\"\"\"\n\nimport argparse\nimport json\nimport os\nimport sys\n\ntry:\n    import anthropic\nexcept ImportError:\n    sys.exit(\"Falta el SDK de Anthropic. Instálalo con: pip install anthropic\")\n\n# ── Configuración: adapta esto a tu negocio ─────────────────────────────\n\nMODELO = \"claude-haiku-4-5\"  # clasificar es tarea de modelo pequeño y barato\n\nCATEGORIAS = [\"consulta\", \"pedido\", \"incidencia\", \"factura\", \"queja\", \"otro\"]\nUMBRAL_CONFIANZA = 0.7  # por debajo, el caso se marca para revisión humana\nMAX_CARACTERES = 12000  # ~3.000 palabras; por encima, avisamos\n\nSISTEMA = (\n    \"Eres un clasificador de casos de un negocio en español. \"\n    \"Lee el texto y clasifícalo llamando a la herramienta. \"\n    \"Si el texto no encaja claramente en ninguna categoría, usa 'otro' \"\n    \"con confianza baja. El motivo debe citar palabras del propio texto.\"\n)\n\n# La herramienta con esquema estricto: la API garantiza que la respuesta\n# valida contra este esquema. Nada de JSON roto ni campos sorpresa.\nHERRAMIENTA = {\n    \"name\": \"clasificar_caso\",\n    \"description\": \"Registra la clasificación del caso analizado.\",\n    \"strict\": True,\n    \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"categoria\": {\"type\": \"string\", \"enum\": CATEGORIAS},\n            \"urgencia\": {\"type\": \"string\", \"enum\": [\"alta\", \"media\", \"baja\"]},\n            \"confianza\": {\n                \"type\": \"number\",\n                \"minimum\": 0,\n                \"maximum\": 1,\n                \"description\": \"Seguridad de la clasificación, de 0 a 1.\",\n            },\n            \"motivo\": {\n                \"type\": \"string\",\n                \"description\": \"Una frase citando el texto que justifica la categoría.\",\n            },\n        },\n        \"required\": [\"categoria\", \"urgencia\", \"confianza\", \"motivo\"],\n        \"additionalProperties\": False,\n    },\n}\n\n# ── Lógica ──────────────────────────────────────────────────────────────\n\n\ndef clasificar(client: \"anthropic.Anthropic\", texto: str) -> dict:\n    \"\"\"Llama a la API forzando el uso de la herramienta y devuelve el dict.\"\"\"\n    respuesta = client.messages.create(\n        model=MODELO,\n        max_tokens=512,\n        system=SISTEMA,\n        tools=[HERRAMIENTA],\n        tool_choice={\"type\": \"tool\", \"name\": \"clasificar_caso\"},\n        messages=[{\"role\": \"user\", \"content\": texto}],\n    )\n    for bloque in respuesta.content:\n        if bloque.type == \"tool_use\" and bloque.name == \"clasificar_caso\":\n            return dict(bloque.input)\n    raise RuntimeError(\"La API no devolvió la clasificación esperada.\")\n\n\ndef leer_entrada(args: argparse.Namespace) -> str:\n    if args.fichero:\n        try:\n            with open(args.fichero, encoding=\"utf-8\") as f:\n                return f.read()\n        except OSError as e:\n            sys.exit(f\"No puedo leer el fichero: {e}\")\n    if args.texto:\n        return args.texto\n    if not sys.stdin.isatty():\n        return sys.stdin.read()\n    sys.exit(\"Dame un texto: como argumento, con --fichero o por stdin. Mira --help.\")\n\n\ndef main() -> None:\n    parser = argparse.ArgumentParser(description=\"Clasifica un caso de texto libre.\")\n    parser.add_argument(\"texto\", nargs=\"?\", help=\"Texto del caso a clasificar\")\n    parser.add_argument(\"--fichero\", help=\"Ruta a un fichero de texto con el caso\")\n    args = parser.parse_args()\n\n    if not os.environ.get(\"ANTHROPIC_API_KEY\"):\n        sys.exit(\n            \"Falta la variable de entorno ANTHROPIC_API_KEY.\\n\"\n            \"Crea la clave en console.anthropic.com y expórtala antes de ejecutar.\"\n        )\n\n    texto = leer_entrada(args).strip()\n    if not texto:\n        sys.exit(\"El texto está vacío: no hay nada que clasificar.\")\n    if len(texto) > MAX_CARACTERES:\n        print(\n            f\"AVISO: texto de {len(texto)} caracteres; se recorta a {MAX_CARACTERES}.\",\n            file=sys.stderr,\n        )\n        texto = texto[:MAX_CARACTERES]\n\n    client = anthropic.Anthropic()  # lee ANTHROPIC_API_KEY del entorno\n\n    try:\n        resultado = clasificar(client, texto)\n    except anthropic.AuthenticationError:\n        sys.exit(\"Clave de API inválida o revocada. Revisa ANTHROPIC_API_KEY.\")\n    except anthropic.RateLimitError:\n        sys.exit(\"Límite de peticiones alcanzado. Espera un minuto y reintenta.\")\n    except anthropic.APIStatusError as e:\n        sys.exit(f\"Error de la API ({e.status_code}): {e.message}\")\n    except anthropic.APIConnectionError:\n        sys.exit(\"No hay conexión con la API. Revisa tu red y reintenta.\")\n\n    # Freno de confianza: lo dudoso se marca para revisión humana.\n    resultado[\"revision_humana\"] = resultado[\"confianza\"] < UMBRAL_CONFIANZA\n\n    print(json.dumps(resultado, ensure_ascii=False, indent=2))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+    },
+    {
+      "name": "README.md",
+      "language": "markdown",
+      "content": "# Clasificador de casos por API\n\nClasifica texto libre (correos, incidencias, formularios) en tus categorías y devuelve SIEMPRE el mismo JSON, garantizado por esquema.\n\n## Instalación\n\n```bash\npip install anthropic\nexport ANTHROPIC_API_KEY=\"tu-clave\"   # Windows (PowerShell): $env:ANTHROPIC_API_KEY=\"tu-clave\"\n```\n\n## Uso\n\n```bash\npython clasificador.py \"No me llegó el pedido 4412 y lo necesito para mañana\"\npython clasificador.py --fichero caso.txt\ncat caso.txt | python clasificador.py\n```\n\nSalida (siempre estos campos):\n\n```json\n{\n  \"categoria\": \"incidencia\",\n  \"urgencia\": \"alta\",\n  \"confianza\": 0.93,\n  \"motivo\": \"Reclama un pedido no entregado ('no me llegó el pedido 4412') con plazo inmediato.\",\n  \"revision_humana\": false\n}\n```\n\n## Adáptalo a tu negocio\n\n- **Categorías**: edita la lista `CATEGORIAS` y describe en `SISTEMA` cualquier matiz («'factura' incluye peticiones de rectificativas»). Mantén siempre una categoría escape tipo `otro`.\n- **Umbral**: `UMBRAL_CONFIANZA` marca cuándo un caso va a revisión humana. Empieza en 0.7 y ajústalo midiendo con casos reales.\n- **Modelo**: `claude-haiku-4-5` clasifica bien y barato. No subas de modelo sin haber medido que hace falta.\n\n## Cómo encajarlo en tu sistema\n\nEl script imprime JSON por stdout y usa códigos de salida (0 = ok, distinto de 0 = error), así que se encadena con cualquier cosa: un cron que lee un buzón, un endpoint que recibe formularios, un bucle sobre un CSV. Para volumen alto, agrupa las llamadas o mira la Batch API (50 % más barata para trabajo sin prisa).\n\n## Medir antes de fiarse\n\nAntes de conectarlo a nada serio: pásale 30 casos reales ya clasificados por una persona y cuenta aciertos. Por debajo del 90 % en tus categorías importantes, ajusta descripciones y repite. Sin esa medición no tienes un clasificador: tienes una esperanza."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Prepara el entorno",
+      "action": "Con Python 3.9 o superior instalado: pip install anthropic",
+      "expect": "La instalación termina sin errores; python -c \"import anthropic\" no protesta.",
+      "stuck": "Si pip no existe, instala Python desde python.org marcando «Add to PATH»."
+    },
+    {
+      "title": "Crea y exporta tu clave",
+      "action": "En console.anthropic.com → API Keys crea una clave y expórtala: export ANTHROPIC_API_KEY=\"sk-ant-...\" (o métela en un .env que cargue tu sistema).",
+      "expect": "echo $ANTHROPIC_API_KEY muestra la clave en tu terminal.",
+      "stuck": "La clave se enseña una sola vez al crearla; si la perdiste, crea otra y revoca la vieja."
+    },
+    {
+      "title": "Guarda el script",
+      "action": "Copia clasificador.py a una carpeta de tu proyecto, tal cual.",
+      "expect": "python clasificador.py --help muestra la ayuda."
+    },
+    {
+      "title": "Primera clasificación",
+      "action": "Ejecuta: python clasificador.py \"Hola, ¿tenéis abierto el sábado por la tarde?\"",
+      "expect": "Un JSON con categoria consulta, urgencia baja, confianza alta y revision_humana en false.",
+      "stuck": "Si dice que falta la clave, la exportaste en otra terminal: repítelo en la que estás usando."
+    },
+    {
+      "title": "Pon tus categorías",
+      "action": "Edita CATEGORIAS y el texto de SISTEMA con las categorías reales de tu negocio y sus matices.",
+      "expect": "Tres casos reales tuyos salen bien clasificados."
+    },
+    {
+      "title": "Mide con 30 casos reales",
+      "action": "Junta 30 casos ya clasificados por una persona, pásalos por el script y cuenta aciertos por categoría.",
+      "expect": "Un porcentaje real de acierto. Con 90 % o más en lo importante, ya puedes conectarlo a tu circuito con el freno de revision_humana activo."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "python clasificador.py \"No me llegó el pedido 4412 y lo necesito para mañana\"",
+      "expect": "categoria incidencia (o pedido, según tus definiciones), urgencia alta, motivo citando el texto, JSON válido."
+    },
+    {
+      "name": "Caso ambiguo",
+      "input": "python clasificador.py \"Os escribo por lo del otro día, ya sabéis\"",
+      "expect": "categoria otro con confianza baja y revision_humana en true."
+    },
+    {
+      "name": "Sin clave",
+      "input": "Ejecuta en una terminal sin ANTHROPIC_API_KEY definida.",
+      "expect": "Mensaje claro de que falta la variable, sin traza fea de Python, y código de salida distinto de 0."
+    },
+    {
+      "name": "Entrada vacía",
+      "input": "python clasificador.py \"\"",
+      "expect": "Aviso de que no hay nada que clasificar; no se gasta ninguna llamada a la API."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "API de Anthropic",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Crea la clave y guárdala en la variable de entorno ANTHROPIC_API_KEY (o en un .env fuera del control de versiones). Nunca la escribas en el script.",
+      "cost": "de pago por tokens; clasificar un caso con claude-haiku-4-5 cuesta décimas de céntimo, y 1.000 casos, alrededor de un euro"
+    }
+  ],
+  "risks": [
+    "Clave filtrada por subir el script con la clave dentro. Mitigación: la clave vive solo en el entorno; añade .env a .gitignore y revoca cualquier clave que haya tocado un repo.",
+    "Confiar en el clasificador sin haberlo medido. Mitigación: el paso de los 30 casos no es opcional; repítelo cada vez que cambies categorías o modelo.",
+    "Textos con datos personales viajando a la API. Mitigación: si tus casos llevan datos sensibles, anonimiza antes de llamar y revisa la política de retención de tu cuenta.",
+    "Automatizar acciones directamente sobre la etiqueta sin freno. Mitigación: usa el campo revision_humana; las acciones irreversibles exigen persona aunque la confianza sea 0.99."
+  ],
+  "examples": [
+    {
+      "name": "Uso directo",
+      "prompt": "python clasificador.py \"Buenas, la factura de marzo tiene el IVA mal calculado, ¿me la podéis rehacer?\""
+    },
+    {
+      "name": "En un bucle sobre ficheros",
+      "prompt": "for f in casos/*.txt; do python clasificador.py --fichero \"$f\" > \"salidas/$(basename $f .txt).json\"; done"
+    },
+    {
+      "name": "Pedírselo a Claude Code",
+      "prompt": "Toma clasificador.py como base y adáptalo para leer los casos de un CSV con columnas id y texto, y escribir un CSV con id, categoria, urgencia y revision_humana."
+    }
+  ],
+  "kits": ["atencion-cliente-multicanal", "agentes-codigo-produccion"]
+}

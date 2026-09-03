@@ -7,7 +7,7 @@ estado: "borrador_accionable"
 ultima_revision: "2026-08-18"
 fuentes: ["Fuente interna: AI Professional Academy", "https://github.com"]
 tags: ["ai-academy", "automatizacion", "codigo", "assets"]
-entregable: "25 automatizaciones con codigo"
+entregable: "catalogo de automatizaciones con codigo"
 ---
 # Automatizaciones con codigo reutilizable
 

@@ -1,66 +1,444 @@
 {
-  "name": "04 Invoice OCR Review",
+  "name": "04 · Extracción de facturas con revisión humana",
   "nodes": [
     {
       "parameters": {
-        "path": "04-invoice-ocr-review",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 04 · Extracción de facturas\n\n1. Credenciales: Anthropic API, Google Sheets (OAuth2) y Gmail (OAuth2).\n2. Pestañas: \"Facturas validadas\", \"Facturas dudosas\" y \"Facturas incompletas\".\n3. Cambia el destinatario de \"Pedir revisión humana\" por el email de tu contable.\n4. Envía en el body el campo texto_factura (texto plano del OCR o del PDF).",
+        "width": 420,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"04 Invoice OCR Review\",\n    category: \"finanzas\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-04-factura-recibida",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo-002",
+      "name": "Webhook factura",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        40,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// El texto de la factura llega dentro de body.texto_factura.\nconst b = $json.body ?? {};\nreturn [{ json: {\n  archivo: String(b.archivo ?? 'sin nombre').trim(),\n  texto_factura: String(b.texto_factura ?? '').trim().slice(0, 15000),\n  recibido_en: new Date().toISOString(),\n} }];"
+      },
+      "id": "nodo-003",
+      "name": "Normalizar entrada",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        260,
+        400
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ $json }}"
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo-004",
+      "name": "Responder recepción",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        480,
+        400
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.texto_factura }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-005",
+      "name": "¿Trae texto de factura?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-5', max_tokens: 1024, system: \"Eres un asistente contable. Extrae datos de facturas espanolas. Responde SOLO con JSON valido con: proveedor, nif, numero_factura, fecha_factura (YYYY-MM-DD), base_imponible (numero), iva (numero), total (numero), moneda y confianza (numero entre 0 y 1). Si un dato no aparece, usa null y baja la confianza.\", messages: [{ role: 'user', content: 'Extrae los campos de esta factura:\\n' + $json.texto_factura }] }) }}",
+        "options": {}
+      },
+      "id": "nodo-006",
+      "name": "Extraer campos con IA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Interpreta el JSON de la IA y comprueba que base + IVA = total.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet ia = {};\ntry {\n  ia = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  ia = { proveedor: null, confianza: 0 };\n}\nconst base = Number(ia.base_imponible ?? NaN);\nconst iva = Number(ia.iva ?? NaN);\nconst total = Number(ia.total ?? NaN);\nconst cuadra = [base, iva, total].every(Number.isFinite) && Math.abs(base + iva - total) < 0.02;\nconst original = $('Normalizar entrada').item.json;\nreturn [{ json: { ...original, ...ia, cuadra, confianza: Number(ia.confianza ?? 0) } }];"
+      },
+      "id": "nodo-007",
+      "name": "Comprobar totales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.cuadra }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-2",
+              "leftValue": "={{ $json.confianza }}",
+              "rightValue": 0.8,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-008",
+      "name": "¿Fiable y cuadra?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Facturas validadas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha_registro": "={{ $json.recibido_en }}",
+            "archivo": "={{ $json.archivo }}",
+            "proveedor": "={{ $json.proveedor }}",
+            "nif": "={{ $json.nif }}",
+            "numero_factura": "={{ $json.numero_factura }}",
+            "fecha_factura": "={{ $json.fecha_factura }}",
+            "base_imponible": "={{ $json.base_imponible }}",
+            "iva": "={{ $json.iva }}",
+            "total": "={{ $json.total }}",
+            "confianza": "={{ $json.confianza }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-009",
+      "name": "Registrar validada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1580,
+        200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Facturas dudosas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha_registro": "={{ $json.recibido_en }}",
+            "archivo": "={{ $json.archivo }}",
+            "proveedor": "={{ $json.proveedor }}",
+            "total": "={{ $json.total }}",
+            "confianza": "={{ $json.confianza }}",
+            "motivo": "={{ $json.cuadra ? \"confianza baja\" : \"los importes no cuadran\" }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-010",
+      "name": "Registrar dudosa",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1580,
+        420
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "REEMPLAZAR@tuempresa.com",
+        "subject": "={{ 'Factura dudosa: ' + $json.archivo }}",
+        "emailType": "text",
+        "message": "={{ 'La extraccion automatica de la factura \"' + $json.archivo + '\" necesita revision humana.\\n\\nProveedor: ' + $json.proveedor + '\\nTotal detectado: ' + $json.total + '\\nConfianza IA: ' + $json.confianza + '\\n\\nDatos completos en la pestaña \"Facturas dudosas\". No se ha contabilizado nada automaticamente.' }}",
+        "options": {}
+      },
+      "id": "nodo-011",
+      "name": "Pedir revisión humana",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1800,
+        420
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Facturas incompletas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha_registro": "={{ $json.recibido_en }}",
+            "archivo": "={{ $json.archivo }}",
+            "motivo": "la peticion no traia texto_factura"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-012",
+      "name": "Registrar incompleta",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        920,
+        520
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook": {
+    "Webhook factura": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Normalizar entrada",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Normalizar entrada": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "Responder recepción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder recepción": {
+      "main": [
+        [
+          {
+            "node": "¿Trae texto de factura?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Trae texto de factura?": {
+      "main": [
+        [
+          {
+            "node": "Extraer campos con IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar incompleta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer campos con IA": {
+      "main": [
+        [
+          {
+            "node": "Comprobar totales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comprobar totales": {
+      "main": [
+        [
+          {
+            "node": "¿Fiable y cuadra?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Fiable y cuadra?": {
+      "main": [
+        [
+          {
+            "node": "Registrar validada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar dudosa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar dudosa": {
+      "main": [
+        [
+          {
+            "node": "Pedir revisión humana",
             "type": "main",
             "index": 0
           }
@@ -72,29 +450,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "finanzas",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "factura_id": "F-2026-0312",
-          "proveedor": "Suministros Delta SA",
-          "cif": "A12345678",
-          "fecha": "2026-08-14",
-          "base": 1250,
-          "iva": 262.5,
-          "total": 1512.5,
-          "email": "admin@ejemplo.es"
-        }
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

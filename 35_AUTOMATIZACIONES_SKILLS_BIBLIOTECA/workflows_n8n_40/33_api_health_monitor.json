@@ -1,68 +1,261 @@
 {
-  "name": "33 API Health Monitor",
+  "name": "33 · Monitor de salud de APIs",
   "nodes": [
+    {
+      "parameters": {
+        "content": "## 33 · Salud de APIs\n\n1. Edita la lista de endpoints en el nodo \"Definir endpoints\".\n2. Bot de Telegram: créalo gratis con @BotFather, pega el token en la credencial y tu chat_id en el nodo de alerta.\n3. Hoja de Google Sheets con pestaña \"Incidencias\".\n\nCada 5 minutos hace ping y solo alerta cuando algo responde 4xx/5xx o no responde.",
+        "width": 460,
+        "height": 260
+      },
+      "id": "nodo_129",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "field": "hours",
-              "hoursInterval": 24
+              "field": "minutes",
+              "minutesInterval": 5
             }
           ]
         }
       },
-      "id": "trigger",
-      "name": "Schedule",
+      "id": "nodo_130",
+      "name": "Cada 5 minutos",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.2,
       "position": [
         0,
-        0
+        340
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"33 API Health Monitor\",\n    category: \"infra\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "jsCode": "// Lista de servicios a vigilar: añade o quita los tuyos.\nconst endpoints = [\n  { nombre: 'API principal', url: 'https://api.ejemplo.com/health' },\n  { nombre: 'Web pública', url: 'https://www.ejemplo.com' },\n  { nombre: 'Panel de alumnos', url: 'https://panel.ejemplo.com/status' }\n];\nreturn endpoints.map(function (e) {\n  return { json: e };\n});"
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_131",
+      "name": "Definir endpoints",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
       ]
     },
     {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "nodo_132",
+      "name": "Hacer ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const objetivo = $('Definir endpoints').item.json;\nconst codigo = Number($json.statusCode || 0);\nconst caido = codigo === 0 || codigo >= 400;\nreturn {\n  json: {\n    nombre: objetivo.nombre,\n    url: objetivo.url,\n    codigo_http: codigo,\n    caido: caido,\n    comprobado_en: new Date().toISOString()\n  }\n};"
+      },
+      "id": "nodo_133",
+      "name": "Evaluar respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_017",
+              "leftValue": "={{ $json.caido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_134",
+      "name": "¿Servicio caído?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Incidencias"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_135",
+      "name": "Registrar incidencia",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "REEMPLAZAR_CHAT_ID",
+        "text": "=[CAÍDA] {{ $json.nombre }}\n\nURL: {{ $json.url }}\nCódigo HTTP: {{ $json.codigo_http }}\nHora: {{ $json.comprobado_en }}\n\n(0 = sin respuesta / timeout)",
+        "additionalFields": {}
+      },
+      "id": "nodo_136",
+      "name": "Alerta por Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        240
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REEMPLAZAR",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
       "parameters": {},
-      "id": "respond",
-      "name": "Fin",
+      "id": "nodo_137",
+      "name": "Servicio OK",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        1100,
+        460
       ]
     }
   ],
   "connections": {
-    "Schedule": {
+    "Cada 5 minutos": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Definir endpoints",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Definir endpoints": {
       "main": [
         [
           {
-            "node": "Fin",
+            "node": "Hacer ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hacer ping": {
+      "main": [
+        [
+          {
+            "node": "Evaluar respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar respuesta": {
+      "main": [
+        [
+          {
+            "node": "¿Servicio caído?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Servicio caído?": {
+      "main": [
+        [
+          {
+            "node": "Registrar incidencia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Servicio OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar incidencia": {
+      "main": [
+        [
+          {
+            "node": "Alerta por Telegram",
             "type": "main",
             "index": 0
           }
@@ -71,23 +264,6 @@
     }
   },
   "settings": {
-    "executionOrder": "v1",
-    "timezone": "Europe/Madrid"
-  },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "infra",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Schedule": [
-      {
-        "referencia": "PRUEBA-0001",
-        "nombre": "Caso de ejemplo",
-        "email": "prueba@ejemplo.es",
-        "mensaje": "Texto de prueba para ver el flujo funcionando.",
-        "fecha": "2026-09-01"
-      }
-    ]
+    "executionOrder": "v1"
   }
 }

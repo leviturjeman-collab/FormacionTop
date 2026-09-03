@@ -1,0 +1,112 @@
+{
+  "id": "revisor-de-codigo",
+  "order": 1,
+  "title": "Revisor de código",
+  "kicker": "Código y calidad",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "intermedio",
+  "what": "Un subagente de Claude Code que revisa los cambios de tu rama antes de que los subas. Lee el diff, lo compara con el resto del proyecto y te devuelve una lista de hallazgos ordenados por gravedad: lo que rompe algo, lo que puede romper algo y lo que es solo estilo. No toca tu código: informa, tú decides. Es la revisión de un compañero senior, disponible a cualquier hora y sin esperar a que nadie tenga un hueco.",
+  "forWho": "Para quien programa con Claude Code y sube cambios sin que nadie los mire, o para equipos pequeños donde la revisión de código se hace tarde y mal. Compensa desde el primer día si trabajas solo: es la segunda opinión que no tienes.",
+  "tools": ["claude-code", "github"],
+  "capabilities": [
+    "Revisa el diff de tu rama contra main y clasifica cada hallazgo por severidad (CRITICO, ALTO, MEDIO, BAJO)",
+    "Detecta errores de lógica, casos límite sin cubrir y regresiones respecto al código que ya existía",
+    "Comprueba que los cambios siguen las convenciones del propio proyecto, no las suyas",
+    "Cita fichero y línea en cada hallazgo, con una propuesta de arreglo concreta",
+    "Termina con un veredicto claro: listo para subir, subir con reservas o no subir"
+  ],
+  "limits": [
+    "No modifica código: solo lee y informa. El arreglo lo aplicas tú o se lo pides después en otra petición",
+    "No ejecuta los tests ni levanta la aplicación: su revisión es estática, sobre el texto del código",
+    "No sustituye la revisión humana en cambios de seguridad, pagos o datos personales: ahí es un primer filtro, no el último",
+    "No revisa lo que no está en el diff: si el problema vive en un fichero que no tocaste, puede no verlo"
+  ],
+  "files": [
+    {
+      "name": "revisor-de-codigo.md",
+      "language": "markdown",
+      "content": "---\nname: revisor-de-codigo\ndescription: Revisa el diff de la rama actual y devuelve hallazgos clasificados por severidad, con fichero, línea y propuesta de arreglo. Úsalo antes de hacer commit o abrir un pull request.\ntools: Read, Grep, Glob, Bash\n---\n\nEres un revisor de código senior. Tu trabajo es revisar cambios, no escribirlos. Nunca modificas ficheros: lees, analizas y devuelves un informe. Hablas en español, al grano y sin adornos.\n\n## Proceso, en este orden\n\n1. **Obtén el diff.** Ejecuta `git diff main...HEAD` (o `git diff HEAD` si no hay commits nuevos). Si el diff está vacío, dilo y para: no hay nada que revisar.\n2. **Sitúate.** Antes de opinar, lee los ficheros completos que toca el diff, no solo las líneas cambiadas. Un cambio puede ser correcto en sus tres líneas y romper una función que lo llama cincuenta líneas más abajo.\n3. **Aprende las reglas de la casa.** Mira dos o tres ficheros vecinos del mismo tipo para captar las convenciones reales del proyecto: cómo se nombran las cosas, cómo se manejan los errores, qué librerías se usan. Juzga contra esas convenciones, no contra tu gusto personal.\n4. **Revisa buscando, por este orden:** errores de lógica y casos límite (nulos, listas vacías, cero, texto con acentos); regresiones (algo que antes funcionaba y el cambio rompe); errores de manejo de fallos (excepciones tragadas, errores sin registrar); problemas de rendimiento evidentes (consultas dentro de bucles, lecturas repetidas); y por último estilo y legibilidad.\n5. **Clasifica cada hallazgo** con una severidad exacta:\n   - **CRITICO**: rompe funcionalidad existente, pierde datos o abre un agujero de seguridad. Bloquea la subida.\n   - **ALTO**: error de lógica o caso límite que fallará con datos reales. Hay que arreglarlo antes de subir.\n   - **MEDIO**: funciona, pero es frágil o va contra las convenciones del proyecto. Arreglar pronto.\n   - **BAJO**: estilo, nombres, comentarios. Opcional.\n6. **Escribe el informe** con el formato de abajo. Si dudas entre dos severidades, elige la más alta y di por qué dudabas.\n\n## Criterios que no negocias\n\n- Cada hallazgo cita fichero y línea. Un hallazgo sin ubicación no vale.\n- Cada hallazgo incluye una propuesta de arreglo concreta, con código si aporta.\n- No inventas problemas para parecer exhaustivo. Si el diff está limpio, el informe lo dice y felicita en una línea, sin relleno.\n- No repites el mismo hallazgo en diez sitios: lo reportas una vez y listas las demás ubicaciones.\n- Máximo 12 hallazgos. Si hay más, reporta los 12 más graves y di cuántos quedan.\n\n## Formato de salida\n\n```\n## Revisión de [rama] — [n] ficheros, [n] hallazgos\n\n### CRITICO\n- `fichero.py:42` — [qué pasa y por qué es grave]. Arreglo: [propuesta].\n\n### ALTO\n...\n\n### MEDIO / BAJO\n...\n\n## Veredicto\n[LISTO PARA SUBIR | SUBIR CON RESERVAS | NO SUBIR] — [una frase de justificación]\n```\n\nSi una sección queda vacía, omítela. Termina siempre con el veredicto."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Crea la carpeta de agentes en tu proyecto",
+      "action": "En la raíz de tu proyecto, crea la carpeta .claude/agents/ si no existe: mkdir -p .claude/agents",
+      "expect": "La carpeta .claude/agents existe dentro de tu proyecto."
+    },
+    {
+      "title": "Copia el fichero del agente",
+      "action": "Crea el fichero .claude/agents/revisor-de-codigo.md y pega dentro el contenido completo del fichero de arriba, incluidas las tres rayas del principio y del final del bloque de cabecera.",
+      "expect": "El fichero existe y empieza por --- seguido de name: revisor-de-codigo.",
+      "stuck": "Si Claude Code no detecta el agente, comprueba que la cabecera YAML tiene las tres rayas en su propia línea y que el fichero está en .claude/agents/, no en .claude/ a secas."
+    },
+    {
+      "title": "Reinicia Claude Code en el proyecto",
+      "action": "Cierra la sesión de Claude Code y vuelve a abrirla en la carpeta del proyecto. Los agentes se cargan al arrancar.",
+      "expect": "Al escribir /agents en Claude Code, revisor-de-codigo aparece en la lista."
+    },
+    {
+      "title": "Haz un cambio y pídele la revisión",
+      "action": "Modifica cualquier fichero del proyecto y escribe en Claude Code: «Usa el subagente revisor-de-codigo para revisar mis cambios».",
+      "expect": "Un informe con hallazgos por severidad y un veredicto final. Si no has cambiado nada, te dirá que el diff está vacío.",
+      "stuck": "Si revisa el proyecto entero en vez del diff, dile: «revisa solo el diff de git, no el proyecto completo»."
+    },
+    {
+      "title": "Hazlo costumbre",
+      "action": "A partir de ahora, antes de cada commit importante, invoca al revisor. Si quieres que Claude lo haga solo, añade a tu CLAUDE.md la línea: «Antes de hacer commit, pasa siempre el subagente revisor-de-codigo».",
+      "expect": "Claude lanza la revisión sin que se la pidas cada vez."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "Cambia una función para que devuelva null en un caso que antes devolvía lista vacía, y pide la revisión del diff.",
+      "expect": "Detecta el cambio de contrato como ALTO o CRITICO, cita fichero y línea, y propone mantener la lista vacía o adaptar a quienes llaman a la función."
+    },
+    {
+      "name": "Diff limpio",
+      "input": "Pide una revisión sin haber cambiado nada.",
+      "expect": "Responde que el diff está vacío y no inventa hallazgos."
+    },
+    {
+      "name": "Cambio con secreto",
+      "input": "Añade una línea con API_KEY = \"sk-test-1234567890abcdef\" en un fichero y pide revisión.",
+      "expect": "Lo marca como CRITICO por secreto en el código y propone moverlo a una variable de entorno. Bórralo después: era solo de prueba."
+    },
+    {
+      "name": "Veredicto presente",
+      "input": "Cualquier revisión.",
+      "expect": "El informe termina siempre con LISTO PARA SUBIR, SUBIR CON RESERVAS o NO SUBIR y una frase de justificación."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Suscripción o API de Anthropic para Claude Code",
+      "where": "claude.ai (plan Pro/Max) o console.anthropic.com → API Keys",
+      "how": "Claude Code funciona con tu sesión de claude.ai o con una clave de API. Si usas clave, guárdala con ANTHROPIC_API_KEY en tu entorno; no la pegues en ningún fichero del proyecto.",
+      "cost": "Incluido en el plan de pago de Claude; por API se paga por tokens, una revisión típica cuesta céntimos"
+    }
+  ],
+  "risks": [
+    "Falsa seguridad: un veredicto LISTO PARA SUBIR no garantiza nada. Mitigación: en código de pagos, seguridad o datos personales, revisión humana además del agente, siempre.",
+    "El agente lee tu código, que sale hacia la API de Anthropic. Mitigación: no lo uses en repositorios con datos de clientes en claro o restricciones contractuales de confidencialidad sin revisar la política de datos de tu plan.",
+    "Exceso de hallazgos BAJO que entierran los graves. Mitigación: el prompt limita a 12 hallazgos; si aun así hay ruido, pídele «solo CRITICO y ALTO».",
+    "Revisiones caras en diffs enormes. Mitigación: revisa por ramas pequeñas; si el diff pasa de mil líneas, trocea el trabajo."
+  ],
+  "examples": [
+    {
+      "name": "Antes de un commit",
+      "prompt": "Usa el subagente revisor-de-codigo para revisar mis cambios pendientes antes de hacer commit."
+    },
+    {
+      "name": "Revisar una rama concreta",
+      "prompt": "Usa el subagente revisor-de-codigo para revisar el diff de la rama feature/facturas contra main."
+    },
+    {
+      "name": "Solo lo grave",
+      "prompt": "Usa el subagente revisor-de-codigo sobre mi diff, pero repórtame solo los hallazgos CRITICO y ALTO."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion"]
+}

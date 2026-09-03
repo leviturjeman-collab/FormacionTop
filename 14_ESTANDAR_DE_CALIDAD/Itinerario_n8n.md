@@ -6,10 +6,10 @@ fase: "produccion"
 estado: "vigente"
 ultima_revision: "2026-08-25"
 tags: ["ai-academy", "criterio_editorial", "n8n"]
-entregable: "guion de las 50 lecciones de n8n"
+entregable: "guion del itinerario de n8n"
 ---
 
-# Itinerario de n8n · 50 lecciones
+# Itinerario de n8n
 
 Herramienta troncal. El peso de cada lección va marcado: **A fondo** para lo
 que se usa a diario, lo que más se rompe o lo que sale caro equivocarse;

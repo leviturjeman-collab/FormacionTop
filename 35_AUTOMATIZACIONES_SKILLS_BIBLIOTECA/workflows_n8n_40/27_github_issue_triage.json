@@ -1,66 +1,297 @@
 {
-  "name": "27 GitHub Issue Triage",
+  "name": "27 · Triaje de issues de GitHub",
   "nodes": [
     {
       "parameters": {
-        "path": "27-github-issue-triage",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 27 · Triaje de issues\n\n1. En tu repo: Settings → Webhooks → añade la URL de este webhook (evento Issues, content type application/json).\n2. Credencial GitHub API con un token con permiso de issues.\n3. El flujo solo COMENTA una propuesta de triaje: las etiquetas las aplica un humano.",
+        "width": 460,
+        "height": 240
       },
-      "id": "trigger",
-      "name": "Webhook",
+      "id": "nodo_067",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wf-27-issue-nueva",
+        "options": {}
+      },
+      "id": "nodo_068",
+      "name": "Issue de GitHub",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
         0,
-        0
+        340
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"27 GitHub Issue Triage\",\n    category: \"devops\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst issue = b.issue || {};\nconst repo = b.repository || {};\nconst salida = {\n  titulo: String(issue.title || ''),\n  cuerpo: String(issue.body || '').slice(0, 4000),\n  numero_issue: issue.number || 0,\n  propietario: repo.owner && repo.owner.login ? repo.owner.login : '',\n  repo: repo.name || '',\n  autor: issue.user && issue.user.login ? issue.user.login : '',\n  accion: String(b.action || ''),\n  valido: Boolean(issue.title && issue.number && repo.name && b.action === 'opened')\n};\nreturn { json: salida };"
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_069",
+      "name": "Validar issue",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
       ]
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_009",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
-      "id": "respond",
-      "name": "Respond",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "id": "nodo_070",
+      "name": "¿Issue nueva y completa?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const sistema = [\n  'Eres el asistente de triaje de un repositorio de GitHub.',\n  'Clasifica la issue y responde SOLO con JSON válido:',\n  '{ \"tipo\": \"bug|mejora|pregunta|otro\", \"prioridad\": \"p0|p1|p2|p3\", \"etiquetas\": [\"...\"], \"primera_respuesta\": \"...\" }',\n  'La primera_respuesta debe ser breve, amable y en español. No prometas fechas.'\n].join('\\n');\nconst peticion_ia = {\n  model: 'claude-opus-5',\n  max_tokens: 1024,\n  system: sistema,\n  messages: [\n    { role: 'user', content: 'TÍTULO: ' + $json.titulo + '\\n\\nCUERPO:\\n' + $json.cuerpo }\n  ]\n};\nreturn { json: { peticion_ia: peticion_ia } };"
+      },
+      "id": "nodo_071",
+      "name": "Preparar clasificación",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_ia) }}",
+        "options": {}
+      },
+      "id": "nodo_072",
+      "name": "Clasificar con Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n');\nlet triaje;\ntry {\n  const inicio = texto.indexOf('{');\n  const fin = texto.lastIndexOf('}');\n  triaje = JSON.parse(texto.slice(inicio, fin + 1));\n} catch (e) {\n  triaje = { tipo: 'otro', prioridad: 'p2', etiquetas: [], primera_respuesta: 'Gracias por abrir la issue, el equipo la revisará.' };\n}\nconst origen = $('Validar issue').item.json;\nconst comentario = [\n  'Triaje automático (propuesta, pendiente de revisión humana):',\n  '',\n  '- Tipo: ' + triaje.tipo,\n  '- Prioridad sugerida: ' + triaje.prioridad,\n  '- Etiquetas sugeridas: ' + (triaje.etiquetas || []).join(', '),\n  '',\n  triaje.primera_respuesta,\n  '',\n  '_Un mantenedor confirmará etiquetas y prioridad._'\n].join('\\n');\nconst salida = {\n  propietario: origen.propietario,\n  repo: origen.repo,\n  numero_issue: origen.numero_issue,\n  titulo: origen.titulo,\n  autor: origen.autor,\n  tipo: triaje.tipo,\n  prioridad: triaje.prioridad,\n  etiquetas: (triaje.etiquetas || []).join(', '),\n  comentario: comentario,\n  triado_en: new Date().toISOString()\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_073",
+      "name": "Componer triaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Triaje"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_074",
+      "name": "Registrar triaje",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1320,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "operation": "createComment",
+        "owner": "={{ $json.propietario }}",
+        "repository": "={{ $json.repo }}",
+        "issueNumber": "={{ $json.numero_issue }}",
+        "body": "={{ $json.comentario }}"
+      },
+      "id": "nodo_075",
+      "name": "Comentar propuesta en la issue",
+      "type": "n8n-nodes-base.github",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        1540,
+        240
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "REEMPLAZAR",
+          "name": "GitHub (token)"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "nodo_076",
+      "name": "Evento ignorado",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Issue de GitHub": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar issue",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar issue": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Issue nueva y completa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Issue nueva y completa?": {
+      "main": [
+        [
+          {
+            "node": "Preparar clasificación",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Evento ignorado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar clasificación": {
+      "main": [
+        [
+          {
+            "node": "Clasificar con Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar con Claude": {
+      "main": [
+        [
+          {
+            "node": "Componer triaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Componer triaje": {
+      "main": [
+        [
+          {
+            "node": "Registrar triaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar triaje": {
+      "main": [
+        [
+          {
+            "node": "Comentar propuesta en la issue",
             "type": "main",
             "index": 0
           }
@@ -71,13 +302,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "devops",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Issue de GitHub": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +311,21 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "action": "opened",
+          "issue": {
+            "number": 12,
+            "title": "La exportación a CSV falla con acentos",
+            "body": "Al exportar alumnos con tildes el CSV sale corrupto.",
+            "user": {
+              "login": "alumno-demo"
+            }
+          },
+          "repository": {
+            "name": "mi-repo",
+            "owner": {
+              "login": "mi-usuario"
+            }
+          }
         }
       }
     ]

@@ -1,66 +1,364 @@
 {
-  "name": "34 Multi LLM Fallback Router",
+  "name": "34 · Router multi-LLM con fallback",
   "nodes": [
     {
       "parameters": {
-        "path": "34-multi-llm-fallback-router",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 34 · Router multi-LLM\n\nIntenta primero Claude (Anthropic). Si la llamada falla (clave mala, 429, caída), la salida de error del nodo alimenta al proveedor de reserva (OpenAI).\n\nCredenciales: Header Auth \"x-api-key\" para Anthropic y Header Auth \"Authorization: Bearer\" para OpenAI. Todo intento queda registrado en Sheets con el proveedor usado.",
+        "width": 480,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_138",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"34 Multi LLM Fallback Router\",\n    category: \"ai_ops\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-34-consulta-ia",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_139",
+      "name": "Consulta de IA",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst faltan = [];\nif (b.prompt === undefined || b.prompt === null || String(b.prompt).trim() === '') {\n  faltan.push('prompt');\n}\nconst prompt = String(b.prompt || '').slice(0, 8000);\nconst peticion_principal = {\n  model: 'claude-opus-5',\n  max_tokens: 2048,\n  messages: [\n    { role: 'user', content: prompt }\n  ]\n};\nreturn {\n  json: {\n    prompt: prompt,\n    origen: String(b.origen || 'api'),\n    peticion_principal: peticion_principal,\n    faltan: faltan,\n    valido: faltan.length === 0\n  }\n};"
+      },
+      "id": "nodo_140",
+      "name": "Validar consulta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_018",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_141",
+      "name": "¿Consulta válida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_principal) }}",
+        "options": {}
+      },
+      "id": "nodo_142",
+      "name": "Llamar a Claude (principal)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n');\nreturn {\n  json: {\n    proveedor: 'anthropic',\n    modelo: $json.model || 'claude-opus-5',\n    con_fallback: false,\n    error_principal: '',\n    respuesta: texto,\n    tokens_entrada: $json.usage ? $json.usage.input_tokens : null,\n    tokens_salida: $json.usage ? $json.usage.output_tokens : null,\n    respondido_en: new Date().toISOString()\n  }\n};"
+      },
+      "id": "nodo_143",
+      "name": "Normalizar respuesta principal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// El proveedor principal ha fallado: preparamos el de reserva.\nconst errorItem = $input.first().json || {};\nconst mensajeError = errorItem.error && errorItem.error.message ? String(errorItem.error.message) : JSON.stringify(errorItem).slice(0, 300);\nconst prompt = $('Validar consulta').first().json.prompt;\nconst peticion_openai = {\n  model: 'gpt-4.1-mini',\n  messages: [\n    { role: 'user', content: prompt }\n  ]\n};\nreturn [ { json: { peticion_openai: peticion_openai, error_principal: mensajeError.slice(0, 300) } } ];"
+      },
+      "id": "nodo_144",
+      "name": "Preparar reserva",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_openai) }}",
+        "options": {}
+      },
+      "id": "nodo_145",
+      "name": "Llamar a OpenAI (reserva)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "OpenAI API (Authorization: Bearer)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const eleccion = $json.choices && $json.choices[0] ? $json.choices[0] : {};\nreturn {\n  json: {\n    proveedor: 'openai',\n    modelo: $json.model || 'gpt-4.1-mini',\n    con_fallback: true,\n    error_principal: $('Preparar reserva').item.json.error_principal,\n    respuesta: eleccion.message ? eleccion.message.content : '',\n    tokens_entrada: $json.usage ? $json.usage.prompt_tokens : null,\n    tokens_salida: $json.usage ? $json.usage.completion_tokens : null,\n    respondido_en: new Date().toISOString()\n  }\n};"
+      },
+      "id": "nodo_146",
+      "name": "Normalizar respuesta de reserva",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Consultas"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_147",
+      "name": "Registrar intento",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1540,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, proveedor: $json.proveedor, con_fallback: $json.con_fallback, respuesta: $json.respuesta } }}",
+        "options": {}
+      },
+      "id": "nodo_148",
+      "name": "Responder al cliente",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        240
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_149",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Consulta de IA": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar consulta",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar consulta": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Consulta válida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Consulta válida?": {
+      "main": [
+        [
+          {
+            "node": "Llamar a Claude (principal)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llamar a Claude (principal)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar respuesta principal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar reserva": {
+      "main": [
+        [
+          {
+            "node": "Llamar a OpenAI (reserva)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llamar a OpenAI (reserva)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar respuesta de reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar respuesta principal": {
+      "main": [
+        [
+          {
+            "node": "Registrar intento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar respuesta de reserva": {
+      "main": [
+        [
+          {
+            "node": "Registrar intento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar intento": {
+      "main": [
+        [
+          {
+            "node": "Responder al cliente",
             "type": "main",
             "index": 0
           }
@@ -71,13 +369,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "ai_ops",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Consulta de IA": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +378,8 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "prompt": "Resume en dos frases qué es una automatización con n8n.",
+          "origen": "demo"
         }
       }
     ]

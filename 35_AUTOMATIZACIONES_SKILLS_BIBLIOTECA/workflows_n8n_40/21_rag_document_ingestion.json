@@ -1,66 +1,296 @@
 {
-  "name": "21 RAG Document Ingestion",
+  "name": "21 · Ingesta de documentos para RAG",
   "nodes": [
     {
       "parameters": {
-        "path": "21-rag-document-ingestion",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 21 · Ingesta RAG\n\nCrea en Postgres/Supabase la tabla:\n\ndocumentos_rag (id serial, titulo text, origen text, idioma text, indice int, trozo text, embedding_estado text, creado_en timestamptz)\n\nAsigna credenciales de Postgres y de Google Sheets y ajusta el ID de la hoja.",
+        "width": 420,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_001",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"21 RAG Document Ingestion\",\n    category: \"rag\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "content": "## Prueba rápida\n\nEnvía un POST al webhook con JSON:\ntitulo, contenido, origen (obligatorios) e idioma (opcional).\n\nLa rama inferior responde 400 si falta algún campo.",
+        "width": 340,
+        "height": 200
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_002",
+      "name": "Nota de prueba",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wf-21-doc-nuevo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "nodo_003",
+      "name": "Documento nuevo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['titulo', 'contenido', 'origen'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst salida = {\n  titulo: String(b.titulo || '').trim(),\n  contenido: String(b.contenido || '').trim(),\n  origen: String(b.origen || '').trim(),\n  idioma: String(b.idioma || 'es').trim(),\n  faltan: faltan,\n  valido: faltan.length === 0,\n  recibido_en: new Date().toISOString()\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_004",
+      "name": "Validar documento",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_001",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_005",
+      "name": "¿Documento completo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Divide el contenido en trozos con solape, listos para vectorizar.\nconst TAM = 1200;\nconst SOLAPE = 200;\nconst salida = [];\nfor (const item of $input.all()) {\n  const d = item.json;\n  const texto = String(d.contenido || '');\n  let i = 0;\n  let indice = 0;\n  while (i < texto.length) {\n    salida.push({\n      json: {\n        titulo: d.titulo,\n        origen: d.origen,\n        idioma: d.idioma,\n        indice: indice,\n        trozo: texto.slice(i, i + TAM)\n      }\n    });\n    indice = indice + 1;\n    i = i + (TAM - SOLAPE);\n  }\n}\nreturn salida;"
+      },
+      "id": "nodo_006",
+      "name": "Trocear contenido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO documentos_rag (titulo, origen, idioma, indice, trozo, embedding_estado, creado_en) VALUES ($1, $2, $3, $4, $5, 'pendiente', NOW());",
+        "options": {
+          "queryReplacement": "={{ $json.titulo }},{{ $json.origen }},{{ $json.idioma }},{{ $json.indice }},{{ $json.trozo }}"
+        }
+      },
+      "id": "nodo_007",
+      "name": "Guardar trozos en Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REEMPLAZAR",
+          "name": "Postgres (Supabase)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const trozos = $('Trocear contenido').all();\nconst primero = trozos.length > 0 ? trozos[0].json : {};\nconst salida = {\n  titulo: primero.titulo || '',\n  origen: primero.origen || '',\n  trozos_guardados: trozos.length,\n  estado: 'ingresado',\n  fecha: new Date().toISOString()\n};\nreturn [ { json: salida } ];"
+      },
+      "id": "nodo_008",
+      "name": "Resumir ingesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Ingestas"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_009",
+      "name": "Registrar en Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1320,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, titulo: $json.titulo, trozos_guardados: $json.trozos_guardados } }}",
+        "options": {}
+      },
+      "id": "nodo_010",
+      "name": "Responder OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        240
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_011",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Documento nuevo": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar documento",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar documento": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Documento completo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Documento completo?": {
+      "main": [
+        [
+          {
+            "node": "Trocear contenido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trocear contenido": {
+      "main": [
+        [
+          {
+            "node": "Guardar trozos en Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar trozos en Postgres": {
+      "main": [
+        [
+          {
+            "node": "Resumir ingesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumir ingesta": {
+      "main": [
+        [
+          {
+            "node": "Registrar en Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar en Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Responder OK",
             "type": "main",
             "index": 0
           }
@@ -71,13 +301,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "rag",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Documento nuevo": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +310,10 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "titulo": "Guía de onboarding",
+          "contenido": "El proceso de alta de un alumno tiene tres fases: registro, activación de la cuenta y acceso al primer módulo. Cada fase queda registrada en la plataforma y genera un correo de confirmación.",
+          "origen": "notion/onboarding.md",
+          "idioma": "es"
         }
       }
     ]

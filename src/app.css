@@ -79,9 +79,38 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* --- Arranque ------------------------------------------------------- */
 
 .st-loading { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
-.st-loading > span { width: 45px; height: 45px; margin-bottom: 8px; border: 1px solid var(--st-line-dark); display: grid; place-items: center; font: 600 17px var(--display); }
+.st-loading > span { width: 45px; height: 45px; margin-bottom: 8px; display: grid; place-items: center; font: 600 17px var(--display); color: var(--st-accent); }
 .st-loading strong { font: 600 18px var(--display); }
-.st-loading small { color: var(--st-muted); font-size: 8px; }
+.st-loading small { color: var(--st-muted); font-size: 8px; display: inline-flex; align-items: center; gap: 6px; }
+
+/* --- La marca: sin caja, con tinta ----------------------------------- */
+
+.st-brand-name, .st-brand-splash { position: relative; display: inline-block; padding-bottom: 6px; }
+.st-brand-splash { font: 600 clamp(26px, 5vw, 40px)/1.15 var(--display); text-align: center; padding: 0 18px 10px; }
+.st-brand-word { display: inline-block; }
+.st-brand-name .st-brand-word {
+  background: linear-gradient(115deg, #f2f7f4 0%, var(--st-accent-light) 45%, #f2f7f4 80%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #f2f7f4;
+}
+.st-brand-splash .st-brand-word {
+  background: linear-gradient(115deg, var(--st-text) 0%, var(--st-accent) 45%, var(--st-text) 80%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--st-text);
+}
+.st-brand-underline {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, var(--st-accent-light), var(--st-accent) 55%, transparent);
+  transform-origin: left;
+}
+.st-brand-splash .st-brand-underline { left: 18px; right: 18px; }
+.st-brand div { gap: 2px; }
 .st-loading pre { margin-top: 10px; padding: 8px 12px; background: var(--st-surface); border: 1px solid var(--st-line); font-size: 9px; }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -97,9 +126,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   display: flex; flex-direction: column; overflow-y: auto;
 }
 .st-brand { min-height: 54px; padding: 0 8px 18px; border-bottom: 1px solid #39423c; display: flex; align-items: center; gap: 11px; text-decoration: none; color: inherit; }
-.st-brand > span { width: 34px; height: 34px; border: 1px solid #728077; display: grid; place-items: center; color: #dfeae4; font: 600 15px var(--display); flex: none; }
-.st-brand div { display: flex; flex-direction: column; gap: 1px; }
-.st-brand strong { font-size: 11px; }
+.st-brand-mark { display: grid; place-items: center; color: var(--st-accent-light); flex: none; }
+.st-brand div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.st-brand strong { font: 700 11.5px/1.35 var(--display); letter-spacing: .01em; }
 .st-brand small { color: #8e9a92; font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
 
 .st-side-search { margin-top: 16px; display: flex; align-items: center; gap: 7px; padding: 0 9px; min-height: 32px; border: 1px solid #3d473f; background: #1a201c; color: #8e9a92; }
@@ -783,20 +812,22 @@ details.st-block { padding: 0; }
   }
 
   @keyframes st-route-wipe {
-    0% { transform: translateX(-120%) skewX(-18deg); opacity: .05; }
-    18% { opacity: .42; }
-    100% { transform: translateX(130%) skewX(-18deg); opacity: 0; }
+    0% { transform: translateX(-120%) skewX(-18deg); opacity: .08; }
+    16% { opacity: .75; }
+    70% { opacity: .45; }
+    100% { transform: translateX(135%) skewX(-18deg); opacity: 0; }
   }
 
   @keyframes st-route-grid {
-    0% { background-position: 0 0, 0 0; opacity: .8; }
-    100% { background-position: 36px 0, 0 36px; opacity: .2; }
+    0% { background-position: 0 0, 0 0; opacity: 1; }
+    62% { opacity: .55; }
+    100% { background-position: 54px 0, 0 54px; opacity: 0; }
   }
 
   @keyframes st-rail-run {
     0% { transform: translate3d(-16%, -14px, 0) scaleX(.24); opacity: 0; }
-    18% { opacity: .55; }
-    76% { opacity: .28; }
+    16% { opacity: .85; }
+    72% { opacity: .45; }
     100% { transform: translate3d(116%, 14px, 0) scaleX(1); opacity: 0; }
   }
 
@@ -890,8 +921,47 @@ details.st-block { padding: 0; }
 
   body { animation: st-page-breathe .5s var(--st-motion-spring) both; }
 
+  /* --- La marca entra palabra a palabra, con tinta en movimiento ------ */
+
+  @keyframes st-brand-word-in {
+    0% { opacity: 0; transform: translateY(10px); filter: blur(6px); }
+    60% { opacity: 1; filter: blur(0); }
+    100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+
+  @keyframes st-brand-ink {
+    0%, 100% { background-position: 0% 0; }
+    50% { background-position: 100% 0; }
+  }
+
+  @keyframes st-brand-draw {
+    0% { transform: scaleX(0); }
+    100% { transform: scaleX(1); }
+  }
+
+  @keyframes st-brand-glint {
+    0%, 88%, 100% { text-shadow: 0 0 0 rgba(121, 194, 164, 0); }
+    93% { text-shadow: 0 0 22px rgba(121, 194, 164, .45); }
+  }
+
+  .st-brand-word {
+    animation:
+      st-brand-word-in .7s var(--st-motion-spring) both,
+      st-brand-ink 9s ease-in-out 1.2s infinite,
+      st-brand-glint 9s ease-in-out 1.2s infinite;
+  }
+  .st-brand-word:nth-child(1) { animation-delay: .05s, 1.2s, 1.2s; }
+  .st-brand-word:nth-child(2) { animation-delay: .17s, 1.35s, 1.35s; }
+  .st-brand-word:nth-child(3) { animation-delay: .29s, 1.5s, 1.5s; }
+  .st-brand-underline { animation: st-brand-draw .9s var(--st-motion-spring) .55s both; }
+  .st-brand-mark { animation: st-brand-word-in .8s var(--st-motion-spring) both; }
+  .st-brand-splash .st-brand-word:nth-child(1) { animation-delay: .1s, 1.4s, 1.4s; }
+  .st-brand-splash .st-brand-word:nth-child(2) { animation-delay: .28s, 1.6s, 1.6s; }
+  .st-brand-splash .st-brand-word:nth-child(3) { animation-delay: .46s, 1.8s, 1.8s; }
+  .st-brand-splash .st-brand-underline { animation-delay: .8s; }
+
   .st-route-canvas {
-    animation: st-route-enter .72s var(--st-motion-spring) both;
+    animation: st-route-enter 1.05s var(--st-motion-spring) both;
   }
   .st-route-canvas::before {
     content: '';
@@ -900,11 +970,11 @@ details.st-block { padding: 0; }
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(90deg, rgba(23,107,77,.07) 1px, transparent 1px),
-      linear-gradient(180deg, rgba(23,107,77,.045) 1px, transparent 1px);
+      linear-gradient(90deg, rgba(23,107,77,.13) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(23,107,77,.09) 1px, transparent 1px);
     background-size: 36px 36px;
     mask-image: linear-gradient(90deg, transparent, #000 16%, #000 72%, transparent);
-    animation: st-route-grid 1.8s ease-out both;
+    animation: st-route-grid 2.6s ease-out both;
   }
   .st-route-canvas::after {
     content: '';
@@ -913,10 +983,10 @@ details.st-block { padding: 0; }
     top: 0;
     bottom: 0;
     left: 0;
-    width: 42%;
+    width: 54%;
     pointer-events: none;
-    background: linear-gradient(90deg, transparent, rgba(121,194,164,.26), transparent);
-    animation: st-route-wipe .92s ease-out both;
+    background: linear-gradient(90deg, transparent, rgba(121,194,164,.42), transparent);
+    animation: st-route-wipe 1.65s cubic-bezier(.3,.1,.2,1) both;
   }
   .st-motion-rail {
     display: block;
@@ -924,14 +994,15 @@ details.st-block { padding: 0; }
     z-index: -1;
     left: 0;
     width: 46%;
-    height: 1px;
+    height: 2px;
+    border-radius: 2px;
     background: linear-gradient(90deg, transparent, var(--st-accent), transparent);
     opacity: 0;
     pointer-events: none;
     transform-origin: left;
   }
-  .st-motion-rail.rail-a { top: 78px; animation: st-rail-run 1s .08s ease-out both; }
-  .st-motion-rail.rail-b { top: 154px; animation: st-rail-run 1.15s .22s ease-out both reverse; }
+  .st-motion-rail.rail-a { top: 78px; animation: st-rail-run 1.55s .1s ease-out both; }
+  .st-motion-rail.rail-b { top: 154px; animation: st-rail-run 1.8s .3s ease-out both reverse; }
 
   .st-reveal {
     opacity: 0;

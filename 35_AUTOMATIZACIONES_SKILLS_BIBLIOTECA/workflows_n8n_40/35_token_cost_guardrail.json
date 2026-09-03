@@ -1,66 +1,377 @@
 {
-  "name": "35 Token Cost Guardrail",
+  "name": "35 · Guardarraíl de coste de tokens",
   "nodes": [
     {
       "parameters": {
-        "path": "35-token-cost-guardrail",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 35 · Guardarraíl de coste\n\nTus apps envían a este webhook cada uso de IA (app, modelo, tokens_entrada, tokens_salida). El flujo calcula el coste, lo acumula en la pestaña \"Consumo\" y, si el gasto del día supera el umbral (10 USD por defecto, edítalo en \"Sumar gasto del día\"), avisa por Gmail.\n\nActualiza la tabla de precios del nodo \"Calcular coste\": COMPROBAR EN LA WEB OFICIAL.",
+        "width": 500,
+        "height": 280
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_150",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        40
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"35 Token Cost Guardrail\",\n    category: \"ai_ops\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-35-uso-ia",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_151",
+      "name": "Registro de uso de IA",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['app', 'modelo', 'tokens_entrada', 'tokens_salida'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst salida = {\n  app: String(b.app || '').trim(),\n  modelo: String(b.modelo || '').trim(),\n  tokens_entrada: Number(b.tokens_entrada || 0),\n  tokens_salida: Number(b.tokens_salida || 0),\n  faltan: faltan,\n  valido: faltan.length === 0 && Number.isFinite(Number(b.tokens_entrada)) && Number.isFinite(Number(b.tokens_salida))\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_152",
+      "name": "Validar registro",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_019",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_153",
+      "name": "¿Registro completo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Precios en USD por millón de tokens. COMPRUEBA los precios vigentes\n// en las webs oficiales antes de fiarte de estos números.\nconst PRECIOS = {\n  'claude-opus-5': { entrada: 5, salida: 25 },\n  'claude-haiku-4-5': { entrada: 1, salida: 5 }\n};\nconst precios = PRECIOS[$json.modelo] || { entrada: 5, salida: 25 };\nconst coste =\n  ($json.tokens_entrada / 1000000) * precios.entrada +\n  ($json.tokens_salida / 1000000) * precios.salida;\nreturn {\n  json: {\n    app: $json.app,\n    modelo: $json.modelo,\n    tokens_entrada: $json.tokens_entrada,\n    tokens_salida: $json.tokens_salida,\n    coste_usd: Number(coste.toFixed(6)),\n    fecha: new Date().toISOString().slice(0, 10),\n    registrado_en: new Date().toISOString()\n  }\n};"
+      },
+      "id": "nodo_154",
+      "name": "Calcular coste",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Consumo"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_155",
+      "name": "Anotar consumo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Consumo"
+        },
+        "options": {}
+      },
+      "id": "nodo_156",
+      "name": "Leer consumo del día",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const hoy = new Date().toISOString().slice(0, 10);\nconst UMBRAL_USD_DIA = 10;\nlet gasto = 0;\nlet eventos = 0;\nfor (const item of $input.all()) {\n  const fila = item.json || {};\n  if (String(fila.fecha || '').slice(0, 10) === hoy) {\n    gasto = gasto + Number(fila.coste_usd || 0);\n    eventos = eventos + 1;\n  }\n}\nreturn [ {\n  json: {\n    fecha: hoy,\n    eventos_hoy: eventos,\n    gasto_hoy_usd: Number(gasto.toFixed(4)),\n    umbral_usd: UMBRAL_USD_DIA,\n    supera_umbral: gasto > UMBRAL_USD_DIA\n  }\n} ];"
+      },
+      "id": "nodo_157",
+      "name": "Sumar gasto del día",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_020",
+              "leftValue": "={{ $json.supera_umbral }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_158",
+      "name": "¿Supera el umbral?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "REEMPLAZAR_responsable@ejemplo.com",
+        "subject": "=[Coste IA] {{ $json.gasto_hoy_usd }} USD hoy: umbral superado",
+        "emailType": "text",
+        "message": "=El gasto en IA de hoy ha superado el umbral.\n\nGasto acumulado hoy: {{ $json.gasto_hoy_usd }} USD\nUmbral configurado: {{ $json.umbral_usd }} USD\nEventos registrados hoy: {{ $json.eventos_hoy }}\n\nRevisa la pestaña Consumo de la hoja para ver qué app y modelo están gastando más, y valora bajar de modelo o cachear prompts.",
+        "options": {}
+      },
+      "id": "nodo_159",
+      "name": "Avisar de sobrecoste",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1760,
+        140
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, gasto_hoy_usd: $(\"Sumar gasto del día\").first().json.gasto_hoy_usd, supera_umbral: $(\"Sumar gasto del día\").first().json.supera_umbral } }}",
+        "options": {}
+      },
+      "id": "nodo_160",
+      "name": "Responder estado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        240
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_161",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Registro de uso de IA": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar registro",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar registro": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Registro completo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Registro completo?": {
+      "main": [
+        [
+          {
+            "node": "Calcular coste",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular coste": {
+      "main": [
+        [
+          {
+            "node": "Anotar consumo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anotar consumo": {
+      "main": [
+        [
+          {
+            "node": "Leer consumo del día",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer consumo del día": {
+      "main": [
+        [
+          {
+            "node": "Sumar gasto del día",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sumar gasto del día": {
+      "main": [
+        [
+          {
+            "node": "¿Supera el umbral?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Supera el umbral?": {
+      "main": [
+        [
+          {
+            "node": "Avisar de sobrecoste",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar de sobrecoste": {
+      "main": [
+        [
+          {
+            "node": "Responder estado",
             "type": "main",
             "index": 0
           }
@@ -71,13 +382,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "ai_ops",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Registro de uso de IA": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +391,10 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "app": "chatbot-soporte",
+          "modelo": "claude-opus-5",
+          "tokens_entrada": 1200,
+          "tokens_salida": 350
         }
       }
     ]

@@ -1,353 +1,87 @@
-# 17 Ecommerce Product Enrichment
+# 17 · Enriquecimiento de fichas de producto ecommerce
 
-## Objetivo
+## Qué hace
 
-Automatizacion n8n para el area **ecommerce**. Esta plantilla es didactica: debe importarse, probarse con payload ficticio y adaptarse antes de produccion.
+Recibe un producto por webhook (SKU, nombre, características en bruto) y la IA redacta la ficha completa: título SEO, descripción de 120-180 palabras, 5 bullets, meta descripción y palabras clave — usando SOLO las características que le das, sin inventar datos técnicos. La ficha queda en la pestaña "Catalogo enriquecido" y Slack avisa para que alguien la revise antes de subirla a la tienda. Nada se publica automáticamente.
 
-## Entrada esperada
+## Antes de empezar
 
-JSON con datos del proceso: usuario, email si aplica, descripcion, prioridad, fuente y consentimiento cuando haya datos personales.
+- Una cuenta de **n8n**: n8n Cloud (de pago, con prueba gratuita) o **self-hosted gratis** (Docker en tu servidor).
+- **API de Anthropic**: de pago por tokens (céntimos por ejecución en este flujo). También puedes apuntar el nodo HTTP a la API de OpenAI si lo prefieres.
+- **Google Sheets/Gmail/Calendar**: gratis con tu cuenta de Google.
+- **Slack**: gratis (un bot en tu workspace, plan free suficiente).
 
-## Salida esperada
+## Credenciales paso a paso
 
-JSON enriquecido con estado, categoria, decision, evidencia y siguiente accion.
+### Anthropic API (Header Auth) — de pago por tokens
+1. Entra en [console.anthropic.com](https://console.anthropic.com) y crea una cuenta (pide añadir un método de pago o crédito inicial).
+2. Menú **API Keys** → **Create Key** → copia la clave (empieza por `sk-ant-`). Solo se muestra una vez.
+3. En n8n: **Credentials > New > Header Auth**.
+   - **Name**: `x-api-key`
+   - **Value**: tu clave `sk-ant-...`
+4. Guarda la credencial con el nombre **Anthropic API** y selecciónala en el nodo HTTP que llama a la IA.
 
-## Caso feliz
+### Google Sheets (OAuth2) — gratis con cuenta de Google
+1. En n8n: **Credentials > New > Google Sheets OAuth2 API**.
+2. En n8n Cloud basta con pulsar **Sign in with Google** y autorizar tu cuenta.
+3. En n8n self-hosted, antes crea un proyecto en [console.cloud.google.com](https://console.cloud.google.com), activa la **Google Sheets API**, crea un **OAuth Client ID** (tipo Web) y pega la Redirect URI que te muestra n8n; después copia Client ID y Client Secret en la credencial y haz el Sign in.
+4. Crea una hoja de cálculo nueva, copia el ID que hay en su URL (entre `/d/` y `/edit`) y pégalo en los nodos donde pone `REEMPLAZAR_ID_DOCUMENTO`.
 
-Payload completo, credenciales configuradas y salida validada.
+### Slack Bot — gratis (plan free de Slack vale)
+1. Entra en [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → *From scratch* → elige tu workspace.
+2. En **OAuth & Permissions > Scopes > Bot Token Scopes** añade `chat:write` (y `channels:read` para elegir canal por lista).
+3. **Install to Workspace** → copia el **Bot User OAuth Token** (`xoxb-...`).
+4. En n8n: **Credentials > New > Slack API** → pega el token → guarda como **Slack Bot**.
+5. En Slack, invita al bot al canal: `/invite @tu-bot`. El ID del canal sale al pulsar el nombre del canal (abajo del todo) y va donde pone `REEMPLAZAR_ID_CANAL`.
 
-## Caso roto
+## Cómo importar
 
-Campo obligatorio ausente, credencial falsa, API rate limit, dato sensible sin consentimiento o accion que requiere aprobacion humana.
+1. En n8n ve a **Workflows > ⋯ > Import from File** (o *Import from Clipboard* y pega el contenido del JSON).
+2. Al abrirse el lienzo verás nodos con un triángulo de aviso: son los que salen "en gris" porque les falta credencial. Abre cada uno y selecciona la credencial que creaste en el paso anterior.
+3. Sustituye todos los valores `REEMPLAZAR...` (ID de la hoja, canal, chat, email...).
+   - Pestañas: **Catalogo enriquecido** y **Productos incompletos**.
+4. Ejecuta primero con **Execute Workflow** (modo test) antes de pulsar **Active**.
 
-## Reparacion
+## Nodo a nodo
 
-Validar schema, anadir nodo de aprobacion humana, separar secrets, registrar logs y documentar rollback.
-
-## Rubrica
-
-- 1: importa pero no se entiende.
-- 2: funciona con payload feliz.
-- 3: maneja caso roto.
-- 4: incluye logs, permisos y defensa.
-
-<!-- IMPLEMENTACION_DETALLADA_2026_08_18 -->
-
-# Implementacion detallada - 17 Ecommerce Product Enrichment
-
-## Para que sirve
-
-Esta automatizacion sirve para convertir un proceso repetible de **proceso** en un flujo observable. No esta pensada como magia ni como sustituto de criterio humano: su funcion es recibir una entrada, validarla, aplicar reglas o asistencia IA cuando tenga sentido, producir una salida estructurada y dejar evidencia de lo ocurrido.
-
-En una empresa o proyecto real, este tipo de workflow ayuda a reducir trabajo manual, estandarizar decisiones, evitar olvidos y detectar casos que requieren revision humana. La clave es no automatizar todo desde el primer dia. Primero se automatiza la parte estable: recibir datos, comprobar formato, clasificar, registrar y responder. Despues se agregan integraciones externas, CRM, emails, Slack, bases de datos o modelos LLM.
-
-## Cuando usarla
-
-Usala cuando el proceso cumpla estas condiciones:
-
-- Ocurre varias veces por semana.
-- Tiene entradas reconocibles.
-- Produce una salida que puede definirse.
-- Tiene errores frecuentes que se pueden detectar.
-- Se puede probar con datos ficticios.
-- No requiere una decision sensible sin revision humana.
-
-No la uses si el proceso cambia cada vez, si depende de informacion privada sin consentimiento, si no hay criterio de exito o si una ejecucion incorrecta puede causar dano financiero, legal o reputacional sin aprobacion.
-
-## Requisitos
-
-- n8n Cloud o n8n self-hosted.
-- Conocer la diferencia entre trigger, node, input, output y execution.
-- Dataset o payload ficticio.
-- Variables de entorno o credenciales separadas.
-- Una cuenta de destino si se conecta con CRM, email, Slack, GitHub u otra API.
-- Checklist de privacidad si aparecen datos personales.
-
-## Implementacion paso a paso en n8n
-
-1. Importar el JSON del workflow desde esta carpeta.
-2. Abrir el workflow en n8n y revisar todos los nodes antes de activarlo.
-3. Configurar credenciales ficticias o de prueba.
-4. Revisar el trigger: webhook, schedule, manual trigger o evento externo.
-5. Abrir cada node y comprobar que entrada espera.
-6. Ejecutar con payload correcto.
-7. Revisar input/output node por node.
-8. Ejecutar con payload roto.
-9. Anadir validaciones antes de cualquier accion externa.
-10. Anadir aprobacion humana si el workflow envia emails, modifica CRM, publica contenido, crea tickets o toca datos sensibles.
-11. Documentar rollback.
-12. Activar solo despues de probar preview/caso ficticio.
-
-## Variables y credenciales
-
-Crear `.env.example` o nota de credenciales con nombres, no valores reales:
-
-```bash
-N8N_WEBHOOK_URL=replace_me
-CRM_API_KEY=replace_me_server_only
-SLACK_BOT_TOKEN=replace_me_server_only
-OPENAI_API_KEY=replace_me_server_only
-DATABASE_URL=replace_me_server_only
-```
-
-Nunca guardar claves reales dentro del JSON exportado. Si el workflow se comparte con alumnos, limpiar credenciales y usar placeholders.
-
-## Caso feliz
-
-El caso feliz debe usar un payload completo. Por ejemplo:
-
-```json
-{"email":"demo@example.com","need":"automatizar seguimiento","source":"formulario","consent":true}
-```
-
-Resultado esperado:
-
-- El workflow se ejecuta sin errores.
-- Cada node recibe y devuelve datos comprensibles.
-- La salida incluye estado, categoria y siguiente accion.
-- No se ejecuta ninguna accion sensible sin control.
-- Queda evidencia en executions/logs.
-
-## Caso ambiguo
-
-Payload ambiguo:
-
-```json
-{"message":"quiero mejorar ventas"}
-```
-
-Resultado profesional esperado: no inventar. El workflow debe marcar `needs_review`, pedir mas datos o enviar a revision humana. Si usa LLM, el prompt debe indicar que no rellene campos desconocidos.
-
-## Caso roto
-
-Ejemplos de ruptura controlada:
-
-- Falta `email`.
-- `consent` es `false`.
-- La API key es invalida.
-- El CRM devuelve `401` o `403`.
-- El proveedor devuelve `429`.
-- El payload cambia de estructura.
-- La tool intenta ejecutar una accion no permitida.
-
-## Reparacion
-
-Documentar:
-
-```markdown
-Sintoma:
-Causa probable:
-Evidencia:
-Cambio realizado:
-Prevencion:
-Rollback:
-```
-
-La reparacion minima suele ser anadir un node de validacion, normalizar campos, capturar errores, limitar retries, pedir aprobacion humana o separar mejor credenciales.
-
-## Produccion
-
-Antes de activar en produccion:
-
-- Probar minimo 10 payloads.
-- Revisar logs.
-- Definir responsable humano.
-- Configurar alertas.
-- Medir coste si usa LLM.
-- Documentar como desactivar el workflow.
-- Guardar version exportada.
-- Escribir fecha de revision.
-
-## Defensa de 3 minutos
-
-El alumno debe explicar: que problema resuelve, que datos entran, que nodes se ejecutan, que salida produce, que fallo provoco, como lo reparo, que permisos usa y que riesgo queda.
-
-<!-- IMPLEMENTACION_AMPLIADA_PROCESO_2026_08_18 -->
-
-## Implementacion operativa ampliada
-
-### 1. Problema que resuelve
-
-**17 Ecommerce Product Enrichment** resuelve un problema recurrente: convertir una tarea manual, ambigua o repetitiva en un proceso que pueda ejecutarse con el mismo criterio cada vez. En formacion, esta pieza sirve para que el alumno deje de pensar en "usar IA" como una conversacion suelta y empiece a pensar en sistemas: entrada, validacion, transformacion, salida, evidencia, revision y mejora.
-
-En un contexto real, esta automatizacion puede ahorrar tiempo, reducir errores, acelerar respuesta a clientes o crear una base de conocimiento operativa. Pero su valor depende de que se implemente con limites. Si se conecta a datos reales sin consentimiento, si ejecuta acciones externas sin aprobacion o si no deja logs, la automatizacion no es profesional aunque funcione en demo.
-
-### 2. Donde encaja en un proceso
-
-El flujo recomendado es:
-
-```text
-Entrada -> Validacion -> Normalizacion -> Decision -> Accion -> Registro -> Revision humana si aplica
-```
-
-La entrada puede ser un webhook, CSV, formulario, email, ticket, issue, transcripcion, factura o documento. La validacion comprueba que no falten campos. La normalizacion convierte nombres, fechas, importes o textos a formato estable. La decision puede ser una regla, un LLM o una combinacion. La accion puede ser responder, crear tarea, actualizar CRM, enviar alerta o guardar en base de datos. El registro permite auditar. La revision humana protege acciones sensibles.
-
-### 3. Preparacion antes de implementar
-
-Antes de tocar herramientas, crear una ficha:
-
-```markdown
-Objetivo:
-Usuario:
-Entrada:
-Salida esperada:
-Campos obligatorios:
-Datos sensibles:
-Herramientas:
-Credenciales:
-Caso feliz:
-Caso ambiguo:
-Caso roto:
-Rollback:
-```
-
-Esta ficha evita improvisar. Tambien ayuda a decidir si conviene hacerlo con n8n, script, API, GitHub Actions, backend, skill o proceso manual. La mejor herramienta es la minima que permite repetir, verificar y explicar.
-
-### 4. Implementacion local
-
-Si esta pieza es codigo, implementarla primero localmente con datos ficticios. No conectar APIs reales hasta comprobar formato.
-
-Pasos:
-
-1. Crear carpeta de prueba.
-2. Copiar el archivo o plantilla.
-3. Crear `.env.example`.
-4. Crear un payload ficticio correcto.
-5. Crear un payload roto.
-6. Ejecutar la pieza.
-7. Guardar output.
-8. Anadir manejo de errores.
-9. Documentar que variables necesita.
-10. Preparar una version para clase.
-
-Ejemplo de payload correcto:
-
-```json
-{"id":"demo-001","email":"demo@example.com","need":"automatizar seguimiento","consent":true}
-```
-
-Ejemplo de payload roto:
-
-```json
-{"need":"automatizar seguimiento"}
-```
-
-### 5. Integracion con n8n
-
-Para llevarlo a n8n:
-
-1. Crear Webhook node.
-2. Pegar el payload correcto.
-3. Anadir Code node o HTTP Request node.
-4. Validar campos obligatorios.
-5. Si falta algo, devolver `needs_review`.
-6. Si esta completo, continuar a la accion.
-7. Antes de enviar emails o modificar sistemas, anadir aprobacion humana.
-8. Responder con JSON claro.
-
-Salida recomendada:
-
-```json
-{
-  "status":"processed",
-  "category":"demo",
-  "next_action":"review_or_send",
-  "requires_human_approval":true,
-  "evidence":"execution_id_or_log_url"
-}
-```
-
-### 6. Integracion con API o backend
-
-Si se convierte en endpoint:
-
-- Usar `POST` para entradas que modifican estado.
-- Validar JSON antes de procesar.
-- No aceptar campos desconocidos sin revisar.
-- Registrar `request_id`.
-- Devolver errores legibles.
-- Separar secretos del frontend.
-
-Ejemplo de respuesta de error:
-
-```json
-{"ok":false,"error":"missing_required_field","field":"email","action":"send_to_review"}
-```
-
-### 7. Seguridad y permisos
-
-Checklist minimo:
-
-- No usar datos reales en clase.
-- No guardar API keys en archivos.
-- No publicar `.env`.
-- Usar scopes minimos.
-- Registrar acciones.
-- Anadir aprobacion humana para side effects.
-- Preparar rollback.
-- Rotar claves si se filtran.
-
-Side effects son acciones que cambian el mundo: enviar email, actualizar CRM, cobrar, borrar, publicar, crear tickets, modificar base de datos o contactar usuarios. Esas acciones requieren mas control que una simple clasificacion.
-
-### 8. Pruebas necesarias
-
-Probar minimo:
-
-| Caso | Entrada | Resultado esperado |
+| Nodo | Qué hace | Qué tocar |
 |---|---|---|
-| Feliz | payload completo | `processed` |
-| Ambiguo | datos incompletos | `needs_review` |
-| Roto | formato incorrecto | error controlado |
-| Seguridad | dato sensible | redaccion o bloqueo |
-| Coste | batch grande | limite o aviso |
+| Webhook producto | Recibe el POST en `wf-17-producto-nuevo` | Nada |
+| Normalizar producto | Extrae sku, nombre, características (máx. 4.000 caracteres) y precio | Nada |
+| Responder recepción | Confirma la recepción | Nada |
+| ¿Producto completo? | Exige sku y nombre | Añade características como obligatorias si quieres fichas ricas |
+| Enriquecer ficha con IA | claude-opus-5 devuelve la ficha en JSON | El prompt: tono de tu marca, límites de longitud |
+| Interpretar ficha | Parsea el JSON | Nada |
+| Registrar ficha | Fila en Catalogo enriquecido, estado "pendiente de revisión" | El ID del documento |
+| Avisar para revisar | Aviso en Slack recordando comprobar datos inventados | REEMPLAZAR_ID_CANAL |
+| Registrar incompleto | Productos sin sku o nombre | Nada |
 
-Si usa LLM, anadir evals:
+## Pruébalo
 
-```json
-{"input":"lead sin email","expected":"pedir email","fail_if":"inventa email"}
-```
+1. **Normal**
+   ```bash
+   curl -X POST https://TU-N8N/webhook-test/wf-17-producto-nuevo -H "Content-Type: application/json" \
+     -d '{"sku":"BOT-500","nombre":"Botella termica 500ml","caracteristicas":"acero inoxidable, 24h frio 12h calor, sin BPA, 3 colores","precio":"19,90"}'
+   ```
+   Debes ver: fila con la ficha completa y aviso en Slack.
+2. **Incompleto**
+   Sin `sku`. Debes ver: fila en **Productos incompletos**.
+3. **Duplicado**
+   El mismo SKU dos veces → dos fichas alternativas. Filtra por sku y elige; borra la descartada para no subir la equivocada.
+4. **Extremo**
+   `caracteristicas: "buena"`. Debes ver: ficha pobre pero SIN datos técnicos inventados (el prompt lo prohíbe) — la calidad de entrada limita la de salida.
 
-### 9. Produccion
+## Errores típicos
 
-Antes de produccion:
+- **La IA inventa materiales o medidas** → refuerza el prompt ("si no está en las características, no lo digas") y revisa SIEMPRE antes de publicar: es el riesgo nº 1 en ecommerce.
+- **Título SEO de más de 60 caracteres** → recórtalo al revisar o pide en el prompt contarlos.
+- **Caracteres raros en la hoja** → características copiadas de un PDF con símbolos: limpia el texto de entrada.
+- **Slack no avisa** → bot fuera del canal.
 
-- Revisar logs.
-- Medir coste.
-- Probar 10 casos.
-- Documentar propietario.
-- Preparar alerta.
-- Exportar version.
-- Definir rollback.
-- Crear README de entrega.
+## Coste estimado
 
-Una automatizacion profesional debe poder apagarse sin romper el negocio. Si nadie sabe desactivarla, no esta lista.
+Por 100 productos: ~700 tokens de entrada + 500 de salida ≈ **~1,60 USD** con claude-opus-5. Sheets/Slack: 0 €. Precios orientativos a fecha de redacción: **COMPROBAR EN LA WEB OFICIAL** antes de presupuestar.
 
-### 10. Como explicarlo al alumno
+## Aviso legal
 
-El alumno debe poder responder:
-
-- Que automatiza.
-- Que no automatiza.
-- Que datos necesita.
-- Que herramienta usa.
-- Que riesgo evita.
-- Que fallo provoco.
-- Que evidencia guardo.
-- Que haria en version 2.
-
-La defensa no debe sonar teorica. Debe sonar como alguien que ha ejecutado, roto y reparado el proceso.
-
-### 11. Variantes utiles
-
-Variantes para ampliar:
-
-- Version manual en checklist.
-- Version n8n visual.
-- Version codigo local.
-- Version API.
-- Version con base de datos.
-- Version con LLM.
-- Version con aprobacion humana.
-- Version con observabilidad.
-
-Cada variante debe mantener el mismo criterio: entrada clara, salida verificable y fallo controlado.
+Las descripciones de producto son publicidad: afirmaciones falsas (materiales, certificaciones, "el mejor del mercado") pueden ser publicidad engañosa. La revisión humana previa a publicar no es opcional. Sin datos personales en este flujo.

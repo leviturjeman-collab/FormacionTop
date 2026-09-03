@@ -268,7 +268,7 @@ export const TOOLS = [
  * Devuelve los ids de herramienta de las que la lección va DE VERDAD.
  *
  * Antes bastaba una mención en cualquier parte del texto, y n8n acababa
- * "presente" en 389 de 449 lecciones: la página de la herramienta era un
+ * "presente" en casi todas las lecciones: la página de la herramienta era un
  * listado inútil. Ahora una herramienta cuenta solo si se nombra en el título
  * o si se repite lo suficiente como para ser protagonista.
  */

@@ -1,0 +1,312 @@
+{
+  "id": "agente-triaje-de-correo",
+  "order": 10,
+  "title": "Agente de triaje de correo",
+  "kicker": "Automatización",
+  "platform": "n8n",
+  "platformLabel": "n8n",
+  "level": "intermedio",
+  "what": "Un flujo de n8n que vigila tu buzón de Gmail y, con cada correo nuevo, hace el trabajo aburrido del triaje: lo clasifica con IA por categoría y urgencia, redacta un borrador de respuesta y te avisa por Telegram con el resumen. El borrador se queda en tu carpeta de borradores de Gmail esperando tu revisión: nada sale hacia el remitente sin que tú lo leas, lo ajustes y pulses enviar. Es el circuito de la bandeja de entrada con freno humano incorporado.",
+  "forWho": "Para quien atiende un buzón compartido (info@, soporte@, pedidos@) y pierde la primera hora del día leyendo y decidiendo. Compensa a partir de 15-20 correos diarios; por debajo, el triaje manual sigue siendo más rápido que mantener el flujo.",
+  "tools": ["n8n", "gmail", "claude", "telegram"],
+  "capabilities": [
+    "Detecta correos nuevos en Gmail cada minuto sin que tengas el correo abierto",
+    "Clasifica cada correo por categoría (consulta, pedido, incidencia, factura, spam...) y urgencia con claude-haiku-4-5",
+    "Redacta un borrador de respuesta en tu tono y lo deja en Borradores de Gmail, dirigido al remitente",
+    "Te avisa por Telegram con remitente, asunto, categoría, urgencia y resumen de dos líneas",
+    "Si la IA devuelve algo raro, marca el correo como «revisar» en vez de romperse"
+  ],
+  "limits": [
+    "No envía ningún correo: crea borradores. El botón de enviar es tuyo y debe seguir siéndolo",
+    "No borra, archiva ni etiqueta correos: no toca tu buzón más allá de crear el borrador",
+    "No responde bien a hilos largos ni adjuntos complejos: clasifica por el texto del mensaje; los casos gordos, a mano",
+    "No decide sobre reclamaciones o temas legales: su borrador en esos casos es un simple acuse de recibo para que lo trates tú"
+  ],
+  "flow": {
+    "name": "Agente de triaje de correo (borradores con aprobación)",
+    "nodes": [
+      {
+        "name": "Nota del flujo",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-380, -200],
+        "parameters": {
+          "content": "## Triaje de correo con freno humano\nGmail Trigger → preparar → Claude clasifica y redacta → borrador en Gmail + aviso Telegram.\n\nAntes de activar: 1) credencial de Gmail (OAuth2), 2) credencial httpHeaderAuth con tu clave de Anthropic (cabecera x-api-key), 3) credencial del bot de Telegram y tu chat_id.\n\nEste flujo NUNCA envía correos: solo crea borradores.",
+          "height": 300,
+          "width": 340
+        }
+      },
+      {
+        "name": "Correo entrante",
+        "type": "n8n-nodes-base.gmailTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0],
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "simple": true,
+          "filters": {}
+        },
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REEMPLAZAR",
+            "name": "Gmail (buzon a triar)"
+          }
+        }
+      },
+      {
+        "name": "Preparar petición IA",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [220, 0],
+        "parameters": {
+          "jsCode": "// Normaliza el correo y construye la petición para la API de Anthropic.\nconst remitente = $json.From || $json.from || 'desconocido';\nconst asunto = $json.Subject || $json.subject || '(sin asunto)';\nconst cuerpo = ($json.snippet || $json.text || '').slice(0, 2000);\n\nconst sistema = 'Eres el asistente de triaje de un buzon profesional en espanol. ' +\n  'Devuelve SOLO un JSON valido con estas claves: ' +\n  'categoria (consulta | pedido | incidencia | factura | comercial | spam | revisar), ' +\n  'urgencia (alta | media | baja), ' +\n  'resumen (maximo 2 frases), ' +\n  'respuesta (borrador de respuesta cordial y breve en espanol, tuteo, listo para revisar; ' +\n  'si el correo es una reclamacion o un tema legal, la respuesta es solo un acuse de recibo). ' +\n  'Nada de texto fuera del JSON.';\n\nconst payload = {\n  model: 'claude-haiku-4-5',\n  max_tokens: 700,\n  system: sistema,\n  messages: [ { role: 'user', content: 'Remitente: ' + remitente + '\\nAsunto: ' + asunto + '\\nMensaje:\\n' + cuerpo } ]\n};\n\nreturn [ { json: { payload: payload, remitente: remitente, asunto: asunto } } ];"
+        }
+      },
+      {
+        "name": "Clasificar con Claude",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [440, 0],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.payload) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "REEMPLAZAR",
+            "name": "Anthropic (cabecera x-api-key)"
+          }
+        }
+      },
+      {
+        "name": "Interpretar respuesta",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [660, 0],
+        "parameters": {
+          "jsCode": "// Extrae el JSON que devuelve Claude y lo une a los datos del correo.\nconst origen = $('Preparar petición IA').first().json;\nconst bruto = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : '';\nconst limpio = bruto.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet datos;\ntry {\n  datos = JSON.parse(limpio);\n} catch (e) {\n  // Si la IA no devolvio JSON valido, el correo se marca para revision manual.\n  datos = { categoria: 'revisar', urgencia: 'media', resumen: bruto.slice(0, 300), respuesta: '' };\n}\n\nreturn [ { json: {\n  remitente: origen.remitente,\n  asunto: origen.asunto,\n  categoria: datos.categoria || 'revisar',\n  urgencia: datos.urgencia || 'media',\n  resumen: datos.resumen || '(sin resumen)',\n  respuesta: datos.respuesta || 'Gracias por tu mensaje. Lo hemos recibido y te respondemos en breve.'\n} } ];"
+        }
+      },
+      {
+        "name": "Crear borrador de respuesta",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [880, 0],
+        "parameters": {
+          "resource": "draft",
+          "subject": "=Re: {{ $json.asunto }}",
+          "message": "={{ $json.respuesta }}",
+          "options": {
+            "sendTo": "={{ $json.remitente }}"
+          }
+        },
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REEMPLAZAR",
+            "name": "Gmail (buzon a triar)"
+          }
+        }
+      },
+      {
+        "name": "Avisar por Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [1100, 0],
+        "parameters": {
+          "chatId": "REEMPLAZAR_CHAT_ID",
+          "text": "=📬 Correo triado\nDe: {{ $('Interpretar respuesta').item.json.remitente }}\nAsunto: {{ $('Interpretar respuesta').item.json.asunto }}\nCategoría: {{ $('Interpretar respuesta').item.json.categoria }} · Urgencia: {{ $('Interpretar respuesta').item.json.urgencia }}\nResumen: {{ $('Interpretar respuesta').item.json.resumen }}\n\nHay un borrador esperando tu revisión en Gmail. Nada se envía sin ti.",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "REEMPLAZAR",
+            "name": "Bot de Telegram (avisos)"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Correo entrante": {
+        "main": [
+          [
+            {
+              "node": "Preparar petición IA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Preparar petición IA": {
+        "main": [
+          [
+            {
+              "node": "Clasificar con Claude",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Clasificar con Claude": {
+        "main": [
+          [
+            {
+              "node": "Interpretar respuesta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Interpretar respuesta": {
+        "main": [
+          [
+            {
+              "node": "Crear borrador de respuesta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Crear borrador de respuesta": {
+        "main": [
+          [
+            {
+              "node": "Avisar por Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "prompt-del-nodo-ia.md",
+      "language": "markdown",
+      "content": "# Prompt del clasificador (nodo «Preparar petición IA»)\n\nEl prompt vive dentro del nodo de código, en la constante `sistema`. Esta es la versión base; ajústala a tu negocio editando ese nodo.\n\n```\nEres el asistente de triaje de un buzón profesional en español.\nDevuelve SOLO un JSON válido con estas claves:\n- categoria: consulta | pedido | incidencia | factura | comercial | spam | revisar\n- urgencia: alta | media | baja\n- resumen: máximo 2 frases\n- respuesta: borrador de respuesta cordial y breve en español, tuteo, listo para revisar;\n  si el correo es una reclamación o un tema legal, la respuesta es solo un acuse de recibo.\nNada de texto fuera del JSON.\n```\n\n## Cómo adaptarlo\n\n- **Tus categorías**: cambia la lista por las de tu negocio (presupuestos, citas, garantías...). Mantén siempre «revisar» como cajón de seguridad.\n- **Tu tono**: añade una frase tipo «firmamos como Equipo de [NOMBRE]» o «tratamos de usted».\n- **Tus reglas**: añade líneas como «si piden precio, la respuesta remite a la tarifa pública y no promete descuentos».\n- No le pidas que decida nada irreversible: clasifica y redacta, las decisiones son tuyas."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Importa el flujo en n8n",
+      "action": "En n8n: Workflows → Add workflow → menú ⋯ → Import from file, y pega el JSON del campo flow de esta página (botón de copiar).",
+      "expect": "El lienzo muestra 6 nodos conectados en cadena más una nota amarilla.",
+      "stuck": "Si aparece «could not find property», copia de nuevo: suele ser un JSON cortado a medias."
+    },
+    {
+      "title": "Conecta Gmail",
+      "action": "Abre los nodos «Correo entrante» y «Crear borrador de respuesta» y crea una credencial Gmail OAuth2: n8n te lleva a iniciar sesión con la cuenta del buzón y aceptar permisos.",
+      "expect": "Ambos nodos en verde, sin el aviso rojo de credencial.",
+      "stuck": "En n8n autoalojado necesitas crear antes un proyecto OAuth en Google Cloud (n8n te muestra la URL de callback exacta que pegar allí)."
+    },
+    {
+      "title": "Crea la credencial de Anthropic",
+      "action": "Abre «Clasificar con Claude» → Credentials → crea una Header Auth con Name: x-api-key y Value: tu clave sk-ant-... de console.anthropic.com.",
+      "expect": "El nodo queda con la credencial asignada. La clave vive en las credenciales de n8n, nunca dentro del nodo.",
+      "stuck": "Si al probar devuelve 401, la clave está mal copiada; si 400, no toques el jsonBody: debe quedar exactamente ={{ JSON.stringify($json.payload) }}."
+    },
+    {
+      "title": "Crea el bot de Telegram",
+      "action": "En Telegram, habla con @BotFather → /newbot → copia el token en una credencial Telegram de n8n. Escribe un mensaje a tu bot y consigue tu chat_id (por ejemplo con @userinfobot); pégalo en el campo chatId del nodo «Avisar por Telegram».",
+      "expect": "El nodo de Telegram con credencial y tu chat_id en lugar de REEMPLAZAR_CHAT_ID.",
+      "stuck": "Si el bot no te escribe, asegúrate de haberle enviado tú un mensaje primero: los bots no pueden iniciar conversación."
+    },
+    {
+      "title": "Prueba con un correo real",
+      "action": "Pulsa Test workflow, mándate un correo al buzón vigilado y espera la ejecución.",
+      "expect": "Ejecución en verde, un borrador nuevo en Gmail dirigido al remitente y el aviso en Telegram con categoría y resumen.",
+      "stuck": "Abre la ejecución y mira en qué nodo se paró: cada nodo enseña su entrada y su salida, ahí está siempre la pista."
+    },
+    {
+      "title": "Actívalo y acuerda la regla de uso",
+      "action": "Pon el interruptor Active. Regla del equipo desde hoy: los borradores se revisan y se envían a mano, y todo lo que caiga en «revisar» o urgencia alta se lee entero.",
+      "expect": "Los correos nuevos llegan clasificados y con borrador sin que abras n8n."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "Envía al buzón: «Hola, ¿qué horario tenéis el sábado? Gracias».",
+      "expect": "Categoría consulta, urgencia baja, borrador con el tono pactado en Borradores, y aviso en Telegram. Ningún correo enviado."
+    },
+    {
+      "name": "Urgencia real",
+      "input": "Envía: «URGENTE: la web de pedidos lleva caída toda la mañana y tenemos clientes esperando».",
+      "expect": "Categoría incidencia, urgencia alta, y el resumen del Telegram lo refleja."
+    },
+    {
+      "name": "Reclamación",
+      "input": "Envía un correo de queja pidiendo la devolución del dinero.",
+      "expect": "El borrador es solo un acuse de recibo, sin promesas de devolución: la decisión queda para el humano."
+    },
+    {
+      "name": "Respuesta rota de la IA",
+      "input": "Edita temporalmente el prompt del nodo de preparación para pedir «responde en verso» y ejecuta con un correo de prueba.",
+      "expect": "El flujo no se rompe: el correo sale como categoría «revisar» con borrador genérico. Deshaz el cambio después."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Gmail (OAuth2)",
+      "where": "Dentro de n8n, al abrir los nodos de Gmail → Create new credential",
+      "how": "Inicia sesión con la cuenta del buzón y acepta los permisos. En n8n autoalojado, antes crea el proyecto OAuth en console.cloud.google.com con la URL de callback que n8n te indica.",
+      "cost": "gratis"
+    },
+    {
+      "name": "API de Anthropic",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Crea la clave y guárdala en una credencial Header Auth de n8n (Name: x-api-key). Nunca la pegues en un nodo.",
+      "cost": "de pago por tokens; clasificar un correo con claude-haiku-4-5 cuesta décimas de céntimo"
+    },
+    {
+      "name": "Bot de Telegram",
+      "where": "Telegram → @BotFather → /newbot",
+      "how": "Copia el token en una credencial Telegram de n8n y tu chat_id en el nodo de aviso.",
+      "cost": "gratis"
+    }
+  ],
+  "risks": [
+    "Enviar por error en vez de guardar borrador si alguien «mejora» el flujo. Mitigación: el nodo de Gmail usa el recurso draft; cualquier cambio a envío directo debe pasar por acuerdo del equipo, no por una tarde de inspiración.",
+    "El contenido de los correos viaja a la API de Anthropic. Mitigación: no uses este flujo en buzones que reciben datos sensibles (salud, legal) sin revisar la política de datos de tu cuenta API.",
+    "Confianza ciega en la categoría: un «spam» mal puesto entierra un correo importante. Mitigación: el flujo no archiva ni borra nada; revisa la bandeja completa una vez al día las dos primeras semanas y ajusta el prompt con los fallos.",
+    "Bucle de correo si el buzón se responde a sí mismo. Mitigación: no actives el flujo en la misma cuenta desde la que envías los borradores a terceros masivamente; el borrador manual ya corta el bucle."
+  ],
+  "examples": [
+    {
+      "name": "Ajustar categorías",
+      "prompt": "Edita el nodo «Preparar petición IA» y sustituye la lista por: matricula | beca | certificado | queja | otro. Mantén «revisar» y vuelve a probar con tres correos reales."
+    },
+    {
+      "name": "Solo avisar de lo urgente",
+      "prompt": "Añade un nodo IF entre «Interpretar respuesta» y el aviso de Telegram con la condición urgencia = alta, y conecta la rama falsa directamente al borrador."
+    }
+  ],
+  "kits": ["atencion-cliente-multicanal"]
+}

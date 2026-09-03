@@ -9,13 +9,19 @@ export default function Progreso() {
   const student = useStudent()
 
   const entries = Object.entries(student.lessons)
-    .filter(([, progress]) => progress.done.length > 0 || Object.keys(progress.quiz).length > 0)
+    .filter(([slug, progress]) => !slug.startsWith('curso:') && progress.done.length > 0)
     .sort((a, b) => b[1].updatedAt.localeCompare(a[1].updatedAt))
 
   const totalDone = Object.values(student.lessons).reduce((sum, item) => sum + item.done.length, 0)
-  const quizzes = Object.values(student.lessons).flatMap((item) => Object.values(item.quiz))
-  const quizCorrect = quizzes.reduce((sum, item) => sum + (item?.correct || 0), 0)
-  const quizTotal = quizzes.reduce((sum, item) => sum + (item?.total || 0), 0)
+
+  // Avance del Programa (la ruta guiada): lecciones con todas sus tareas marcadas.
+  const cursoBase = (course.curso || []).filter((lesson) => !lesson.tool)
+  const cursoDone = cursoBase.filter((lesson) => {
+    const progress = student.lessons['curso:' + lesson.id]
+    if (progress?.done?.includes('intermedio')) return true
+    const marked = progress?.checks?.intermedio || []
+    return lesson.tasks.length > 0 && marked.length >= lesson.tasks.length
+  }).length
 
   const download = () => {
     const blob = new Blob([store.export()], { type: 'application/json' })
@@ -85,8 +91,8 @@ export default function Progreso() {
           <span>lecciones tocadas</span>
         </div>
         <div>
-          <strong>{quizTotal ? `${Math.round((quizCorrect / quizTotal) * 100)}%` : '—'}</strong>
-          <span>aciertos en los quizzes</span>
+          <strong>{cursoDone}/{cursoBase.length}</strong>
+          <span>lecciones del Programa completadas</span>
         </div>
         <div>
           <strong>{notesWritten}</strong>
@@ -122,28 +128,19 @@ export default function Progreso() {
           <thead>
             <tr>
               <th>Lección</th>
-              <th>Niveles</th>
-              <th>Quiz</th>
+              <th>Niveles completados</th>
             </tr>
           </thead>
           <tbody>
             {entries.map(([slug, progress]) => {
               const lesson = bySlug.get(slug)
               if (!lesson) return null
-              const quiz = Object.entries(progress.quiz)
               return (
                 <tr key={slug}>
                   <td><a href={href({ name: 'leccion', slug })}>{lesson.title}</a></td>
                   <td>
                     {progress.done.length
                       ? progress.done.map((level) => <span key={level} className="st-pill">{level}</span>)
-                      : '—'}
-                  </td>
-                  <td>
-                    {quiz.length
-                      ? quiz.map(([level, result]) => (
-                        <span key={level} className="st-pill">{level}: {result?.correct}/{result?.total}</span>
-                      ))
                       : '—'}
                   </td>
                 </tr>

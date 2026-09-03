@@ -1,353 +1,106 @@
-# 40 Student Progress Coach
+# 40 · Coach de progreso de alumnos
 
-## Objetivo
+## Qué hace
 
-Automatizacion n8n para el area **educacion**. Esta plantilla es didactica: debe importarse, probarse con payload ficticio y adaptarse antes de produccion.
+Cada lunes a las 09:00 lee tu hoja de alumnos en Google Sheets, detecta a los rezagados (progreso < 50 % o 7+ días sin actividad), y redacta con Claude un mensaje de ánimo personalizado y corto para cada uno mencionando su módulo actual. Antes de enviar NADA, el tutor recibe por **Gmail** la lista completa de mensajes propuestos con botones Aprobar / Rechazar (el flujo queda en pausa). Solo si aprueba, cada alumno recibe su mensaje por **WhatsApp** y los envíos quedan registrados en la pestaña "Envios".
 
-## Entrada esperada
+Automatiza el trabajo pesado (detectar y redactar) y deja la decisión de contactar a una persona.
 
-JSON con datos del proceso: usuario, email si aplica, descripcion, prioridad, fuente y consentimiento cuando haya datos personales.
+## Antes de empezar
 
-## Salida esperada
+- **Gratis**: n8n self-hosted, Google Sheets y Gmail.
+- **De pago**: la API de Anthropic (un mensaje corto por alumno rezagado) y WhatsApp Business Cloud en producción (número de pruebas gratis).
+- Prepara la hoja: pestaña **Alumnos** con columnas exactas `nombre`, `telefono`, `modulo_actual`, `progreso_pct`, `dias_sin_actividad` (teléfonos en formato 34600000000). Y una pestaña **Envios** vacía para el registro.
+- Los alumnos deben haber aceptado recibir mensajes de WhatsApp del curso (consentimiento; mira el flujo 24).
 
-JSON enriquecido con estado, categoria, decision, evidencia y siguiente accion.
+## Credenciales paso a paso
 
-## Caso feliz
+### Google Sheets (OAuth2)
 
-Payload completo, credenciales configuradas y salida validada.
+1. En n8n: **Credentials → Add credential → Google Sheets OAuth2 API**. En n8n Cloud basta con pulsar **Sign in with Google** y aceptar los permisos.
+2. Si tu n8n es self-hosted: crea un proyecto en https://console.cloud.google.com, habilita la **Google Sheets API**, configura la pantalla de consentimiento y crea una credencial **ID de cliente OAuth** (aplicación web) usando la *Redirect URI* que te muestra n8n. Copia el Client ID y el Client Secret en la credencial de n8n y conéctate.
+3. Crea una hoja de cálculo en https://sheets.google.com y copia su **ID de documento**: es el tramo largo de la URL entre `/d/` y `/edit`.
+4. En cada nodo de Google Sheets del flujo, pega ese ID donde pone `REEMPLAZAR_ID_DOCUMENTO` y comprueba que el nombre de la pestaña coincide con el indicado en la guía (créala si no existe; los encabezados se crean solos en el primer append).
 
-## Caso roto
+### Anthropic API (Header Auth) — para los nodos que llaman a Claude
 
-Campo obligatorio ausente, credencial falsa, API rate limit, dato sensible sin consentimiento o accion que requiere aprobacion humana.
+1. Entra en https://console.anthropic.com con tu cuenta, ve a **API Keys** y pulsa **Create Key**. Copia la clave (empieza por `sk-ant-`): solo se muestra una vez.
+2. En n8n: **Credentials → Add credential → Header Auth**.
+3. En **Name** (nombre de la cabecera) escribe exactamente `x-api-key`. En **Value** pega tu clave.
+4. Guarda la credencial como "Anthropic API (x-api-key)" y selecciónala en el nodo HTTP que llama a Claude (viene marcado con id REEMPLAZAR).
 
-## Reparacion
+El nodo ya envía la cabecera `anthropic-version` por ti; no tienes que añadir nada más.
 
-Validar schema, anadir nodo de aprobacion humana, separar secrets, registrar logs y documentar rollback.
+### Gmail (OAuth2)
 
-## Rubrica
+1. En n8n: **Credentials → Add credential → Gmail OAuth2**. En n8n Cloud, **Sign in with Google** y listo.
+2. Self-hosted: en el mismo proyecto de Google Cloud de antes, habilita la **Gmail API** y reutiliza el Client ID / Client Secret con la Redirect URI de n8n.
+3. Asigna la credencial al nodo de Gmail y sustituye el destinatario `REEMPLAZAR_...@ejemplo.com` por un correo real.
 
-- 1: importa pero no se entiende.
-- 2: funciona con payload feliz.
-- 3: maneja caso roto.
-- 4: incluye logs, permisos y defensa.
+### WhatsApp Business Cloud (Meta) — de pago según uso
 
-<!-- IMPLEMENTACION_DETALLADA_2026_08_18 -->
+1. Necesitas una cuenta de **Meta Business** (https://business.facebook.com) y una app en https://developers.facebook.com → **Create App** → tipo *Business*.
+2. Dentro de la app añade el producto **WhatsApp**. Meta te asigna un número de pruebas gratuito y un token temporal.
+3. En el panel **API Setup / Configuración de la API** copia dos cosas: el **Access Token** y el **Phone Number ID**.
+4. En n8n: **Credentials → Add credential → WhatsApp API** → pega el Access Token. Para producción crea un token permanente con un *system user* en Business Settings.
+5. En el nodo de WhatsApp sustituye `REEMPLAZAR_PHONE_NUMBER_ID` por tu Phone Number ID.
+6. En modo pruebas solo puedes escribir a números que hayas verificado en ese panel. Los teléfonos van en formato internacional sin "+": `34600000000`. Fuera de la ventana de 24 h desde el último mensaje del usuario, Meta exige plantillas aprobadas.
 
-# Implementacion detallada - 40 Student Progress Coach
+## Cómo importar
 
-## Para que sirve
+1. Descarga `40_student_progress_coach.json` de esta carpeta.
+2. En n8n: **Workflows → Add workflow → ⋯ → Import from File** y elige el JSON.
+3. Abre los nodos que salgan con aviso y selecciona en cada uno la credencial que creaste (los bloques de credenciales vienen con id `REEMPLAZAR` a propósito: nunca compartimos claves dentro del JSON).
+4. Sustituye todos los valores `REEMPLAZAR_...` (correos, chat_id, ID de la hoja de cálculo...).
+5. Pulsa **Execute workflow** para probarlo en modo test
+6. Cuando el caso de prueba funcione, activa el flujo (interruptor **Active**). Recuerda: en test la URL del webhook es `/webhook-test/...` y en producción `/webhook/...`.
 
-Esta automatizacion sirve para convertir un proceso repetible de **proceso** en un flujo observable. No esta pensada como magia ni como sustituto de criterio humano: su funcion es recibir una entrada, validarla, aplicar reglas o asistencia IA cuando tenga sentido, producir una salida estructurada y dejar evidencia de lo ocurrido.
+## Nodo a nodo
 
-En una empresa o proyecto real, este tipo de workflow ayuda a reducir trabajo manual, estandarizar decisiones, evitar olvidos y detectar casos que requieren revision humana. La clave es no automatizar todo desde el primer dia. Primero se automatiza la parte estable: recibir datos, comprobar formato, clasificar, registrar y responder. Despues se agregan integraciones externas, CRM, emails, Slack, bases de datos o modelos LLM.
+- **Cada lunes a las 09:00 (scheduleTrigger)** — cron `0 9 * * 1`.
+- **Leer hoja de alumnos (googleSheets)** — lee la pestaña "Alumnos", una fila por alumno.
+- **Evaluar progreso (code)** — marca ficha completa y si necesita apoyo; a los que sí, les prepara ya la petición de IA.
+- **¿Ficha completa y necesita apoyo? (if)** — doble condición; el resto va a "Alumnos omitidos" (fichas incompletas o alumnos al día).
+- **Redactar ánimo con Claude (httpRequest)** — un mensaje de máx. 300 caracteres por alumno, en tuteo y sin presión.
+- **Componer mensajes y resumen (code)** — empareja respuesta ↔ alumno y arma el resumen para el tutor.
+- **Aprobación del tutor (gmail, sendAndWait)** — correo con TODOS los mensajes propuestos y botones; el flujo espera.
+- **¿Aprobado por el tutor? (if)** — lee `data.approved`; rechazo → "Envío descartado".
+- **Expandir mensajes (code)** — vuelve a un item por alumno para el envío.
+- **Registrar envíos (googleSheets)** — primero la evidencia en "Envios"...
+- **Enviar WhatsApp al alumno (whatsApp)** — ...y después el mensaje real a cada teléfono.
+- **Alumnos omitidos (noOp)** — rama de descartados.
+- **Envío descartado (noOp)** — rama de rechazo del tutor.
 
-## Cuando usarla
+## Pruébalo
 
-Usala cuando el proceso cumpla estas condiciones:
+Sin webhook: rellena la hoja y usa **Execute workflow**. Usa TU propio número como teléfono de los alumnos de prueba.
 
-- Ocurre varias veces por semana.
-- Tiene entradas reconocibles.
-- Produce una salida que puede definirse.
-- Tiene errores frecuentes que se pueden detectar.
-- Se puede probar con datos ficticios.
-- No requiere una decision sensible sin revision humana.
+**1. Caso normal**: dos alumnos, uno con `progreso_pct: 30` y `dias_sin_actividad: 10`, otro con `progreso_pct: 90` y `dias_sin_actividad: 1`. Ejecuta: te llega UN correo con UN mensaje propuesto; aprueba y espera el WhatsApp y la fila en "Envios".
 
-No la uses si el proceso cambia cada vez, si depende de informacion privada sin consentimiento, si no hay criterio de exito o si una ejecucion incorrecta puede causar dano financiero, legal o reputacional sin aprobacion.
+**2. Caso incompleto**: añade una fila sin teléfono. Debe irse a "Alumnos omitidos" sin gastar IA ni aparecer en el correo del tutor.
 
-## Requisitos
+**3. Caso duplicado**: ejecuta dos veces y aprueba las dos: el alumno rezagado recibe dos mensajes. Ejercicio importante: consulta "Envios" y salta a quien ya recibió mensaje esta semana.
 
-- n8n Cloud o n8n self-hosted.
-- Conocer la diferencia entre trigger, node, input, output y execution.
-- Dataset o payload ficticio.
-- Variables de entorno o credenciales separadas.
-- Una cuenta de destino si se conecta con CRM, email, Slack, GitHub u otra API.
-- Checklist de privacidad si aparecen datos personales.
+**4. Caso extremo (rechazo)**: repite el caso normal y pulsa **Rechazar** en el correo. Espera "Envío descartado": ni WhatsApp ni filas nuevas en "Envios".
 
-## Implementacion paso a paso en n8n
+## Errores típicos
 
-1. Importar el JSON del workflow desde esta carpeta.
-2. Abrir el workflow en n8n y revisar todos los nodes antes de activarlo.
-3. Configurar credenciales ficticias o de prueba.
-4. Revisar el trigger: webhook, schedule, manual trigger o evento externo.
-5. Abrir cada node y comprobar que entrada espera.
-6. Ejecutar con payload correcto.
-7. Revisar input/output node por node.
-8. Ejecutar con payload roto.
-9. Anadir validaciones antes de cualquier accion externa.
-10. Anadir aprobacion humana si el workflow envia emails, modifica CRM, publica contenido, crea tickets o toca datos sensibles.
-11. Documentar rollback.
-12. Activar solo despues de probar preview/caso ficticio.
+- **El correo de aprobación no llega**: destinatario REEMPLAZAR sin cambiar, o el flujo ni llegó ahí porque ningún alumno necesita apoyo (mira la ejecución).
+- **WhatsApp falla con `Recipient phone number not in allowed list`**: en modo pruebas de Meta solo puedes escribir a números verificados: añade el tuyo en el panel de la app.
+- **Mensajes con nombre equivocado**: el emparejamiento usa itemMatching: no reordenes los nodos entre "Evaluar progreso" y "Componer mensajes y resumen".
+- **Columnas no reconocidas**: los nombres de columna deben ser exactos y en minúsculas (`progreso_pct`, no `Progreso %`).
 
-## Variables y credenciales
+## Coste estimado
 
-Crear `.env.example` o nota de credenciales con nombres, no valores reales:
+- **n8n**: gratis si lo alojas tú (self-hosted); n8n Cloud es de pago por suscripción — COMPROBAR EN LA WEB OFICIAL (n8n.io/pricing).
+- **API de Anthropic (Claude Opus 5)**: de pago por tokens, referencia 5 USD por millón de tokens de entrada y 25 USD por millón de salida — COMPROBAR EN LA WEB OFICIAL (anthropic.com/pricing).
+- **WhatsApp Business Cloud**: el número de pruebas es gratuito; en producción Meta cobra por conversación/plantilla según país — COMPROBAR EN LA WEB OFICIAL (developers.facebook.com/docs/whatsapp/pricing).
+- **Google Sheets / Gmail**: gratis con una cuenta de Google normal dentro de los límites de uso.
 
-```bash
-N8N_WEBHOOK_URL=replace_me
-CRM_API_KEY=replace_me_server_only
-SLACK_BOT_TOKEN=replace_me_server_only
-OPENAI_API_KEY=replace_me_server_only
-DATABASE_URL=replace_me_server_only
-```
+Orientativo: 10 alumnos rezagados/semana ≈ 10 llamadas cortas (< 0,05 USD) + el coste de conversación de WhatsApp según país — COMPROBAR EN LA WEB OFICIAL.
 
-Nunca guardar claves reales dentro del JSON exportado. Si el workflow se comparte con alumnos, limpiar credenciales y usar placeholders.
+## Aviso legal
 
-## Caso feliz
+Material didáctico de la formación: impórtalo, pruébalo con datos ficticios y adáptalo antes de usarlo con datos o sistemas reales. Las salidas de los modelos de IA pueden contener errores: mantén siempre revisión humana antes de cualquier acción irreversible. Revisa los términos de servicio y precios vigentes de cada proveedor (Anthropic, OpenAI, Google, Meta, Slack, GitHub, Vercel, Supabase) antes de usarlos en producción. Si el flujo trata datos personales, necesitas base legal (RGPD), información al interesado y un registro de tratamiento; consulta a tu asesor legal. El autor no se hace responsable del uso que hagas de esta plantilla.
 
-El caso feliz debe usar un payload completo. Por ejemplo:
-
-```json
-{"email":"demo@example.com","need":"automatizar seguimiento","source":"formulario","consent":true}
-```
-
-Resultado esperado:
-
-- El workflow se ejecuta sin errores.
-- Cada node recibe y devuelve datos comprensibles.
-- La salida incluye estado, categoria y siguiente accion.
-- No se ejecuta ninguna accion sensible sin control.
-- Queda evidencia en executions/logs.
-
-## Caso ambiguo
-
-Payload ambiguo:
-
-```json
-{"message":"quiero mejorar ventas"}
-```
-
-Resultado profesional esperado: no inventar. El workflow debe marcar `needs_review`, pedir mas datos o enviar a revision humana. Si usa LLM, el prompt debe indicar que no rellene campos desconocidos.
-
-## Caso roto
-
-Ejemplos de ruptura controlada:
-
-- Falta `email`.
-- `consent` es `false`.
-- La API key es invalida.
-- El CRM devuelve `401` o `403`.
-- El proveedor devuelve `429`.
-- El payload cambia de estructura.
-- La tool intenta ejecutar una accion no permitida.
-
-## Reparacion
-
-Documentar:
-
-```markdown
-Sintoma:
-Causa probable:
-Evidencia:
-Cambio realizado:
-Prevencion:
-Rollback:
-```
-
-La reparacion minima suele ser anadir un node de validacion, normalizar campos, capturar errores, limitar retries, pedir aprobacion humana o separar mejor credenciales.
-
-## Produccion
-
-Antes de activar en produccion:
-
-- Probar minimo 10 payloads.
-- Revisar logs.
-- Definir responsable humano.
-- Configurar alertas.
-- Medir coste si usa LLM.
-- Documentar como desactivar el workflow.
-- Guardar version exportada.
-- Escribir fecha de revision.
-
-## Defensa de 3 minutos
-
-El alumno debe explicar: que problema resuelve, que datos entran, que nodes se ejecutan, que salida produce, que fallo provoco, como lo reparo, que permisos usa y que riesgo queda.
-
-<!-- IMPLEMENTACION_AMPLIADA_PROCESO_2026_08_18 -->
-
-## Implementacion operativa ampliada
-
-### 1. Problema que resuelve
-
-**40 Student Progress Coach** resuelve un problema recurrente: convertir una tarea manual, ambigua o repetitiva en un proceso que pueda ejecutarse con el mismo criterio cada vez. En formacion, esta pieza sirve para que el alumno deje de pensar en "usar IA" como una conversacion suelta y empiece a pensar en sistemas: entrada, validacion, transformacion, salida, evidencia, revision y mejora.
-
-En un contexto real, esta automatizacion puede ahorrar tiempo, reducir errores, acelerar respuesta a clientes o crear una base de conocimiento operativa. Pero su valor depende de que se implemente con limites. Si se conecta a datos reales sin consentimiento, si ejecuta acciones externas sin aprobacion o si no deja logs, la automatizacion no es profesional aunque funcione en demo.
-
-### 2. Donde encaja en un proceso
-
-El flujo recomendado es:
-
-```text
-Entrada -> Validacion -> Normalizacion -> Decision -> Accion -> Registro -> Revision humana si aplica
-```
-
-La entrada puede ser un webhook, CSV, formulario, email, ticket, issue, transcripcion, factura o documento. La validacion comprueba que no falten campos. La normalizacion convierte nombres, fechas, importes o textos a formato estable. La decision puede ser una regla, un LLM o una combinacion. La accion puede ser responder, crear tarea, actualizar CRM, enviar alerta o guardar en base de datos. El registro permite auditar. La revision humana protege acciones sensibles.
-
-### 3. Preparacion antes de implementar
-
-Antes de tocar herramientas, crear una ficha:
-
-```markdown
-Objetivo:
-Usuario:
-Entrada:
-Salida esperada:
-Campos obligatorios:
-Datos sensibles:
-Herramientas:
-Credenciales:
-Caso feliz:
-Caso ambiguo:
-Caso roto:
-Rollback:
-```
-
-Esta ficha evita improvisar. Tambien ayuda a decidir si conviene hacerlo con n8n, script, API, GitHub Actions, backend, skill o proceso manual. La mejor herramienta es la minima que permite repetir, verificar y explicar.
-
-### 4. Implementacion local
-
-Si esta pieza es codigo, implementarla primero localmente con datos ficticios. No conectar APIs reales hasta comprobar formato.
-
-Pasos:
-
-1. Crear carpeta de prueba.
-2. Copiar el archivo o plantilla.
-3. Crear `.env.example`.
-4. Crear un payload ficticio correcto.
-5. Crear un payload roto.
-6. Ejecutar la pieza.
-7. Guardar output.
-8. Anadir manejo de errores.
-9. Documentar que variables necesita.
-10. Preparar una version para clase.
-
-Ejemplo de payload correcto:
-
-```json
-{"id":"demo-001","email":"demo@example.com","need":"automatizar seguimiento","consent":true}
-```
-
-Ejemplo de payload roto:
-
-```json
-{"need":"automatizar seguimiento"}
-```
-
-### 5. Integracion con n8n
-
-Para llevarlo a n8n:
-
-1. Crear Webhook node.
-2. Pegar el payload correcto.
-3. Anadir Code node o HTTP Request node.
-4. Validar campos obligatorios.
-5. Si falta algo, devolver `needs_review`.
-6. Si esta completo, continuar a la accion.
-7. Antes de enviar emails o modificar sistemas, anadir aprobacion humana.
-8. Responder con JSON claro.
-
-Salida recomendada:
-
-```json
-{
-  "status":"processed",
-  "category":"demo",
-  "next_action":"review_or_send",
-  "requires_human_approval":true,
-  "evidence":"execution_id_or_log_url"
-}
-```
-
-### 6. Integracion con API o backend
-
-Si se convierte en endpoint:
-
-- Usar `POST` para entradas que modifican estado.
-- Validar JSON antes de procesar.
-- No aceptar campos desconocidos sin revisar.
-- Registrar `request_id`.
-- Devolver errores legibles.
-- Separar secretos del frontend.
-
-Ejemplo de respuesta de error:
-
-```json
-{"ok":false,"error":"missing_required_field","field":"email","action":"send_to_review"}
-```
-
-### 7. Seguridad y permisos
-
-Checklist minimo:
-
-- No usar datos reales en clase.
-- No guardar API keys en archivos.
-- No publicar `.env`.
-- Usar scopes minimos.
-- Registrar acciones.
-- Anadir aprobacion humana para side effects.
-- Preparar rollback.
-- Rotar claves si se filtran.
-
-Side effects son acciones que cambian el mundo: enviar email, actualizar CRM, cobrar, borrar, publicar, crear tickets, modificar base de datos o contactar usuarios. Esas acciones requieren mas control que una simple clasificacion.
-
-### 8. Pruebas necesarias
-
-Probar minimo:
-
-| Caso | Entrada | Resultado esperado |
-|---|---|---|
-| Feliz | payload completo | `processed` |
-| Ambiguo | datos incompletos | `needs_review` |
-| Roto | formato incorrecto | error controlado |
-| Seguridad | dato sensible | redaccion o bloqueo |
-| Coste | batch grande | limite o aviso |
-
-Si usa LLM, anadir evals:
-
-```json
-{"input":"lead sin email","expected":"pedir email","fail_if":"inventa email"}
-```
-
-### 9. Produccion
-
-Antes de produccion:
-
-- Revisar logs.
-- Medir coste.
-- Probar 10 casos.
-- Documentar propietario.
-- Preparar alerta.
-- Exportar version.
-- Definir rollback.
-- Crear README de entrega.
-
-Una automatizacion profesional debe poder apagarse sin romper el negocio. Si nadie sabe desactivarla, no esta lista.
-
-### 10. Como explicarlo al alumno
-
-El alumno debe poder responder:
-
-- Que automatiza.
-- Que no automatiza.
-- Que datos necesita.
-- Que herramienta usa.
-- Que riesgo evita.
-- Que fallo provoco.
-- Que evidencia guardo.
-- Que haria en version 2.
-
-La defensa no debe sonar teorica. Debe sonar como alguien que ha ejecutado, roto y reparado el proceso.
-
-### 11. Variantes utiles
-
-Variantes para ampliar:
-
-- Version manual en checklist.
-- Version n8n visual.
-- Version codigo local.
-- Version API.
-- Version con base de datos.
-- Version con LLM.
-- Version con aprobacion humana.
-- Version con observabilidad.
-
-Cada variante debe mantener el mismo criterio: entrada clara, salida verificable y fallo controlado.
+Estás contactando a personas con sus datos (nombre, teléfono, progreso): necesitas su consentimiento previo para este canal y debes ofrecer una forma clara de dejar de recibir mensajes.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { BookOpen, BookMarked, Bot, Boxes, Compass, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson, LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
@@ -16,6 +16,7 @@ import Proyecto from './pages/Proyecto'
 import Deck from './pages/Deck'
 import Prompts from './pages/Prompts'
 import Kits from './pages/Kits'
+import Agentes from './pages/Agentes'
 import Admin from './pages/Admin'
 import Guia from './pages/Guia'
 import { CursoIndice, CursoLeccion } from './pages/Curso'
@@ -64,9 +65,14 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
   return (
     <aside className={`st-sidebar${open ? ' open' : ''}`}>
       <a className="st-brand" href={href({ name: 'inicio' })} onClick={onClose}>
-        <span><GraduationCap size={17} /></span>
+        <span className="st-brand-mark" aria-hidden="true"><GraduationCap size={19} /></span>
         <div>
-          <strong>AI Professional Academy</strong>
+          <strong className="st-brand-name" aria-label="AI Professional Academy">
+            <span className="st-brand-word">AI</span>{' '}
+            <span className="st-brand-word">Professional</span>{' '}
+            <span className="st-brand-word">Academy</span>
+            <i className="st-brand-underline" aria-hidden="true" />
+          </strong>
           <small>Formación aplicada</small>
         </div>
       </a>
@@ -105,6 +111,9 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         </a>
         <a className={is('kits') ? 'active' : ''} href={href({ name: 'kits' })} onClick={onClose}>
           <Boxes size={14} /> Kits institucionales
+        </a>
+        <a className={is('agentes') ? 'active' : ''} href={href({ name: 'agentes' })} onClick={onClose}>
+          <Bot size={14} /> Agentes
         </a>
         {(student.teacher || is('admin')) && (
           <a className={is('admin') ? 'active' : ''} href={href({ name: 'admin' })} onClick={onClose}>
@@ -248,6 +257,11 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'deck': return ['Presentación']
       case 'prompts': return ['Prompts']
       case 'kits': return ['Kits institucionales']
+      case 'agentes': {
+        if (!route.agentId) return ['Agentes']
+        const agent = (course.agents || []).find((item) => item.id === route.agentId)
+        return ['Agentes', agent?.title || route.agentId]
+      }
       case 'admin': return ['Súper administrador']
       case 'guia': return ['Guías']
       case 'curso': {
@@ -307,6 +321,7 @@ function Pages({ route }: { route: Route }) {
     case 'deck': return <Deck deckId={route.deckId} />
     case 'prompts': return <Prompts familyId={route.familyId} />
     case 'kits': return <Kits />
+    case 'agentes': return <Agentes agentId={route.agentId} />
     case 'admin': return <Admin />
     case 'guia': return <Guia guideId={route.guideId} />
     case 'curso': return route.lessonId ? <CursoLeccion lessonId={route.lessonId} /> : <CursoIndice />
@@ -334,6 +349,7 @@ function Shell() {
       case 'buscar': return `${route.name}:${route.query}:${JSON.stringify(route.filters)}`
       case 'carpeta': return `${route.name}:${route.folderId}:${JSON.stringify(route.filters)}`
       case 'guia': return `${route.name}:${route.guideId || 'indice'}`
+      case 'agentes': return `${route.name}:${route.agentId || 'indice'}`
       case 'curso': return `${route.name}:${route.lessonId || 'indice'}`
       default: return route.name
     }
@@ -475,9 +491,13 @@ export default function App() {
   if (!course) {
     return (
       <div className="st-loading">
-        <span><Loader2 size={18} className="spin" /></span>
-        <strong>AI Professional Academy</strong>
-        <small>Cargando el curso…</small>
+        <strong className="st-brand-splash" aria-label="AI Professional Academy">
+          <span className="st-brand-word">AI</span>{' '}
+          <span className="st-brand-word">Professional</span>{' '}
+          <span className="st-brand-word">Academy</span>
+          <i className="st-brand-underline" aria-hidden="true" />
+        </strong>
+        <small><Loader2 size={11} className="spin" /> Cargando el curso…</small>
       </div>
     )
   }

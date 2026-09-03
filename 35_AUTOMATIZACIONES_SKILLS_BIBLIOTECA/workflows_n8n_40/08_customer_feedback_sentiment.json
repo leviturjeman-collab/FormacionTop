@@ -1,66 +1,385 @@
 {
-  "name": "08 Customer Feedback Sentiment",
+  "name": "08 · Sentimiento de feedback de clientes",
   "nodes": [
     {
       "parameters": {
-        "path": "08-customer-feedback-sentiment",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 08 · Sentimiento de feedback\n\n1. Credenciales: Anthropic API, Google Sheets y Slack Bot.\n2. Pestañas: \"Feedback\" y \"Feedback incompleto\".\n3. REEMPLAZAR_ID_CANAL: canal de Slack del equipo de experiencia de cliente.\n4. La respuesta sugerida por la IA queda en la hoja: NUNCA se envía sola al cliente.",
+        "width": 420,
+        "height": 240
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"08 Customer Feedback Sentiment\",\n    category: \"soporte\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-08-feedback-cliente",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo-002",
+      "name": "Webhook feedback",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        40,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// El feedback llega dentro de body.\nconst b = $json.body ?? {};\nreturn [{ json: {\n  cliente: String(b.cliente ?? 'anonimo').trim(),\n  email: String(b.email ?? '').trim().toLowerCase(),\n  canal: String(b.canal ?? 'web').trim(),\n  mensaje: String(b.mensaje ?? '').trim().slice(0, 4000),\n  recibido_en: new Date().toISOString(),\n} }];"
+      },
+      "id": "nodo-003",
+      "name": "Normalizar feedback",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        260,
+        400
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ $json }}"
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo-004",
+      "name": "Responder recepción",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        480,
+        400
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.mensaje }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-005",
+      "name": "¿Trae mensaje?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-5', max_tokens: 1024, system: \"Eres analista de experiencia de cliente. Responde SOLO con JSON valido con: sentimiento (positivo|neutro|negativo), urgencia (alta|media|baja), temas (lista de 1-3 strings) y respuesta_sugerida (2-3 frases en espanol; es solo una sugerencia interna).\", messages: [{ role: 'user', content: 'Analiza este feedback de cliente: ' + JSON.stringify($json) }] }) }}",
+        "options": {}
+      },
+      "id": "nodo-006",
+      "name": "Analizar sentimiento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// La API de Anthropic devuelve una lista de bloques; con el razonamiento\n// activado el primero puede ser de tipo \"thinking\", asi que buscamos el\n// primer bloque de texto en vez de leer content[0] a ciegas.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet ia = {};\ntry {\n  // La IA a veces envuelve el JSON en un bloque de codigo; lo limpiamos.\n  ia = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  ia = { sentimiento: 'revisar', urgencia: 'media', temas: [], respuesta_sugerida: '' };\n}\nconst original = $('Normalizar feedback').item.json;\nreturn [{ json: { ...original, ...ia, ia_texto_bruto: texto.slice(0, 500) } }];"
+      },
+      "id": "nodo-007",
+      "name": "Interpretar análisis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Feedback"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.recibido_en }}",
+            "cliente": "={{ $json.cliente }}",
+            "canal": "={{ $json.canal }}",
+            "mensaje": "={{ $json.mensaje }}",
+            "sentimiento": "={{ $json.sentimiento }}",
+            "urgencia": "={{ $json.urgencia }}",
+            "temas": "={{ ($json.temas || []).join(\", \") }}",
+            "respuesta_sugerida": "={{ $json.respuesta_sugerida }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-008",
+      "name": "Registrar feedback",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1360,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.sentimiento }}",
+              "rightValue": "negativo",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-009",
+      "name": "¿Negativo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_CANAL"
+        },
+        "text": "={{ 'Feedback NEGATIVO de ' + $json.cliente + ' (urgencia ' + $json.urgencia + '): \"' + $json.mensaje.slice(0, 200) + '\". Temas: ' + ($json.temas || []).join(', ') + '. Hay una respuesta sugerida en la hoja Feedback: revisala y responde tu al cliente.' }}",
+        "otherOptions": {}
+      },
+      "id": "nodo-010",
+      "name": "Alertar a CX",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1800,
+        220
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Feedback incompleto"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.recibido_en }}",
+            "motivo": "la peticion no traia el campo mensaje",
+            "datos_recibidos": "={{ JSON.stringify($json) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-011",
+      "name": "Registrar incompleto",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        920,
+        520
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook": {
+    "Webhook feedback": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Normalizar feedback",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Normalizar feedback": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "Responder recepción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder recepción": {
+      "main": [
+        [
+          {
+            "node": "¿Trae mensaje?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Trae mensaje?": {
+      "main": [
+        [
+          {
+            "node": "Analizar sentimiento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analizar sentimiento": {
+      "main": [
+        [
+          {
+            "node": "Interpretar análisis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar análisis": {
+      "main": [
+        [
+          {
+            "node": "Registrar feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar feedback": {
+      "main": [
+        [
+          {
+            "node": "¿Negativo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Negativo?": {
+      "main": [
+        [
+          {
+            "node": "Alertar a CX",
             "type": "main",
             "index": 0
           }
@@ -72,27 +391,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "soporte",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "ticket_id": "SUP-4471",
-          "email": "cliente@ejemplo.es",
-          "asunto": "No puedo acceder al panel",
-          "cuerpo": "Desde ayer me sale error 500 al entrar. He probado con dos navegadores.",
-          "prioridad": "alta",
-          "canal": "email"
-        }
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

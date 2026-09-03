@@ -99,7 +99,7 @@ Origen: Gemini structured output. Uso: convertir texto libre en JSON validable. 
 
 Origen: Gemini function calling y Claude tool use. Uso: conectar lenguaje natural con herramientas. Fase: 04.
 
-## Criterio para elegir las primeras 10 skills del curso
+## Criterio para elegir las primeras skills del curso
 
 Orden recomendado:
 

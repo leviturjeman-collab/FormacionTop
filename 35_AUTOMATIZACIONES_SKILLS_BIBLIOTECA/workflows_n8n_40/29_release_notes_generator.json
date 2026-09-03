@@ -1,66 +1,379 @@
 {
-  "name": "29 Release Notes Generator",
+  "name": "29 · Generador de release notes",
   "nodes": [
     {
       "parameters": {
-        "path": "29-release-notes-generator",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 29 · Release notes\n\nLlama al webhook con propietario, repo, desde_tag y hasta_tag. El flujo compara los tags en GitHub, redacta las notas con IA y crea un BORRADOR en Gmail: tú lo revisas y decides publicarlo.\n\nCredenciales: Header Auth GitHub (Authorization: Bearer), Anthropic, Gmail y Google Sheets.",
+        "width": 480,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_088",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        40
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"29 Release Notes Generator\",\n    category: \"devops\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-29-release",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_089",
+      "name": "Petición de release notes",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['propietario', 'repo', 'desde_tag', 'hasta_tag'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst salida = {\n  propietario: String(b.propietario || '').trim(),\n  repo: String(b.repo || '').trim(),\n  desde_tag: String(b.desde_tag || '').trim(),\n  hasta_tag: String(b.hasta_tag || '').trim(),\n  faltan: faltan,\n  valido: faltan.length === 0\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_090",
+      "name": "Validar petición",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_011",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_091",
+      "name": "¿Petición completa?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.github.com/repos/' + $json.propietario + '/' + $json.repo + '/compare/' + $json.desde_tag + '...' + $json.hasta_tag }}",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "User-Agent",
+              "value": "n8n-workflow-29"
+            }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "nodo_092",
+      "name": "Comparar tags en GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "GitHub (Authorization: Bearer)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const origen = $('Validar petición').item.json;\nconst commits = ($json.commits || []).slice(0, 100).map(function (c) {\n  const linea = c.commit && c.commit.message ? c.commit.message.split('\\n')[0] : '';\n  const autor = c.commit && c.commit.author ? c.commit.author.name : '';\n  return '- ' + linea + ' (' + autor + ')';\n}).join('\\n');\nconst sistema = [\n  'Redactas release notes claras en español para usuarios no técnicos.',\n  'Agrupa en secciones: Novedades, Mejoras, Correcciones. Omite commits internos (ci, chore, merge).',\n  'Devuelve solo el texto en Markdown, sin explicaciones extra.'\n].join('\\n');\nconst peticion_ia = {\n  model: 'claude-opus-5',\n  max_tokens: 2048,\n  system: sistema,\n  messages: [\n    { role: 'user', content: 'Repositorio: ' + origen.propietario + '/' + origen.repo + '\\nVersión: de ' + origen.desde_tag + ' a ' + origen.hasta_tag + '\\n\\nCOMMITS:\\n' + commits }\n  ]\n};\nreturn { json: { total_commits: ($json.commits || []).length, peticion_ia: peticion_ia } };"
+      },
+      "id": "nodo_093",
+      "name": "Preparar redacción",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_ia) }}",
+        "options": {}
+      },
+      "id": "nodo_094",
+      "name": "Redactar con Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const bloques = $json.content || [];\nconst notas = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n')\n  .trim();\nconst origen = $('Validar petición').item.json;\nconst salida = {\n  repo: origen.propietario + '/' + origen.repo,\n  desde_tag: origen.desde_tag,\n  hasta_tag: origen.hasta_tag,\n  total_commits: $('Preparar redacción').item.json.total_commits,\n  notas: notas,\n  generado_en: new Date().toISOString()\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_095",
+      "name": "Extraer notas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Releases"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_096",
+      "name": "Registrar generación",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1540,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "=[Borrador] Release notes {{ $json.hasta_tag }} de {{ $json.repo }}",
+        "emailType": "text",
+        "message": "=Borrador generado automáticamente ({{ $json.total_commits }} commits analizados). Revísalo antes de publicar:\n\n{{ $json.notas }}",
+        "options": {
+          "sendTo": "REEMPLAZAR_tu_correo@ejemplo.com"
+        }
+      },
+      "id": "nodo_097",
+      "name": "Borrador con las notas",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1760,
+        240
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, repo: $('Extraer notas').first().json.repo, notas: $('Extraer notas').first().json.notas } }}",
+        "options": {}
+      },
+      "id": "nodo_098",
+      "name": "Responder notas",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        240
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_099",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Petición de release notes": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar petición",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar petición": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Petición completa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Petición completa?": {
+      "main": [
+        [
+          {
+            "node": "Comparar tags en GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comparar tags en GitHub": {
+      "main": [
+        [
+          {
+            "node": "Preparar redacción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar redacción": {
+      "main": [
+        [
+          {
+            "node": "Redactar con Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redactar con Claude": {
+      "main": [
+        [
+          {
+            "node": "Extraer notas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer notas": {
+      "main": [
+        [
+          {
+            "node": "Registrar generación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar generación": {
+      "main": [
+        [
+          {
+            "node": "Borrador con las notas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Borrador con las notas": {
+      "main": [
+        [
+          {
+            "node": "Responder notas",
             "type": "main",
             "index": 0
           }
@@ -71,13 +384,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "devops",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Petición de release notes": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +393,10 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "propietario": "mi-usuario",
+          "repo": "mi-repo",
+          "desde_tag": "v1.0.0",
+          "hasta_tag": "v1.1.0"
         }
       }
     ]

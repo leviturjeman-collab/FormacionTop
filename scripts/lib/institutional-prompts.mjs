@@ -204,19 +204,18 @@ const BASE_FAMILY_CATEGORY = {
   'contenido-negocio': 'crear-contenido',
 }
 
-const KIT_SCENARIOS = [
-  ['Sistema operativo de IA para equipo', 'coordinar herramientas, prompts, automatizaciones, permisos y evidencias para que un equipo trabaje con IA de forma consistente'],
-  ['Portal web o app institucional', 'diseñar una web o aplicación institucional con contenido real, rutas claras, despliegue, QA y mantenimiento'],
-  ['Sistema documental y RAG', 'convertir documentos internos en respuestas con fuentes, permisos, actualización y prueba de calidad'],
-  ['Máquina de contenido y presentaciones', 'crear un sistema de contenido, decks, guiones y piezas visuales con revisión editorial y calendario'],
-  ['Agentes de código, QA y producción', 'organizar agentes y asistentes de código con repositorio, tests, revisión humana, deploy y recuperación'],
-  ['CRM, datos y reporting institucional', 'conectar captación, datos, seguimiento, reporting y decisiones comerciales sin perder trazabilidad'],
-]
-
-const SOURCE_LABELS = {
-  'Biblioteca anterior': 'Biblioteca anterior',
-  Programa: 'Programa',
-  'Kits institucionales': 'Kits institucionales',
+/*
+ * Qué categorías de encargo tienen sentido para cada sección de herramientas.
+ * Es lo que evita generar «Calendario editorial con PostgreSQL» o «Agente con
+ * permisos para Midjourney»: cada herramienta solo recibe los encargos que de
+ * verdad se hacen con ella.
+ */
+const SECTION_CATEGORY_IDS = {
+  'asistentes-modelos': new Set(['aprender-desde-cero', 'elegir-herramienta', 'crear-proyecto', 'automatizar', 'crear-contenido', 'programar', 'conectar-datos', 'crear-agentes', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente', 'proyecto-institucional']),
+  'automatizacion-comunicacion': new Set(['aprender-desde-cero', 'elegir-herramienta', 'automatizar', 'conectar-datos', 'crear-agentes', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente']),
+  'apps-codigo-deploy': new Set(['aprender-desde-cero', 'elegir-herramienta', 'crear-proyecto', 'programar', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente']),
+  'datos-conocimiento': new Set(['aprender-desde-cero', 'elegir-herramienta', 'conectar-datos', 'automatizar', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente']),
+  'contenido-visual': new Set(['aprender-desde-cero', 'elegir-herramienta', 'crear-proyecto', 'crear-contenido', 'probar-reparar', 'seguridad-coste-privacidad', 'entregar-equipo-cliente']),
 }
 
 function wordCount(value) {
@@ -287,7 +286,7 @@ function promptCore(tool, task, index) {
 
   let text = `Actúa como arquitecta institucional de sistemas de IA y operaciones. Tu tarea es ayudarme a usar ${tool.label} dentro de una organización real, con criterio de gobierno, privacidad, coste, mantenimiento y evidencia. No escribas una explicación genérica de la herramienta ni una lista bonita de posibilidades: convierte mi caso en una decisión, una prueba y una entrega que otra persona pueda revisar.\n\n## Contexto que debes usar\nInstitución: [INSTITUCION]. Área o equipo: [AREA_EQUIPO]. Persona que necesita entenderlo: [PERFIL_PERSONA]. Proceso o problema: [PROCESO_O_PROBLEMA]. Entrada real: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones: [RESTRICCIONES]. Datos sensibles o prohibidos: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Encargo institucional\nNecesito ${outcome} usando ${tool.label} solo si encaja. En esta herramienta, el papel de partida es este: ${toolRole} Piezas internas que debes tener presentes: ${internalPieces || 'entrada, salida, permisos, historial, exportación y forma de revisar resultados'}. Regla específica del encargo: ${rule}\n\n## Cómo debes trabajar\nPrimero revisa si los corchetes están completos. Si falta un dato que cambie la decisión, hazme una sola pregunta y espera mi respuesta. Si puedes avanzar con un supuesto menor, márcalo como SUPUESTO y explica cómo se comprobaría. Adapta el lenguaje a [PERFIL_PERSONA]: si es principiante, traduce cada palabra técnica; si es dirección, resume impacto, riesgo y coste; si es equipo técnico, añade contratos de datos, permisos y pruebas. No uses datos reales en ejemplos: inventa datos ficticios realistas y señala que son ficticios.\n\n## Salida obligatoria\nDevuelve la respuesta en este orden. Uno: ficha institucional de menos de 180 palabras con objetivo, usuario, entrada, salida, límite y criterio de éxito. Dos: decisión sobre si ${tool.label} es suficiente, excesiva o insuficiente, comparándola con una alternativa más simple y con la opción de hacerlo manualmente en la primera versión. Tres: pasos concretos para ejecutar el encargo, indicando pantalla, botón, campo, archivo, nodo o espacio de trabajo cuando aplique. Cuatro: prueba de aceptación con caso normal, incompleto, duplicado y extremo. Cinco: riesgos de privacidad, permisos, coste, dependencia del proveedor y mantenimiento. Seis: evidencia que debo guardar: archivo, captura, enlace, log, tabla o decisión escrita.\n\n## Control institucional\nAntes de recomendar activar, publicar, enviar, borrar, cobrar, cambiar permisos o compartir datos, marca APROBACIÓN HUMANA OBLIGATORIA. Define cómo se detiene el proceso si algo falla. Explica cómo se mide el consumo en ${tool.label}: ${usage} No inventes precios ni límites; si pueden haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL. Termina con una siguiente acción de menos de treinta minutos y una frase de cierre que empiece por: La decisión institucional es.`
 
-  while (wordCount(text) < 590) {
+  if (wordCount(text) < 560) {
     text += `\n\nAñade también una mini matriz RACI con responsable, aprobador, persona consultada e informada. Incluye una versión para piloto con datos ficticios y una versión para uso real, separadas claramente. Si el uso real exige contrato, licencia, revisión legal, política interna o validación de seguridad, no lo des por resuelto: déjalo como bloqueo visible.`
   }
 
@@ -310,7 +309,7 @@ function importToolPrompt(tool, prompt, index) {
   const categoryId = categoryForToolPrompt(prompt.name)
   let text = `Actúa como responsable institucional y adapta este encargo de ${tool.label} a una organización real. Mantén el objetivo del prompt original, pero añade gobierno, privacidad, coste, evidencia, revisión humana y prueba con datos ficticios. Contexto obligatorio: institución [INSTITUCION], área [AREA_EQUIPO], persona [PERFIL_PERSONA], proceso [PROCESO_O_PROBLEMA], entrada [ENTRADA_REAL], salida [SALIDA_ESPERADA], volumen [VOLUMEN_Y_FRECUENCIA], restricciones [RESTRICCIONES], datos sensibles [DATOS_SENSIBLES] y fecha [FECHA_REVISION].\n\n## Prompt base que debes ejecutar\n${prompt.prompt}\n\n## Cierre institucional obligatorio\nAntes de terminar, convierte la respuesta en una ficha verificable: decisión, pasos, riesgos, prueba normal/incompleta/duplicada/extrema, evidencia que se guarda, responsable, coste o consumo que se mide y condición para no activar. Si algo depende de precios, planes, permisos o funciones actuales, escribe COMPROBAR EN LA WEB OFICIAL. No des el trabajo por listo para producción sin aprobación humana cuando haya datos sensibles, publicación, dinero o contacto con personas.`
 
-  while (wordCount(text) < 590) {
+  if (wordCount(text) < 560) {
     text += `\n\nSi el resultado va dirigido a alguien que empieza desde cero, traduce cada término técnico y limita el siguiente paso a menos de treinta minutos. Si va dirigido a dirección, resume decisión, impacto, riesgo y coste. Si va dirigido a un equipo técnico, añade entrada, salida, contrato de datos y prueba repetible.`
   }
 
@@ -333,7 +332,7 @@ function importBasePrompt(family, prompt, index) {
   const categoryId = BASE_FAMILY_CATEGORY[family.id] || 'proyecto-institucional'
   let text = `Actúa como responsable institucional y usa el siguiente prompt base dentro de una organización real. No respondas como si fuera una tarea personal suelta: adapta la salida a equipo, evidencias, permisos, coste, mantenimiento, revisión humana y trazabilidad. Contexto obligatorio antes de responder: institución [INSTITUCION], área [AREA_EQUIPO], persona [PERFIL_PERSONA], proceso [PROCESO_O_PROBLEMA], entrada [ENTRADA_REAL], salida [SALIDA_ESPERADA], volumen [VOLUMEN_Y_FRECUENCIA], restricciones [RESTRICCIONES], datos sensibles [DATOS_SENSIBLES] y fecha [FECHA_REVISION].\n\n## Prompt base de la biblioteca anterior\n${prompt.prompt}\n\n## Reglas institucionales\nConserva la intención del prompt base, pero termina siempre con una ficha de decisión, una prueba con datos ficticios, una evidencia que se guarda, un responsable, riesgos de privacidad y coste, una alternativa manual y una condición de parada. Si faltan datos, pregunta una sola cosa. Si algo puede haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL.`
 
-  while (wordCount(text) < 590) {
+  if (wordCount(text) < 560) {
     text += `\n\nAdapta la explicación a [PERFIL_PERSONA]. Si es principiante, da instrucciones concretas sin jerga; si es dirección, prioriza decisión y riesgo; si es equipo técnico, añade formato de datos, permisos y comprobación. No uses datos reales en ejemplos; usa datos ficticios y dilo claramente.`
   }
 
@@ -357,7 +356,7 @@ function importCoursePrompt(lesson, task, index, toolById) {
   const categoryId = categoryForToolPrompt(`${lesson.title} ${task.title} ${task.action}`)
   let text = `Actúa como responsable institucional de formación aplicada. Vas a usar un prompt que aparece dentro del Programa del curso, pero debes convertirlo en una tarea institucional completa: con contexto, salida verificable, evidencia, seguridad, coste, responsable y criterio de terminado. No respondas como ejercicio aislado ni como conversación informal.\n\n## Contexto obligatorio\nInstitución: [INSTITUCION]. Área o equipo: [AREA_EQUIPO]. Persona que aprende o ejecuta: [PERFIL_PERSONA]. Proceso o problema: [PROCESO_O_PROBLEMA]. Entrada real: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones: [RESTRICCIONES]. Datos sensibles: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Origen del prompt\nLección del Programa: ${lesson.title}. Tarea: ${task.title}. Dónde se trabaja: ${task.where}. Acción esperada: ${task.action}. Resultado que debería verse: ${task.expect}.${task.stuck ? ` Si no sale: ${task.stuck}.` : ''}${tool ? ` Herramienta relacionada: ${tool.label}.` : ''}\n\n## Prompt base del Programa\n${task.prompt}\n\n## Adaptación institucional obligatoria\nAntes de responder, comprueba si todos los corchetes están rellenados. Si falta un dato crítico, haz una sola pregunta y espera. Después devuelve: uno, explicación para [PERFIL_PERSONA] sin jerga innecesaria; dos, salida concreta que debe producirse; tres, pasos numerados para ejecutarlo; cuatro, prueba con caso normal, incompleto, duplicado y extremo; cinco, datos que no deben usarse todavía; seis, quién aprueba y quién conserva la evidencia; siete, cómo se mide el consumo o esfuerzo; ocho, qué haría manualmente si la herramienta o el proveedor falla.\n\nNo des por terminada la tarea porque la respuesta suene bien. Debe existir una evidencia: texto, captura, archivo, log, enlace, tabla o decisión escrita. Si toca activar, publicar, enviar, borrar, cobrar, conectar credenciales o compartir datos, marca APROBACIÓN HUMANA OBLIGATORIA. Termina con una siguiente acción de menos de treinta minutos.`
 
-  while (wordCount(text) < 590) {
+  if (wordCount(text) < 560) {
     text += `\n\nIncluye una nota de transferencia: cómo explicaría este resultado una persona principiante, cómo lo revisaría una persona responsable y qué necesitaría una persona técnica para mantenerlo. Separa hechos, supuestos y puntos por comprobar. Si hay precios, límites o funciones de producto, escribe COMPROBAR EN LA WEB OFICIAL.`
   }
 
@@ -376,10 +375,12 @@ function importCoursePrompt(lesson, task, index, toolById) {
   }
 }
 
-function importKitPrompt([title, outcome], index) {
+function importKitPrompt(kit, index) {
+  const title = kit.title
+  const outcome = `diseñar e implantar este sistema: ${kit.promise || kit.title}`
   let text = `Actúa como arquitecta institucional de sistemas de IA. Quiero diseñar el kit "${title}" para una organización real. No me des una colección de ideas sueltas: necesito una arquitectura de trabajo que combine prompts, herramientas, automatizaciones, datos, skills o procedimientos, gobierno, seguridad, coste, documentación y operación.\n\n## Contexto obligatorio\nInstitución: [INSTITUCION]. Área o equipo dueño del sistema: [AREA_EQUIPO]. Personas usuarias: [PERFIL_PERSONA]. Proceso o problema principal: [PROCESO_O_PROBLEMA]. Entradas disponibles: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones de tiempo, presupuesto y herramientas: [RESTRICCIONES]. Datos sensibles o prohibidos: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Objetivo del kit\nNecesito ${outcome}. Diseña el sistema como si tuviera que explicarlo a dirección, a una persona principiante y a un equipo técnico. La respuesta debe ayudar a decidir qué se hace primero, qué se automatiza, qué se deja manual, qué se prueba con datos ficticios y qué queda bloqueado hasta tener aprobación.\n\n## Salida obligatoria\nDevuelve: uno, mapa del sistema con módulos y responsabilidades; dos, lista de herramientas candidatas y por qué entra cada una; tres, familias de prompts que se necesitan y cuándo se usan; cuatro, automatizaciones posibles con disparador, validación, acción, registro y ruta de error; cinco, skills o procedimientos reutilizables que conviene documentar; seis, datos que entran, datos que salen y permisos mínimos; siete, fases de implantación de piloto a uso real; ocho, entregables que deben conservarse; nueve, riesgos de privacidad, coste, dependencia del proveedor y mantenimiento; diez, criterios para decir que el kit está listo o que debe seguir en pruebas.\n\n## Gobierno y prueba\nAntes de usar datos reales, diseña una prueba con cuatro casos: normal, incompleto, duplicado y extremo. Para cada caso indica entrada ficticia, resultado esperado, dónde se comprueba, quién aprueba y qué se guarda como evidencia. Marca APROBACIÓN HUMANA OBLIGATORIA si el kit publica, envía mensajes, cambia permisos, borra datos, cobra dinero o afecta a personas. No inventes precios ni límites de planes: escribe COMPROBAR EN LA WEB OFICIAL. Termina con un primer paso de menos de treinta minutos y una decisión que pueda quedar pegada en Mi proyecto.`
 
-  while (wordCount(text) < 590) {
+  if (wordCount(text) < 560) {
     text += `\n\nAñade una matriz de operación con responsable, aprobador, frecuencia de revisión, señal de fallo, canal de aviso y plan de vuelta atrás. Si alguna parte puede hacerse manualmente durante el piloto, recomiéndala antes que una automatización compleja. Si hay una herramienta que parece atractiva pero no aporta evidencia o control, propón descartarla por ahora.`
   }
 
@@ -411,7 +412,7 @@ function makeFamily(meta, extra = {}) {
   }
 }
 
-export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFiles = []) {
+export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFiles = [], kits = []) {
   const toolById = new Map((toolPages || []).map((tool) => [tool.id, tool]))
   const generalEntries = []
   const output = []
@@ -426,7 +427,9 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
     }
   }
 
-  for (const [index, kit] of KIT_SCENARIOS.entries()) {
+  // Un prompt de arranque por cada kit institucional real, sin lista paralela
+  // que se desincronice cuando se añadan kits.
+  for (const [index, kit] of (kits || []).entries()) {
     pushGeneral(importKitPrompt(kit, index))
   }
 
@@ -436,67 +439,65 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
     }
   }
 
+  /*
+   * Antes cada tema aparecia dos o tres veces («Programa», «Biblioteca
+   * anterior»...) con el mismo contenido de fondo. Ahora hay UNA familia por
+   * tema; solo se parte en lotes numerados cuando supera los 50 prompts.
+   */
   for (const meta of CATEGORY_META) {
     const entries = generalEntries.filter((entry) => entry.categoryId === meta.id)
     if (!entries.length) continue
-    const bySource = new Map()
-    for (const entry of entries) {
-      const source = SOURCE_LABELS[entry.source] || entry.source || 'General'
-      if (!bySource.has(source)) bySource.set(source, [])
-      bySource.get(source).push(entry)
-    }
-    for (const [source, sourceEntries] of bySource.entries()) {
-      const sourceChunks = chunks(sourceEntries, 50)
-      for (const [index, group] of sourceChunks.entries()) {
-        const suffix = sourceChunks.length > 1 ? ` ${index + 1}` : ''
-        output.push(makeFamily(
-          {
-            id: `general-${meta.id}-${slug(source)}${suffix ? `-${index + 1}` : ''}`,
-            title: `${meta.title} · ${source}${suffix}`,
-            intro: `${group.length} prompts institucionales de ${source.toLowerCase()} para ${meta.intro.toLowerCase()}`,
-            categoryId: meta.id,
-          },
-          {
-            sectionId: GENERAL_SECTION.id,
-            sectionTitle: GENERAL_SECTION.title,
-            sectionDescription: GENERAL_SECTION.description,
-            blockTitle: `${meta.title}: ${source}${suffix}`,
-            blockDescription: `Lote pequeno con ${group.length} prompts. Contiene ${meta.intro.toLowerCase()}`,
-            useCase: GENERAL_SECTION.useCase,
-            audience: GENERAL_SECTION.audience,
-            toolId: 'general',
-            toolLabel: 'General institucional',
-            source,
-            prompts: group,
-          },
-        ))
-      }
+    const groups = chunks(entries, 50)
+    // «Prompts institucionales para entender…» → «entender…», para no repetirse
+    // al componer las frases de la ficha.
+    const purpose = meta.intro.replace(/^Prompts (institucionales )?para /i, '').toLowerCase()
+    for (const [index, group] of groups.entries()) {
+      const suffix = groups.length > 1 ? ` · lote ${index + 1} de ${groups.length}` : ''
+      output.push(makeFamily(
+        {
+          id: `general-${meta.id}${groups.length > 1 ? `-${index + 1}` : ''}`,
+          title: `${meta.title}${suffix}`,
+          intro: `${group.length} prompts institucionales para ${purpose}`,
+          categoryId: meta.id,
+        },
+        {
+          sectionId: GENERAL_SECTION.id,
+          sectionTitle: GENERAL_SECTION.title,
+          sectionDescription: GENERAL_SECTION.description,
+          blockTitle: `${meta.title}${suffix}`,
+          blockDescription: `${group.length} prompts listos para copiar, para ${purpose}`,
+          useCase: GENERAL_SECTION.useCase,
+          audience: GENERAL_SECTION.audience,
+          toolId: 'general',
+          toolLabel: 'General institucional',
+          source: 'General',
+          prompts: group,
+        },
+      ))
     }
   }
 
   for (const tool of toolPages || []) {
     if (MANUAL_ONLY_TOOLS.has(tool.id)) continue
 
+    const section = sectionForTool(tool)
+    const allowedCategories = SECTION_CATEGORY_IDS[section.id] || SECTION_CATEGORY_IDS['asistentes-modelos']
+
     const imported = (tool.guide?.prompts || [])
       .slice(0, 20)
       .map((prompt, index) => importToolPrompt(tool, prompt, index))
-    const extras = EXTRA_TASKS.map((task, index) => promptCore(tool, task, index))
-    const entries = [...imported, ...extras]
+    // Solo los encargos que tienen sentido con esta herramienta: nada de
+    // rellenar hasta una cifra fija con combinaciones absurdas.
+    const extras = EXTRA_TASKS
+      .filter((task) => allowedCategories.has(task[0]))
+      .map((task, index) => promptCore(tool, task, index))
+    const prompts = [...imported, ...extras].slice(0, 50)
 
-    let fallbackIndex = 0
-    while (entries.length < 50) {
-      const task = EXTRA_TASKS[fallbackIndex % EXTRA_TASKS.length]
-      entries.push(promptCore(tool, task, EXTRA_TASKS.length + fallbackIndex))
-      fallbackIndex += 1
-    }
-
-    const section = sectionForTool(tool)
-    const prompts = entries.slice(0, 50)
     output.push(makeFamily(
       {
         id: `herramienta-${tool.id}`,
-        title: `${tool.label} · 50 prompts`,
-        intro: `50 prompts institucionales para usar ${tool.label} dentro de proyectos reales, con corchetes rellenables, prueba, evidencia, coste, privacidad y entrega.`,
+        title: `${tool.label} · ${prompts.length} prompts`,
+        intro: `${prompts.length} prompts institucionales para usar ${tool.label} dentro de proyectos reales, con corchetes rellenables, prueba, evidencia, coste, privacidad y entrega.`,
         categoryId: 'herramienta',
       },
       {
@@ -504,7 +505,7 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
         sectionTitle: section.title,
         sectionDescription: section.description,
         blockTitle: tool.label,
-        blockDescription: `Lote cerrado de 50 prompts. Reparte el trabajo entre ${summarizeCategories(prompts)}.`,
+        blockDescription: `${prompts.length} prompts pertinentes para ${tool.label}. Reparte el trabajo entre ${summarizeCategories(prompts)}.`,
         useCase: section.useCase,
         audience: section.audience,
         toolId: tool.id,

@@ -1,4 +1,4 @@
-import { ArrowRight, BookMarked, BookOpen, Clock, FolderSearch, PlayCircle, Puzzle, Search, Sparkles, Workflow } from 'lucide-react'
+import { ArrowRight, BookMarked, BookOpen, Bot, Boxes, Clock, FolderSearch, PlayCircle, Puzzle, Search, Sparkles, Workflow } from 'lucide-react'
 import type { LevelId } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href } from '../router'
@@ -42,7 +42,7 @@ export default function Inicio() {
           <h1>{started ? 'Sigue donde lo dejaste.' : 'Empieza por aquí.'}</h1>
           <p>
             El curso son <strong>{coreLessons} lecciones</strong>, en orden. Todo lo demás (herramientas, prompts,
-            automatizaciones y diccionario) está ahí para cuando lo necesites. No hace falta mirarlo antes.
+            kits, agentes, automatizaciones y diccionario) está ahí para cuando lo necesites. No hace falta mirarlo antes.
           </p>
         </div>
         <div className="st-overall">
@@ -108,7 +108,9 @@ export default function Inicio() {
             <a href={href({ name: 'curso' })}><BookMarked size={14} /><span><strong>{coreLessons} lecciones guiadas</strong><small>La ruta que sí conviene seguir en orden.</small></span></a>
             <a href={href({ name: 'herramientas' })}><FolderSearch size={14} /><span><strong>{organizedTools} herramientas organizadas</strong><small>Cada ficha muestra como máximo 25 lecciones para evitar paredes de scroll.</small></span></a>
             <a href={href({ name: 'buscar', query: '', filters: {} })}><Search size={14} /><span><strong>{course.stats.fichas} fichas de consulta</strong><small>Para buscar algo concreto cuando te atasques.</small></span></a>
-            <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /><span><strong>{course.stats.workflows} ejemplos ya hechos</strong><small>Automatizaciones que puedes copiar y usar.</small></span></a>
+            <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /><span><strong>{course.stats.workflows} automatizaciones importables</strong><small>Flujos de n8n con su guía de credenciales, listos para usar.</small></span></a>
+            <a href={href({ name: 'kits' })}><Boxes size={14} /><span><strong>{(course.kits || []).length} kits institucionales</strong><small>Proyectos completos: brief, fases, prompts, flujo y entrega.</small></span></a>
+            <a href={href({ name: 'agentes' })}><Bot size={14} /><span><strong>{(course.agents || []).length} agentes listos para instalar</strong><small>Claude Code, GPTs, n8n y API, con instalación y prueba.</small></span></a>
           </div>
           <div className="st-brand-row" aria-label="Herramientas que cubre el curso">
             {SHOWCASE.map((icon) => <BrandMark key={icon} icon={icon} size={16} />)}

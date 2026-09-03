@@ -483,8 +483,98 @@ const EXTRA_PROMPT_TASKS = [
   ['Auditar privacidad y permisos', 'revisar qué datos entran, quién los ve y qué permisos has concedido', 'Marca datos personales, secretos, retención, enlaces públicos y acciones irreversibles.'],
 ]
 
-const MIN_TOOL_PROMPTS = 25
+const MAX_GENERATED_TOOL_PROMPTS = 25
 const NO_PROMPT_TOOLS = new Set(['wispr-flow'])
+
+/*
+ * Tipo de trabajo de cada encargo. Es lo que impide ofrecer «Crear un
+ * storyboard con Docker» o «Crear una imagen con PostgreSQL»: cada
+ * herramienta declara qué tipos de trabajo le pegan y solo recibe esos.
+ */
+const TASK_KINDS = {
+  'Definir un problema real': 'generic',
+  'Investigar y comparar opciones': 'generic',
+  'Analizar información propia': 'analysis',
+  'Extraer datos de documentos': 'data',
+  'Escribir una pieza profesional': 'writing',
+  'Revisar y mejorar un texto': 'writing',
+  'Crear una imagen': 'image',
+  'Editar una imagen de referencia': 'image',
+  'Planificar un vídeo': 'video',
+  'Crear un storyboard': 'video',
+  'Diseñar una web': 'web',
+  'Diseñar una aplicación': 'app',
+  'Hacer un cambio de código': 'code',
+  'Diagnosticar un error': 'tech',
+  'Diseñar una interfaz': 'design',
+  'Preparar datos y estructura': 'data',
+  'Automatizar un proceso': 'automation',
+  'Crear un agente con límites': 'automation',
+  'Evaluar calidad': 'generic',
+  'Documentar y entregar': 'generic',
+}
+
+const TOOL_TASK_KINDS = {
+  openai: ['generic', 'analysis', 'writing', 'image', 'automation', 'code', 'tech', 'data'],
+  anthropic: ['generic', 'analysis', 'writing', 'code', 'tech', 'data'],
+  claude: ['generic', 'analysis', 'writing', 'code', 'tech', 'data'],
+  'claude-code': ['generic', 'code', 'tech', 'data', 'automation'],
+  codex: ['generic', 'code', 'tech'],
+  copilot: ['generic', 'code', 'tech'],
+  cursor: ['generic', 'code', 'tech', 'app'],
+  vscode: ['generic', 'code', 'tech'],
+  github: ['generic', 'code', 'tech', 'automation'],
+  gemini: ['generic', 'analysis', 'writing', 'image', 'data', 'tech'],
+  perplexity: ['generic', 'analysis', 'writing'],
+  notebooklm: ['generic', 'analysis', 'data'],
+  huggingface: ['generic', 'code', 'tech', 'data', 'analysis'],
+  ollama: ['generic', 'code', 'tech', 'analysis'],
+  replicate: ['generic', 'image', 'video', 'code', 'tech'],
+  langchain: ['generic', 'code', 'tech', 'data', 'automation'],
+  colab: ['generic', 'code', 'tech', 'analysis', 'data'],
+  python: ['generic', 'code', 'tech', 'data', 'automation'],
+  node: ['generic', 'code', 'tech', 'automation'],
+  typescript: ['generic', 'code', 'tech'],
+  react: ['generic', 'code', 'tech', 'web', 'app', 'design'],
+  tailwind: ['generic', 'code', 'web', 'design'],
+  docker: ['generic', 'code', 'tech'],
+  vercel: ['generic', 'code', 'tech', 'web'],
+  lovable: ['generic', 'web', 'app', 'design', 'tech'],
+  v0: ['generic', 'web', 'app', 'design', 'tech'],
+  bolt: ['generic', 'web', 'app', 'design', 'tech'],
+  base44: ['generic', 'web', 'app', 'design', 'tech', 'data'],
+  replit: ['generic', 'web', 'app', 'code', 'tech'],
+  framer: ['generic', 'web', 'design'],
+  figma: ['generic', 'design', 'web', 'app', 'image'],
+  canva: ['generic', 'image', 'design', 'writing'],
+  midjourney: ['generic', 'image'],
+  'nano-banana': ['generic', 'image'],
+  higgsfield: ['generic', 'video', 'image'],
+  runway: ['generic', 'video', 'image'],
+  'seedance-2-5': ['generic', 'video'],
+  heygen: ['generic', 'video', 'writing'],
+  descript: ['generic', 'video', 'writing'],
+  elevenlabs: ['generic', 'video', 'writing'],
+  gamma: ['generic', 'writing', 'design'],
+  n8n: ['generic', 'automation', 'tech', 'data'],
+  zapier: ['generic', 'automation', 'tech', 'data'],
+  make: ['generic', 'automation', 'tech', 'data'],
+  pipedream: ['generic', 'automation', 'tech', 'code'],
+  slack: ['generic', 'automation', 'writing', 'tech'],
+  gmail: ['generic', 'automation', 'writing', 'tech'],
+  telegram: ['generic', 'automation', 'writing', 'tech'],
+  whatsapp: ['generic', 'automation', 'writing', 'tech'],
+  sheets: ['generic', 'data', 'analysis', 'automation', 'tech'],
+  airtable: ['generic', 'data', 'analysis', 'automation', 'tech'],
+  supabase: ['generic', 'data', 'code', 'tech', 'app'],
+  postgres: ['generic', 'data', 'code', 'tech'],
+  notion: ['generic', 'data', 'writing', 'analysis'],
+  obsidian: ['generic', 'data', 'writing', 'analysis'],
+}
+
+function allowedTaskKindsFor(toolId) {
+  return new Set(TOOL_TASK_KINDS[toolId] || ['generic', 'tech'])
+}
 
 const PROFILE_DEFAULT = {
   intro: 'Esta ficha no se queda en el nombre del producto: te enseña qué piezas hay dentro, qué decisión resuelve cada una y cómo encaja en un proyecto completo.',
@@ -640,7 +730,7 @@ function enrichToolPrompts(prompts, tool, profile) {
       if (wordCount(item.prompt) >= 500) break
       item.prompt += section
     }
-    while (wordCount(item.prompt) < 500) {
+    if (wordCount(item.prompt) < 450) {
       item.prompt += `\n\nAñade un ejemplo completo con datos ficticios, escrito como si yo fuera a hacerlo ahora mismo. El ejemplo debe incluir una entrada concreta, la salida exacta que debería aparecer, el punto donde debo revisarla, una decisión que no tomarías todavía y una señal clara para parar antes de gastar dinero, publicar, enviar o conectar datos reales.`
     }
   }
@@ -666,7 +756,7 @@ function promptFor(tool, profile, task, index) {
   const details = `\n\nDetalle específico de ${tool.label}: separa la decisión de ${name.toLowerCase()} del trabajo posterior. Escribe el nombre visible de cada función, qué campo entra, qué campo sale y cómo se revisa un caso dudoso. Si no está disponible, marca COMPROBAR DISPONIBILIDAD y ofrece una alternativa.`
   prompt += details
   if (wordCount(prompt) > 600) prompt = prompt.replace(details, '')
-  while (wordCount(prompt) < 500) prompt += `\n\nAntes de terminar, vuelve a mirar el caso concreto y añade un ejemplo rellenado con datos ficticios, una decisión que no tomarías todavía y la pregunta que tendría que responder una persona responsable antes de compartir el resultado.`
+  if (wordCount(prompt) < 450) prompt += `\n\nAntes de terminar, vuelve a mirar el caso concreto y añade un ejemplo rellenado con datos ficticios, una decisión que no tomarías todavía y la pregunta que tendría que responder una persona responsable antes de compartir el resultado.`
   return prompt
 }
 
@@ -706,11 +796,15 @@ function ensureMinimumToolPrompts(guide, tool, profile) {
   if (NO_PROMPT_TOOLS.has(tool.id)) return guide.prompts || []
   const prompts = Array.isArray(guide.prompts) ? guide.prompts : []
   const used = new Set(prompts.map((item) => String(item?.name || '').trim().toLowerCase()).filter(Boolean))
+  const allowed = allowedTaskKindsFor(tool.id)
+  // Solo encargos del tipo de trabajo que hace esta herramienta. Mejor 15
+  // prompts pertinentes que 25 con relleno: aquí no se rellena hasta una cifra.
   const candidates = [...PROMPT_TASKS, ...EXTRA_PROMPT_TASKS]
+    .filter((task) => allowed.has(TASK_KINDS[task[0]] || 'generic'))
   let index = prompts.length
 
   for (const task of candidates) {
-    if (prompts.length >= MIN_TOOL_PROMPTS) break
+    if (prompts.length >= MAX_GENERATED_TOOL_PROMPTS) break
     const name = `${task[0]} con ${tool.label}`
     if (used.has(name.toLowerCase())) continue
     prompts.push({
@@ -720,19 +814,6 @@ function ensureMinimumToolPrompts(guide, tool, profile) {
       model: profile.selection,
     })
     used.add(name.toLowerCase())
-    index += 1
-  }
-
-  while (prompts.length < MIN_TOOL_PROMPTS) {
-    const round = prompts.length - candidates.length + 1
-    const task = PROMPT_TASKS[prompts.length % PROMPT_TASKS.length]
-    const name = `${task[0]} aplicado a un caso ${round} con ${tool.label}`
-    prompts.push({
-      name,
-      prompt: promptFor(tool, profile, task, index),
-      when: `Úsalo cuando necesites una variante aplicada a un caso real distinto.`,
-      model: profile.selection,
-    })
     index += 1
   }
 

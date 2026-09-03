@@ -1,66 +1,377 @@
 {
-  "name": "26 Contract Clause Extractor",
+  "name": "26 · Extractor de cláusulas de contratos",
   "nodes": [
     {
       "parameters": {
-        "path": "26-contract-clause-extractor",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 26 · Cláusulas de contratos\n\nSi el riesgo global es ALTO se crea un borrador de Gmail para el equipo legal: nada se envía solo.\n\nCambia el destinatario del borrador y asigna credenciales de Anthropic, Gmail y Google Sheets. Herramienta de apoyo: NO es asesoría legal.",
+        "width": 460,
+        "height": 240
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_055",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        40
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"26 Contract Clause Extractor\",\n    category: \"legal\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-26-contrato",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_056",
+      "name": "Contrato recibido",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['cliente', 'texto_contrato'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst salida = {\n  cliente: String(b.cliente || '').trim(),\n  texto_contrato: String(b.texto_contrato || '').slice(0, 20000),\n  faltan: faltan,\n  valido: faltan.length === 0\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_057",
+      "name": "Validar contrato",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_007",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_058",
+      "name": "¿Contrato completo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const sistema = [\n  'Eres un asistente para revisión de contratos. NO das asesoría legal.',\n  'Extrae las cláusulas relevantes del contrato: duración, pagos, penalizaciones, confidencialidad, propiedad intelectual, rescisión, limitación de responsabilidad.',\n  'Para cada cláusula indica riesgo: alto, medio o bajo. No inventes cláusulas que no estén en el texto.',\n  'Responde SOLO con JSON válido con esta forma:',\n  '{ \"clausulas\": [ { \"tipo\": \"...\", \"resumen\": \"...\", \"riesgo\": \"alto\" } ], \"riesgo_global\": \"alto\" }'\n].join('\\n');\nconst peticion_ia = {\n  model: 'claude-opus-5',\n  max_tokens: 4096,\n  system: sistema,\n  messages: [\n    { role: 'user', content: 'CONTRATO (cliente ' + $json.cliente + '):\\n\\n' + $json.texto_contrato }\n  ]\n};\nreturn { json: { peticion_ia: peticion_ia } };"
+      },
+      "id": "nodo_059",
+      "name": "Preparar análisis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_ia) }}",
+        "options": {}
+      },
+      "id": "nodo_060",
+      "name": "Analizar con Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n');\nlet resultado;\ntry {\n  const inicio = texto.indexOf('{');\n  const fin = texto.lastIndexOf('}');\n  resultado = JSON.parse(texto.slice(inicio, fin + 1));\n} catch (e) {\n  resultado = { clausulas: [], riesgo_global: 'alto', error: 'respuesta_no_json' };\n}\nconst clausulas = resultado.clausulas || [];\nconst salida = {\n  cliente: $('Validar contrato').item.json.cliente,\n  riesgo_global: String(resultado.riesgo_global || 'alto').toLowerCase(),\n  total_clausulas: clausulas.length,\n  clausulas_resumen: clausulas.map(function (c) { return c.tipo + ' (' + c.riesgo + '): ' + c.resumen; }).join(' | '),\n  clausulas: clausulas,\n  analizado_en: new Date().toISOString()\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_061",
+      "name": "Parsear cláusulas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_008",
+              "leftValue": "={{ $json.riesgo_global }}",
+              "rightValue": "alto",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_062",
+      "name": "¿Riesgo alto?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "=[Revisar] Contrato de {{ $json.cliente }} con riesgo ALTO",
+        "emailType": "text",
+        "message": "=El análisis automático ha marcado riesgo global ALTO.\n\nCliente: {{ $json.cliente }}\nCláusulas detectadas: {{ $json.total_clausulas }}\n\n{{ $json.clausulas_resumen }}\n\nEste borrador NO se ha enviado: revísalo y decide tú. Análisis generado con IA, no es asesoría legal.",
+        "options": {
+          "sendTo": "REEMPLAZAR_legal@ejemplo.com"
+        }
+      },
+      "id": "nodo_063",
+      "name": "Borrador para legal",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1540,
+        120
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Contratos"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_064",
+      "name": "Registrar análisis",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1540,
+        340
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, riesgo_global: $json.riesgo_global, clausulas: $json.clausulas } }}",
+        "options": {}
+      },
+      "id": "nodo_065",
+      "name": "Responder cláusulas",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        340
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_066",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Contrato recibido": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar contrato",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar contrato": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Contrato completo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Contrato completo?": {
+      "main": [
+        [
+          {
+            "node": "Preparar análisis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar análisis": {
+      "main": [
+        [
+          {
+            "node": "Analizar con Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analizar con Claude": {
+      "main": [
+        [
+          {
+            "node": "Parsear cláusulas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear cláusulas": {
+      "main": [
+        [
+          {
+            "node": "¿Riesgo alto?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Riesgo alto?": {
+      "main": [
+        [
+          {
+            "node": "Borrador para legal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Registrar análisis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar análisis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar análisis": {
+      "main": [
+        [
+          {
+            "node": "Responder cláusulas",
             "type": "main",
             "index": 0
           }
@@ -71,13 +382,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "legal",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Contrato recibido": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +391,8 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "cliente": "Academia Demo SL",
+          "texto_contrato": "CLÁUSULA 1. Duración: 12 meses prorrogables. CLÁUSULA 2. Penalización por cancelación anticipada: 3 mensualidades. CLÁUSULA 3. Confidencialidad durante 5 años."
         }
       }
     ]

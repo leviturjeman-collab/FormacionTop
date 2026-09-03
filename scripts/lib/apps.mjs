@@ -300,7 +300,7 @@ const ALIASES = {
 /**
  * La guía de una herramienta SOLO se muestra si la lección va de esa
  * herramienta. Antes se elegía por área, y eso metía la guía de Docker en una
- * lección sobre Linux y el ejemplo de n8n en 289 lecciones distintas.
+ * lección sobre Linux y el ejemplo de n8n en cientos de lecciones distintas.
  */
 export function appGuideFor(tools, stageId, title = '') {
   const enTitulo = title.toLowerCase()

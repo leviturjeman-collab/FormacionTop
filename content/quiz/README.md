@@ -1,7 +1,7 @@
 # Preguntas por categoría
 
 El banco base está escrito por área (`scripts/lib/quizbank.mjs`): dos preguntas
-por área y nivel. Con 465 lecciones, eso significa que las lecciones de una
+por área y nivel. Con cientos de lecciones, eso significa que las lecciones de una
 misma área comparten preguntas.
 
 Esta carpeta lo arregla categoría a categoría. Cada archivo añade preguntas

@@ -1,66 +1,363 @@
 {
-  "name": "24 Consent Checker GDPR",
+  "name": "24 · Comprobador de consentimiento RGPD",
   "nodes": [
     {
       "parameters": {
-        "path": "24-consent-checker-gdpr",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 24 · Consentimiento RGPD\n\nRegistra cada alta con su base legal en Google Sheets (pestaña \"Consentimientos\") y bloquea el procesamiento si no hay consentimiento explícito.\n\nCambia el correo del responsable (DPO) en el nodo de Gmail. Esto es una ayuda técnica, no sustituye asesoría legal.",
+        "width": 460,
+        "height": 240
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_033",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        40
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"24 Consent Checker GDPR\",\n    category: \"legal\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-24-alta-datos",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_034",
+      "name": "Alta con datos personales",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['email', 'finalidad', 'consentimiento'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst texto = String(b.consentimiento).toLowerCase();\nconst consentimiento = b.consentimiento === true || texto === 'true' || texto === 'si' || texto === 'sí';\nconst salida = {\n  email: String(b.email || '').trim().toLowerCase(),\n  finalidad: String(b.finalidad || '').trim(),\n  consentimiento: consentimiento,\n  origen: String(b.origen || 'desconocido').trim(),\n  fecha_consentimiento: new Date().toISOString(),\n  faltan: faltan,\n  valido: faltan.length === 0\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_035",
+      "name": "Validar solicitud",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_004",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_036",
+      "name": "¿Campos completos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_005",
+              "leftValue": "={{ $json.consentimiento }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_037",
+      "name": "¿Hay consentimiento?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "asig_Marcar_como_consentido_0",
+              "name": "estado",
+              "value": "consentimiento_registrado",
+              "type": "string"
+            },
+            {
+              "id": "asig_Marcar_como_consentido_1",
+              "name": "puede_procesarse",
+              "value": "={{ true }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "nodo_038",
+      "name": "Marcar como consentido",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "asig_Marcar_sin_consentimiento_0",
+              "name": "estado",
+              "value": "bloqueado_sin_consentimiento",
+              "type": "string"
+            },
+            {
+              "id": "asig_Marcar_sin_consentimiento_1",
+              "name": "puede_procesarse",
+              "value": "={{ false }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "nodo_039",
+      "name": "Marcar sin consentimiento",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "REEMPLAZAR_dpo@ejemplo.com",
+        "subject": "=[RGPD] Alta bloqueada sin consentimiento: {{ $json.email }}",
+        "emailType": "text",
+        "message": "=Se ha recibido un alta sin consentimiento explícito y se ha bloqueado.\n\nEmail: {{ $json.email }}\nFinalidad declarada: {{ $json.finalidad }}\nOrigen: {{ $json.origen }}\nFecha: {{ $json.fecha_consentimiento }}\n\nNo se ha procesado ningún dato. Revisa el formulario de origen.",
+        "options": {}
+      },
+      "id": "nodo_040",
+      "name": "Avisar al responsable",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        500
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Consentimientos"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_041",
+      "name": "Registrar decisión",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        260
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: $json.puede_procesarse, estado: $json.estado, email: $json.email } }}",
+        "options": {}
+      },
+      "id": "nodo_042",
+      "name": "Responder decisión",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        260
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_043",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        500
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Alta con datos personales": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar solicitud",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar solicitud": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Campos completos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Campos completos?": {
+      "main": [
+        [
+          {
+            "node": "¿Hay consentimiento?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay consentimiento?": {
+      "main": [
+        [
+          {
+            "node": "Marcar como consentido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar sin consentimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como consentido": {
+      "main": [
+        [
+          {
+            "node": "Registrar decisión",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar sin consentimiento": {
+      "main": [
+        [
+          {
+            "node": "Registrar decisión",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Avisar al responsable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar decisión": {
+      "main": [
+        [
+          {
+            "node": "Responder decisión",
             "type": "main",
             "index": 0
           }
@@ -71,13 +368,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "legal",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Alta con datos personales": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +377,10 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "email": "alumna@ejemplo.es",
+          "finalidad": "envio de newsletter formativa",
+          "consentimiento": true,
+          "origen": "formulario web"
         }
       }
     ]

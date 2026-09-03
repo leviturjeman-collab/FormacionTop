@@ -13,7 +13,7 @@ export function useCourse(): CourseData {
   return value
 }
 
-/** Índices para no recorrer 465 lecciones en cada render. */
+/** Índices para no recorrer toda la biblioteca en cada render. */
 export function useIndexes() {
   const course = useCourse()
   return useMemo(() => {

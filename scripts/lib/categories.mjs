@@ -2,7 +2,7 @@
  * Capa de categorías.
  *
  * El vault ya tiene una jerarquía real de tres niveles. En vez de aplanar 465
- * lecciones en 10 áreas (que dejaba una con 105 lecciones), aquí se reconstruye:
+ * lecciones en 10 áreas (que dejaba una desbordada), aquí se reconstruye:
  *
  *   Área  →  Categoría  →  Lección
  *

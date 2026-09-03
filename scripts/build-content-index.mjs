@@ -32,7 +32,17 @@ const projectDir = path.resolve(scriptDir, '..')
 const publicDir = path.join(projectDir, 'public')
 const generatedDir = path.join(publicDir, 'generated')
 
-const IGNORED = new Set(['node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '36_PORTAL_WEB_FORMACION'])
+/*
+ * Carpetas que no forman parte del curso: infraestructura, documentación
+ * interna del proyecto (backlog, auditorías, planes de QA) y `content/`,
+ * que se carga de forma explícita con loadContent(). Lo que está aquí no
+ * llega nunca al alumno como lección.
+ */
+const IGNORED = new Set([
+  'node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '.claude',
+  '36_PORTAL_WEB_FORMACION', '99_PENDIENTE_Y_MEJORAS', '23_AUDITORIA_PROFESIONAL',
+  'content', 'scripts', 'src',
+])
 
 async function exists(target) {
   try { await fs.access(target); return true } catch { return false }
@@ -156,7 +166,12 @@ const promptFiles = await loadContent('prompts')
 const guideFiles = await loadContent('guias')
 const cursoFiles = await loadContent('lecciones')
 const kitFiles = await loadContent('kits')
+const agentFiles = await loadContent('agentes')
 const faqFiles = await loadContent('preguntas')
+
+// Las guías fundamentales siguen un orden pedagógico, no el del sistema de archivos.
+guideFiles.sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || String(a.title).localeCompare(String(b.title), 'es'))
+agentFiles.sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || String(a.title).localeCompare(String(b.title), 'es'))
 
 /* El orden de las preguntas sigue el recorrido del alumno, no el alfabetico
  * del sistema de archivos: primero lo que se pregunta antes de empezar. */
@@ -195,264 +210,17 @@ function enrichPrompts(items, context) {
 
 for (const family of promptFiles) enrichPrompts(family.prompts, family.title)
 
-const EXTRA_INSTITUTIONAL_KITS = [
-  {
-    id: 'portal-app-institucional',
-    order: 2,
-    title: 'Portal web o app institucional',
-    kicker: 'Web, app y publicación',
-    audience: 'equipos que necesitan una web, portal interno, dashboard o aplicación pequeña',
-    promise: 'Convierte una necesidad de negocio en una interfaz publicada, con contenido real, rutas claras, QA y mantenimiento.',
-    focus: 'diseñar, construir, revisar y publicar un portal o aplicación institucional',
-    entry: 'brief, contenidos, usuarios, permisos y pantallas necesarias',
-    output: 'web o app navegable, checklist de QA, README, deploy y plan de mantenimiento',
-    tools: ['openai', 'claude', 'v0', 'lovable', 'github', 'vercel', 'figma', 'supabase'],
-    promptFamilies: ['crear-proyecto', 'programar', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['web', 'app', 'deploy', 'qa', 'frontend', 'github', 'vercel'],
-    deliverables: ['Mapa de pantallas', 'Repositorio o versión publicada', 'Plan de QA', 'Manual de actualización'],
-    fits: ['Landing o web corporativa con contenidos reales', 'Portal interno con roles y estados', 'Dashboard de seguimiento para dirección', 'Prototipo que debe enseñarse a cliente sin parecer maqueta'],
-    notFor: ['Apps críticas sin equipo técnico responsable', 'Productos que manejan pagos o salud sin revisión legal', 'Sustituir investigación de usuarios por una pantalla bonita'],
-  },
-  {
-    id: 'rag-documental',
-    order: 3,
-    title: 'Sistema documental y RAG',
-    kicker: 'Datos y conocimiento',
-    audience: 'equipos con manuales, documentos, normativa, contratos o conocimiento interno',
-    promise: 'Convierte documentos dispersos en respuestas con fuente, permisos, actualización y prueba de calidad.',
-    focus: 'organizar documentos y montar una base consultable con respuestas verificables',
-    entry: 'PDF, docs, carpetas, hojas y preguntas frecuentes internas',
-    output: 'inventario documental, base de conocimiento, preguntas de prueba y criterio de respuesta con fuente',
-    tools: ['openai', 'claude', 'notebooklm', 'supabase', 'postgres', 'langchain', 'sheets', 'notion'],
-    promptFamilies: ['conectar-datos', 'probar-reparar', 'seguridad-coste-privacidad'],
-    skillKeywords: ['rag', 'documentos', 'fuentes', 'conocimiento', 'datos'],
-    deliverables: ['Inventario documental', 'Política de fuentes', 'Set de preguntas de prueba', 'Registro de actualización'],
-    fits: ['Manuales internos que nadie encuentra', 'Normativa que debe citar fuente', 'Onboarding con respuestas repetidas', 'Soporte interno con documentación dispersa'],
-    notFor: ['Responder sin fuente visible', 'Meter documentos sensibles sin permisos', 'Usar documentos desactualizados como si fueran verdad vigente'],
-  },
-  {
-    id: 'contenido-presentaciones',
-    order: 4,
-    title: 'Máquina de contenido y presentaciones',
-    kicker: 'Contenido y venta',
-    audience: 'marketing, formación, ventas, agencias, docentes y equipos comerciales',
-    promise: 'Convierte ideas, clases o campañas en guiones, decks, piezas visuales y calendario con revisión editorial.',
-    focus: 'crear contenido institucional reutilizable sin perder tono, fuentes ni aprobación',
-    entry: 'objetivos, audiencia, materiales fuente, calendario y guía de marca',
-    output: 'calendario editorial, guiones, presentaciones, piezas visuales y checklist de aprobación',
-    tools: ['openai', 'claude', 'gamma', 'canva', 'figma', 'midjourney', 'runway', 'higgsfield', 'elevenlabs'],
-    promptFamilies: ['crear-contenido', 'entregar-equipo-cliente', 'seguridad-coste-privacidad'],
-    skillKeywords: ['contenido', 'deck', 'presentacion', 'video', 'imagen', 'marca'],
-    deliverables: ['Calendario editorial', 'Guiones aprobados', 'Deck reutilizable', 'Banco de piezas visuales'],
-    fits: ['Cursos y webinars', 'Presentaciones comerciales', 'Campañas con varias piezas', 'Documentación convertida en materiales enseñables'],
-    notFor: ['Publicar sin revisión de marca', 'Usar imágenes con derechos dudosos', 'Crear mucho contenido sin una métrica o audiencia concreta'],
-  },
-  {
-    id: 'agentes-codigo-produccion',
-    order: 5,
-    title: 'Agentes de código, QA y producción',
-    kicker: 'Código y mantenimiento',
-    audience: 'builders, equipos técnicos, founders y alumnos avanzados',
-    promise: 'Organiza asistentes de código con repositorio, tareas pequeñas, pruebas, revisión humana, deploy y recuperación.',
-    focus: 'construir y mantener software con agentes sin romper producción',
-    entry: 'repositorio, issue, rama, entorno local, pruebas y criterio de aceptación',
-    output: 'tarea técnica acotada, diff revisable, tests, deploy y plan de rollback',
-    tools: ['codex', 'claude-code', 'cursor', 'github', 'typescript', 'react', 'node', 'python', 'docker', 'vercel'],
-    promptFamilies: ['programar', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['codigo', 'qa', 'tests', 'pull request', 'deploy', 'rollback'],
-    deliverables: ['Issue técnico', 'Pull request revisable', 'Plan de pruebas', 'Notas de despliegue'],
-    fits: ['Cambios pequeños en una app existente', 'Corrección de bugs con test', 'Refactor acotado', 'Deploy controlado a producción'],
-    notFor: ['Reescribir un producto entero sin contexto', 'Dar permisos de producción sin revisión', 'Aceptar un diff sin probarlo'],
-  },
-  {
-    id: 'crm-reporting-institucional',
-    order: 6,
-    title: 'CRM, datos y reporting institucional',
-    kicker: 'Ventas y dirección',
-    audience: 'ventas, dirección, operaciones comerciales y administración',
-    promise: 'Conecta captación, seguimiento, reporting y decisiones comerciales con trazabilidad y datos limpios.',
-    focus: 'pasar de leads dispersos a seguimiento medible y reportes de dirección',
-    entry: 'formularios, emails, llamadas, hojas, CRM y estados comerciales',
-    output: 'pipeline limpio, alertas, informe semanal y reglas de seguimiento',
-    tools: ['airtable', 'sheets', 'hubspot', 'gmail', 'slack', 'n8n', 'make', 'openai'],
-    promptFamilies: ['automatizar', 'conectar-datos', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['crm', 'ventas', 'reporting', 'pipeline', 'lead'],
-    deliverables: ['Modelo de datos comercial', 'Workflow de seguimiento', 'Dashboard semanal', 'Manual de estados'],
-    fits: ['Leads que llegan por varios canales', 'Seguimiento comercial que depende de memoria', 'Reportes semanales hechos a mano', 'Carteras de clientes con estados poco claros'],
-    notFor: ['Mandar mensajes comerciales sin consentimiento', 'Automatizar descuentos o cobros sin aprobación', 'Reportar datos que nadie mantiene limpios'],
-  },
-  {
-    id: 'campus-onboarding-ia',
-    order: 7,
-    title: 'Campus de formación y onboarding con IA',
-    kicker: 'Formación interna',
-    audience: 'academias, equipos de formación, RR. HH. y responsables de adopción',
-    promise: 'Convierte conocimiento interno en ruta de aprendizaje, ejercicios, evaluación, evidencias y soporte al alumno.',
-    focus: 'diseñar formación práctica con IA, tareas verificables y seguimiento de progreso',
-    entry: 'temario, perfiles de alumno, materiales fuente, calendario y criterios de evaluación',
-    output: 'programa por niveles, ejercicios, banco de preguntas, evidencias y panel de progreso',
-    tools: ['openai', 'claude', 'notion', 'sheets', 'gamma', 'canva', 'wispr-flow', 'n8n'],
-    promptFamilies: ['aprender-desde-cero', 'crear-contenido', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['formacion', 'onboarding', 'evaluacion', 'alumnos', 'curso'],
-    deliverables: ['Ruta formativa', 'Ejercicios por nivel', 'Banco de preguntas', 'Sistema de evidencias'],
-    fits: ['Formar equipos no técnicos', 'Onboarding de nuevas personas', 'Cursos con prácticas reales', 'Soporte al alumno con dudas repetidas'],
-    notFor: ['Evaluar personas solo con IA', 'Usar datos de menores sin política clara', 'Convertir formación en vídeos sin práctica'],
-  },
-  {
-    id: 'atencion-cliente-multicanal',
-    order: 8,
-    title: 'Atención al cliente multicanal',
-    kicker: 'Soporte y comunicación',
-    audience: 'soporte, recepción, ventas internas y equipos de atención',
-    promise: 'Ordena mensajes de email, WhatsApp, formularios y chat en una cola con prioridad, borrador y aprobación.',
-    focus: 'atender mejor sin responder automáticamente a ciegas',
-    entry: 'mensajes entrantes, datos de cliente, historial y política de respuesta',
-    output: 'cola priorizada, borradores, escalado humano, registro y métricas de respuesta',
-    tools: ['gmail', 'whatsapp', 'telegram', 'slack', 'n8n', 'zapier', 'openai', 'sheets'],
-    promptFamilies: ['automatizar', 'crear-agentes', 'probar-reparar', 'seguridad-coste-privacidad'],
-    skillKeywords: ['soporte', 'cliente', 'whatsapp', 'correo', 'ticket', 'prioridad'],
-    deliverables: ['Mapa de canales', 'Cola de casos', 'Plantillas de respuesta', 'Protocolo de escalado'],
-    fits: ['Bandejas compartidas saturadas', 'WhatsApp de negocio sin seguimiento', 'Tickets sin prioridad', 'Respuestas repetidas que deben revisarse'],
-    notFor: ['Responder temas legales o médicos sin persona responsable', 'Enviar mensajes masivos sin permiso', 'Prometer plazos que el equipo no puede cumplir'],
-  },
-  {
-    id: 'gobierno-costes-ia',
-    order: 9,
-    title: 'Gobierno, seguridad y costes de IA',
-    kicker: 'Control institucional',
-    audience: 'dirección, legal, seguridad, tecnología y responsables de adopción',
-    promise: 'Define qué se puede usar, con qué datos, cuánto cuesta, quién aprueba y cómo se audita.',
-    focus: 'crear una política operativa de IA que permita avanzar sin perder control',
-    entry: 'herramientas en uso, tipos de datos, casos de uso, riesgos y presupuesto',
-    output: 'política de uso, matriz de permisos, límites de gasto, registro de riesgos y cadencia de revisión',
-    tools: ['openai', 'claude', 'github', 'notion', 'sheets', 'n8n', 'supabase', 'vercel'],
-    promptFamilies: ['seguridad-coste-privacidad', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['seguridad', 'coste', 'privacidad', 'politica', 'gobierno', 'auditoria'],
-    deliverables: ['Política de IA', 'Matriz de permisos', 'Registro de riesgos', 'Plan de auditoría'],
-    fits: ['Equipos que ya usan IA sin reglas comunes', 'Dirección que necesita aprobar pilotos', 'Proveedores que piden tratamiento de datos', 'Proyectos que pueden gastar crédito o publicar contenido'],
-    notFor: ['Bloquear todo por miedo', 'Aprobar herramientas sin revisar datos', 'Confundir checklist interna con asesoramiento legal completo'],
-  },
-]
+/*
+ * Los kits institucionales viven en content/kits/*.json, un archivo por kit,
+ * escritos a mano y completos. Aqui solo se ordenan: no se genera ni se clona
+ * ningun kit en build. Si falta contenido, se nota en la pagina y se escribe
+ * en su archivo, no aqui.
+ */
+const institutionalKits = [...kitFiles].sort((a, b) => (a.order || 0) - (b.order || 0))
 
-function cloneJson(value) {
-  return JSON.parse(JSON.stringify(value))
-}
-
-function scenarioBrief(scenario, basePrompt) {
-  return `Actúa como arquitecta institucional de sistemas de IA. Vamos a diseñar el kit "${scenario.title}" para una organización real. El foco no es montar botones sueltos: es ${scenario.focus}.
-
-Contexto obligatorio:
-- Institución o cliente: [INSTITUCION]
-- Área responsable: [AREA_EQUIPO]
-- Personas usuarias: [PERFIL_PERSONA]
-- Problema o proceso: [PROCESO_O_PROBLEMA]
-- Entrada real: ${scenario.entry}. Ajusta esto con [ENTRADA_REAL].
-- Salida esperada: ${scenario.output}. Ajusta esto con [SALIDA_ESPERADA].
-- Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]
-- Restricciones: [RESTRICCIONES]
-- Datos sensibles: [DATOS_SENSIBLES]
-- Fecha de revisión: [FECHA_REVISION]
-
-Primero devuelve el proceso actual en pasos, después hazme solo las tres preguntas que más cambiarían el diseño y espera mi respuesta. Cuando conteste, separa qué va manual, qué se automatiza, qué se prueba con datos ficticios, quién aprueba y qué evidencia se guarda. No recomiendes usar datos reales hasta que existan permisos, pruebas y criterio de parada.
-
-Si necesitas una base más estricta, conserva esta lógica de trabajo:
-
-${basePrompt}`
-}
-
-function adaptPrompt(prompt, scenario, index) {
-  return {
-    ...prompt,
-    id: `${scenario.id}-${prompt.id || `prompt-${index + 1}`}`,
-    name: `${scenario.title} · ${prompt.name}`,
-    when: `Úsalo dentro del kit "${scenario.title}" cuando toque ${String(prompt.when || 'preparar una decisión verificable').toLowerCase()}`,
-    prompt: `Adapta este paso al kit "${scenario.title}". Foco: ${scenario.focus}. Entrada principal: ${scenario.entry}. Salida esperada: ${scenario.output}. Mantén revisión humana, prueba con datos ficticios, coste visible, privacidad y evidencia.\n\n${prompt.prompt}`,
-    expect: `${prompt.expect} Adaptado a ${scenario.title}, con evidencia y siguiente acción claras.`,
-  }
-}
-
-function adaptWorkflow(workflow, scenario) {
-  return {
-    ...workflow,
-    name: `${scenario.title} · circuito base`,
-    what: `Circuito base para ${scenario.focus}. Está pensado como esqueleto importable: entrada, normalización, validación, IA si aporta valor, registro, aviso y aprobación humana antes de cualquier acción sensible.`,
-    needs: [
-      `Una entrada definida: ${scenario.entry}.`,
-      `Una salida aprobada: ${scenario.output}.`,
-      'Credenciales de prueba, no credenciales definitivas, hasta pasar los casos normal, incompleto, duplicado y extremo.',
-    ],
-    fill: [
-      ['[ENTRADA_REAL]', scenario.entry],
-      ['[SALIDA_ESPERADA]', scenario.output],
-      ['[CANAL_AVISO]', 'Dónde se avisa a la persona responsable: Slack, correo, Telegram o panel interno.'],
-      ['[APROBADOR]', 'Persona que revisa antes de publicar, enviar, borrar, cobrar o cambiar permisos.'],
-    ],
-    careful: [
-      'No actives el circuito con datos reales hasta tener prueba con datos ficticios y aprobación humana.',
-      'No conectes cuentas personales si el kit pertenece a una institución o cliente.',
-      'Si publica, envía mensajes, cambia permisos o consume crédito, debe existir un punto de parada visible.',
-    ],
-  }
-}
-
-function expandInstitutionalKits(files) {
-  if (!files.length) return files
-  const base = files.find((kit) => kit.id === 'operaciones-ia') || files[0]
-  const generated = EXTRA_INSTITUTIONAL_KITS.map((scenario) => {
-    const kit = cloneJson(base)
-    kit.id = scenario.id
-    kit.order = scenario.order
-    kit.title = scenario.title
-    kit.kicker = scenario.kicker
-    kit.promise = scenario.promise
-    kit.audience = scenario.audience
-    kit.plain = `Este kit sirve para ${scenario.focus}. Trabaja con ${scenario.entry} y busca terminar con ${scenario.output}. No es una colección de prompts sueltos: combina alcance, herramientas, datos, fases, pruebas, riesgos, entrega y mantenimiento. La versión mínima debe funcionar con datos ficticios antes de tocar cuentas reales; la versión real necesita responsable, aprobación y evidencia guardada.`
-    kit.fits = scenario.fits
-    kit.notFor = scenario.notFor
-    kit.tools = scenario.tools
-    kit.promptFamilies = scenario.promptFamilies
-    kit.skillKeywords = scenario.skillKeywords
-    kit.deliverables = scenario.deliverables
-    kit.brief = {
-      ...kit.brief,
-      name: `Define el kit de ${scenario.title}`,
-      when: 'Lo primero: antes de elegir herramienta, automatización o pantalla.',
-      prompt: scenarioBrief(scenario, kit.brief.prompt),
-      expect: `Un alcance inicial para ${scenario.title}: proceso, preguntas críticas, límites, prueba con datos ficticios y criterio de éxito.`,
-    }
-    kit.scopes = (kit.scopes || []).map((scope) => ({
-      ...scope,
-      what: scope.id === 'minimo'
-        ? `Piloto pequeño de ${scenario.focus}: una entrada, una salida, una revisión humana y evidencia guardada.`
-        : scope.id === 'estandar'
-          ? `Sistema operativo de ${scenario.focus}: varios casos, estados, pruebas, responsables y documentación.`
-          : `Versión avanzada de ${scenario.focus}: métricas, alertas, recuperación, histórico y revisión periódica.`,
-    }))
-    kit.prompts = (kit.prompts || []).slice(0, 10).map((prompt, index) => adaptPrompt(prompt, scenario, index))
-    kit.workflows = (kit.workflows || []).slice(0, 1).map((workflow) => adaptWorkflow(workflow, scenario))
-    kit.phases = (kit.phases || []).map((phase) => ({
-      ...phase,
-      goal: `${phase.goal} En este kit se aplica a: ${scenario.focus}.`,
-      deliverable: `${phase.deliverable} · Adaptado a ${scenario.output}.`,
-    }))
-    kit.testData = [
-      { name: 'Normal', input: `Caso ficticio completo para ${scenario.title}: ${scenario.entry}.`, expect: `Se genera ${scenario.output} con responsable, estado y evidencia.` },
-      { name: 'Incompleto', input: `Falta un dato clave en ${scenario.entry}.`, expect: 'El sistema no inventa: pide el dato, marca bloqueo y conserva registro.' },
-      { name: 'Duplicado', input: `El mismo caso llega dos veces por canales distintos.`, expect: 'Se detecta duplicado y no se crean dos acciones reales.' },
-      { name: 'Extremo', input: `Caso sensible, urgente o con coste dentro de ${scenario.focus}.`, expect: 'Se detiene, escala a una persona y marca aprobación humana obligatoria.' },
-    ]
-    kit.delivery = (kit.delivery || []).map((item) => ({
-      ...item,
-      what: `${item.what} En este kit debe dejar claro cómo operar ${scenario.title}.`,
-    }))
-    return kit
-  })
-  const existingIds = new Set(files.map((kit) => kit.id))
-  return [...files, ...generated.filter((kit) => !existingIds.has(kit.id))]
-}
-
-const institutionalKits = expandInstitutionalKits(kitFiles)
-
+// Se regenera todo desde cero: sin esto, los archivos de lecciones o
+// workflows retirados se quedarían huérfanos en public/generated.
+await fs.rm(generatedDir, { recursive: true, force: true })
 await fs.mkdir(generatedDir, { recursive: true })
 const allFiles = await walk(vaultDir)
 const markdownFiles = allFiles.filter((file) => file.toLowerCase().endsWith('.md'))
@@ -513,6 +281,9 @@ const usedSlugs = new Set()
 
 for (const absolute of markdownFiles) {
   const relativePath = toPosix(path.relative(vaultDir, absolute))
+  // Los .md sueltos en la raíz (README, changelog, planes) son documentación
+  // del proyecto, no material del curso.
+  if (!relativePath.includes('/')) continue
   const raw = await fs.readFile(absolute, 'utf8')
   const signal = extract(raw, relativePath)
 
@@ -875,7 +646,7 @@ const toolPages = TOOLS
   .filter((tool) => tool.count > 0 || tool.guide || conItinerario.has(tool.id))
   .sort((a, b) => b.count - a.count)
 
-const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles)
+const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles, institutionalKits)
 for (const family of promptLibrary) enrichPrompts(family.prompts, family.title)
 
 /* --- Biblioteca: carpetas del vault -------------------------------- */
@@ -923,6 +694,7 @@ const course = {
     projects: areaProjects.length,
     decks: deckFiles.length,
     kits: institutionalKits.length,
+    agents: agentFiles.length,
     preguntas: faqFiles.reduce((suma, grupo) => suma + (grupo.preguntas?.length || 0), 0),
     sourceWords: lessons.reduce((sum, lesson) => sum + lesson.sourceWords, 0),
     quizQuestions: lessons.reduce(
@@ -942,7 +714,8 @@ const course = {
   prompts: promptLibrary,
   guides: guideFiles,
   curso: cursoFiles.sort((a, b) => (a.number || 0) - (b.number || 0)),
-  kits: institutionalKits.sort((a, b) => (a.order || 0) - (b.order || 0)),
+  kits: institutionalKits,
+  agents: agentFiles,
   preguntas: faqFiles,
   toolPages,
   glossaryIndex,

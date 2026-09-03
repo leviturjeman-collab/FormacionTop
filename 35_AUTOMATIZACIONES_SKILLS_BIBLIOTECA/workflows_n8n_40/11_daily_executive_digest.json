@@ -1,68 +1,374 @@
 {
-  "name": "11 Daily Executive Digest",
+  "name": "11 · Digest diario para dirección por Telegram",
   "nodes": [
+    {
+      "parameters": {
+        "content": "## 11 · Digest para dirección\n\n1. Credenciales: Google Sheets, Anthropic API y Telegram Bot.\n2. Pestaña \"KPIs\" con columnas: metrica, valor, variacion. Pestaña \"Digests\" como histórico.\n3. Cambia la URL del RSS por la fuente de noticias de tu sector.\n4. REEMPLAZAR_CHAT_ID: el chat de Telegram de dirección.",
+        "width": 420,
+        "height": 240
+      },
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Cómo se unen las fuentes\n\nEl disparador lanza en paralelo la lectura de KPIs y el RSS; el nodo \"Unir fuentes\" junta ambos resultados antes de resumir. Añade más fuentes conectándolas al mismo Merge.",
+        "width": 380,
+        "height": 200
+      },
+      "id": "nodo-002",
+      "name": "Nota · Dos fuentes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        20
+      ]
+    },
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "field": "hours",
-              "hoursInterval": 24
+              "field": "days",
+              "triggerAtHour": 8
             }
           ]
         }
       },
-      "id": "trigger",
-      "name": "Schedule",
+      "id": "nodo-003",
+      "name": "Cada día a las 8",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.2,
       "position": [
-        0,
-        0
+        40,
+        400
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"11 Daily Executive Digest\",\n    category: \"productividad\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "KPIs"
+        },
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "nodo-004",
+      "name": "Leer KPIs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
       "position": [
-        280,
-        0
+        260,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=inteligencia+artificial+empresas&hl=es",
+        "options": {}
+      },
+      "id": "nodo-005",
+      "name": "Noticias del sector",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        500
       ]
     },
     {
-      "parameters": {},
-      "id": "respond",
-      "name": "Fin",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "nodo-006",
+      "name": "Unir fuentes",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
       "position": [
-        560,
-        0
+        480,
+        400
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Separa KPIs de noticias y construye el contexto para la IA.\nconst items = $input.all().map((i) => i.json);\nconst kpis = items.filter((x) => x.metrica !== undefined);\nconst noticias = items\n  .filter((x) => x.title !== undefined)\n  .slice(0, 8)\n  .map((n) => ({ titulo: n.title, enlace: n.link }));\nreturn [{ json: {\n  hay_datos: kpis.length + noticias.length > 0,\n  kpis,\n  noticias,\n  fecha: new Date().toISOString().slice(0, 10),\n} }];"
+      },
+      "id": "nodo-007",
+      "name": "Preparar digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.hay_datos }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-008",
+      "name": "¿Hay datos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-5', max_tokens: 1024, system: \"Eres jefe de gabinete. Escribe un digest diario para direccion en espanol: maximo 12 lineas de texto plano, primero KPIs con su variacion, despues 3 titulares relevantes con una linea de por que importan. Sin florituras.\", messages: [{ role: 'user', content: 'Redacta el digest del ' + $json.fecha + '. KPIs: ' + JSON.stringify($json.kpis) + '. Noticias: ' + JSON.stringify($json.noticias) }] }) }}",
+        "options": {}
+      },
+      "id": "nodo-009",
+      "name": "Redactar digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Se queda con el texto del digest.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst previo = $('Preparar digest').item.json;\nreturn [{ json: {\n  fecha: previo.fecha,\n  digest: bloque ? bloque.text : 'La IA no devolvio texto: revisa la ejecucion.',\n} }];"
+      },
+      "id": "nodo-010",
+      "name": "Extraer texto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "REEMPLAZAR_CHAT_ID",
+        "text": "={{ 'DIGEST ' + $json.fecha + '\\n\\n' + $json.digest }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "nodo-011",
+      "name": "Enviar a dirección",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1580,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REEMPLAZAR",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Digests"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.fecha }}",
+            "digest": "={{ $json.digest.slice(0, 5000) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-012",
+      "name": "Registrar digest",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1800,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
     }
   ],
   "connections": {
-    "Schedule": {
+    "Cada día a las 8": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Leer KPIs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Noticias del sector",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Leer KPIs": {
       "main": [
         [
           {
-            "node": "Fin",
+            "node": "Unir fuentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Noticias del sector": {
+      "main": [
+        [
+          {
+            "node": "Unir fuentes",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Unir fuentes": {
+      "main": [
+        [
+          {
+            "node": "Preparar digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar digest": {
+      "main": [
+        [
+          {
+            "node": "¿Hay datos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay datos?": {
+      "main": [
+        [
+          {
+            "node": "Redactar digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redactar digest": {
+      "main": [
+        [
+          {
+            "node": "Extraer texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer texto": {
+      "main": [
+        [
+          {
+            "node": "Enviar a dirección",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar a dirección": {
+      "main": [
+        [
+          {
+            "node": "Registrar digest",
             "type": "main",
             "index": 0
           }
@@ -71,23 +377,9 @@
     }
   },
   "settings": {
-    "executionOrder": "v1",
-    "timezone": "Europe/Madrid"
+    "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "productividad",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Schedule": [
-      {
-        "asunto": "Resumen del día",
-        "responsable": "Marta",
-        "email": "marta@ejemplo.es",
-        "pendientes": 3,
-        "fecha": "2026-09-01"
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

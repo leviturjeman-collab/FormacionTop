@@ -1,353 +1,82 @@
-# 18 Abandoned Cart Followup
+# 18 · Seguimiento de carrito abandonado por WhatsApp
 
-## Objetivo
+## Qué hace
 
-Automatizacion n8n para el area **ecommerce**. Esta plantilla es didactica: debe importarse, probarse con payload ficticio y adaptarse antes de produccion.
+Cada hora lee la pestaña "Carritos" y busca carritos pendientes. Solo son elegibles los que tienen teléfono, consentimiento explícito (consentimiento = si) y llevan entre 1 y 48 horas abandonados. Por cada elegible, Slack pide aprobación humana; solo si alguien pulsa Approve se envía al cliente la **plantilla aprobada de WhatsApp** "recordatorio_carrito". Los descartados y los enviados quedan registrados en Sheets con su motivo.
 
-## Entrada esperada
+## Antes de empezar
 
-JSON con datos del proceso: usuario, email si aplica, descripcion, prioridad, fuente y consentimiento cuando haya datos personales.
+- Una cuenta de **n8n**: n8n Cloud (de pago, con prueba gratuita) o **self-hosted gratis** (Docker en tu servidor).
+- **Google Sheets/Gmail/Calendar**: gratis con tu cuenta de Google.
+- **Slack**: gratis (un bot en tu workspace, plan free suficiente).
+- **WhatsApp**: requiere **cuenta Meta Business + WhatsApp Business Cloud API con número verificado**. Enviar mensajes tiene coste por conversación y, fuera de la ventana de 24 h, exige **plantillas aprobadas** por Meta.
 
-## Salida esperada
+## Credenciales paso a paso
 
-JSON enriquecido con estado, categoria, decision, evidencia y siguiente accion.
+### Google Sheets (OAuth2) — gratis con cuenta de Google
+1. En n8n: **Credentials > New > Google Sheets OAuth2 API**.
+2. En n8n Cloud basta con pulsar **Sign in with Google** y autorizar tu cuenta.
+3. En n8n self-hosted, antes crea un proyecto en [console.cloud.google.com](https://console.cloud.google.com), activa la **Google Sheets API**, crea un **OAuth Client ID** (tipo Web) y pega la Redirect URI que te muestra n8n; después copia Client ID y Client Secret en la credencial y haz el Sign in.
+4. Crea una hoja de cálculo nueva, copia el ID que hay en su URL (entre `/d/` y `/edit`) y pégalo en los nodos donde pone `REEMPLAZAR_ID_DOCUMENTO`.
 
-## Caso feliz
+### Slack Bot — gratis (plan free de Slack vale)
+1. Entra en [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → *From scratch* → elige tu workspace.
+2. En **OAuth & Permissions > Scopes > Bot Token Scopes** añade `chat:write` (y `channels:read` para elegir canal por lista).
+3. **Install to Workspace** → copia el **Bot User OAuth Token** (`xoxb-...`).
+4. En n8n: **Credentials > New > Slack API** → pega el token → guarda como **Slack Bot**.
+5. En Slack, invita al bot al canal: `/invite @tu-bot`. El ID del canal sale al pulsar el nombre del canal (abajo del todo) y va donde pone `REEMPLAZAR_ID_CANAL`.
 
-Payload completo, credenciales configuradas y salida validada.
+### WhatsApp Business Cloud — requiere cuenta Meta Business (el API tiene coste por conversación)
+1. Entra en [developers.facebook.com](https://developers.facebook.com) → **My Apps > Create App** → tipo **Business**.
+2. Añade el producto **WhatsApp** a la app. Necesitas una cuenta **Meta Business verificada** y un **número de teléfono propio verificado** (el número de prueba solo sirve para 5 destinatarios de test).
+3. En **WhatsApp > API Setup** copia el **Phone Number ID** (va donde pone `REEMPLAZAR_PHONE_NUMBER_ID`).
+4. Crea un **token permanente**: Business Settings → **System Users** → crea uno, asígnale la app y genera un token con permisos `whatsapp_business_messaging` y `whatsapp_business_management`.
+5. En n8n: **Credentials > New > WhatsApp API** → pega el token de acceso → guarda como **WhatsApp Business Cloud**.
 
-## Caso roto
+## Cómo importar
 
-Campo obligatorio ausente, credencial falsa, API rate limit, dato sensible sin consentimiento o accion que requiere aprobacion humana.
+1. En n8n ve a **Workflows > ⋯ > Import from File** (o *Import from Clipboard* y pega el contenido del JSON).
+2. Al abrirse el lienzo verás nodos con un triángulo de aviso: son los que salen "en gris" porque les falta credencial. Abre cada uno y selecciona la credencial que creaste en el paso anterior.
+3. Sustituye todos los valores `REEMPLAZAR...` (ID de la hoja, canal, chat, email...).
+   - Pestaña **Carritos** con columnas: carrito_id, cliente, telefono, importe, abandonado_en (ISO), consentimiento (si|no), estado (pendiente|contactado). Pestañas **Carritos descartados** y **Recordatorios enviados**.
+   - Crea la plantilla en Meta: WhatsApp Manager → **Message Templates > Create** → nombre `recordatorio_carrito`, idioma `es`, categoría *Marketing* → espera la aprobación de Meta ANTES de activar el flujo.
+4. Ejecuta primero con **Execute Workflow** (modo test) antes de pulsar **Active**.
 
-## Reparacion
+## Nodo a nodo
 
-Validar schema, anadir nodo de aprobacion humana, separar secrets, registrar logs y documentar rollback.
-
-## Rubrica
-
-- 1: importa pero no se entiende.
-- 2: funciona con payload feliz.
-- 3: maneja caso roto.
-- 4: incluye logs, permisos y defensa.
-
-<!-- IMPLEMENTACION_DETALLADA_2026_08_18 -->
-
-# Implementacion detallada - 18 Abandoned Cart Followup
-
-## Para que sirve
-
-Esta automatizacion sirve para convertir un proceso repetible de **proceso** en un flujo observable. No esta pensada como magia ni como sustituto de criterio humano: su funcion es recibir una entrada, validarla, aplicar reglas o asistencia IA cuando tenga sentido, producir una salida estructurada y dejar evidencia de lo ocurrido.
-
-En una empresa o proyecto real, este tipo de workflow ayuda a reducir trabajo manual, estandarizar decisiones, evitar olvidos y detectar casos que requieren revision humana. La clave es no automatizar todo desde el primer dia. Primero se automatiza la parte estable: recibir datos, comprobar formato, clasificar, registrar y responder. Despues se agregan integraciones externas, CRM, emails, Slack, bases de datos o modelos LLM.
-
-## Cuando usarla
-
-Usala cuando el proceso cumpla estas condiciones:
-
-- Ocurre varias veces por semana.
-- Tiene entradas reconocibles.
-- Produce una salida que puede definirse.
-- Tiene errores frecuentes que se pueden detectar.
-- Se puede probar con datos ficticios.
-- No requiere una decision sensible sin revision humana.
-
-No la uses si el proceso cambia cada vez, si depende de informacion privada sin consentimiento, si no hay criterio de exito o si una ejecucion incorrecta puede causar dano financiero, legal o reputacional sin aprobacion.
-
-## Requisitos
-
-- n8n Cloud o n8n self-hosted.
-- Conocer la diferencia entre trigger, node, input, output y execution.
-- Dataset o payload ficticio.
-- Variables de entorno o credenciales separadas.
-- Una cuenta de destino si se conecta con CRM, email, Slack, GitHub u otra API.
-- Checklist de privacidad si aparecen datos personales.
-
-## Implementacion paso a paso en n8n
-
-1. Importar el JSON del workflow desde esta carpeta.
-2. Abrir el workflow en n8n y revisar todos los nodes antes de activarlo.
-3. Configurar credenciales ficticias o de prueba.
-4. Revisar el trigger: webhook, schedule, manual trigger o evento externo.
-5. Abrir cada node y comprobar que entrada espera.
-6. Ejecutar con payload correcto.
-7. Revisar input/output node por node.
-8. Ejecutar con payload roto.
-9. Anadir validaciones antes de cualquier accion externa.
-10. Anadir aprobacion humana si el workflow envia emails, modifica CRM, publica contenido, crea tickets o toca datos sensibles.
-11. Documentar rollback.
-12. Activar solo despues de probar preview/caso ficticio.
-
-## Variables y credenciales
-
-Crear `.env.example` o nota de credenciales con nombres, no valores reales:
-
-```bash
-N8N_WEBHOOK_URL=replace_me
-CRM_API_KEY=replace_me_server_only
-SLACK_BOT_TOKEN=replace_me_server_only
-OPENAI_API_KEY=replace_me_server_only
-DATABASE_URL=replace_me_server_only
-```
-
-Nunca guardar claves reales dentro del JSON exportado. Si el workflow se comparte con alumnos, limpiar credenciales y usar placeholders.
-
-## Caso feliz
-
-El caso feliz debe usar un payload completo. Por ejemplo:
-
-```json
-{"email":"demo@example.com","need":"automatizar seguimiento","source":"formulario","consent":true}
-```
-
-Resultado esperado:
-
-- El workflow se ejecuta sin errores.
-- Cada node recibe y devuelve datos comprensibles.
-- La salida incluye estado, categoria y siguiente accion.
-- No se ejecuta ninguna accion sensible sin control.
-- Queda evidencia en executions/logs.
-
-## Caso ambiguo
-
-Payload ambiguo:
-
-```json
-{"message":"quiero mejorar ventas"}
-```
-
-Resultado profesional esperado: no inventar. El workflow debe marcar `needs_review`, pedir mas datos o enviar a revision humana. Si usa LLM, el prompt debe indicar que no rellene campos desconocidos.
-
-## Caso roto
-
-Ejemplos de ruptura controlada:
-
-- Falta `email`.
-- `consent` es `false`.
-- La API key es invalida.
-- El CRM devuelve `401` o `403`.
-- El proveedor devuelve `429`.
-- El payload cambia de estructura.
-- La tool intenta ejecutar una accion no permitida.
-
-## Reparacion
-
-Documentar:
-
-```markdown
-Sintoma:
-Causa probable:
-Evidencia:
-Cambio realizado:
-Prevencion:
-Rollback:
-```
-
-La reparacion minima suele ser anadir un node de validacion, normalizar campos, capturar errores, limitar retries, pedir aprobacion humana o separar mejor credenciales.
-
-## Produccion
-
-Antes de activar en produccion:
-
-- Probar minimo 10 payloads.
-- Revisar logs.
-- Definir responsable humano.
-- Configurar alertas.
-- Medir coste si usa LLM.
-- Documentar como desactivar el workflow.
-- Guardar version exportada.
-- Escribir fecha de revision.
-
-## Defensa de 3 minutos
-
-El alumno debe explicar: que problema resuelve, que datos entran, que nodes se ejecutan, que salida produce, que fallo provoco, como lo reparo, que permisos usa y que riesgo queda.
-
-<!-- IMPLEMENTACION_AMPLIADA_PROCESO_2026_08_18 -->
-
-## Implementacion operativa ampliada
-
-### 1. Problema que resuelve
-
-**18 Abandoned Cart Followup** resuelve un problema recurrente: convertir una tarea manual, ambigua o repetitiva en un proceso que pueda ejecutarse con el mismo criterio cada vez. En formacion, esta pieza sirve para que el alumno deje de pensar en "usar IA" como una conversacion suelta y empiece a pensar en sistemas: entrada, validacion, transformacion, salida, evidencia, revision y mejora.
-
-En un contexto real, esta automatizacion puede ahorrar tiempo, reducir errores, acelerar respuesta a clientes o crear una base de conocimiento operativa. Pero su valor depende de que se implemente con limites. Si se conecta a datos reales sin consentimiento, si ejecuta acciones externas sin aprobacion o si no deja logs, la automatizacion no es profesional aunque funcione en demo.
-
-### 2. Donde encaja en un proceso
-
-El flujo recomendado es:
-
-```text
-Entrada -> Validacion -> Normalizacion -> Decision -> Accion -> Registro -> Revision humana si aplica
-```
-
-La entrada puede ser un webhook, CSV, formulario, email, ticket, issue, transcripcion, factura o documento. La validacion comprueba que no falten campos. La normalizacion convierte nombres, fechas, importes o textos a formato estable. La decision puede ser una regla, un LLM o una combinacion. La accion puede ser responder, crear tarea, actualizar CRM, enviar alerta o guardar en base de datos. El registro permite auditar. La revision humana protege acciones sensibles.
-
-### 3. Preparacion antes de implementar
-
-Antes de tocar herramientas, crear una ficha:
-
-```markdown
-Objetivo:
-Usuario:
-Entrada:
-Salida esperada:
-Campos obligatorios:
-Datos sensibles:
-Herramientas:
-Credenciales:
-Caso feliz:
-Caso ambiguo:
-Caso roto:
-Rollback:
-```
-
-Esta ficha evita improvisar. Tambien ayuda a decidir si conviene hacerlo con n8n, script, API, GitHub Actions, backend, skill o proceso manual. La mejor herramienta es la minima que permite repetir, verificar y explicar.
-
-### 4. Implementacion local
-
-Si esta pieza es codigo, implementarla primero localmente con datos ficticios. No conectar APIs reales hasta comprobar formato.
-
-Pasos:
-
-1. Crear carpeta de prueba.
-2. Copiar el archivo o plantilla.
-3. Crear `.env.example`.
-4. Crear un payload ficticio correcto.
-5. Crear un payload roto.
-6. Ejecutar la pieza.
-7. Guardar output.
-8. Anadir manejo de errores.
-9. Documentar que variables necesita.
-10. Preparar una version para clase.
-
-Ejemplo de payload correcto:
-
-```json
-{"id":"demo-001","email":"demo@example.com","need":"automatizar seguimiento","consent":true}
-```
-
-Ejemplo de payload roto:
-
-```json
-{"need":"automatizar seguimiento"}
-```
-
-### 5. Integracion con n8n
-
-Para llevarlo a n8n:
-
-1. Crear Webhook node.
-2. Pegar el payload correcto.
-3. Anadir Code node o HTTP Request node.
-4. Validar campos obligatorios.
-5. Si falta algo, devolver `needs_review`.
-6. Si esta completo, continuar a la accion.
-7. Antes de enviar emails o modificar sistemas, anadir aprobacion humana.
-8. Responder con JSON claro.
-
-Salida recomendada:
-
-```json
-{
-  "status":"processed",
-  "category":"demo",
-  "next_action":"review_or_send",
-  "requires_human_approval":true,
-  "evidence":"execution_id_or_log_url"
-}
-```
-
-### 6. Integracion con API o backend
-
-Si se convierte en endpoint:
-
-- Usar `POST` para entradas que modifican estado.
-- Validar JSON antes de procesar.
-- No aceptar campos desconocidos sin revisar.
-- Registrar `request_id`.
-- Devolver errores legibles.
-- Separar secretos del frontend.
-
-Ejemplo de respuesta de error:
-
-```json
-{"ok":false,"error":"missing_required_field","field":"email","action":"send_to_review"}
-```
-
-### 7. Seguridad y permisos
-
-Checklist minimo:
-
-- No usar datos reales en clase.
-- No guardar API keys en archivos.
-- No publicar `.env`.
-- Usar scopes minimos.
-- Registrar acciones.
-- Anadir aprobacion humana para side effects.
-- Preparar rollback.
-- Rotar claves si se filtran.
-
-Side effects son acciones que cambian el mundo: enviar email, actualizar CRM, cobrar, borrar, publicar, crear tickets, modificar base de datos o contactar usuarios. Esas acciones requieren mas control que una simple clasificacion.
-
-### 8. Pruebas necesarias
-
-Probar minimo:
-
-| Caso | Entrada | Resultado esperado |
+| Nodo | Qué hace | Qué tocar |
 |---|---|---|
-| Feliz | payload completo | `processed` |
-| Ambiguo | datos incompletos | `needs_review` |
-| Roto | formato incorrecto | error controlado |
-| Seguridad | dato sensible | redaccion o bloqueo |
-| Coste | batch grande | limite o aviso |
+| Cada hora | Disparador horario | La frecuencia |
+| Leer carritos pendientes | Lee Carritos filtrando estado = pendiente | El ID del documento |
+| Evaluar elegibilidad | Comprueba teléfono, consentimiento y ventana 1-48 h; anota el motivo de descarte | Los umbrales de horas |
+| ¿Elegible? | Separa elegibles de descartados | Nada |
+| Aprobar recordatorio | Slack sendAndWait: una aprobación por carrito | El canal; añade timeout en Options |
+| Recordatorio WhatsApp | Envía la plantilla aprobada "recordatorio_carrito" | REEMPLAZAR_PHONE_NUMBER_ID y el nombre de plantilla si usaste otro |
+| Registrar recordatorio | Fila en Recordatorios enviados con "aprobado_por_humano: si" | Nada |
+| Registrar descartado | Fila en Carritos descartados con el motivo | Nada |
 
-Si usa LLM, anadir evals:
+## Pruébalo
 
-```json
-{"input":"lead sin email","expected":"pedir email","fail_if":"inventa email"}
-```
+1. **Normal**
+   Añade un carrito con tu teléfono de pruebas, consentimiento "si", abandonado_en de hace 2 horas, estado pendiente. Ejecuta. Debes ver: aprobación en Slack → Approve → llega la plantilla a tu WhatsApp → fila en Recordatorios enviados. Marca el carrito como "contactado" en la pestaña Carritos para que no se repita.
+2. **Incompleto**
+   Carrito sin teléfono. Debes ver: fila en **Carritos descartados** con motivo "sin telefono"; nadie recibe nada.
+3. **Duplicado**
+   No marques "contactado" y espera a la siguiente hora. Debes ver: vuelve a pedir aprobación — el estado en la hoja ES el control anti-duplicados; actualízalo siempre tras enviar.
+4. **Extremo**
+   Carrito con consentimiento "si" pero de hace 80 horas. Debes ver: descartado con motivo "demasiado antiguo (>48h)" — mejor un cupón por email que un WhatsApp tardío.
 
-### 9. Produccion
+## Errores típicos
 
-Antes de produccion:
+- **Error 132001 (template not found)** → la plantilla no existe con ese nombre/idioma exactos o aún no está aprobada: revisa WhatsApp Manager.
+- **La plantilla llega sin datos del carrito** → esta versión envía la plantilla sin variables; añade components con parámetros en el nodo WhatsApp si tu plantilla los usa.
+- **Nadie aprueba y se acumulan esperas** → pon Limit Wait Time en el nodo de aprobación para que caduquen solas.
+- **Envíos a números de prueba fallan** → con el número de test de Meta solo puedes escribir a destinatarios registrados como testers.
 
-- Revisar logs.
-- Medir coste.
-- Probar 10 casos.
-- Documentar propietario.
-- Preparar alerta.
-- Exportar version.
-- Definir rollback.
-- Crear README de entrega.
+## Coste estimado
 
-Una automatizacion profesional debe poder apagarse sin romper el negocio. Si nadie sabe desactivarla, no esta lista.
+Por 100 recordatorios: WhatsApp cobra por conversación de marketing (~0,03-0,08 € por mensaje en España según tarifa vigente) ≈ **3-8 €** — **COMPROBAR EN LA WEB OFICIAL de Meta**, cambia por país y por categoría. Sheets/Slack: 0 €. Sin coste de IA (no hay llamada LLM). Precios orientativos a fecha de redacción: **COMPROBAR EN LA WEB OFICIAL** antes de presupuestar.
 
-### 10. Como explicarlo al alumno
+## Aviso legal
 
-El alumno debe poder responder:
-
-- Que automatiza.
-- Que no automatiza.
-- Que datos necesita.
-- Que herramienta usa.
-- Que riesgo evita.
-- Que fallo provoco.
-- Que evidencia guardo.
-- Que haria en version 2.
-
-La defensa no debe sonar teorica. Debe sonar como alguien que ha ejecutado, roto y reparado el proceso.
-
-### 11. Variantes utiles
-
-Variantes para ampliar:
-
-- Version manual en checklist.
-- Version n8n visual.
-- Version codigo local.
-- Version API.
-- Version con base de datos.
-- Version con LLM.
-- Version con aprobacion humana.
-- Version con observabilidad.
-
-Cada variante debe mantener el mismo criterio: entrada clara, salida verificable y fallo controlado.
+Esto es marketing directo: bajo RGPD/LSSI necesitas **consentimiento previo y demostrable** para contactar por WhatsApp (por eso la columna consentimiento y su registro). WhatsApp además **exige plantillas aprobadas** para mensajes salientes fuera de la ventana de 24 h, como este. Ofrece baja fácil (responder BAJA y actualizar la hoja) y respeta las listas de exclusión.

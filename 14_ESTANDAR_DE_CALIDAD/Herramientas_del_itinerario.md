@@ -11,7 +11,7 @@ entregable: "listado de herramientas con itinerario propio"
 
 # Herramientas del itinerario
 
-Cada una de estas herramientas tiene **20 lecciones**, con los mismos huecos y
+Cada una de estas herramientas tiene su propio bloque de lecciones (la app muestra el numero real en cada ficha), con los mismos huecos y
 el mismo nivel de detalle. Ver [[Estructura_de_las_20_lecciones]].
 
 ## Bloque 1 · Hablar con la IA
@@ -59,7 +59,7 @@ el mismo nivel de detalle. Ver [[Estructura_de_las_20_lecciones]].
 
 ## Total
 
-19 herramientas x 20 lecciones = **380 lecciones**.
+El total real de lecciones por herramienta lo calcula la app en cada ficha; este documento define el patron, no la cifra.
 
 ## Qué pasa con lo que ya había
 

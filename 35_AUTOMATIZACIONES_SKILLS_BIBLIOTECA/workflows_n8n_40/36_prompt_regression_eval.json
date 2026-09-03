@@ -1,66 +1,301 @@
 {
-  "name": "36 Prompt Regression Eval",
+  "name": "36 · Evaluación de regresión de prompts",
   "nodes": [
     {
       "parameters": {
-        "path": "36-prompt-regression-eval",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 36 · Regresión de prompts\n\nCada lunes a las 07:00 ejecuta tus casos de prueba contra la API de Anthropic y comprueba que las respuestas siguen conteniendo lo esperado.\n\nEdita los casos en \"Casos de prueba\" y el umbral (80 %) en \"Agregar resultados\". Si la tasa de éxito cae por debajo, aviso por Gmail. Todo queda en la pestaña \"Evals\".",
+        "width": 480,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_162",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        40
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"36 Prompt Regression Eval\",\n    category: \"ai_ops\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1"
+            }
+          ]
+        }
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_163",
+      "name": "Cada lunes a las 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Casos de regresión: prompt + palabras que DEBEN aparecer en la respuesta.\n// Añade aquí los casos reales de tu producto.\nconst casos = [\n  { id: 'saludo', prompt: 'Saluda a la clienta María en una sola frase amable en español.', esperado: ['maría'] },\n  { id: 'resumen', prompt: 'Resume en una frase: n8n permite automatizar procesos conectando nodos visuales.', esperado: ['n8n'] },\n  { id: 'formato-json', prompt: 'Devuelve SOLO un JSON con la clave \"ok\" con valor true, sin texto extra.', esperado: ['\"ok\"', 'true'] }\n];\nreturn casos.map(function (c) {\n  const peticion_ia = {\n    model: 'claude-opus-5',\n    max_tokens: 512,\n    messages: [\n      { role: 'user', content: c.prompt }\n    ]\n  };\n  return { json: { id: c.id, prompt: c.prompt, esperado: c.esperado, peticion_ia: peticion_ia } };\n});"
+      },
+      "id": "nodo_164",
+      "name": "Casos de prueba",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
       ]
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_ia) }}",
+        "options": {}
       },
-      "id": "respond",
-      "name": "Respond",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "id": "nodo_165",
+      "name": "Ejecutar caso con Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const caso = $('Casos de prueba').item.json;\nconst bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join(' ')\n  .toLowerCase();\nconst ausentes = (caso.esperado || []).filter(function (palabra) {\n  return texto.indexOf(String(palabra).toLowerCase()) === -1;\n});\nreturn {\n  json: {\n    id: caso.id,\n    pasa: ausentes.length === 0,\n    palabras_ausentes: ausentes.join(', '),\n    extracto: texto.slice(0, 200)\n  }\n};"
+      },
+      "id": "nodo_166",
+      "name": "Puntuar caso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resultados = $input.all();\nconst total = resultados.length;\nconst pasados = resultados.filter(function (r) { return r.json.pasa === true; }).length;\nconst fallidos = resultados\n  .filter(function (r) { return r.json.pasa !== true; })\n  .map(function (r) { return r.json.id + ' (faltan: ' + r.json.palabras_ausentes + ')'; });\nconst UMBRAL_PCT = 80;\nconst tasa = total > 0 ? Math.round((pasados / total) * 100) : 0;\nreturn [ {\n  json: {\n    total_casos: total,\n    casos_pasados: pasados,\n    tasa_exito_pct: tasa,\n    umbral_pct: UMBRAL_PCT,\n    hay_regresion: tasa < UMBRAL_PCT,\n    casos_fallidos: fallidos.join(' | ') || 'ninguno',\n    ejecutado_en: new Date().toISOString()\n  }\n} ];"
+      },
+      "id": "nodo_167",
+      "name": "Agregar resultados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Evals"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_168",
+      "name": "Registrar ejecución",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        340
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_021",
+              "leftValue": "={{ $json.hay_regresion }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_169",
+      "name": "¿Hay regresión?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "REEMPLAZAR_responsable@ejemplo.com",
+        "subject": "=[Evals] Regresión de prompts: {{ $json.tasa_exito_pct }} % de éxito",
+        "emailType": "text",
+        "message": "=La evaluación semanal de prompts ha caído por debajo del umbral.\n\nTasa de éxito: {{ $json.tasa_exito_pct }} % (umbral {{ $json.umbral_pct }} %)\nCasos pasados: {{ $json.casos_pasados }} de {{ $json.total_casos }}\nCasos fallidos: {{ $json.casos_fallidos }}\n\nRevisa si ha cambiado el prompt, el modelo o el formato de respuesta antes de desplegar nada nuevo.",
+        "options": {}
+      },
+      "id": "nodo_170",
+      "name": "Avisar de regresión",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1540,
+        240
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "nodo_171",
+      "name": "Sin regresión",
+      "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        1540,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Cada lunes a las 07:00": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Casos de prueba",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Casos de prueba": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "Ejecutar caso con Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar caso con Claude": {
+      "main": [
+        [
+          {
+            "node": "Puntuar caso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puntuar caso": {
+      "main": [
+        [
+          {
+            "node": "Agregar resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agregar resultados": {
+      "main": [
+        [
+          {
+            "node": "Registrar ejecución",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar ejecución": {
+      "main": [
+        [
+          {
+            "node": "¿Hay regresión?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay regresión?": {
+      "main": [
+        [
+          {
+            "node": "Avisar de regresión",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sin regresión",
             "type": "main",
             "index": 0
           }
@@ -70,28 +305,5 @@
   },
   "settings": {
     "executionOrder": "v1"
-  },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "ai_ops",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
-        }
-      }
-    ]
   }
 }
