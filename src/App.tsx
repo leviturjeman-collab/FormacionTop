@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent } from 'react'
 import { BookOpen, BookMarked, Boxes, BrainCircuit, Compass, Gamepad2, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Lock, LogOut, Menu, Presentation, Puzzle, Search, ShieldCheck, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
@@ -30,6 +30,16 @@ const ACCESS_GRAVITY = 1220
 const ACCESS_JUMP_VELOCITY = -430
 const ACCESS_MAX_FALL = 680
 
+function accessGameMetrics(width: number) {
+  if (width <= 380) {
+    return { floor: 56, robotX: 78, robotSize: 46, speedBase: 188, speedMax: 270 }
+  }
+  if (width <= 520) {
+    return { floor: 56, robotX: 92, robotSize: 46, speedBase: 184, speedMax: 265 }
+  }
+  return { floor: ACCESS_GAME_FLOOR, robotX: ACCESS_ROBOT_X, robotSize: ACCESS_ROBOT_SIZE, speedBase: 160, speedMax: 240 }
+}
+
 type AccessPipe = {
   id: number
   x: number
@@ -49,17 +59,21 @@ type AccessGameView = {
   started: boolean
 }
 
-function accessGameGap(height: number) {
-  return Math.max(174, Math.min(218, height * 0.36))
+function accessGameGap(height: number, width: number) {
+  const phone = width <= 520
+  return phone
+    ? Math.max(138, Math.min(168, height * 0.42))
+    : Math.max(174, Math.min(218, height * 0.36))
 }
 
 function accessPipeWidth(width: number) {
   return Math.max(62, Math.min(82, width * 0.12))
 }
 
-function randomAccessGap(height: number, gap: number) {
-  const topPad = 76
-  const bottomPad = ACCESS_GAME_FLOOR + 58
+function randomAccessGap(height: number, gap: number, width: number) {
+  const metrics = accessGameMetrics(width)
+  const topPad = width <= 520 ? 56 : 76
+  const bottomPad = metrics.floor + metrics.robotSize
   const max = Math.max(topPad, height - bottomPad - gap)
   return Math.round(topPad + Math.random() * (max - topPad))
 }
@@ -273,6 +287,7 @@ function StudentAccessGate() {
   const stageRef = useRef<HTMLDivElement>(null)
   const pipeIdRef = useRef(1)
   const lastTickRef = useRef<number | null>(null)
+  const gamePointerRef = useRef<{ x: number; y: number; time: number } | null>(null)
   const gameRef = useRef<AccessGameView>({
     y: 214,
     velocity: 0,
@@ -290,20 +305,21 @@ function StudentAccessGate() {
     const rect = stageRef.current?.getBoundingClientRect()
     const width = rect?.width || 640
     const height = rect?.height || 520
-    const gap = accessGameGap(height)
+    const metrics = accessGameMetrics(width)
+    const gap = accessGameGap(height, width)
     const pipeWidth = accessPipeWidth(width)
     const spacing = Math.max(326, width * 0.54)
     const startX = width + Math.max(128, width * 0.22)
     const pipes = Array.from({ length: 3 }, (_, index): AccessPipe => ({
       id: pipeIdRef.current++,
       x: startX + spacing * index,
-      gapY: randomAccessGap(height, gap),
+      gapY: randomAccessGap(height, gap, width),
       gap,
       width: pipeWidth,
       scored: false,
       }))
     const next = {
-      y: Math.min(height * 0.42, height - ACCESS_GAME_FLOOR - ACCESS_ROBOT_SIZE - 18),
+      y: Math.min(height * 0.42, height - metrics.floor - metrics.robotSize - 18),
       velocity: launch ? ACCESS_JUMP_VELOCITY : 0,
       pipes,
       score: 0,
@@ -326,6 +342,25 @@ function StudentAccessGate() {
     lastTickRef.current = null
     setGame(gameRef.current)
   }, [resetGame])
+
+  const handleGamePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    gamePointerRef.current = { x: event.clientX, y: event.clientY, time: performance.now() }
+  }, [])
+
+  const handleGamePointerUp = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    const start = gamePointerRef.current
+    gamePointerRef.current = null
+    if (!start) {
+      jump()
+      return
+    }
+    const dx = event.clientX - start.x
+    const dy = event.clientY - start.y
+    const elapsed = performance.now() - start.time
+    const isTap = Math.abs(dx) < 14 && Math.abs(dy) < 14 && elapsed < 420
+    const isPlaySwipe = Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) * 1.4
+    if (isTap || isPlaySwipe) jump()
+  }, [jump])
 
   useEffect(() => {
     resetGame(false)
@@ -353,16 +388,17 @@ function StudentAccessGate() {
         lastTickRef.current = time
         const width = rect.width
         const height = rect.height
-        const gap = accessGameGap(height)
+        const metrics = accessGameMetrics(width)
+        const gap = accessGameGap(height, width)
         const pipeWidth = accessPipeWidth(width)
         const current = gameRef.current
         if (current.started && current.alive) {
-          const speed = Math.min(230, 150 + current.score * 4)
+          const speed = Math.min(metrics.speedMax, metrics.speedBase + current.score * 4)
           const y = current.y + current.velocity * dt
           const velocity = Math.min(ACCESS_MAX_FALL, current.velocity + ACCESS_GRAVITY * dt)
           const maxX = Math.max(...current.pipes.map((pipe) => pipe.x))
           let score = current.score
-          let alive = y > 0 && y + ACCESS_ROBOT_SIZE < height - ACCESS_GAME_FLOOR
+          let alive = y > 0 && y + metrics.robotSize < height - metrics.floor
           const pipes = current.pipes.map((pipe) => {
             let nextPipe = { ...pipe, x: pipe.x - speed * dt, width: pipeWidth, gap }
             if (nextPipe.x + pipeWidth < -24) {
@@ -370,16 +406,16 @@ function StudentAccessGate() {
                 ...nextPipe,
                 id: pipeIdRef.current++,
                 x: maxX + Math.max(326, width * 0.54),
-                gapY: randomAccessGap(height, gap),
+                gapY: randomAccessGap(height, gap, width),
                 scored: false,
               }
             }
-            if (!nextPipe.scored && nextPipe.x + pipeWidth < ACCESS_ROBOT_X) {
+            if (!nextPipe.scored && nextPipe.x + pipeWidth < metrics.robotX) {
               score += 1
               nextPipe.scored = true
             }
-            const overlapsX = ACCESS_ROBOT_X + ACCESS_ROBOT_SIZE - 9 > nextPipe.x && ACCESS_ROBOT_X + 8 < nextPipe.x + pipeWidth
-            const outsideGap = y + 8 < nextPipe.gapY || y + ACCESS_ROBOT_SIZE - 8 > nextPipe.gapY + gap
+            const overlapsX = metrics.robotX + metrics.robotSize - 9 > nextPipe.x && metrics.robotX + 8 < nextPipe.x + pipeWidth
+            const outsideGap = y + 8 < nextPipe.gapY || y + metrics.robotSize - 8 > nextPipe.gapY + gap
             if (overlapsX && outsideGap) alive = false
             return nextPipe
           })
@@ -441,6 +477,11 @@ function StudentAccessGate() {
               <Lock size={14} /> Desbloquear formación
             </button>
           </form>
+          <div className="st-access-swipe-cue" aria-hidden="true">
+            <span>Desliza</span>
+            <b>←</b>
+            <span>para jugar</span>
+          </div>
         </div>
 
         <div
@@ -449,7 +490,9 @@ function StudentAccessGate() {
           role="button"
           tabIndex={0}
           aria-label="Juego de salto del robot"
-          onPointerDown={jump}
+          onPointerDown={handleGamePointerDown}
+          onPointerUp={handleGamePointerUp}
+          onPointerCancel={() => { gamePointerRef.current = null }}
         >
           <span className="st-flappy-sun" />
           <span className="st-flappy-grid" />
@@ -492,7 +535,7 @@ function StudentAccessGate() {
             <strong>{game.score}</strong>
             <small>MAX {game.best}</small>
           </div>
-          {!game.started && game.alive && <div className="st-flappy-toast">ESPACIO / CLIC</div>}
+          {!game.started && game.alive && <div className="st-flappy-toast">TOCA / DESLIZA</div>}
           {!game.alive && <div className="st-flappy-toast danger">OTRA VEZ</div>}
         </div>
       </section>

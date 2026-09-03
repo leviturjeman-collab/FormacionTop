@@ -1085,23 +1085,48 @@ details.st-block { padding: 0; }
   }
 
 @media (max-width: 520px) {
-  .st-access-shell { padding: 0; place-items: stretch; }
-  .st-access { min-height: 100vh; border: 0; grid-template-rows: auto minmax(300px, 42vh); }
-  .st-access-copy { padding: 20px 16px 16px; gap: 13px; }
+  .st-access-shell { padding: 0; place-items: stretch; overflow: hidden; }
+  .st-access {
+    width: 100vw;
+    min-height: 100svh;
+    border: 0;
+    display: flex;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+  .st-access::-webkit-scrollbar { display: none; }
+  .st-access-copy {
+    flex: 0 0 100vw;
+    min-height: 100svh;
+    padding: 20px 16px 18px;
+    gap: 13px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
   .st-access-copy h1 { max-width: 8ch; font-size: 42px; }
   .st-access-copy > p { font-size: 12px; line-height: 1.5; }
   .st-pin-card { padding: 14px; }
   .st-pin-input-wrap { min-height: 58px; }
   .st-pin-input-wrap input { font-size: 24px; letter-spacing: .16em; }
+  .st-access-swipe-cue { display: inline-flex; }
   .st-access-metrics { display: none; }
   .st-flappy-stage {
-    min-height: 300px;
+    flex: 0 0 100vw;
+    min-height: 100svh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
     --flappy-floor: 56px;
     --flappy-robot-left: 92px;
     --flappy-robot-box: 46px;
     --flappy-robot-img: 62px;
     --flappy-robot-shift-x: -8px;
     --flappy-robot-shift-y: -9px;
+    touch-action: manipulation;
   }
   .st-flappy-sun { top: 28px; right: 26px; width: 52px; }
   .st-flappy-grid { bottom: 76px; height: 58px; background-size: 34px 34px; }
@@ -1147,7 +1172,7 @@ details.st-block { padding: 0; }
 
 @media (max-width: 380px) {
   .st-support-strip { grid-template-columns: 1fr; }
-  .st-flappy-stage { min-height: 280px; --flappy-robot-left: 78px; }
+  .st-flappy-stage { --flappy-robot-left: 78px; }
   .st-pin-dots { gap: 4px; }
 }
 
@@ -2473,6 +2498,32 @@ details.st-block-ejemplo { padding: 0; }
 .st-pin-card .st-btn {
   min-height: 50px;
   justify-content: center;
+}
+.st-access-swipe-cue {
+  display: none;
+  width: min(430px, 100%);
+  min-height: 42px;
+  border: 1px solid rgba(32,37,34,.18);
+  background: #fff;
+  color: var(--st-text);
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 8px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  box-shadow: 4px 4px 0 rgba(32,37,34,.08);
+}
+.st-access-swipe-cue b {
+  width: 28px;
+  height: 22px;
+  border: 2px solid #202522;
+  background: #fff5a6;
+  display: grid;
+  place-items: center;
+  font: 900 16px/1 var(--display);
+  box-shadow: 3px 3px 0 rgba(32,37,34,.14);
 }
 .st-access-metrics {
   width: min(430px, 100%);
