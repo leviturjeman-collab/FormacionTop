@@ -15,6 +15,44 @@ export function hashPin(pin) {
   return crypto.createHash('sha256').update(`${pepper}:${pin}`).digest('hex')
 }
 
+function sessionSecret() {
+  return process.env.SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'local-dev'
+}
+
+function base64url(value) {
+  return Buffer.from(JSON.stringify(value)).toString('base64url')
+}
+
+export function signSession(payload) {
+  const body = base64url({
+    ...payload,
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30,
+  })
+  const signature = crypto.createHmac('sha256', sessionSecret()).update(body).digest('base64url')
+  return `${body}.${signature}`
+}
+
+export function verifySessionToken(token) {
+  try {
+    const [body, signature] = String(token || '').split('.')
+    if (!body || !signature) return null
+    const expected = crypto.createHmac('sha256', sessionSecret()).update(body).digest('base64url')
+    if (signature.length !== expected.length) return null
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'))
+    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null
+    return payload
+  } catch {
+    return null
+  }
+}
+
+export function sessionFromRequest(req) {
+  const header = req.headers.authorization || req.headers.Authorization || ''
+  const token = String(header).startsWith('Bearer ') ? String(header).slice(7) : req.headers['x-session-token']
+  return verifySessionToken(token)
+}
+
 export function normalizeLearner(input) {
   const now = new Date().toISOString()
   const pin = cleanPin(input?.pin)
@@ -108,4 +146,8 @@ export async function supabaseFetch(path, options = {}) {
 
 export function learnersPath(query = '') {
   return `${LEARNERS_TABLE}${query}`
+}
+
+export function progressPath(query = '') {
+  return `learner_progress${query}`
 }

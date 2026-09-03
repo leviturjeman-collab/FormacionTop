@@ -1,4 +1,15 @@
-import { adminPin, cleanPin, hashPin, json, learnerFromRow, learnersPath, readBody, supabaseFetch } from '../_supabase.js'
+import {
+  adminPin,
+  cleanPin,
+  hashPin,
+  json,
+  learnerFromRow,
+  learnersPath,
+  progressPath,
+  readBody,
+  signSession,
+  supabaseFetch,
+} from '../_supabase.js'
 
 function errorResponse(res, error) {
   const status = error.status || 500
@@ -16,7 +27,7 @@ export default async function handler(req, res) {
     const pin = cleanPin(body.pin, 6)
 
     if (pin === adminPin()) {
-      json(res, 200, { ok: true, role: 'admin' })
+      json(res, 200, { ok: true, role: 'admin', sessionToken: signSession({ role: 'admin' }) })
       return
     }
 
@@ -43,7 +54,15 @@ export default async function handler(req, res) {
       learner.status = 'activo'
     }
 
-    json(res, 200, { ok: true, role: 'learner', learner: learnerFromRow(learner) })
+    const progress = await supabaseFetch(progressPath(`?learner_id=eq.${encodeURIComponent(learner.id)}&select=state,updated_at&limit=1`))
+
+    json(res, 200, {
+      ok: true,
+      role: 'learner',
+      sessionToken: signSession({ role: 'learner', learnerId: learner.id }),
+      learner: learnerFromRow(learner),
+      progress: progress[0]?.state || null,
+    })
   } catch (error) {
     errorResponse(res, error)
   }

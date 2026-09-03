@@ -5,6 +5,10 @@ for (const line of readFileSync('.env.local', 'utf8').split(/\r?\n/)) {
   if (match) process.env[match[1]] = match[2].replace(/^"|"$/g, '')
 }
 
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en .env.local. Vercel no descarga valores sensibles; rellena .env.local a mano o prueba la API ya desplegada.')
+}
+
 const { default: learners } = await import('../api/admin/learners.js')
 const { default: unlock } = await import('../api/auth/unlock.js')
 
@@ -47,8 +51,19 @@ if (created.status !== 200 || !created.body.learners?.[0]?.id) {
 const id = created.body.learners[0].id
 const unlocked = await call(unlock, { method: 'POST', headers: {}, body: { pin } })
 
-if (unlocked.status !== 200 || unlocked.body.role !== 'learner') {
+if (unlocked.status !== 200 || unlocked.body.role !== 'learner' || !unlocked.body.sessionToken) {
   throw new Error(`Unlock failed: ${JSON.stringify(unlocked.body)}`)
+}
+
+const { default: progress } = await import('../api/progress.js')
+const savedProgress = await call(progress, {
+  method: 'POST',
+  headers: { authorization: `Bearer ${unlocked.body.sessionToken}` },
+  body: { state: { name: 'Codex Smoke', lessons: { smoke: { done: ['basico'] } } } },
+})
+
+if (savedProgress.status !== 200) {
+  throw new Error(`Progress failed: ${JSON.stringify(savedProgress.body)}`)
 }
 
 const deleted = await call(learners, { method: 'DELETE', headers: adminHeaders, query: { id } })
@@ -57,4 +72,4 @@ if (deleted.status !== 200) {
   throw new Error(`Delete failed: ${JSON.stringify(deleted.body)}`)
 }
 
-console.log('Supabase API smoke OK', JSON.stringify({ created: true, unlocked: true, deleted: true }))
+console.log('Supabase API smoke OK', JSON.stringify({ created: true, unlocked: true, progress: true, deleted: true }))

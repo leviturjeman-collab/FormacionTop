@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { LevelId } from './types'
 import { unlockRemotePin } from './learners-api'
+import { saveRemoteProgress } from './progress-api'
 
 /**
  * Estado del alumno. Vive solo en su navegador: no hay servidor,
@@ -28,8 +29,10 @@ export interface StudentState {
   name: string
   /** Acceso local del alumno a la academia. */
   learnerUnlocked: boolean
+  learnerId?: string
   learnerName?: string
   learnerEmail?: string
+  learnerSessionToken?: string
   /** Modo profesor: muestra el guion de clase y el acceso a presentar. */
   teacher: boolean
   /** Desbloqueo local del panel privado. No sustituye autenticación de servidor. */
@@ -193,13 +196,26 @@ function upsertLocalLearner(learner: StoredLearner) {
   writeAdminLearners(next)
 }
 
-function commitLearnerSession(learner: Pick<StoredLearner, 'name' | 'email'>) {
+function mergeRemoteProgress(progress: Record<string, unknown> | null | undefined): Partial<StudentState> {
+  if (!progress || typeof progress !== 'object') return {}
+  return progress as Partial<StudentState>
+}
+
+function commitLearnerSession(
+  learner: Pick<StoredLearner, 'id' | 'name' | 'email'>,
+  sessionToken?: string,
+  progress?: Record<string, unknown> | null,
+) {
+  const remoteProgress = mergeRemoteProgress(progress)
   commit({
     ...state,
+    ...remoteProgress,
     name: learner.name || state.name,
     learnerUnlocked: true,
+    learnerId: learner.id,
     learnerName: learner.name,
     learnerEmail: learner.email,
+    learnerSessionToken: sessionToken || state.learnerSessionToken,
     adminUnlocked: false,
     teacher: false,
   })
@@ -226,6 +242,32 @@ function read(): StudentState {
 
 let state = read()
 const listeners = new Set<(next: StudentState) => void>()
+let progressSyncTimer: ReturnType<typeof window.setTimeout> | null = null
+
+function stateForRemote(next: StudentState): Partial<StudentState> {
+  const {
+    adminUnlocked,
+    teacher,
+    learnerSessionToken,
+    ...remoteState
+  } = next
+  return {
+    ...remoteState,
+    adminUnlocked: false,
+    teacher: false,
+    learnerSessionToken: undefined,
+  }
+}
+
+function queueProgressSync(next: StudentState) {
+  if (!next.learnerSessionToken || !next.learnerId || next.adminUnlocked) return
+  if (progressSyncTimer) window.clearTimeout(progressSyncTimer)
+  progressSyncTimer = window.setTimeout(() => {
+    saveRemoteProgress(next.learnerSessionToken!, stateForRemote(next)).catch(() => {
+      /* El respaldo local ya quedo guardado; Supabase se reintentara en el siguiente cambio. */
+    })
+  }, 650)
+}
 
 function commit(next: StudentState) {
   state = next
@@ -234,6 +276,7 @@ function commit(next: StudentState) {
   } catch {
     /* Si el almacenamiento está lleno o bloqueado, el curso sigue funcionando sin guardar. */
   }
+  queueProgressSync(next)
   listeners.forEach((listener) => listener(next))
 }
 
@@ -260,7 +303,16 @@ export const store = {
   unlockAdmin(pin: string) {
     if (pin.trim() !== ADMIN_PIN) return false
     sessionAdminPin = pin.trim()
-    commit({ ...state, learnerUnlocked: true, adminUnlocked: true, teacher: true, learnerName: 'Administrador' })
+    commit({
+      ...state,
+      learnerUnlocked: true,
+      learnerId: undefined,
+      learnerSessionToken: undefined,
+      adminUnlocked: true,
+      teacher: true,
+      learnerName: 'Administrador',
+      learnerEmail: undefined,
+    })
     return true
   },
 
@@ -294,7 +346,7 @@ export const store = {
       if (result.role === 'admin') return this.unlockAdmin(clean)
       if (result.learner) {
         upsertLocalLearner(result.learner)
-        commitLearnerSession(result.learner)
+        commitLearnerSession(result.learner, result.sessionToken, result.progress)
         return true
       }
     } catch {
@@ -308,8 +360,10 @@ export const store = {
     commit({
       ...state,
       learnerUnlocked: false,
+      learnerId: undefined,
       learnerName: undefined,
       learnerEmail: undefined,
+      learnerSessionToken: undefined,
       adminUnlocked: false,
       teacher: false,
     })

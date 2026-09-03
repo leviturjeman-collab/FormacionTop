@@ -36,3 +36,20 @@ create trigger learners_set_updated_at
 before update on public.learners
 for each row
 execute function public.set_updated_at();
+
+create table if not exists public.learner_progress (
+  learner_id uuid primary key references public.learners(id) on delete cascade,
+  state jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists learner_progress_updated_at_idx on public.learner_progress (updated_at desc);
+
+alter table public.learner_progress enable row level security;
+
+drop trigger if exists learner_progress_set_updated_at on public.learner_progress;
+create trigger learner_progress_set_updated_at
+before update on public.learner_progress
+for each row
+execute function public.set_updated_at();

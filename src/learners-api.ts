@@ -58,6 +58,11 @@ export async function unlockRemotePin(pin: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ pin }),
   })
-  const data = await parseResponse<{ role: 'admin' | 'learner'; learner?: StoredLearner }>(response)
+  const data = await parseResponse<{
+    role: 'admin' | 'learner'
+    sessionToken?: string
+    learner?: StoredLearner
+    progress?: Record<string, unknown> | null
+  }>(response)
   return data
 }
