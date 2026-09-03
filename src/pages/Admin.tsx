@@ -123,6 +123,37 @@ function AdminPanel() {
   const [syncing, setSyncing] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
 
+  async function syncWithSupabase() {
+    const adminPin = getAdminPinForSession()
+    if (!adminPin) {
+      setNotice('Entra de nuevo con el PIN 5555 para sincronizar Supabase.')
+      return
+    }
+
+    setSyncing(true)
+    try {
+      const localLearners = readAdminLearners()
+      const remoteLearners = await fetchRemoteLearners(adminPin)
+      const merged = writeAdminLearners(mergeLearners(remoteLearners, localLearners))
+      setPins(merged)
+      setDraft((current) => ({ ...current, pin: generateLearnerPin(merged) }))
+
+      if (merged.length) {
+        await saveRemoteLearners(adminPin, merged)
+        const refreshed = await fetchRemoteLearners(adminPin)
+        const synced = writeAdminLearners(mergeLearners(refreshed, merged))
+        setPins(synced)
+        setDraft((current) => ({ ...current, pin: generateLearnerPin(synced) }))
+      }
+
+      setNotice(`Supabase sincronizado. ${merged.length} alumnos guardados en la base de datos.`)
+    } catch {
+      setNotice('No pude sincronizar con Supabase. Revisa variables de Vercel y que la tabla learners exista.')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   useEffect(() => {
     const syncLearners = () => setPins(readAdminLearners())
     const syncFromEvent = (event: Event) => {
@@ -142,35 +173,7 @@ function AdminPanel() {
   }, [])
 
   useEffect(() => {
-    let active = true
-    const adminPin = getAdminPinForSession()
-    if (!adminPin) {
-      setNotice('Para sincronizar Supabase, entra de nuevo con el PIN 5555 en esta pestana.')
-      return
-    }
-
-    async function syncWithSupabase() {
-      setSyncing(true)
-      try {
-        const localLearners = readAdminLearners()
-        const remoteLearners = await fetchRemoteLearners(adminPin)
-        const merged = writeAdminLearners(mergeLearners(remoteLearners, localLearners))
-        if (!active) return
-        setPins(merged)
-        setDraft((current) => ({ ...current, pin: generateLearnerPin(merged) }))
-        if (localLearners.length) await saveRemoteLearners(adminPin, merged)
-        if (active) setNotice('Supabase conectado. Alumnos y PINs sincronizados con la base de datos.')
-      } catch {
-        if (active) setNotice('Supabase aun no esta listo o falta la tabla. Mientras tanto se conserva la copia local.')
-      } finally {
-        if (active) setSyncing(false)
-      }
-    }
-
     syncWithSupabase()
-    return () => {
-      active = false
-    }
   }, [])
 
   const suggestedTools = useMemo(
@@ -369,7 +372,10 @@ function AdminPanel() {
         <Lock size={15} />
         <div>
           <strong>Los alumnos y PINs quedan guardados en este navegador</strong>
-          <p>No se borran al salir del perfil ni al recargar. Solo desaparecen si los borras aquí, limpias los datos del sitio o usas navegación privada. Exporta una copia JSON y podrás restaurarla con Importar JSON.</p>
+          <p>Se guardan en Supabase y queda una copia local de seguridad en este navegador. Si ves alumnos aquí pero no en Supabase, pulsa sincronizar.</p>
+          <button type="button" className="st-btn-ghost" onClick={syncWithSupabase} disabled={syncing}>
+            <RefreshCw size={13} /> {syncing ? 'Sincronizando' : 'Sincronizar Supabase'}
+          </button>
           {syncing && <small>Sincronizando con Supabase...</small>}
           {notice && <small>{notice}</small>}
         </div>

@@ -12,6 +12,7 @@ const KEY = 'academia.progreso.v1'
 export const ADMIN_LEARNERS_KEY = 'academia.admin.alumnos.v1'
 export const ADMIN_LEARNERS_BACKUP_KEY = 'academia.admin.alumnos.backup.v1'
 export const ADMIN_LEARNERS_EVENT = 'academia:admin-learners-updated'
+const ADMIN_PIN_SESSION_KEY = 'academia.admin.pin.session.v1'
 
 export interface LessonProgress {
   /** Niveles marcados como completados. */
@@ -122,6 +123,32 @@ function storageSet(key: string, value: string) {
   }
 }
 
+function rememberAdminPin(pin: string) {
+  sessionAdminPin = pin
+  try {
+    sessionStorage.setItem(ADMIN_PIN_SESSION_KEY, pin)
+  } catch {
+    /* Si sessionStorage esta bloqueado, se mantiene en memoria durante la pestana actual. */
+  }
+}
+
+function forgetAdminPin() {
+  sessionAdminPin = ''
+  try {
+    sessionStorage.removeItem(ADMIN_PIN_SESSION_KEY)
+  } catch {
+    /* Nada que limpiar si el almacenamiento de sesion esta bloqueado. */
+  }
+}
+
+function readRememberedAdminPin() {
+  try {
+    return sessionStorage.getItem(ADMIN_PIN_SESSION_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
 export function generateLearnerPin(existing: Pick<StoredLearner, 'pin'>[] = []) {
   const used = new Set(existing.map((item) => item.pin))
   for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -222,7 +249,7 @@ function commitLearnerSession(
 }
 
 export function getAdminPinForSession() {
-  return sessionAdminPin
+  return sessionAdminPin || readRememberedAdminPin() || (state.adminUnlocked ? ADMIN_PIN : '')
 }
 
 function read(): StudentState {
@@ -302,7 +329,7 @@ export const store = {
 
   unlockAdmin(pin: string) {
     if (pin.trim() !== ADMIN_PIN) return false
-    sessionAdminPin = pin.trim()
+    rememberAdminPin(pin.trim())
     commit({
       ...state,
       learnerUnlocked: true,
@@ -317,7 +344,7 @@ export const store = {
   },
 
   lockAdmin() {
-    sessionAdminPin = ''
+    forgetAdminPin()
     commit({ ...state, adminUnlocked: false, teacher: false })
   },
 
@@ -356,7 +383,7 @@ export const store = {
   },
 
   lockLearner() {
-    sessionAdminPin = ''
+    forgetAdminPin()
     commit({
       ...state,
       learnerUnlocked: false,
