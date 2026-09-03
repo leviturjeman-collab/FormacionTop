@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, Ban, Check, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
 import { store, useStudent } from '../store'
@@ -140,6 +140,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
   const firstFamily = baseFamilias.find((item) => item.id === familyId) || baseFamilias[0]
   const [activeSection, setActiveSection] = useState(firstFamily?.sectionId || 'otros')
   const [cuantos, setCuantos] = useState(12)
+  const [focused, setFocused] = useState(false)
 
   const activeId = active || familyId || baseFamilias[0]?.id || ''
   const familia = baseFamilias.find((item) => item.id === activeId) || baseFamilias[0]
@@ -197,8 +198,10 @@ export default function Prompts({ familyId }: { familyId?: string }) {
     setActive(id)
     setQuery('')
     setSelectedTool('all')
+    setFocused(true)
     const family = baseFamilias.find((item) => item.id === id)
     if (family?.sectionId) setActiveSection(family.sectionId)
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }))
   }
 
   function selectSection(id: string) {
@@ -208,7 +211,9 @@ export default function Prompts({ familyId }: { familyId?: string }) {
     setCuantos(12)
     setQuery('')
     setSelectedTool('all')
+    setFocused(true)
     if (first) setActive(first.id)
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }))
   }
 
   const searchResults = useMemo(() => {
@@ -250,7 +255,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
   }
 
   return (
-    <div className="st-page">
+    <div className={`st-page st-prompt-page${focused ? ' is-focused' : ''}`}>
       <div className="st-page-title">
         <span className="st-kicker"><Sparkles size={12} /> Listos para copiar</span>
         <h1>Biblioteca de prompts</h1>
@@ -313,7 +318,16 @@ export default function Prompts({ familyId }: { familyId?: string }) {
         })}
       </section>
 
-      <section className="st-prompt-workbench">
+      {focused && (
+        <div className="st-inline-focusbar">
+          <button type="button" className="st-btn-ghost" onClick={() => setFocused(false)}>
+            <ArrowLeft size={12} /> Volver a todos los bloques
+          </button>
+          <span>{familia?.title || selectedSection?.title || 'Prompts'}</span>
+        </div>
+      )}
+
+      <section className={`st-prompt-workbench${focused ? ' focused' : ''}`}>
         <aside className="st-prompt-family-rail" aria-label="Bloques de la categoría seleccionada">
           <div className="st-prompt-family-head">
             <span className="st-kicker">Categoría activa</span>

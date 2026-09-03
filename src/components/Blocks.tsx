@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  AlertTriangle, Ban, Check, CheckCheck, ClipboardList, Code2, Coins, Copy, FileText,
+  AlertTriangle, ArrowLeft, Ban, Check, CheckCheck, ClipboardList, Code2, Coins, Copy, FileText,
   Layers, Lightbulb, ListChecks, MousePointerClick, PackageCheck, Puzzle, Quote, Rocket,
   Scale, ScrollText, Terminal as TerminalIcon, TriangleAlert, UserPlus, X, Languages, Footprints, ExternalLink,
 } from 'lucide-react'
@@ -70,8 +70,38 @@ const strings = (items?: (string | GlossaryItem)[]) =>
   (items || []).filter((item): item is string => typeof item === 'string')
 
 export default function Blocks({ blocks }: { blocks: Block[] }) {
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
+  const [openBlocks, setOpenBlocks] = useState<Set<number>>(() => new Set([0]))
+  const focusedBlock = focusedIndex === null ? null : blocks[focusedIndex]
+
+  function focusBlock(index: number) {
+    setFocusedIndex(index)
+    window.requestAnimationFrame(() => {
+      document.querySelector('.st-blocks')?.scrollIntoView({ block: 'start', behavior: 'instant' as ScrollBehavior })
+    })
+  }
+
+  function syncOpen(index: number, open: boolean) {
+    setOpenBlocks((current) => {
+      const next = new Set(current)
+      if (open) next.add(index)
+      else next.delete(index)
+      return next
+    })
+    if (open) focusBlock(index)
+    else if (focusedIndex === index) setFocusedIndex(null)
+  }
+
   return (
-    <div className="st-blocks">
+    <div className={`st-blocks${focusedIndex !== null ? ' is-focused' : ''}`}>
+      {focusedBlock && (
+        <div className="st-inline-focusbar">
+          <button type="button" className="st-btn-ghost" onClick={() => setFocusedIndex(null)}>
+            <ArrowLeft size={12} /> Volver a la lección completa
+          </button>
+          <span>{focusedBlock.title}</span>
+        </div>
+      )}
       {blocks.map((block, index) => {
         if (block.kind === 'instalar') return <Install key={index} block={block} />
         const Icon = ICONS[(block.icon as BlockKind) || block.kind] || ICONS[block.kind] || Lightbulb
@@ -81,7 +111,12 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
           : block.kind === 'cuenta' ? block.account?.steps.length || 0
           : block.parts?.length || strings(block.items).length || block.lines?.length || block.errors?.length || 0
         return (
-          <details key={`${block.kind}-${index}`} className={`st-block st-block-${block.kind}`} open={index === 0}>
+          <details
+            key={`${block.kind}-${index}`}
+            className={`st-block st-block-${block.kind}${focusedIndex === index ? ' is-active-focus' : ''}`}
+            open={focusedIndex !== null ? focusedIndex === index : openBlocks.has(index)}
+            onToggle={(event) => syncOpen(index, event.currentTarget.open)}
+          >
             <summary>
               <span>
                 {block.app ? <BrandMark icon={block.app.icon} size={16} /> : <Icon size={15} />}

@@ -52,6 +52,8 @@ export function CursoIndice() {
   const course = useCourse()
   const student = useStudent()
   const lecciones = [...(course.curso || [])].sort((a, b) => a.number - b.number)
+  const [focusedStage, setFocusedStage] = useState<string | null>(null)
+  const [openStages, setOpenStages] = useState<Set<string>>(() => new Set())
 
   if (!lecciones.length) {
     return (
@@ -105,8 +107,26 @@ export function CursoIndice() {
     .map((stage) => ({ stage, items: sueltas.filter((item) => item.stageId === stage.id) }))
   const areasConLecciones = porArea.filter((group) => group.items.length)
   const areasBiblioteca = porArea.filter((group) => !group.items.length)
+  const focusedStageMeta = focusedStage ? areasConLecciones.find(({ stage }) => stage.id === focusedStage)?.stage : null
 
   const requiredMin = sueltas.reduce((sum, item) => sum + item.minutes, 0)
+
+  function syncStageOpen(id: string, open: boolean) {
+    setOpenStages((current) => {
+      const next = new Set(current)
+      if (open) next.add(id)
+      else next.delete(id)
+      return next
+    })
+    if (open) {
+      setFocusedStage(id)
+      window.requestAnimationFrame(() => {
+        document.querySelector('.st-curso-area-stack')?.scrollIntoView({ block: 'start', behavior: 'instant' as ScrollBehavior })
+      })
+    } else if (focusedStage === id) {
+      setFocusedStage(null)
+    }
+  }
 
   return (
     <div className="st-page">
@@ -170,8 +190,22 @@ export function CursoIndice() {
         <h2>Abre un bloque y sigue sus lecciones</h2>
         <p>Los bloques están plegados para que no parezca una biblioteca infinita. Abre el bloque actual y avanza de arriba abajo.</p>
       </section>
+      {focusedStageMeta && (
+        <div className="st-inline-focusbar">
+          <button type="button" className="st-btn-ghost" onClick={() => setFocusedStage(null)}>
+            <ArrowLeft size={12} /> Volver a todos los bloques
+          </button>
+          <span>Bloque {focusedStageMeta.number} · {focusedStageMeta.title}</span>
+        </div>
+      )}
+      <div className={`st-curso-area-stack${focusedStage ? ' is-focused' : ''}`}>
       {areasConLecciones.map(({ stage, items }) => (
-        <details key={stage.id} className="st-curso-area" open={stage.id === etapaActual}>
+        <details
+          key={stage.id}
+          className={`st-curso-area${focusedStage === stage.id ? ' is-active-focus' : ''}`}
+          open={focusedStage ? focusedStage === stage.id : openStages.has(stage.id) || stage.id === etapaActual}
+          onToggle={(event) => syncStageOpen(stage.id, event.currentTarget.open)}
+        >
           <summary className="st-curso-area-head">
             <div>
               <span className="st-kicker">Bloque {stage.number} · {stage.tagline}</span>
@@ -208,6 +242,7 @@ export function CursoIndice() {
           </ol>
         </details>
       ))}
+      </div>
 
       {areasBiblioteca.length > 0 && (
         <section className="st-curso-pending">

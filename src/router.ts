@@ -25,6 +25,7 @@ export type Route =
   | { name: 'proyecto'; stageId: string }
   | { name: 'deck'; deckId: string }
   | { name: 'prompts'; familyId?: string }
+  | { name: 'skills' }
   | { name: 'kits' }
   | { name: 'admin' }
   | { name: 'guia'; guideId?: string }
@@ -97,6 +98,8 @@ export function parseHash(hash: string): Route {
       return segments[1] ? { name: 'deck', deckId: segments[1] } : { name: 'ruta' }
     case 'prompts':
       return { name: 'prompts', familyId: segments[1] }
+    case 'skills':
+      return { name: 'skills' }
     case 'kits':
     case 'institucional':
       return { name: 'kits' }
@@ -150,6 +153,8 @@ export function href(route: Route): string {
       return `#/deck/${encodeURIComponent(route.deckId)}`
     case 'prompts':
       return route.familyId ? `#/prompts/${encodeURIComponent(route.familyId)}` : '#/prompts'
+    case 'skills':
+      return '#/skills'
     case 'kits':
       return '#/kits'
     case 'admin':

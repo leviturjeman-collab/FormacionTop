@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { BookOpen, BookMarked, Boxes, BrainCircuit, Compass, Gamepad2, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Lock, LogOut, Menu, Presentation, Puzzle, Search, ShieldCheck, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson, LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
@@ -15,6 +15,7 @@ import Presentar from './pages/Presentar'
 import Proyecto from './pages/Proyecto'
 import Deck from './pages/Deck'
 import Prompts from './pages/Prompts'
+import Skills from './pages/Skills'
 import Kits from './pages/Kits'
 import Admin from './pages/Admin'
 import Guia from './pages/Guia'
@@ -23,6 +24,46 @@ import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta }
 
 const LEVEL_SHORT: Record<LevelId, string> = { basico: 'Bás', intermedio: 'Int', avanzado: 'Avz' }
 const ROBOT_CURSOR_SRC = `${import.meta.env.BASE_URL}robot-cursor.png`
+const ACCESS_GAME_FLOOR = 78
+const ACCESS_ROBOT_X = 116
+const ACCESS_ROBOT_SIZE = 58
+const ACCESS_GRAVITY = 1220
+const ACCESS_JUMP_VELOCITY = -430
+const ACCESS_MAX_FALL = 680
+
+type AccessPipe = {
+  id: number
+  x: number
+  gapY: number
+  gap: number
+  width: number
+  scored: boolean
+}
+
+type AccessGameView = {
+  y: number
+  velocity: number
+  pipes: AccessPipe[]
+  score: number
+  best: number
+  alive: boolean
+  started: boolean
+}
+
+function accessGameGap(height: number) {
+  return Math.max(174, Math.min(218, height * 0.36))
+}
+
+function accessPipeWidth(width: number) {
+  return Math.max(62, Math.min(82, width * 0.12))
+}
+
+function randomAccessGap(height: number, gap: number) {
+  const topPad = 76
+  const bottomPad = ACCESS_GAME_FLOOR + 58
+  const max = Math.max(topPad, height - bottomPad - gap)
+  return Math.round(topPad + Math.random() * (max - topPad))
+}
 
 function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClose: () => void }) {
   const course = useCourse()
@@ -104,10 +145,13 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         <a className={is('prompts') ? 'active' : ''} href={href({ name: 'prompts' })} onClick={onClose}>
           <Sparkles size={14} /> Prompts
         </a>
+        <a className={is('skills') ? 'active' : ''} href={href({ name: 'skills' })} onClick={onClose}>
+          <BrainCircuit size={14} /> Skills
+        </a>
         <a className={is('kits') ? 'active' : ''} href={href({ name: 'kits' })} onClick={onClose}>
           <Boxes size={14} /> Kits institucionales
         </a>
-        {(student.teacher || is('admin')) && (
+        {student.adminUnlocked && (
           <a className={is('admin') ? 'active' : ''} href={href({ name: 'admin' })} onClick={onClose}>
             <KeyRound size={14} /> Súper admin
           </a>
@@ -208,78 +252,243 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
   )
 }
 
-function RobotCursor() {
-  const cursorRef = useRef<HTMLDivElement>(null)
+function StudentAccessGate() {
+  const route = useRoute()
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState('')
+  const stageRef = useRef<HTMLDivElement>(null)
+  const pipeIdRef = useRef(1)
+  const lastTickRef = useRef<number | null>(null)
+  const gameRef = useRef<AccessGameView>({
+    y: 214,
+    velocity: 0,
+    pipes: [],
+    score: 0,
+    best: 0,
+    alive: true,
+    started: false,
+  })
+  const [game, setGame] = useState(gameRef.current)
+  const cleanPin = pin.replace(/\D/g, '').slice(0, 6)
+  const canSubmit = cleanPin.length === 4 || cleanPin.length === 6
 
-  useEffect(() => {
-    const supportsFinePointer = window.matchMedia('(pointer: fine)').matches
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!supportsFinePointer || reduceMotion) return
-
-    const root = document.documentElement
-    root.classList.add('robot-cursor-enabled')
-
-    let frame = 0
-    let targetX = window.innerWidth / 2
-    let targetY = window.innerHeight / 2
-    let currentX = targetX
-    let currentY = targetY
-
-    const setPointerState = (event: PointerEvent) => {
-      if (event.pointerType && event.pointerType !== 'mouse') return
-      const cursor = cursorRef.current
-      if (!cursor) return
-      targetX = event.clientX
-      targetY = event.clientY
-      cursor.classList.add('is-visible')
-      const target = event.target instanceof Element ? event.target : null
-      const interactive = target?.closest('a, button, [role="button"], summary, input, textarea, select')
-      const typing = target?.closest('input, textarea, select, [contenteditable="true"]')
-      cursor.classList.toggle('is-hovering', Boolean(interactive))
-      cursor.classList.toggle('is-typing', Boolean(typing))
+  const resetGame = useCallback((launch = false) => {
+    const rect = stageRef.current?.getBoundingClientRect()
+    const width = rect?.width || 640
+    const height = rect?.height || 520
+    const gap = accessGameGap(height)
+    const pipeWidth = accessPipeWidth(width)
+    const spacing = Math.max(326, width * 0.54)
+    const startX = width + Math.max(128, width * 0.22)
+    const pipes = Array.from({ length: 3 }, (_, index): AccessPipe => ({
+      id: pipeIdRef.current++,
+      x: startX + spacing * index,
+      gapY: randomAccessGap(height, gap),
+      gap,
+      width: pipeWidth,
+      scored: false,
+      }))
+    const next = {
+      y: Math.min(height * 0.42, height - ACCESS_GAME_FLOOR - ACCESS_ROBOT_SIZE - 18),
+      velocity: launch ? ACCESS_JUMP_VELOCITY : 0,
+      pipes,
+      score: 0,
+      best: gameRef.current.best,
+      alive: true,
+      started: launch,
     }
-
-    const hideCursor = () => cursorRef.current?.classList.remove('is-visible', 'is-hovering', 'is-typing', 'is-down')
-    const pressCursor = () => cursorRef.current?.classList.add('is-down')
-    const releaseCursor = () => cursorRef.current?.classList.remove('is-down')
-
-    const render = () => {
-      const cursor = cursorRef.current
-      if (cursor) {
-        currentX += (targetX - currentX) * 0.24
-        currentY += (targetY - currentY) * 0.24
-        cursor.style.transform = `translate3d(${currentX - 18}px, ${currentY - 16}px, 0)`
-      }
-      frame = window.requestAnimationFrame(render)
-    }
-
-    window.addEventListener('pointermove', setPointerState, { passive: true })
-    window.addEventListener('pointerleave', hideCursor)
-    window.addEventListener('pointerdown', pressCursor, { passive: true })
-    window.addEventListener('pointerup', releaseCursor, { passive: true })
-    frame = window.requestAnimationFrame(render)
-
-    return () => {
-      root.classList.remove('robot-cursor-enabled')
-      window.cancelAnimationFrame(frame)
-      window.removeEventListener('pointermove', setPointerState)
-      window.removeEventListener('pointerleave', hideCursor)
-      window.removeEventListener('pointerdown', pressCursor)
-      window.removeEventListener('pointerup', releaseCursor)
-    }
+    lastTickRef.current = null
+    gameRef.current = next
+    setGame(next)
   }, [])
 
+  const jump = useCallback(() => {
+    const current = gameRef.current
+    if (!current.alive) {
+      resetGame(true)
+      return
+    }
+    gameRef.current = { ...current, started: true, velocity: ACCESS_JUMP_VELOCITY }
+    lastTickRef.current = null
+    setGame(gameRef.current)
+  }, [resetGame])
+
+  useEffect(() => {
+    resetGame(false)
+    const onResize = () => resetGame(gameRef.current.started)
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== 'Space') return
+      event.preventDefault()
+      jump()
+    }
+    window.addEventListener('resize', onResize)
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [jump, resetGame])
+
+  useEffect(() => {
+    let frame = 0
+    const tick = (time: number) => {
+      const rect = stageRef.current?.getBoundingClientRect()
+      if (rect) {
+        const last = lastTickRef.current ?? time
+        const dt = Math.min(0.034, Math.max(0.001, (time - last) / 1000))
+        lastTickRef.current = time
+        const width = rect.width
+        const height = rect.height
+        const gap = accessGameGap(height)
+        const pipeWidth = accessPipeWidth(width)
+        const current = gameRef.current
+        if (current.started && current.alive) {
+          const speed = Math.min(230, 150 + current.score * 4)
+          const y = current.y + current.velocity * dt
+          const velocity = Math.min(ACCESS_MAX_FALL, current.velocity + ACCESS_GRAVITY * dt)
+          const maxX = Math.max(...current.pipes.map((pipe) => pipe.x))
+          let score = current.score
+          let alive = y > 0 && y + ACCESS_ROBOT_SIZE < height - ACCESS_GAME_FLOOR
+          const pipes = current.pipes.map((pipe) => {
+            let nextPipe = { ...pipe, x: pipe.x - speed * dt, width: pipeWidth, gap }
+            if (nextPipe.x + pipeWidth < -24) {
+              nextPipe = {
+                ...nextPipe,
+                id: pipeIdRef.current++,
+                x: maxX + Math.max(326, width * 0.54),
+                gapY: randomAccessGap(height, gap),
+                scored: false,
+              }
+            }
+            if (!nextPipe.scored && nextPipe.x + pipeWidth < ACCESS_ROBOT_X) {
+              score += 1
+              nextPipe.scored = true
+            }
+            const overlapsX = ACCESS_ROBOT_X + ACCESS_ROBOT_SIZE - 9 > nextPipe.x && ACCESS_ROBOT_X + 8 < nextPipe.x + pipeWidth
+            const outsideGap = y + 8 < nextPipe.gapY || y + ACCESS_ROBOT_SIZE - 8 > nextPipe.gapY + gap
+            if (overlapsX && outsideGap) alive = false
+            return nextPipe
+          })
+          const best = Math.max(current.best, score)
+          gameRef.current = { y, velocity, pipes, score, best, alive, started: alive }
+          setGame({ ...gameRef.current })
+        } else {
+          lastTickRef.current = null
+        }
+      }
+      frame = window.requestAnimationFrame(tick)
+    }
+    frame = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (store.unlockLearner(cleanPin)) {
+      if (cleanPin !== '5555' && route.name === 'admin') navigate({ name: 'inicio' })
+      return
+    }
+    setError('PIN no encontrado. Pide tu acceso al profesor.')
+    setPin('')
+  }
+
   return (
-    <div ref={cursorRef} className="st-robot-cursor" aria-hidden="true">
-      <span />
-      <img src={ROBOT_CURSOR_SRC} alt="" draggable={false} />
+    <div className="st-access-shell">
+      <section className="st-access">
+        <div className="st-access-copy">
+          <span className="st-kicker"><ShieldCheck size={12} /> Academia privada</span>
+          <h1>Entra con tu PIN</h1>
+          <p>Tu ruta se abre cuando validas el PIN que te ha dado el profesor.</p>
+
+          <form className="st-pin-card" onSubmit={submit} aria-label="Acceso de alumno por PIN">
+            <label>
+              <span>PIN de alumno o administrador</span>
+              <div className="st-pin-input-wrap">
+                <KeyRound size={18} />
+                <input
+                  autoFocus
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={cleanPin}
+                  onChange={(event) => {
+                    setError('')
+                    setPin(event.target.value)
+                  }}
+                  placeholder="••••••"
+                  type="password"
+                />
+              </div>
+            </label>
+            <div className="st-pin-dots" aria-hidden="true">
+              {Array.from({ length: 6 }).map((_, index) => <i key={index} className={index < cleanPin.length ? 'on' : ''} />)}
+            </div>
+            {error && <p className="st-access-error">{error}</p>}
+            <button type="submit" className="st-btn" disabled={!canSubmit}>
+              <Lock size={14} /> Desbloquear formación
+            </button>
+          </form>
+        </div>
+
+        <div
+          ref={stageRef}
+          className={`st-flappy-stage${game.alive ? '' : ' is-crashed'}${game.started ? ' is-playing' : ''}`}
+          role="button"
+          tabIndex={0}
+          aria-label="Juego de salto del robot"
+          onPointerDown={jump}
+        >
+          <span className="st-flappy-sun" />
+          <span className="st-flappy-grid" />
+          <span className="st-flappy-cloud cloud-a" />
+          <span className="st-flappy-cloud cloud-b" />
+          <div className="st-flappy-trail">
+            <i />
+            <i />
+            <i />
+          </div>
+          <div
+            className="st-flappy-robot"
+            style={{
+              transform: `translate3d(0, ${game.y}px, 0) rotate(${Math.max(-24, Math.min(18, game.velocity * 0.055))}deg)`,
+            }}
+          >
+            <img src={ROBOT_CURSOR_SRC} alt="" draggable={false} />
+          </div>
+          {game.pipes.map((pipe) => (
+            <div
+              key={pipe.id}
+              className="st-flappy-pipe"
+              style={{
+                '--pipe-x': `${pipe.x}px`,
+                '--pipe-w': `${pipe.width}px`,
+                '--gap-y': `${pipe.gapY}px`,
+                '--gap-h': `${pipe.gap}px`,
+              } as CSSProperties}
+            >
+              <i className="top" />
+              <i className="bottom" />
+            </div>
+          ))}
+          <div className="st-flappy-floor">
+            <span />
+            <span />
+          </div>
+          <div className="st-flappy-hud">
+            <Gamepad2 size={14} />
+            <strong>{game.score}</strong>
+            <small>MAX {game.best}</small>
+          </div>
+          {!game.started && game.alive && <div className="st-flappy-toast">ESPACIO / CLIC</div>}
+          {!game.alive && <div className="st-flappy-toast danger">OTRA VEZ</div>}
+        </div>
+      </section>
     </div>
   )
 }
 
 function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const course = useCourse()
-  const { teacher } = useStudent()
+  const { adminUnlocked, learnerUnlocked, teacher } = useStudent()
 
   const trail = useMemo(() => {
     switch (route.name) {
@@ -317,6 +526,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'proyecto': return ['Proyecto final']
       case 'deck': return ['Presentación']
       case 'prompts': return ['Prompts']
+      case 'skills': return ['Skills']
       case 'kits': return ['Kits institucionales']
       case 'admin': return ['Súper administrador']
       case 'guia': return ['Guías']
@@ -349,16 +559,34 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
           <BookOpen size={12} />
           Ruta guiada · biblioteca de apoyo
         </a>
-        <button
-          type="button"
-          className={`st-project-switch${teacher ? ' on' : ''}`}
-          onClick={() => store.toggleTeacher()}
-          aria-pressed={teacher}
-          title="Muestra el guion de clase y el acceso a presentar. El alumno no lo ve."
-        >
-          <Presentation size={12} />
-          {teacher ? 'Modo profesor' : 'Modo alumno'}
-        </button>
+        {adminUnlocked ? (
+          <button
+            type="button"
+            className={`st-project-switch${teacher ? ' on' : ''}`}
+            onClick={() => store.toggleTeacher()}
+            aria-pressed={teacher}
+            title="Muestra el guion de clase y el acceso a presentar. El alumno no lo ve."
+          >
+            <Presentation size={12} />
+            {teacher ? 'Modo profesor' : 'Modo alumno'}
+          </button>
+        ) : !learnerUnlocked ? (
+          <a className="st-project-switch" href={href({ name: 'admin' })} title="Acceso privado con PIN">
+            <KeyRound size={12} />
+            Acceso privado
+          </a>
+        ) : null}
+        {(learnerUnlocked || adminUnlocked) && (
+          <button
+            type="button"
+            className="st-project-switch st-session-exit"
+            onClick={() => store.lockLearner()}
+            title={adminUnlocked ? 'Salir del súper administrador' : 'Salir del perfil de alumno'}
+          >
+            <LogOut size={12} />
+            {adminUnlocked ? 'Salir admin' : 'Salir perfil'}
+          </button>
+        )}
       </div>
     </header>
   )
@@ -376,6 +604,7 @@ function Pages({ route }: { route: Route }) {
     case 'proyecto': return <Proyecto stageId={route.stageId} />
     case 'deck': return <Deck deckId={route.deckId} />
     case 'prompts': return <Prompts familyId={route.familyId} />
+    case 'skills': return <Skills />
     case 'kits': return <Kits />
     case 'admin': return <Admin />
     case 'guia': return <Guia guideId={route.guideId} />
@@ -394,6 +623,7 @@ function Pages({ route }: { route: Route }) {
 function Shell() {
   const route = useRoute()
   const course = useCourse()
+  const student = useStudent()
   const [menuOpen, setMenuOpen] = useState(false)
   const routeKey = useMemo(() => {
     switch (route.name) {
@@ -459,20 +689,6 @@ function Shell() {
       '.st-checkitems button',
       '.st-choice-grid button',
       '.st-tool-choice',
-      '.st-page p',
-      '.st-page li',
-      '.st-page dt',
-      '.st-page dd',
-      '.st-page th',
-      '.st-page td',
-      '.st-page label',
-      '.st-page input',
-      '.st-page select',
-      '.st-page textarea',
-      '.st-page code',
-      '.st-page pre',
-      '.st-page a',
-      '.st-page button',
     ].join(',')
     const elements = Array.from(document.querySelectorAll<HTMLElement>(selector))
     if (!('IntersectionObserver' in window)) {
@@ -494,13 +710,30 @@ function Shell() {
     return () => observer.disconnect()
   }, [route])
 
+  useEffect(() => {
+    if (route.name === 'admin' && student.learnerUnlocked && !student.adminUnlocked) {
+      navigate({ name: 'inicio' })
+    }
+  }, [route, student.learnerUnlocked, student.adminUnlocked])
+
+  if (!student.learnerUnlocked && !student.adminUnlocked) {
+    return (
+      <div className="student-app">
+        <StudentAccessGate />
+      </div>
+    )
+  }
+
+  if (route.name === 'admin' && student.learnerUnlocked && !student.adminUnlocked) {
+    return <div className="st-loading" />
+  }
+
   // Las presentaciones ocupan la pantalla entera: sin barra lateral ni cabecera.
   if (route.name === 'presentar') return <Presentar slug={route.slug} level={route.level} />
   if (route.name === 'deck') return <Deck deckId={route.deckId} />
 
   return (
     <div className="student-app">
-      <RobotCursor />
       <Sidebar route={route} open={menuOpen} onClose={() => setMenuOpen(false)} />
       {menuOpen && <button type="button" className="st-scrim" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} />}
 

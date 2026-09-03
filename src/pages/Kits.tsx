@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  AlertTriangle, ArrowRight, BookMarked, Check, Clipboard, Coins, Download, FileText,
+  AlertTriangle, ArrowLeft, ArrowRight, BookMarked, Check, Clipboard, Coins, Download, FileText,
   Gavel, Layers, Lightbulb, ListChecks, Save, Scale, Shield, Sparkles, Target, Workflow, Wrench,
 } from 'lucide-react'
 import { useCourse } from '../course'
@@ -155,6 +155,7 @@ export default function Kits() {
   const [active, setActive] = useState(kits[0]?.id || '')
   const [tab, setTab] = useState<TabId>('resumen')
   const [saved, setSaved] = useState(false)
+  const [focused, setFocused] = useState(false)
   const kit = kits.find((item) => item.id === active) || kits[0]
 
   const tools = useMemo(() => (kit ? kitTools(course, kit) : []), [course, kit])
@@ -213,8 +214,15 @@ export default function Kits() {
 
   const flowText = (index: number) => JSON.stringify(kit.workflows[index].flow, null, 2)
 
+  function openKit(id: string) {
+    setActive(id)
+    setTab('resumen')
+    setFocused(true)
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+  }
+
   return (
-    <div className="st-page">
+    <div className={`st-page st-kit-page${focused ? ' is-focused' : ''}`}>
       <div className="st-page-title">
         <span className="st-kicker"><Sparkles size={12} /> Proyectos grandes</span>
         <h1>Kits institucionales</h1>
@@ -225,14 +233,23 @@ export default function Kits() {
         </p>
       </div>
 
-      <div className="st-kit-layout">
+      {focused && (
+        <div className="st-kit-focusbar">
+          <button type="button" className="st-btn-ghost" onClick={() => setFocused(false)}>
+            <ArrowLeft size={12} /> Volver a todos los casos
+          </button>
+          <span>{kit.title}</span>
+        </div>
+      )}
+
+      <div className={`st-kit-layout${focused ? ' focused' : ''}`}>
         <aside className="st-kit-index" aria-label="Kits disponibles">
           {kits.map((item) => (
             <button
               key={item.id}
               type="button"
               className={item.id === kit.id ? 'on' : ''}
-              onClick={() => { setActive(item.id); setTab('resumen') }}
+              onClick={() => openKit(item.id)}
             >
               <span>{item.kicker}</span>
               <strong>{item.title}</strong>

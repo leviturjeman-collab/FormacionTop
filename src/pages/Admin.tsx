@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Check, Clipboard, KeyRound, Mail, Plus, RefreshCw, Trash2, UserCheck } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Check, Clipboard, KeyRound, Lock, Mail, Plus, RefreshCw, Trash2, UserCheck } from 'lucide-react'
 import { useCourse } from '../course'
+import { ADMIN_LEARNERS_KEY, store, useStudent } from '../store'
 
-const KEY = 'academia.admin.alumnos.v1'
 type AdminTab = 'estado' | 'crear' | 'alumnos' | 'pendiente'
 type LearnerStatus = 'pendiente' | 'entregado' | 'activo'
 
@@ -35,7 +35,7 @@ const STATUS_LABELS: Record<LearnerStatus, string> = {
 
 function readPins(): LearnerPin[] {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(ADMIN_LEARNERS_KEY)
     const parsed = raw ? JSON.parse(raw) : []
     return Array.isArray(parsed) ? parsed.map(normalizeLearner) : []
   } catch {
@@ -78,6 +78,57 @@ function validEmail(email: string) {
 }
 
 export default function Admin() {
+  const student = useStudent()
+  if (!student.adminUnlocked) return <AdminAccess />
+  return <AdminPanel />
+}
+
+function AdminAccess() {
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState('')
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (store.unlockAdmin(pin)) return
+    setError('PIN incorrecto.')
+    setPin('')
+  }
+
+  return (
+    <div className="st-page">
+      <section className="st-admin-login" aria-label="Acceso privado al súper administrador">
+        <div>
+          <span className="st-kicker"><Lock size={12} /> Acceso privado</span>
+          <h1>Súper administrador</h1>
+          <p>Introduce tu PIN para abrir el panel. Los alumnos no ven el acceso directo de Súper admin en el menú.</p>
+        </div>
+        <form onSubmit={submit}>
+          <label>
+            <span>PIN de administrador</span>
+            <input
+              autoFocus
+              inputMode="numeric"
+              maxLength={4}
+              value={pin}
+              onChange={(event) => {
+                setError('')
+                setPin(event.target.value.replace(/\D/g, '').slice(0, 4))
+              }}
+              placeholder="5555"
+              type="password"
+            />
+          </label>
+          {error && <p className="st-admin-field-error">{error}</p>}
+          <button type="submit" className="st-btn" disabled={pin.length !== 4}>
+            <KeyRound size={13} /> Entrar
+          </button>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+function AdminPanel() {
   const course = useCourse()
   const [pins, setPins] = useState<LearnerPin[]>(() => readPins())
   const [draft, setDraft] = useState(() => emptyDraft())
@@ -86,7 +137,7 @@ export default function Admin() {
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(pins))
+    localStorage.setItem(ADMIN_LEARNERS_KEY, JSON.stringify(pins))
   }, [pins])
 
   const suggestedTools = useMemo(
@@ -177,6 +228,9 @@ export default function Admin() {
           Panel para preparar alumnos, email, PIN de seis dígitos, objetivo y herramientas recomendadas. Esta primera versión vive en tu navegador:
           sirve para organizar, no como autenticación real de servidor.
         </p>
+        <button type="button" className="st-btn-ghost" onClick={() => store.lockLearner()}>
+          <Lock size={12} /> Salir del súper administrador
+        </button>
       </div>
 
       <section className="st-admin-warning">

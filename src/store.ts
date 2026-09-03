@@ -7,6 +7,7 @@ import type { LevelId } from './types'
  */
 
 const KEY = 'academia.progreso.v1'
+export const ADMIN_LEARNERS_KEY = 'academia.admin.alumnos.v1'
 
 export interface LessonProgress {
   /** Niveles marcados como completados. */
@@ -22,8 +23,14 @@ export interface LessonProgress {
 
 export interface StudentState {
   name: string
+  /** Acceso local del alumno a la academia. */
+  learnerUnlocked: boolean
+  learnerName?: string
+  learnerEmail?: string
   /** Modo profesor: muestra el guion de clase y el acceso a presentar. */
   teacher: boolean
+  /** Desbloqueo local del panel privado. No sustituye autenticación de servidor. */
+  adminUnlocked: boolean
   preferredLevel: LevelId
   lessons: Record<string, LessonProgress>
   lastLesson?: string
@@ -53,7 +60,32 @@ export interface SavedPrompt {
   source?: string
 }
 
-const EMPTY: StudentState = { name: '', teacher: false, preferredLevel: 'basico', lessons: {} }
+const ADMIN_PIN = '5555'
+const EMPTY: StudentState = {
+  name: '',
+  learnerUnlocked: false,
+  teacher: false,
+  adminUnlocked: false,
+  preferredLevel: 'basico',
+  lessons: {},
+}
+
+type StoredLearner = {
+  name?: string
+  email?: string
+  pin?: string
+  status?: string
+}
+
+function readLearners(): StoredLearner[] {
+  try {
+    const raw = localStorage.getItem(ADMIN_LEARNERS_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
 
 function read(): StudentState {
   try {
@@ -99,7 +131,46 @@ export const store = {
   },
 
   toggleTeacher() {
+    if (!state.adminUnlocked) return
     commit({ ...state, teacher: !state.teacher })
+  },
+
+  unlockAdmin(pin: string) {
+    if (pin.trim() !== ADMIN_PIN) return false
+    commit({ ...state, learnerUnlocked: true, adminUnlocked: true, teacher: true, learnerName: 'Administrador' })
+    return true
+  },
+
+  lockAdmin() {
+    commit({ ...state, adminUnlocked: false, teacher: false })
+  },
+
+  unlockLearner(pin: string) {
+    const clean = pin.trim()
+    if (clean === ADMIN_PIN) return this.unlockAdmin(clean)
+    const learner = readLearners().find((item) => item.pin === clean)
+    if (!learner) return false
+    commit({
+      ...state,
+      name: learner.name || state.name,
+      learnerUnlocked: true,
+      learnerName: learner.name,
+      learnerEmail: learner.email,
+      adminUnlocked: false,
+      teacher: false,
+    })
+    return true
+  },
+
+  lockLearner() {
+    commit({
+      ...state,
+      learnerUnlocked: false,
+      learnerName: undefined,
+      learnerEmail: undefined,
+      adminUnlocked: false,
+      teacher: false,
+    })
   },
 
   visit(slug: string) {

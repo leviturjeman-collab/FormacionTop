@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ArrowRight, Check, ChevronDown, Clipboard, Search, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Clipboard, Search, X } from 'lucide-react'
 import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href, type Route } from '../router'
@@ -395,8 +395,16 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const student = useStudent()
   const doneSlugs = useDoneSet()
   const level: LevelId = student.preferredLevel || 'basico'
+  const [activePanel, setActivePanel] = useState('')
+  const [focused, setFocused] = useState(false)
+
+  useEffect(() => {
+    setActivePanel('')
+    setFocused(false)
+  }, [toolId])
 
   const tool = course.toolPages.find((item) => item.id === toolId)
+  const progress = useProgressOf(tool?.lessonSlugs || [])
   if (!tool) {
     return (
       <div className="st-page">
@@ -413,15 +421,14 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const hiddenCount = Math.max(0, totalAvailable - tool.count)
   const filters = 'filters' in route ? route.filters : {}
   const shown = applyFilters(all, filters, doneSlugs)
-  const progress = useProgressOf(tool.lessonSlugs)
   const promptCount = tool.guide?.prompts?.length || 0
   const automationCount = tool.guide?.automations?.length || 0
   const toolMapItems = [
-    {
+    ...(tool.guide ? [{
       id: 'guia-herramienta',
       title: 'Guía rápida',
       detail: 'Qué es, para qué sirve y qué no debes tocar todavía.',
-    },
+    }] : []),
     ...(all.length ? [{
       id: 'lecciones-herramienta',
       title: 'Lecciones',
@@ -432,18 +439,29 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
       title: 'Prompts',
       detail: `${promptCount} listos para copiar`,
     }] : []),
+    ...(tool.guide?.catalog?.items?.length ? [{
+      id: 'piezas',
+      title: 'Piezas internas',
+      detail: `${tool.guide.catalog.items.length} funciones explicadas`,
+    }] : []),
     ...(automationCount ? [{
       id: 'automatizaciones',
       title: 'Automatizaciones',
       detail: `${automationCount} flujos explicados`,
     }] : []),
   ]
-  const jumpTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const defaultToolPanel = tool.guide ? 'guia-herramienta' : all.length ? 'lecciones-herramienta' : toolMapItems[0]?.id || 'guia-herramienta'
+  const currentPanel = activePanel || defaultToolPanel
+  const currentMapItem = toolMapItems.find((item) => item.id === currentPanel)
+
+  function openPanel(id: string) {
+    setActivePanel(id)
+    setFocused(true)
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }))
   }
 
   return (
-    <div className="st-page">
+    <div className={`st-page st-tool-page${focused ? ' is-focused' : ''}`}>
       <header className="st-area-head">
         <span><BrandMark icon={tool.icon} size={40} /></span>
         <div>
@@ -472,9 +490,25 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
         </div>
       </header>
 
+      {focused && (
+        <div className="st-inline-focusbar">
+          <button type="button" className="st-btn-ghost" onClick={() => setFocused(false)}>
+            <ArrowLeft size={12} /> Volver al mapa de {tool.label}
+          </button>
+          <span>{currentMapItem?.title || tool.label}</span>
+        </div>
+      )}
+
+      <div className={`st-tool-focus-layout${focused ? ' focused' : ''}`}>
       <section className="st-tool-map" aria-label={`Mapa de ${tool.label}`}>
         {toolMapItems.map((item, index) => (
-          <button key={item.id} type="button" onClick={() => jumpTo(item.id)}>
+          <button
+            key={item.id}
+            type="button"
+            className={currentPanel === item.id ? 'on' : ''}
+            onClick={() => openPanel(item.id)}
+            aria-pressed={currentPanel === item.id}
+          >
             <span>{index + 1}</span>
             <strong>{item.title}</strong>
             <small>{item.detail}</small>
@@ -482,36 +516,50 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
         ))}
       </section>
 
-      {tool.guide && (
-        <section id="guia-herramienta" className="st-tool-guide">
-          <div className="st-section-head">
-            <div>
-              <span className="st-kicker">Empieza aquí</span>
-              <h2>Primero entiende la herramienta</h2>
+      <section className="st-tool-active-panel" aria-live="polite">
+        {tool.guide && currentPanel === 'guia-herramienta' && (
+          <section id="guia-herramienta" className="st-tool-guide">
+            <div className="st-section-head">
+              <div>
+                <span className="st-kicker">Empieza aquí</span>
+                <h2>Primero entiende la herramienta</h2>
+              </div>
             </div>
-          </div>
-          <Blocks blocks={guideBlocks(tool.guide, tool.label)} />
-        </section>
-      )}
+            <Blocks blocks={guideBlocks(tool.guide, tool.label)} />
+          </section>
+        )}
 
-      {all.length > 0 && (
-        <section id="lecciones-herramienta" className="st-tool-lessons">
-          <div className="st-section-head">
-            <div>
-              <span className="st-kicker">Lecciones dentro de {tool.label}</span>
-              <h2>Estudia solo estas piezas</h2>
-              <p className="st-tool-inside-intro">
-                No son otra ruta obligatoria ni prometen ser un curso exacto de 20 lecciones. Son piezas de consulta seleccionadas para entender {tool.label} cuando tu proyecto la necesite.
-              </p>
+        {all.length > 0 && currentPanel === 'lecciones-herramienta' && (
+          <section id="lecciones-herramienta" className="st-tool-lessons">
+            <div className="st-section-head">
+              <div>
+                <span className="st-kicker">Lecciones dentro de {tool.label}</span>
+                <h2>Estudia solo estas piezas</h2>
+                <p className="st-tool-inside-intro">
+                  No son otra ruta obligatoria ni prometen ser un curso exacto de 20 lecciones. Son piezas de consulta seleccionadas para entender {tool.label} cuando tu proyecto la necesite.
+                </p>
+              </div>
+              <span>{shown.length} de {all.length}{hiddenCount ? ` · ${hiddenCount} guardadas fuera` : ''}</span>
             </div>
-            <span>{shown.length} de {all.length}{hiddenCount ? ` · ${hiddenCount} guardadas fuera` : ''}</span>
-          </div>
-          <Filters route={route} lessons={all} hide={['tool']} />
-          <LessonList lessons={shown} level={level} />
-        </section>
-      )}
+            <Filters route={route} lessons={all} hide={['tool']} />
+            <LessonList lessons={shown} level={level} />
+          </section>
+        )}
 
-      {tool.guide && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} />}
+        {tool.guide && currentPanel === 'piezas' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="piezas" onSelectPanel={setActivePanel} />}
+        {tool.guide && currentPanel === 'prompts-herramienta' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="prompts" onSelectPanel={setActivePanel} />}
+        {tool.guide && currentPanel === 'automatizaciones' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="automatizaciones" onSelectPanel={setActivePanel} />}
+      </section>
+      </div>
+
+      <section className="st-tool-context-strip" aria-label="Más secciones disponibles">
+        {toolMapItems.filter((item) => item.id !== currentPanel).map((item) => (
+          <button key={item.id} type="button" onClick={() => openPanel(item.id)}>
+            <strong>{item.title}</strong>
+            <span>{item.detail}</span>
+          </button>
+        ))}
+      </section>
 
       <ToolConnections tool={tool.id} />
     </div>
@@ -614,19 +662,32 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
   return blocks
 }
 
-function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string; toolId: string }) {
+function ToolInside({
+  guide,
+  label,
+  toolId,
+  section = 'all',
+  onSelectPanel,
+}: {
+  guide: ToolGuide
+  label: string
+  toolId: string
+  section?: 'all' | 'piezas' | 'prompts' | 'automatizaciones'
+  onSelectPanel?: (panel: string) => void
+}) {
   const [selected, setSelected] = useState<NonNullable<ToolGuide['catalog']>['items'][number] | null>(null)
+  const showCatalog = section === 'all' || section === 'piezas'
+  const showPrompts = section === 'all' || section === 'prompts'
+  const showAutomations = section === 'all' || section === 'automatizaciones'
 
   function jumpToAutomations() {
     setSelected(null)
-    window.setTimeout(() => {
-      document.getElementById('automatizaciones')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 40)
+    onSelectPanel?.('automatizaciones')
   }
 
   return (
     <>
-      {guide.catalog?.items?.length ? (
+      {showCatalog && guide.catalog?.items?.length ? (
         <section className="st-tool-inside" id="piezas">
           <div className="st-section-head">
             <div><span className="st-kicker">Dentro de {label}</span><h2>Qué hay aquí y cuándo usarlo</h2></div>
@@ -670,16 +731,16 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
           )}
         </section>
       ) : null}
-      {guide.prompts?.length ? <ToolPromptLibrary prompts={guide.prompts} label={label} /> : null}
-      {guide.automations?.length ? <AutomationLibrary automations={guide.automations} label={label} /> : null}
+      {showPrompts && guide.prompts?.length ? <ToolPromptLibrary prompts={guide.prompts} label={label} defaultOpen /> : null}
+      {showAutomations && guide.automations?.length ? <AutomationLibrary automations={guide.automations} label={label} /> : null}
     </>
   )
 }
 
 type ToolPrompt = NonNullable<ToolGuide['prompts']>[number]
 
-function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: string }) {
-  const [open, setOpen] = useState(false)
+function ToolPromptLibrary({ prompts, label, defaultOpen = false }: { prompts: ToolPrompt[]; label: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
   const [copied, setCopied] = useState(false)

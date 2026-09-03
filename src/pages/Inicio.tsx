@@ -1,4 +1,4 @@
-import { ArrowRight, BookMarked, BookOpen, Clock, FolderSearch, PlayCircle, Puzzle, Search, Sparkles, Workflow } from 'lucide-react'
+import { ArrowRight, BookMarked, BookOpen, BrainCircuit, Clock, FolderSearch, PlayCircle, Puzzle, Search, Sparkles, Workflow } from 'lucide-react'
 import type { LevelId } from '../types'
 import { useCourse, useIndexes } from '../course'
 import { href } from '../router'
@@ -68,6 +68,7 @@ export default function Inicio() {
           <a href={href({ name: 'kits' })}><Sparkles size={14} /> Proyectos grandes</a>
           <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /> Automatizar</a>
           <a href={href({ name: 'herramienta', toolId: 'higgsfield', filters: {} })}><PlayCircle size={14} /> Crear vídeo</a>
+          <a href={href({ name: 'skills' })}><BrainCircuit size={14} /> Skills</a>
           <a href={href({ name: 'herramientas' })}><Search size={14} /> Herramientas</a>
           <a href={href({ name: 'indice' })}><BookOpen size={14} /> Diccionario</a>
         </div>
@@ -107,6 +108,7 @@ export default function Inicio() {
           <div className="st-support-map">
             <a href={href({ name: 'curso' })}><BookMarked size={14} /><span><strong>{coreLessons} lecciones guiadas</strong><small>La ruta que sí conviene seguir en orden.</small></span></a>
             <a href={href({ name: 'herramientas' })}><FolderSearch size={14} /><span><strong>{organizedTools} herramientas organizadas</strong><small>Cada ficha muestra como máximo 25 lecciones para evitar paredes de scroll.</small></span></a>
+            <a href={href({ name: 'skills' })}><BrainCircuit size={14} /><span><strong>100 skills de GitHub</strong><small>Ordenadas por estrellas y seleccionadas para Claude, ChatGPT, Codex, Cursor y Copilot.</small></span></a>
             <a href={href({ name: 'buscar', query: '', filters: {} })}><Search size={14} /><span><strong>{course.stats.fichas} fichas de consulta</strong><small>Para buscar algo concreto cuando te atasques.</small></span></a>
             <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /><span><strong>{course.stats.workflows} ejemplos ya hechos</strong><small>Automatizaciones que puedes copiar y usar.</small></span></a>
           </div>
