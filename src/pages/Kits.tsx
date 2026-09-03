@@ -23,16 +23,16 @@ type TabId =
   | 'flujo' | 'pruebas' | 'coste' | 'entrega' | 'recursos'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'resumen', label: 'Qué es y para quién' },
-  { id: 'arranque', label: 'Define tu proyecto' },
-  { id: 'arquitectura', label: 'Arquitectura y stack' },
-  { id: 'fases', label: 'Fases paso a paso' },
-  { id: 'prompts', label: 'Prompts del kit' },
-  { id: 'flujo', label: 'Flujo importable' },
-  { id: 'pruebas', label: 'Pruebas y riesgos' },
-  { id: 'coste', label: 'Coste y legal' },
-  { id: 'entrega', label: 'Entrega y precio' },
-  { id: 'recursos', label: 'Resto del portal' },
+  { id: 'resumen', label: '1. Encaje' },
+  { id: 'arranque', label: '2. Brief' },
+  { id: 'arquitectura', label: '3. Stack' },
+  { id: 'fases', label: '4. Fases' },
+  { id: 'prompts', label: '5. Prompts' },
+  { id: 'flujo', label: '6. Flujo' },
+  { id: 'pruebas', label: '7. Pruebas' },
+  { id: 'coste', label: '8. Coste' },
+  { id: 'entrega', label: '9. Entrega' },
+  { id: 'recursos', label: '10. Portal' },
 ]
 
 function toolById(course: Course, id: string) {
@@ -221,7 +221,7 @@ export default function Kits() {
         <p>
           Cada kit es un proyecto completo: define tu caso con el brief, sigue las fases, copia los prompts
           y monta el sistema sin salir de esta página. La ruta principal no exige programar; el código está
-          debajo para quien quiera bajar.
+          debajo para quien quiera bajar. Los flujos importables necesitan tus credenciales reales antes de activarse.
         </p>
       </div>
 
@@ -258,6 +258,7 @@ export default function Kits() {
             <div><span>Pasos</span><strong>{totalSteps}</strong></div>
             <div><span>Prompts propios</span><strong>{kit.prompts.length + 1}</strong></div>
             <div><span>Horas estimadas</span><strong>{Math.round(totalMinutes / 60)}</strong></div>
+            <div><span>Estado</span><strong>{kit.workflows.length ? 'Importable' : 'Guia'}</strong></div>
           </div>
 
           <nav className="st-kit-tabs" aria-label="Secciones del kit">
@@ -481,6 +482,10 @@ export default function Kits() {
                     <CopyButton text={flowText(index)} label="Copiar el flujo" />
                   </div>
                   <p className="st-kit-plain">{workflow.what}</p>
+                  <p className="st-kit-nocode">
+                    <strong>Estado real.</strong> Este flujo se puede copiar, pero no queda funcionando hasta conectar credenciales,
+                    probar webhook, ejecutar con datos ficticios y revisar que no manda mensajes reales por error.
+                  </p>
 
                   <div className="st-kit-columns">
                     <div>

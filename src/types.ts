@@ -788,6 +788,10 @@ export interface Course {
     workflows: number
     authored: number
     terms: number
+    projects: number
+    decks: number
+    kits: number
+    preguntas: number
     sourceWords: number
     quizQuestions: number
     blocks: number

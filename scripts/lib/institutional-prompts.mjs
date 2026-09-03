@@ -15,6 +15,11 @@ const CATEGORY_META = [
     intro: 'Prompts para convertir una necesidad institucional en una primera versión, con usuarios, alcance, pantallas, datos, estados y criterio de terminado.',
   },
   {
+    id: 'ecommerce',
+    title: 'E-commerce y tiendas online',
+    intro: 'Prompts para tiendas online, catálogo, fichas de producto, SEO, conversión, checkout, stock, marketplaces, soporte, postventa, campañas y margen sin inventar claims ni activar acciones comerciales sin revisión.',
+  },
+  {
     id: 'automatizar',
     title: 'Automatizar',
     intro: 'Prompts para diseñar flujos institucionales con disparador, validación, aprobación, registro, recuperación y parada controlada.',
@@ -63,8 +68,17 @@ const CATEGORY_META = [
 
 const CATEGORY_BY_ID = new Map(CATEGORY_META.map((meta) => [meta.id, meta]))
 const MANUAL_ONLY_TOOLS = new Set(['wispr-flow'])
+const ECOMMERCE_TOOL_IDS = new Set(['shopify', 'woocommerce'])
 
 const TOOL_SECTIONS = [
+  {
+    id: 'ecommerce-ventas-online',
+    title: 'E-commerce, catálogo y venta online',
+    description: 'Herramientas y prompts para convertir productos, pedidos, stock, mensajes, campañas y datos de tienda en sistemas revisables.',
+    toolIds: ['shopify', 'woocommerce'],
+    useCase: 'Montar, auditar y operar tiendas online con catálogo claro, soporte controlado, automatizaciones medibles y revisión humana.',
+    audience: 'Tiendas online, marcas DTC, ecommerce, retail, agencias, atención al cliente y operaciones.',
+  },
   {
     id: 'asistentes-modelos',
     title: 'Asistentes IA y modelos',
@@ -205,6 +219,11 @@ const BASE_FAMILY_CATEGORY = {
 }
 
 const KIT_SCENARIOS = [
+  ['Lanzamiento de tienda online con IA', 'preparar una tienda online vendible con catálogo, páginas críticas, checkout revisado, pruebas de compra, analítica básica y checklist de publicación'],
+  ['Catálogo y fichas de producto', 'normalizar atributos, beneficios verificables, descripciones, SEO, variantes, imágenes, FAQs y control de publicación para productos online'],
+  ['Conversión, carrito y recuperación de ventas', 'mejorar home, colección, ficha, carrito, checkout, emails y mensajes de recuperación sin prometer descuentos ni contactar sin consentimiento'],
+  ['Soporte y postventa ecommerce', 'ordenar consultas, incidencias, devoluciones, reseñas, garantías y seguimiento de pedidos con borradores revisados y escalado humano'],
+  ['Marketplaces y multicanal', 'adaptar productos y operaciones a Shopify, WooCommerce, Amazon, Etsy, redes sociales, WhatsApp y feeds comerciales con control de stock y margen'],
   ['Sistema operativo de IA para equipo', 'coordinar herramientas, prompts, automatizaciones, permisos y evidencias para que un equipo trabaje con IA de forma consistente'],
   ['Portal web o app institucional', 'diseñar una web o aplicación institucional con contenido real, rutas claras, despliegue, QA y mantenimiento'],
   ['Sistema documental y RAG', 'convertir documentos internos en respuestas con fuentes, permisos, actualización y prueba de calidad'],
@@ -215,9 +234,62 @@ const KIT_SCENARIOS = [
 
 const SOURCE_LABELS = {
   'Biblioteca anterior': 'Biblioteca anterior',
+  'E-commerce': 'E-commerce',
   Programa: 'Programa',
   'Kits institucionales': 'Kits institucionales',
 }
+
+const ECOMMERCE_FILL = [
+  ['[TIENDA]', 'Nombre de la tienda, marca o cliente.'],
+  ['[PLATAFORMA_ECOMMERCE]', 'Shopify, WooCommerce, marketplace, tienda propia, landing con pago o todavía sin plataforma elegida.'],
+  ['[TIPO_PRODUCTO]', 'Categoría de producto, rango de precios, variantes y nivel de explicación que necesita el comprador.'],
+  ['[CATALOGO_ACTUAL]', 'Número de productos, categorías, atributos obligatorios, variantes, fotos, vídeos y datos que faltan.'],
+  ['[CANALES_VENTA]', 'Web, Amazon, Etsy, Instagram, TikTok Shop, WhatsApp, email, afiliados, retail o marketplace.'],
+  ['[POLITICAS_TIENDA]', 'Envíos, devoluciones, garantía, plazos, impuestos, promociones, privacidad y condiciones comerciales.'],
+  ['[MARGEN_Y_STOCK]', 'Margen objetivo, stock disponible, rotación, productos prioritarios y límites de descuento.'],
+  ['[METRICA_COMERCIAL]', 'Conversión, ticket medio, margen, recurrencia, tasa de devolución, tiempo de respuesta o ROAS.'],
+]
+
+const ECOMMERCE_PROMPT_TASKS = [
+  ['Auditoría de tienda antes de publicar', 'cuando una tienda está casi lista pero todavía puede fallar en claridad, confianza, navegación, checkout o políticas', 'diagnosticar qué bloquea la compra y qué debe corregirse antes de abrir al público', 'home, colecciones, fichas, carrito, checkout, envíos, devoluciones, analítica y mensajes legales', 'lista priorizada de correcciones con severidad, responsable, prueba y evidencia'],
+  ['Arquitectura de categorías y colecciones', 'cuando el catálogo existe pero el comprador no encuentra rápido lo que necesita', 'reordenar categorías, filtros, colecciones y navegación para reducir duda y fricción', 'productos, atributos, búsquedas internas, margen, temporadas y preguntas frecuentes', 'mapa de colecciones, filtros, naming y reglas de publicación'],
+  ['Ficha de producto que vende sin inventar', 'cuando una ficha necesita explicar mejor beneficios, uso, compatibilidad y límites', 'crear una ficha persuasiva y verificable sin afirmar propiedades no probadas', 'características reales, fotos, reseñas, materiales, medidas, restricciones y garantías', 'ficha con título, bullets, descripción, FAQ, metadatos SEO y claims prohibidos'],
+  ['SEO de producto y colección', 'cuando la tienda necesita tráfico orgánico sin rellenar texto inútil', 'mejorar title, meta description, H1, estructura, FAQs y enlazado interno', 'palabras clave, intención de búsqueda, producto, competencia, dudas y contenido existente', 'plan SEO por página con cambios exactos y prueba de indexabilidad'],
+  ['Matriz de variantes y atributos', 'cuando hay tallas, colores, packs, formatos o compatibilidades que crean errores', 'ordenar variantes para que catálogo, stock, precios e imágenes coincidan', 'SKU, atributos, opciones, fotos, precio, inventario, proveedor y restricciones', 'matriz de variantes con validaciones, errores frecuentes y checklist de carga'],
+  ['Naming de producto y colección', 'cuando los nombres son bonitos pero no ayudan a comprar ni a buscar', 'crear nombres claros, consistentes y útiles para navegación, SEO y anuncios', 'marca, categoría, beneficio, público, material, uso y tono comercial', 'nombres candidatos con criterio, descarte y reglas para futuros productos'],
+  ['Descripción por público comprador', 'cuando el mismo producto debe venderse a perfiles distintos sin cambiar la verdad del producto', 'adaptar el argumento de venta a principiante, experto, regalo, empresa o recompra', 'producto, objeciones, nivel técnico, precio, reseñas y casos de uso', 'versiones de copy por perfil con límites de uso y prueba A/B'],
+  ['Claims comerciales permitidos y prohibidos', 'cuando marketing quiere prometer demasiado o usar frases difíciles de demostrar', 'separar beneficios verificables, supuestos, claims sensibles y frases que requieren evidencia', 'fichas, anuncios, emails, normativa, pruebas, reseñas y política de marca', 'matriz de claims con fuente, riesgo, alternativa segura y aprobador'],
+  ['Bundles, packs y upsells', 'cuando se quiere subir ticket medio sin liar al comprador ni romper margen', 'diseñar packs, complementarios, umbrales y recomendaciones de compra', 'productos, margen, stock, compatibilidad, temporadas y comportamiento de compra', 'propuesta de bundles con margen, copy, ubicación y condición de parada'],
+  ['Pricing y descuento con margen visible', 'cuando hay promociones pero no está claro si ayudan o queman margen', 'evaluar precios, descuentos, cupones, umbrales y regalos con impacto económico', 'coste, margen, stock, conversión, competencia, campañas y restricciones', 'tabla de escenarios con margen, riesgo, recomendación y aprobación necesaria'],
+  ['Landing de lanzamiento de producto', 'cuando se lanza un producto nuevo y la página debe explicar rápido por qué importa', 'diseñar la landing con mensaje, bloques, objeciones, prueba social, FAQ y CTA', 'producto, público, promesa, fotos, precio, fecha, stock y canal de campaña', 'estructura de landing con copy por sección y checklist de publicación'],
+  ['CRO de ficha de producto', 'cuando entra tráfico pero la ficha no convierte', 'detectar fricciones en above the fold, imágenes, precio, variantes, envío, confianza y CTA', 'capturas, analítica, heatmaps si existen, reseñas, preguntas y tasa de conversión', 'hipótesis CRO priorizadas con cambios pequeños y medición'],
+  ['CRO de carrito y checkout', 'cuando se pierden compradores al final del proceso', 'identificar dudas, costes sorpresa, campos, métodos de pago, confianza y errores', 'pasos de checkout, tasas de abandono, métodos de pago, políticas y soporte', 'plan de mejora con pruebas, eventos de analítica y riesgo legal'],
+  ['Recuperación de carrito abandonado', 'cuando se quiere recuperar ventas sin parecer spam ni incumplir consentimiento', 'diseñar emails o mensajes de recuperación con permisos, timing y límites', 'carrito, productos, consentimiento, canal, descuento permitido y tono de marca', 'secuencia con disparador, segmentos, copy, exclusiones y prueba'],
+  ['Email de bienvenida y primera compra', 'cuando alguien se suscribe o compra por primera vez', 'crear una experiencia de bienvenida que explique valor, confianza y siguiente compra', 'fuente del contacto, consentimiento, producto comprado, interés y políticas', 'secuencia de bienvenida con asunto, cuerpo, objetivo, métrica y freno'],
+  ['Campaña estacional ecommerce', 'cuando llega una campaña tipo Black Friday, Navidad, verano o vuelta al cole', 'preparar oferta, calendario, creatividades, stock, soporte y medición', 'productos, margen, stock, fechas, canales, audiencia y restricciones legales', 'plan de campaña con piezas, calendario, riesgos y checklist diario'],
+  ['Creatividades para anuncios de producto', 'cuando se necesitan anuncios sin perder coherencia de marca ni prometer de más', 'crear ángulos, titulares, hooks, visuales y variantes para prueba', 'producto, público, canal, objeciones, reseñas, restricciones y assets', 'banco de creatividades con hipótesis, claim, formato y métrica'],
+  ['Prompt visual para producto online', 'cuando se generan imágenes de apoyo sin sustituir la foto real del producto', 'definir prompts visuales útiles respetando materiales, proporciones, uso y derechos', 'foto real, guía de marca, restricciones, escenario, canal y producto', 'prompts visuales, checklist de veracidad y lista de usos prohibidos'],
+  ['FAQ de precompra', 'cuando soporte responde siempre las mismas dudas antes de comprar', 'convertir preguntas frecuentes en respuestas claras que reduzcan fricción y devoluciones', 'mensajes, emails, reseñas, políticas, producto y objeciones', 'FAQ por tema con respuesta aprobable, fuente y señal de escalado'],
+  ['Guiones de WhatsApp precompra', 'cuando la tienda vende o resuelve dudas por WhatsApp', 'crear respuestas de ayuda con consentimiento, tono y escalado antes de prometer disponibilidad', 'preguntas, productos, stock, precios, envío, devoluciones y política comercial', 'banco de respuestas con variables, límites y aprobación humana'],
+  ['Soporte de pedido y seguimiento', 'cuando clientes preguntan por estado, entrega, cambio o incidencia', 'ordenar respuestas y acciones de soporte sin inventar estados ni plazos', 'pedido, transportista, historial, política de envío y datos mínimos', 'protocolo de soporte con borradores, campos obligatorios y escalado'],
+  ['Devoluciones y garantías', 'cuando hay incidencias postventa que deben resolverse con criterio consistente', 'crear un flujo de devolución, cambio, garantía o incidencia con límites comerciales', 'pedido, producto, fecha, motivo, fotos, política y excepciones', 'árbol de decisión con respuesta, evidencia, aprobación y registro'],
+  ['Reseñas y prueba social', 'cuando hay reseñas útiles pero están dispersas o mal aprovechadas', 'convertir reseñas en insights, FAQs, mejoras de producto y piezas de confianza', 'reseñas, valoraciones, fotos de cliente, permisos, quejas y menciones', 'matriz de prueba social con permiso, uso, riesgo y pieza propuesta'],
+  ['Segmentación de clientes ecommerce', 'cuando se quiere vender mejor sin tratar a todos igual', 'crear segmentos por comportamiento, producto, margen, frecuencia y etapa de relación', 'pedidos, navegación, emails, tickets, consentimiento y gasto', 'segmentos accionables con campaña, exclusión, dato mínimo y métrica'],
+  ['Retención y recompra', 'cuando la primera compra no se convierte en relación', 'diseñar acciones de recompra, educación, mantenimiento, reposición o cross-sell', 'producto, ciclo de uso, margen, historial, satisfacción y canal permitido', 'plan de retención con momentos, mensajes, automatización y prueba'],
+  ['Inventario y alerta de stock', 'cuando marketing vende productos que operaciones no puede servir', 'conectar stock, campañas, fichas y soporte para evitar promesas falsas', 'inventario, proveedor, campañas, pedidos, variantes y tiempos de reposición', 'reglas de stock con avisos, bloqueo de campaña y responsable'],
+  ['Datos de proveedor a catálogo', 'cuando el proveedor manda información incompleta, desordenada o poco vendible', 'transformar datos de proveedor en ficha publicable sin perder trazabilidad', 'CSV, PDF, fotos, tarifas, atributos, medidas, materiales y condiciones', 'pipeline de limpieza con campos obligatorios, dudas y checklist de carga'],
+  ['Feed para Google Merchant o catálogo social', 'cuando los productos deben salir a canales de venta externos', 'preparar un feed limpio con atributos, imágenes, disponibilidad y políticas', 'catálogo, SKU, precios, stock, URLs, imágenes y reglas del canal', 'checklist de feed con errores, campos, revisión y prueba de muestra'],
+  ['Adaptación a marketplace', 'cuando un producto pasa de tienda propia a Amazon, Etsy u otro canal', 'reescribir y validar contenido para reglas, categorías, SEO interno y margen del marketplace', 'producto, categoría, fotos, atributos, comisiones, logística y reglas del canal', 'ficha adaptada por marketplace con riesgos y campos pendientes'],
+  ['Tienda en Shopify: QA de publicación', 'cuando una tienda Shopify debe revisarse antes de abrir o cambiar tema', 'auditar navegación, tema, productos, pagos, envíos, impuestos, emails y apps', 'configuración, tema, productos, checkout, dominios, apps y políticas', 'checklist Shopify con prueba de compra ficticia y evidencias'],
+  ['Tienda en WooCommerce: mantenimiento', 'cuando WooCommerce acumula plugins, errores, lentitud o dudas de actualización', 'ordenar mantenimiento, plugins, backups, seguridad, checkout y rendimiento', 'WordPress, plugins, pasarela, hosting, theme, logs y cambios recientes', 'plan de mantenimiento WooCommerce con backups, pruebas y rollback'],
+  ['Dashboard ecommerce semanal', 'cuando dirección necesita ver tienda sin abrir diez herramientas', 'diseñar un informe de ventas, margen, conversión, stock, soporte y campañas', 'Shopify/WooCommerce, Sheets, ads, emails, pedidos, devoluciones y stock', 'dashboard semanal con métricas, fuentes, alertas y decisiones'],
+  ['Automatización n8n de pedido problemático', 'cuando se quiere detectar incidencias de pedido antes de que exploten en soporte', 'diseñar un workflow con disparador, validación, registro, aviso y aprobación', 'pedido, pago, stock, transportista, email, WhatsApp y tabla de auditoría', 'workflow especificado con nodos, campos, pruebas y ruta de error'],
+  ['Automatización de consulta por WhatsApp', 'cuando llegan preguntas comerciales por WhatsApp y se quiere preparar borrador', 'clasificar intención, buscar producto o política y crear borrador sin enviar solo', 'mensaje, catálogo, política, stock, historial y responsable', 'flujo de borrador con aprobación humana y registro de conversación'],
+  ['Auditoría de permisos y datos de cliente', 'cuando la tienda conecta apps, automatizaciones o agentes a datos de clientes', 'revisar qué datos se usan, quién accede, cuánto se guarda y qué se exporta', 'clientes, pedidos, emails, apps, n8n, tablas, agentes y roles', 'mapa de datos con permisos mínimos, riesgos y acciones bloqueadas'],
+  ['Plan de internacionalización ecommerce', 'cuando se quiere vender en otro país o idioma', 'preparar traducción, moneda, envíos, impuestos, soporte, SEO y expectativas realistas', 'catálogo, país, idioma, logística, normativa, moneda y canales', 'plan por fases con traducciones, bloqueos legales y prueba de compra'],
+  ['Optimización de producto ganador', 'cuando un producto ya vende y se quiere escalar sin romper soporte ni stock', 'sacar más rendimiento a un producto con datos, creatividad, bundles y operación', 'ventas, margen, stock, reseñas, soporte, anuncios y tasa de devolución', 'plan de escalado con hipótesis, límites, señales de parada y responsables'],
+  ['Diagnóstico de producto que no vende', 'cuando un producto recibe visitas pero no compras o ni siquiera recibe clics', 'separar problema de oferta, tráfico, precio, confianza, ficha, foto, stock o audiencia', 'analítica, ficha, campaña, precio, reseñas, competencia y navegación', 'diagnóstico con causa probable, prueba corta y cambio prioritario'],
+]
 
 function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length
@@ -231,6 +303,7 @@ function compact(value, max = 280) {
 
 function categoryForToolPrompt(name) {
   const text = String(name || '').toLowerCase()
+  if (/e-?commerce|tienda online|shopify|woocommerce|marketplace|amazon|etsy|cat[aá]logo|producto|checkout|carrito|pedido|stock|reseñ|postventa|devoluci[oó]n|garant[ií]a|cro|merchant|venta online/.test(text)) return 'ecommerce'
   if (/investigar|comparar|opciones|decisi/.test(text)) return 'elegir-herramienta'
   if (/automatizar|workflow|flujo/.test(text)) return 'automatizar'
   if (/agente|l[ií]mites|permisos/.test(text)) return 'crear-agentes'
@@ -398,6 +471,28 @@ function importKitPrompt([title, outcome], index) {
   }
 }
 
+function importEcommercePrompt([name, when, goal, entry, output], index) {
+  let text = `Actúa como responsable institucional de e-commerce, operaciones y sistemas de IA. Quiero trabajar el caso "${name}" para una tienda real sin convertirlo en una lista de ideas bonitas ni en copy sin comprobar. Tu prioridad es vender mejor con datos, catálogo ordenado, margen visible, soporte controlado, automatizaciones seguras y evidencia guardada.\n\n## Contexto obligatorio\nTienda o marca: [TIENDA]. Institución o cliente: [INSTITUCION]. Plataforma ecommerce: [PLATAFORMA_ECOMMERCE]. Área responsable: [AREA_EQUIPO]. Persona que ejecuta: [PERFIL_PERSONA]. Tipo de producto: [TIPO_PRODUCTO]. Catálogo actual: [CATALOGO_ACTUAL]. Canales de venta: [CANALES_VENTA]. Políticas de tienda: [POLITICAS_TIENDA]. Margen y stock: [MARGEN_Y_STOCK]. Entrada real disponible: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones: [RESTRICCIONES]. Datos sensibles o prohibidos: [DATOS_SENSIBLES]. Métrica comercial prioritaria: [METRICA_COMERCIAL]. Fecha de revisión: [FECHA_REVISION].\n\n## Cuándo usarlo\n${when}. El objetivo es ${goal}. La entrada principal será ${entry}. La salida que debe existir al final será ${output}.\n\n## Reglas de trabajo\nPrimero revisa si faltan datos que cambien precio, stock, margen, garantía, envío, disponibilidad, impuestos, consentimiento o publicación. Si falta uno de esos datos, haz una sola pregunta y espera. Si puedes avanzar con supuestos, márcalos como SUPUESTO y deja claro cómo se comprobarían en Shopify, WooCommerce, marketplace, hoja de cálculo, CRM, herramienta de email, WhatsApp Business o n8n. No inventes características del producto, certificaciones, resultados, tiempos de entrega, descuentos, disponibilidad ni reseñas. No uses datos reales de clientes en ejemplos: crea datos ficticios y dilo.\n\n## Salida obligatoria\nDevuelve: uno, diagnóstico comercial en menos de 180 palabras; dos, decisión sobre si conviene actuar ahora, medir antes o no tocar; tres, pasos concretos por pantalla, tabla, ficha, colección, checkout, canal, nodo o documento; cuatro, copy o estructura si aplica, separando texto publicable, texto para revisión y claims prohibidos; cinco, automatización posible con disparador, validación, acción, registro, error y freno humano; seis, prueba con caso normal, incompleto, duplicado y extremo; siete, impacto esperado en [METRICA_COMERCIAL] y cómo medirlo sin atribución falsa; ocho, riesgos de privacidad, margen, stock, soporte, reputación y dependencia de plataforma; nueve, evidencia que debo guardar; diez, siguiente acción de menos de treinta minutos.\n\n## Control ecommerce\nMarca APROBACIÓN HUMANA OBLIGATORIA antes de publicar productos, cambiar precios, activar descuentos, enviar mensajes, contestar garantías, procesar devoluciones, cobrar, tocar datos de cliente, instalar apps, conectar credenciales o activar workflows. Si algo depende de planes, comisiones, normativa fiscal, reglas de marketplace o funciones actuales, escribe COMPROBAR EN LA WEB OFICIAL. Termina con una decisión que empiece por: Para esta tienda, la prioridad es.`
+
+  while (wordCount(text) < 590) {
+    text += `\n\nAñade una mini matriz RACI con responsable de catálogo, responsable comercial, aprobador, soporte y persona técnica. Incluye versión manual para el piloto y versión automatizada para cuando haya evidencia. Si el proceso puede generar spam, descuentos mal aplicados, stock falso o mensajes a clientes sin consentimiento, trátalo como bloqueo hasta revisión humana.`
+  }
+
+  return {
+    id: `ecommerce:general:tienda-${String(index + 1).padStart(2, '0')}`,
+    categoryId: 'ecommerce',
+    toolId: 'general',
+    toolLabel: 'E-commerce',
+    source: 'E-commerce',
+    name: `E-commerce · ${name}`,
+    when,
+    prompt: text,
+    fill: [...BASE_FILL, ...ECOMMERCE_FILL],
+    expect: `Una salida ecommerce verificable para ${name}: diagnóstico, pasos, copy o estructura, automatización, prueba, riesgos, evidencia y acción corta.`,
+    next: 'Guarda la salida en Mi proyecto y valida con datos ficticios antes de tocar productos, pedidos o clientes reales.',
+  }
+}
+
 function makeFamily(meta, extra = {}) {
   return {
     id: meta.id,
@@ -428,6 +523,10 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
 
   for (const [index, kit] of KIT_SCENARIOS.entries()) {
     pushGeneral(importKitPrompt(kit, index))
+  }
+
+  for (const [index, task] of ECOMMERCE_PROMPT_TASKS.entries()) {
+    pushGeneral(importEcommercePrompt(task, index))
   }
 
   for (const lesson of cursoFiles || []) {
@@ -480,7 +579,17 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
     const imported = (tool.guide?.prompts || [])
       .slice(0, 20)
       .map((prompt, index) => importToolPrompt(tool, prompt, index))
-    const extras = EXTRA_TASKS.map((task, index) => promptCore(tool, task, index))
+    const ecommerceExtras = ECOMMERCE_TOOL_IDS.has(tool.id)
+      ? ECOMMERCE_PROMPT_TASKS.map(([name, when, goal, entry, output], index) => promptCore(
+        tool,
+        ['ecommerce', name, `${goal}. Entrada ecommerce: ${entry}. Salida esperada: ${output}`, when],
+        index,
+      ))
+      : []
+    const extras = [
+      ...ecommerceExtras,
+      ...EXTRA_TASKS.map((task, index) => promptCore(tool, task, ecommerceExtras.length + index)),
+    ]
     const entries = [...imported, ...extras]
 
     let fallbackIndex = 0

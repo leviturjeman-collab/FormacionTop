@@ -185,6 +185,7 @@ const TITLE_STAGE = [
   [/test|prueba|eval|playwright|observabilidad|postmortem|monitor|regresi[oó]n|logs?\b/i, 'calidad'],
   [/docker|terminal|homebrew|instalaci[oó]n|setup|variables de entorno|\benv\b|deploy|vercel|supabase/i, 'entorno'],
   [/claude code|codex|copilot|cursor|gemini cli|asistente de c[oó]digo/i, 'asistentes'],
+  [/e-?commerce|tienda online|shopify|woocommerce|marketplace|cat[aá]logo|producto|checkout|carrito|pedido|stock|reseñ|venta online/i, 'entrega'],
   [/portfolio|cliente|propuesta|factura|precio|venta|negocio|capstone|defensa|certificaci[oó]n|rúbrica|rubrica/i, 'entrega'],
   [/token|contexto|alucina|temperatura|par[aá]metro|c[oó]mo funciona un modelo|transformer|llm\b/i, 'fundamentos'],
 ]
@@ -220,6 +221,8 @@ export const TOOLS = [
   { id: 'pipedream', label: 'Pipedream', icon: 'n8n', match: /pipedream/i },
   { id: 'notebooklm', label: 'NotebookLM', icon: 'googlegemini', match: /notebooklm/i },
   { id: 'airtable', label: 'Airtable', icon: 'airtable', match: /airtable/i },
+  { id: 'shopify', label: 'Shopify', icon: 'shopify', match: /shopify/i },
+  { id: 'woocommerce', label: 'WooCommerce', icon: 'woocommerce', match: /woo ?commerce|wordpress\s+commerce/i },
   // Herramientas de construccion y creacion con IA que entran en el itinerario.
   { id: 'lovable', label: 'Lovable', icon: 'react', match: /\blovable\b/i },
   { id: 'v0', label: 'v0', icon: 'vercel', match: /\bv0\.dev\b|\bv0\b(?= de vercel)/i },

@@ -24,6 +24,47 @@ function useDoneSet() {
   )
 }
 
+function toolContentSummary(tool: ToolPage) {
+  const selected = tool.count || 0
+  const itinerary = tool.itinerary?.length || 0
+  const prompts = tool.guide?.prompts?.length || 0
+  const automations = tool.guide?.automations?.length || 0
+  const pieces = [
+    itinerary ? `${itinerary} paso a paso` : '',
+    selected ? `${selected} de consulta` : '',
+    prompts ? `${prompts} prompts` : '',
+    automations ? `${automations} automatizaciones` : '',
+  ].filter(Boolean)
+  if (pieces.length) return pieces.join(' · ')
+  return tool.guide ? 'Guia manual' : 'Sin contenido curado'
+}
+
+function automationReality(automation: ToolAutomation) {
+  const text = `${automation.platform} ${automation.credentials} ${automation.steps.join(' ')}`.toLowerCase()
+  if (text.includes('workflow importable')) {
+    return {
+      label: 'Importable',
+      detail: 'Puedes copiar el flujo, pero tienes que poner tus credenciales y probarlo con datos ficticios.',
+    }
+  }
+  if (text.includes('whatsapp') || text.includes('cloud api') || text.includes('telegram')) {
+    return {
+      label: 'Requiere cuenta real',
+      detail: 'La logica esta explicada; el funcionamiento depende de token, bot, webhook, permisos y prueba real.',
+    }
+  }
+  if (text.includes('n8n')) {
+    return {
+      label: 'Guia n8n',
+      detail: 'Recorrido para construirlo en n8n; no equivale a una ejecucion ya conectada.',
+    }
+  }
+  return {
+    label: 'Guia operativa',
+    detail: 'Tiene pasos, prueba y recuperacion; valida primero con tus cuentas.',
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * RUTA: las diez áreas                                                *
  * ------------------------------------------------------------------ */
@@ -238,7 +279,7 @@ export function Categoria({ categoryId, route }: { categoryId: string; route: Ro
 }
 
 /* ------------------------------------------------------------------ *
- * BIBLIOTECA: las carpetas del vault                                  *
+ * BIBLIOTECA: carpetas internas de consulta                           *
  * ------------------------------------------------------------------ */
 
 export function Biblioteca() {
@@ -250,7 +291,7 @@ export function Biblioteca() {
         <span className="st-kicker">Consulta</span>
         <h1>Biblioteca</h1>
         <p>
-          Las {course.folders.length} carpetas de tu vault, tal y como las tienes organizadas. La ruta es para
+          Las {course.folders.length} carpetas de contenido interno, organizadas como biblioteca de consulta. La ruta es para
           aprender en orden; esto es para encontrar algo concreto cuando ya sabes qué buscas.
         </p>
       </div>
@@ -327,22 +368,13 @@ export function Herramientas() {
       <div className="st-tool-grid">
         {course.toolPages.map((tool) => {
           const escritas = tool.itinerary?.length || 0
-          const promptCount = tool.guide?.prompts?.length || 0
-          const automationCount = tool.guide?.automations?.length || 0
           return (
             <a key={tool.id} className="st-tool-card" href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
               <BrandMark icon={tool.icon} size={24} />
               <div>
                 <strong>{tool.label}</strong>
                 {tool.guide ? (
-                  <span>
-                    {[
-                      tool.count ? `${tool.count} lecciones` : '',
-                      promptCount ? `${promptCount} prompts` : '',
-                      automationCount ? `${automationCount} automatizaciones` : '',
-                      tool.count || promptCount || automationCount ? 'guía completa' : 'guía manual',
-                    ].filter(Boolean).join(' · ')}
-                  </span>
+                  <span>{toolContentSummary(tool)}</span>
                 ) : escritas > 0 ? (
                   <span className="st-tool-itinerary">Itinerario · {escritas} lecciones</span>
                 ) : (
@@ -393,7 +425,7 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
     ...(all.length ? [{
       id: 'lecciones-herramienta',
       title: 'Lecciones',
-      detail: `${tool.count} seleccionadas${hiddenCount ? ` de ${totalAvailable}` : ''}`,
+      detail: `${tool.count} de consulta${hiddenCount ? `, ${hiddenCount} internas fuera` : ''}`,
     }] : []),
     ...(promptCount ? [{
       id: 'prompts-herramienta',
@@ -419,7 +451,7 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
           <h1>{tool.label}</h1>
           <p>
             {tool.count
-              ? `Lo esencial de ${tool.label}, curado en un máximo de ${tool.maxLessons || 25} lecciones de consulta.`
+              ? `Lo esencial de ${tool.label}, curado como biblioteca de consulta. Si existe una ruta paso a paso, se marca aparte para no mezclar estudio con material de apoyo.`
               : `${tool.label} funciona como herramienta manual de consulta: primero entiendes qué hace y después la usas solo cuando te ayuda en tu trabajo real.`}
             {hiddenCount ? ` Hay ${hiddenCount} menciones internas más, pero no se muestran aquí para no crear una lista interminable.` : ''}
           </p>
@@ -429,6 +461,7 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
             <>
               <div><strong>{tool.count}</strong><small>seleccionadas</small></div>
               <div><strong>{progress.percent}%</strong><small>completado</small></div>
+              <div><strong>{tool.itinerary?.length || 'No'}</strong><small>paso a paso</small></div>
             </>
           ) : (
             <>
@@ -468,7 +501,7 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
               <span className="st-kicker">Lecciones dentro de {tool.label}</span>
               <h2>Estudia solo estas piezas</h2>
               <p className="st-tool-inside-intro">
-                No son otra ruta obligatoria. Son las lecciones seleccionadas para entender {tool.label} cuando tu proyecto la necesite.
+                No son otra ruta obligatoria ni prometen ser un curso exacto de 20 lecciones. Son piezas de consulta seleccionadas para entender {tool.label} cuando tu proyecto la necesite.
               </p>
             </div>
             <span>{shown.length} de {all.length}{hiddenCount ? ` · ${hiddenCount} guardadas fuera` : ''}</span>
@@ -740,6 +773,9 @@ function AutomationLibrary({ automations, label }: { automations: ToolAutomation
                 <span className="st-kicker">{selected.difficulty} · {selected.platform}</span>
                 <h3>{selected.name}</h3>
                 <p>{selected.goal}</p>
+                <p className="st-automation-reality">
+                  <strong>{automationReality(selected).label}.</strong> {automationReality(selected).detail}
+                </p>
               </div>
               <button type="button" className="st-icon-close" onClick={() => setSelected(null)} aria-label="Cerrar automatización"><X size={16} /></button>
             </header>
@@ -759,10 +795,15 @@ function AutomationLibrary({ automations, label }: { automations: ToolAutomation
 }
 
 function AutomationCard({ automation, onOpen }: { automation: ToolAutomation; onOpen: () => void }) {
+  const reality = automationReality(automation)
   return (
     <article className="st-automation-card">
       <button type="button" className="st-automation-toggle" onClick={onOpen}>
-        <span><strong>{automation.name}</strong><small>{automation.difficulty} · {automation.platform}</small></span>
+        <span>
+          <strong>{automation.name}</strong>
+          <small>{automation.difficulty} · {automation.platform}</small>
+          <em>{reality.label}</em>
+        </span>
         <span>→</span>
       </button>
     </article>

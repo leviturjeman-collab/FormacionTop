@@ -69,7 +69,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
       <div className="st-page">
         <div className="st-empty">
           <h2>Esa lección no existe</h2>
-          <p>El enlace apunta a «{slug}», que no está en el curso. Puede que hayas renombrado el archivo en Obsidian y haya que regenerar el índice.</p>
+          <p>El enlace apunta a «{slug}», que no está en el curso. Puede que el contenido se haya reorganizado y haya que regenerar el índice.</p>
           <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
         </div>
       </div>

@@ -1,40 +1,89 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Clipboard, KeyRound, Plus, Trash2 } from 'lucide-react'
+import { Check, Clipboard, KeyRound, Mail, Plus, RefreshCw, Trash2, UserCheck } from 'lucide-react'
 import { useCourse } from '../course'
 
 const KEY = 'academia.admin.alumnos.v1'
+type AdminTab = 'estado' | 'crear' | 'alumnos' | 'pendiente'
+type LearnerStatus = 'pendiente' | 'entregado' | 'activo'
+
+const ADMIN_TABS: { id: AdminTab; label: string }[] = [
+  { id: 'estado', label: 'Estado del curso' },
+  { id: 'crear', label: 'Crear alumno' },
+  { id: 'alumnos', label: 'Alumnos y PINs' },
+  { id: 'pendiente', label: 'Pendiente real' },
+]
 
 type LearnerPin = {
   id: string
   name: string
+  email: string
   pin: string
   level: string
   goal: string
   tools: string
   notes: string
+  status: LearnerStatus
   createdAt: string
+  updatedAt: string
 }
 
-const EMPTY = { name: '', goal: '', tools: '', notes: '', level: 'basico' }
+const STATUS_LABELS: Record<LearnerStatus, string> = {
+  pendiente: 'Sin entregar',
+  entregado: 'PIN entregado',
+  activo: 'Alumno activo',
+}
 
 function readPins(): LearnerPin[] {
   try {
     const raw = localStorage.getItem(KEY)
-    return raw ? JSON.parse(raw) : []
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.map(normalizeLearner) : []
   } catch {
     return []
   }
 }
 
-function generatePin() {
+function normalizeLearner(item: Partial<LearnerPin>): LearnerPin {
+  const createdAt = item.createdAt || new Date().toISOString()
+  return {
+    id: item.id || `${Date.now()}-${item.email || item.name || 'alumno'}`,
+    name: item.name || '',
+    email: item.email || '',
+    pin: /^\d{6}$/.test(item.pin || '') ? item.pin! : generatePin(),
+    level: item.level || 'basico',
+    goal: item.goal || '',
+    tools: item.tools || '',
+    notes: item.notes || '',
+    status: item.status || 'pendiente',
+    createdAt,
+    updatedAt: item.updatedAt || createdAt,
+  }
+}
+
+function generatePin(existing: LearnerPin[] = []) {
+  const used = new Set(existing.map((item) => item.pin))
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const pin = String(Math.floor(100000 + Math.random() * 900000))
+    if (!used.has(pin)) return pin
+  }
   return String(Math.floor(100000 + Math.random() * 900000))
+}
+
+function emptyDraft(pins: LearnerPin[] = []) {
+  return { name: '', email: '', pin: generatePin(pins), goal: '', tools: '', notes: '', level: 'basico' }
+}
+
+function validEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
 }
 
 export default function Admin() {
   const course = useCourse()
   const [pins, setPins] = useState<LearnerPin[]>(() => readPins())
-  const [draft, setDraft] = useState(EMPTY)
+  const [draft, setDraft] = useState(() => emptyDraft())
   const [copied, setCopied] = useState<string | null>(null)
+  const [tab, setTab] = useState<AdminTab>('estado')
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     localStorage.setItem(KEY, JSON.stringify(pins))
@@ -44,26 +93,67 @@ export default function Admin() {
     () => course.toolPages.slice(0, 18).map((tool) => tool.label),
     [course.toolPages],
   )
+  const mainLessons = useMemo(() => (course.curso || []).filter((lesson) => !lesson.tool), [course.curso])
+  const blocksWithoutMainRoute = useMemo(
+    () => course.stages.filter((stage) => !mainLessons.some((lesson) => lesson.stageId === stage.id)),
+    [course.stages, mainLessons],
+  )
+  const learnerStats = useMemo(() => ({
+    total: pins.length,
+    pending: pins.filter((item) => item.status === 'pendiente').length,
+    delivered: pins.filter((item) => item.status === 'entregado').length,
+    active: pins.filter((item) => item.status === 'activo').length,
+  }), [pins])
+  const filteredPins = useMemo(() => {
+    const text = query.trim().toLowerCase()
+    if (!text) return pins
+    return pins.filter((item) =>
+      [item.name, item.email, item.pin, item.goal, item.tools, STATUS_LABELS[item.status]]
+        .join(' ')
+        .toLowerCase()
+        .includes(text),
+    )
+  }, [pins, query])
+  const emailTaken = pins.some((item) => item.email.toLowerCase() === draft.email.trim().toLowerCase())
+  const pinTaken = pins.some((item) => item.pin === draft.pin)
+  const pinValid = /^\d{6}$/.test(draft.pin)
+  const canCreate = draft.name.trim() && validEmail(draft.email) && pinValid && !emailTaken && !pinTaken
 
   function createPin() {
-    if (!draft.name.trim()) return
-    setPins((current) => [{
+    if (!canCreate) return
+    const next = [{
       id: `${Date.now()}-${draft.name}`,
       name: draft.name.trim(),
-      pin: generatePin(),
+      email: draft.email.trim().toLowerCase(),
+      pin: draft.pin,
       level: draft.level,
       goal: draft.goal.trim(),
       tools: draft.tools.trim(),
       notes: draft.notes.trim(),
+      status: 'pendiente' as LearnerStatus,
       createdAt: new Date().toISOString(),
-    }, ...current])
-    setDraft(EMPTY)
+      updatedAt: new Date().toISOString(),
+    }, ...pins]
+    setPins(next)
+    setDraft(emptyDraft(next))
   }
 
   function copy(value: string, id: string) {
     navigator.clipboard?.writeText(value)
     setCopied(id)
     window.setTimeout(() => setCopied(null), 1500)
+  }
+
+  function accessText(item: LearnerPin) {
+    return `Acceso a la formación\nEmail: ${item.email}\nPIN: ${item.pin}`
+  }
+
+  function cycleStatus(id: string) {
+    setPins((current) => current.map((item) => {
+      if (item.id !== id) return item
+      const status: LearnerStatus = item.status === 'pendiente' ? 'entregado' : item.status === 'entregado' ? 'activo' : 'pendiente'
+      return { ...item, status, updatedAt: new Date().toISOString() }
+    }))
   }
 
   function exportPins() {
@@ -84,7 +174,7 @@ export default function Admin() {
         <span className="st-kicker"><KeyRound size={12} /> Control local</span>
         <h1>Súper administrador</h1>
         <p>
-          Panel para preparar alumnos, PINs, objetivo y herramientas recomendadas. Esta primera versión vive en tu navegador:
+          Panel para preparar alumnos, email, PIN de seis dígitos, objetivo y herramientas recomendadas. Esta primera versión vive en tu navegador:
           sirve para organizar, no como autenticación real de servidor.
         </p>
       </div>
@@ -97,6 +187,27 @@ export default function Admin() {
         </div>
       </section>
 
+      <nav className="st-admin-tabs" aria-label="Tabs de súper administrador">
+        {ADMIN_TABS.map((item) => (
+          <button key={item.id} type="button" className={tab === item.id ? 'on' : ''} onClick={() => setTab(item.id)}>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
+      {tab === 'estado' && (
+        <section className="st-admin-status">
+          <div><span>Ruta principal</span><strong>{mainLessons.length}</strong><small>lecciones que el alumno debe seguir en orden.</small></div>
+          <div><span>Biblioteca</span><strong>{course.stats.lessons}</strong><small>lecciones de consulta, no obligatorias.</small></div>
+          <div><span>Herramientas</span><strong>{course.toolPages.length}</strong><small>fichas, prompts, automatizaciones y guías.</small></div>
+          <div><span>Kits</span><strong>{course.stats.kits}</strong><small>proyectos institucionales listos para adaptar.</small></div>
+          <div><span>Workflows</span><strong>{course.stats.workflows}</strong><small>flujos generados/importables que aún requieren credenciales.</small></div>
+          <div><span>Bloques pendientes</span><strong>{blocksWithoutMainRoute.length}</strong><small>con biblioteca, pero sin ruta principal curada.</small></div>
+          <div><span>Alumnos guardados</span><strong>{learnerStats.total}</strong><small>{learnerStats.pending} sin entregar · {learnerStats.delivered} con PIN · {learnerStats.active} activos.</small></div>
+        </section>
+      )}
+
+      {tab === 'crear' && (
       <section className="st-admin-grid">
         <div className="st-admin-form">
           <div className="st-section-head">
@@ -106,6 +217,15 @@ export default function Admin() {
             </div>
           </div>
           <label><span>Nombre del alumno</span><input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Ej. Laura Pérez" /></label>
+          <label><span>Email del alumno</span><input type="email" value={draft.email} onChange={(event) => setDraft({ ...draft, email: event.target.value })} placeholder="laura@email.com" /></label>
+          <div className="st-admin-pin-row">
+            <label><span>PIN de 6 dígitos</span><input inputMode="numeric" maxLength={6} value={draft.pin} onChange={(event) => setDraft({ ...draft, pin: event.target.value.replace(/\D/g, '').slice(0, 6) })} placeholder="123456" /></label>
+            <button type="button" className="st-btn-ghost" onClick={() => setDraft({ ...draft, pin: generatePin(pins) })}><RefreshCw size={13} /> Generar</button>
+          </div>
+          {draft.email && !validEmail(draft.email) && <p className="st-admin-field-error">El email no tiene formato válido.</p>}
+          {emailTaken && <p className="st-admin-field-error">Ese email ya está guardado en alumnos.</p>}
+          {draft.pin && !pinValid && <p className="st-admin-field-error">El PIN debe tener exactamente 6 dígitos.</p>}
+          {pinTaken && <p className="st-admin-field-error">Ese PIN ya existe. Genera otro.</p>}
           <label><span>Objetivo principal</span><input value={draft.goal} onChange={(event) => setDraft({ ...draft, goal: event.target.value })} placeholder="Ej. montar una automatización para clientes" /></label>
           <label><span>Nivel inicial</span><select value={draft.level} onChange={(event) => setDraft({ ...draft, level: event.target.value })}><option value="basico">Básico</option><option value="intermedio">Intermedio</option><option value="avanzado">Avanzado</option></select></label>
           <label><span>Herramientas recomendadas</span><input value={draft.tools} onChange={(event) => setDraft({ ...draft, tools: event.target.value })} placeholder="Ej. ChatGPT, n8n, Nano Banana" /></label>
@@ -115,23 +235,25 @@ export default function Admin() {
             ))}
           </div>
           <label><span>Notas internas</span><textarea rows={4} value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} placeholder="Restricciones, ritmo, dudas, kit recomendado..." /></label>
-          <button type="button" className="st-btn" onClick={createPin} disabled={!draft.name.trim()}><Plus size={13} /> Crear PIN</button>
+          <button type="button" className="st-btn" onClick={createPin} disabled={!canCreate}><Plus size={13} /> Guardar alumno y PIN</button>
         </div>
 
         <aside className="st-admin-missing">
-          <span className="st-kicker">Lo que falta para hacerlo real</span>
-          <h2>Próximas piezas</h2>
+          <span className="st-kicker">Uso recomendado</span>
+          <h2>Flujo de alta</h2>
           <ul>
-            <li>Base de datos de alumnos y progreso sincronizado.</li>
-            <li>Login real para administrador y alumno.</li>
-            <li>Permisos por rol: alumno, profesor, administrador.</li>
-            <li>Restablecer PIN y caducidad de accesos.</li>
-            <li>Registro de actividad y exportación por alumno.</li>
-            <li>Consentimiento, privacidad y política de datos.</li>
+            <li>Escribes nombre y email real del alumno.</li>
+            <li>Generas o defines un PIN de seis dígitos.</li>
+            <li>Guardas la ficha con nivel, objetivo y herramientas.</li>
+            <li>Copias el acceso y se lo mandas al alumno.</li>
+            <li>Marcas el estado como PIN entregado o alumno activo.</li>
+            <li>Exportas JSON para conservar una copia fuera del navegador.</li>
           </ul>
         </aside>
       </section>
+      )}
 
+      {tab === 'alumnos' && (
       <section className="st-admin-list">
         <div className="st-section-head">
           <div>
@@ -140,35 +262,57 @@ export default function Admin() {
           </div>
           <button type="button" className="st-btn-ghost" onClick={exportPins} disabled={!pins.length}>Exportar JSON</button>
         </div>
+        <div className="st-admin-learner-summary">
+          <div><strong>{learnerStats.total}</strong><span>Total</span></div>
+          <div><strong>{learnerStats.pending}</strong><span>Sin entregar</span></div>
+          <div><strong>{learnerStats.delivered}</strong><span>PIN entregado</span></div>
+          <div><strong>{learnerStats.active}</strong><span>Activos</span></div>
+        </div>
+        <label className="st-admin-search">
+          <Mail size={13} />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nombre, email, PIN, estado, objetivo o herramienta..." />
+        </label>
 
-        {pins.length ? (
+        {filteredPins.length ? (
           <div className="st-admin-table">
-            {pins.map((item) => (
+            {filteredPins.map((item) => (
               <article key={item.id}>
                 <div>
                   <strong>{item.name}</strong>
-                  <small>{item.goal || 'Objetivo pendiente'} · nivel {item.level}</small>
+                  <small>{item.email} · {item.goal || 'Objetivo pendiente'} · nivel {item.level}</small>
                 </div>
                 <code>{item.pin}</code>
+                <button type="button" className={`st-admin-state is-${item.status}`} onClick={() => cycleStatus(item.id)}>
+                  <UserCheck size={12} /> {STATUS_LABELS[item.status]}
+                </button>
                 <span>{item.tools || 'Herramientas por definir'}</span>
-                <button type="button" onClick={() => copy(item.pin, item.id)}>{copied === item.id ? <Check size={13} /> : <Clipboard size={13} />}</button>
+                <button type="button" title="Copiar email y PIN" onClick={() => copy(accessText(item), item.id)}>{copied === item.id ? <Check size={13} /> : <Clipboard size={13} />}</button>
                 <button type="button" onClick={() => setPins((current) => current.filter((pin) => pin.id !== item.id))}><Trash2 size={13} /></button>
               </article>
             ))}
           </div>
         ) : (
           <div className="st-empty">
-            <h2>Aún no hay alumnos</h2>
-            <p>Crea el primero con nombre, objetivo, nivel y herramientas recomendadas.</p>
+            <h2>{pins.length ? 'No hay coincidencias' : 'Aún no hay alumnos'}</h2>
+            <p>{pins.length ? 'Cambia la búsqueda para volver a ver la lista completa.' : 'Crea el primero con nombre, email, PIN, objetivo, nivel y herramientas recomendadas.'}</p>
           </div>
         )}
       </section>
+      )}
 
+      {tab === 'pendiente' && (
       <section className="st-admin-questions">
         <span className="st-kicker">Preguntas que conviene decidir</span>
         <h2>Para la siguiente versión</h2>
         <p>Qué datos puede ver cada alumno, si el PIN caduca, si necesitas grupos/clases, qué ve el profesor, qué se exporta como certificado y dónde se guarda el progreso.</p>
+        <ul>
+          {blocksWithoutMainRoute.map((stage) => <li key={stage.id}>Curar ruta principal para: {stage.title}</li>)}
+          <li>Separar permisos reales de alumno, profesor, administrador y súper administrador.</li>
+          <li>Conectar backend antes de usar PINs como autenticación real con alumnos.</li>
+          <li>Crear auditoría de ejecución para automatizaciones con WhatsApp, Telegram y n8n.</li>
+        </ul>
       </section>
+      )}
     </div>
   )
 }

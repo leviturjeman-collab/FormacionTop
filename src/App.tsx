@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { BookOpen, BookMarked, Boxes, Compass, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson, LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
@@ -22,6 +22,7 @@ import { CursoIndice, CursoLeccion } from './pages/Curso'
 import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
 
 const LEVEL_SHORT: Record<LevelId, string> = { basico: 'Bás', intermedio: 'Int', avanzado: 'Avz' }
+const ROBOT_CURSOR_SRC = `${import.meta.env.BASE_URL}robot-cursor.png`
 
 function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClose: () => void }) {
   const course = useCourse()
@@ -204,6 +205,75 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         </div>
       </div>
     </aside>
+  )
+}
+
+function RobotCursor() {
+  const cursorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const supportsFinePointer = window.matchMedia('(pointer: fine)').matches
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!supportsFinePointer || reduceMotion) return
+
+    const root = document.documentElement
+    root.classList.add('robot-cursor-enabled')
+
+    let frame = 0
+    let targetX = window.innerWidth / 2
+    let targetY = window.innerHeight / 2
+    let currentX = targetX
+    let currentY = targetY
+
+    const setPointerState = (event: PointerEvent) => {
+      if (event.pointerType && event.pointerType !== 'mouse') return
+      const cursor = cursorRef.current
+      if (!cursor) return
+      targetX = event.clientX
+      targetY = event.clientY
+      cursor.classList.add('is-visible')
+      const target = event.target instanceof Element ? event.target : null
+      const interactive = target?.closest('a, button, [role="button"], summary, input, textarea, select')
+      const typing = target?.closest('input, textarea, select, [contenteditable="true"]')
+      cursor.classList.toggle('is-hovering', Boolean(interactive))
+      cursor.classList.toggle('is-typing', Boolean(typing))
+    }
+
+    const hideCursor = () => cursorRef.current?.classList.remove('is-visible', 'is-hovering', 'is-typing', 'is-down')
+    const pressCursor = () => cursorRef.current?.classList.add('is-down')
+    const releaseCursor = () => cursorRef.current?.classList.remove('is-down')
+
+    const render = () => {
+      const cursor = cursorRef.current
+      if (cursor) {
+        currentX += (targetX - currentX) * 0.24
+        currentY += (targetY - currentY) * 0.24
+        cursor.style.transform = `translate3d(${currentX - 18}px, ${currentY - 16}px, 0)`
+      }
+      frame = window.requestAnimationFrame(render)
+    }
+
+    window.addEventListener('pointermove', setPointerState, { passive: true })
+    window.addEventListener('pointerleave', hideCursor)
+    window.addEventListener('pointerdown', pressCursor, { passive: true })
+    window.addEventListener('pointerup', releaseCursor, { passive: true })
+    frame = window.requestAnimationFrame(render)
+
+    return () => {
+      root.classList.remove('robot-cursor-enabled')
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('pointermove', setPointerState)
+      window.removeEventListener('pointerleave', hideCursor)
+      window.removeEventListener('pointerdown', pressCursor)
+      window.removeEventListener('pointerup', releaseCursor)
+    }
+  }, [])
+
+  return (
+    <div ref={cursorRef} className="st-robot-cursor" aria-hidden="true">
+      <span />
+      <img src={ROBOT_CURSOR_SRC} alt="" draggable={false} />
+    </div>
   )
 }
 
@@ -430,6 +500,7 @@ function Shell() {
 
   return (
     <div className="student-app">
+      <RobotCursor />
       <Sidebar route={route} open={menuOpen} onClose={() => setMenuOpen(false)} />
       {menuOpen && <button type="button" className="st-scrim" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} />}
 
@@ -447,7 +518,7 @@ function Shell() {
       <footer className="st-foot">
         <p>
           Ruta principal, especializaciones y biblioteca de consulta ·
-          generado desde «{course.vaultName}» el {new Date(course.generatedAt).toLocaleDateString('es-ES')}
+          actualizado el {new Date(course.generatedAt).toLocaleDateString('es-ES')}
         </p>
         <p>
           Los logos pertenecen a sus respectivos titulares y se usan para identificar la herramienta que se enseña.
@@ -463,10 +534,16 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="st-loading">
-        <span><X size={18} /></span>
-        <strong>No se ha podido cargar el curso</strong>
-        <small>{error}</small>
+      <div className="st-loading st-loading-error">
+        <div className="st-loading-mark" aria-hidden="true">
+          <span className="st-loading-orbit orbit-a" />
+          <span className="st-loading-orbit orbit-b" />
+          <span className="st-loading-core"><X size={18} /></span>
+        </div>
+        <div className="st-loading-copy">
+          <strong>No se ha podido cargar el curso</strong>
+          <small>{error}</small>
+        </div>
         <pre>npm run index</pre>
       </div>
     )
@@ -475,9 +552,20 @@ export default function App() {
   if (!course) {
     return (
       <div className="st-loading">
-        <span><Loader2 size={18} className="spin" /></span>
-        <strong>AI Professional Academy</strong>
-        <small>Cargando el curso…</small>
+        <div className="st-loading-mark" aria-hidden="true">
+          <span className="st-loading-orbit orbit-a" />
+          <span className="st-loading-orbit orbit-b" />
+          <span className="st-loading-core">AI</span>
+        </div>
+        <div className="st-loading-copy">
+          <strong>Preparando la formación</strong>
+          <small>Organizando ruta, kits, prompts y automatizaciones</small>
+        </div>
+        <div className="st-loading-lines" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
       </div>
     )
   }
