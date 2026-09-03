@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { BookOpen, BookMarked, Boxes, BrainCircuit, Compass, Gamepad2, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Lock, LogOut, Menu, Presentation, Puzzle, Search, ShieldCheck, Sparkles, TrendingUp, X } from 'lucide-react'
-import type { CursoLesson, LevelId } from './types'
+import type { CursoLesson } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
 import { store, useStudent } from './store'
@@ -22,7 +22,6 @@ import Guia from './pages/Guia'
 import { CursoIndice, CursoLeccion } from './pages/Curso'
 import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
 
-const LEVEL_SHORT: Record<LevelId, string> = { basico: 'Bás', intermedio: 'Int', avanzado: 'Avz' }
 const ROBOT_CURSOR_SRC = `${import.meta.env.BASE_URL}robot-cursor.png`
 const ACCESS_GAME_FLOOR = 78
 const ACCESS_ROBOT_X = 116
@@ -100,8 +99,12 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
     const marked = progress?.checks?.intermedio || []
     return lesson.tasks.length > 0 && marked.length >= lesson.tasks.length
   }
-  const mainDone = cursoBase.filter(isCursoDone).length
-  const percent = cursoBase.length ? Math.round((mainDone / cursoBase.length) * 100) : 0
+  const sessionLabel = student.adminUnlocked
+    ? student.teacher ? 'Modo profesor' : 'Modo alumno'
+    : 'Modo alumno'
+  const sessionDetail = student.adminUnlocked
+    ? 'Panel privado activo'
+    : student.learnerName ? `Perfil: ${student.learnerName}` : 'Perfil de alumno activo'
 
   return (
     <aside className={`st-sidebar${open ? ' open' : ''}`}>
@@ -228,25 +231,36 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         })}
       </div>
 
-      <div className="st-course-progress">
-        <div>
-          <span>Ruta principal</span>
-          <strong>{mainDone}/{cursoBase.length}</strong>
+      <div className="st-session-panel">
+        <div className="st-session-mode">
+          <span>{student.adminUnlocked ? 'Sesión privada' : 'Sesión activa'}</span>
+          <strong>{sessionLabel}</strong>
+          <small>{sessionDetail}</small>
         </div>
-        <i><b style={{ width: `${percent}%` }} /></i>
-        <div className="st-level-pick" role="group" aria-label="Nivel por defecto">
-          {course.levels.map((meta) => (
-            <button
-              key={meta.id}
-              type="button"
-              className={student.preferredLevel === meta.id ? 'on' : ''}
-              onClick={() => store.setPreferredLevel(meta.id)}
-              title={meta.audience}
-            >
-              {LEVEL_SHORT[meta.id]}
-            </button>
-          ))}
-        </div>
+        {student.adminUnlocked && (
+          <button
+            type="button"
+            className={`st-session-button${student.teacher ? ' on' : ''}`}
+            onClick={() => store.toggleTeacher()}
+            aria-pressed={student.teacher}
+            title="Cambia entre vista de profesor y vista de alumno."
+          >
+            <Presentation size={12} />
+            {student.teacher ? 'Ver como alumno' : 'Ver como profesor'}
+          </button>
+        )}
+        <button
+          type="button"
+          className="st-session-button danger"
+          onClick={() => {
+            store.lockLearner()
+            onClose()
+          }}
+          title={student.adminUnlocked ? 'Salir del súper administrador' : 'Salir del perfil de alumno'}
+        >
+          <LogOut size={12} />
+          {student.adminUnlocked ? 'Salir admin' : 'Salir perfil'}
+        </button>
       </div>
     </aside>
   )
@@ -488,7 +502,6 @@ function StudentAccessGate() {
 
 function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const course = useCourse()
-  const { adminUnlocked, learnerUnlocked, teacher } = useStudent()
 
   const trail = useMemo(() => {
     switch (route.name) {
@@ -559,34 +572,6 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
           <BookOpen size={12} />
           Ruta guiada · biblioteca de apoyo
         </a>
-        {adminUnlocked ? (
-          <button
-            type="button"
-            className={`st-project-switch${teacher ? ' on' : ''}`}
-            onClick={() => store.toggleTeacher()}
-            aria-pressed={teacher}
-            title="Muestra el guion de clase y el acceso a presentar. El alumno no lo ve."
-          >
-            <Presentation size={12} />
-            {teacher ? 'Modo profesor' : 'Modo alumno'}
-          </button>
-        ) : !learnerUnlocked ? (
-          <a className="st-project-switch" href={href({ name: 'admin' })} title="Acceso privado con PIN">
-            <KeyRound size={12} />
-            Acceso privado
-          </a>
-        ) : null}
-        {(learnerUnlocked || adminUnlocked) && (
-          <button
-            type="button"
-            className="st-project-switch st-session-exit"
-            onClick={() => store.lockLearner()}
-            title={adminUnlocked ? 'Salir del súper administrador' : 'Salir del perfil de alumno'}
-          >
-            <LogOut size={12} />
-            {adminUnlocked ? 'Salir admin' : 'Salir perfil'}
-          </button>
-        )}
       </div>
     </header>
   )

@@ -100,12 +100,12 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
                   {saved ? 'Guardado' : 'Guardar en mi proyecto'}
                 </button>
                 <pre>{prompt.prompt}</pre>
-                <small className="st-prompt-length">{prompt.prompt.trim().split(/\s+/).filter(Boolean).length} palabras · encargo completo con contexto, pruebas, coste y entrega</small>
+                <small className="st-prompt-length">{prompt.prompt.trim().split(/\s+/).filter(Boolean).length} palabras · listo para copiar y rellenar</small>
               </div>
 
               {prompt.fill?.length > 0 && (
                 <dl className="st-prompt-fill">
-                  <dt className="st-prompt-fill-title">Lo que tienes que sustituir</dt>
+                  <dt className="st-prompt-fill-title">2. Rellena estos huecos</dt>
                   {prompt.fill.map(([hueco, que]) => (
                     <div key={hueco}>
                       <dt><code>{hueco}</code></dt>
@@ -115,13 +115,13 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
                 </dl>
               )}
 
-              <p className="st-prompt-expect"><b>Te va a devolver:</b> {prompt.expect}</p>
-              {prompt.next && <p className="st-prompt-next"><b>Y después:</b> {prompt.next}</p>}
+              <p className="st-prompt-expect"><b>3. Al terminar mira esto:</b> {prompt.expect}</p>
+              {prompt.next && <p className="st-prompt-next"><b>4. Después haz esto:</b> {prompt.next}</p>}
               <div className="st-prompt-flow">
-                <span>1. Copia</span>
-                <span>2. Pega en tu IA</span>
-                <span>3. Guarda resultado</span>
-                <span>4. Llévalo a Mi proyecto</span>
+                <span>1. Entra en ChatGPT, Claude o Gemini</span>
+                <span>2. Copia y pega el prompt</span>
+                <span>3. Cambia los huecos entre corchetes</span>
+                <span>4. Guarda lo útil en Mi proyecto</span>
               </div>
             </div>
           </div>

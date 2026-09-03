@@ -513,23 +513,37 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                 </div>
 
                 <details className="st-task-detail" open={index === 0 || hecha}>
-                  <summary>Ver instrucciones, prompt y evidencia</summary>
+                  <summary>Abrir pasos</summary>
                   <div>
-                    <p className="st-task-action">{task.action}</p>
+                    <div className="st-step-guide">
+                      <section>
+                        <b>1. Entra aquí</b>
+                        <p>{task.where}</p>
+                      </section>
+                      <section>
+                        <b>2. Haz esto</b>
+                        <p>{task.action}</p>
+                      </section>
+                    </div>
                     {task.prompt && <Prompt text={task.prompt} />}
-                    <p className="st-task-expected"><b>Tienes que ver:</b> {task.expect}</p>
+                    <div className="st-step-guide">
+                      <section>
+                        <b>3. Comprueba esto</b>
+                        <p>{task.expect}</p>
+                      </section>
+                    </div>
                     {task.stuck && (
                       <p className="st-task-stuck">
                         <HelpCircle size={12} />
-                        <span><b>Si no te sale:</b> {task.stuck}</span>
+                        <span><b>4. Si no sale:</b> {task.stuck}</span>
                       </p>
                     )}
                     <Notebook
                       slug={`curso:${lessonId}`}
                       level="intermedio"
                       noteKey={String(index)}
-                      label="Qué te ha salido"
-                      placeholder="Pega aquí el resultado o apunta lo que has decidido…"
+                      label="Apunta tu resultado"
+                      placeholder="Escribe una frase: qué has visto, qué has guardado o qué falta…"
                     />
                   </div>
                 </details>
