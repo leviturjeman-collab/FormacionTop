@@ -8,6 +8,8 @@ import type { LevelId } from './types'
 
 const KEY = 'academia.progreso.v1'
 export const ADMIN_LEARNERS_KEY = 'academia.admin.alumnos.v1'
+export const ADMIN_LEARNERS_BACKUP_KEY = 'academia.admin.alumnos.backup.v1'
+export const ADMIN_LEARNERS_EVENT = 'academia:admin-learners-updated'
 
 export interface LessonProgress {
   /** Niveles marcados como completados. */
@@ -70,21 +72,114 @@ const EMPTY: StudentState = {
   lessons: {},
 }
 
-type StoredLearner = {
-  name?: string
-  email?: string
-  pin?: string
-  status?: string
+export type LearnerStatus = 'pendiente' | 'entregado' | 'activo'
+
+export interface StoredLearner {
+  id: string
+  name: string
+  email: string
+  pin: string
+  level: string
+  goal: string
+  tools: string
+  notes: string
+  status: LearnerStatus
+  createdAt: string
+  updatedAt: string
 }
 
-function readLearners(): StoredLearner[] {
+type StoredLearnerDraft = Partial<StoredLearner>
+
+function parseLearnerList(raw: string | null): StoredLearnerDraft[] | null {
+  if (!raw) return []
   try {
-    const raw = localStorage.getItem(ADMIN_LEARNERS_KEY)
-    const parsed = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed : []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item === 'object') : null
   } catch {
-    return []
+    return null
   }
+}
+
+function storageGet(key: string) {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function storageSet(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function generateLearnerPin(existing: Pick<StoredLearner, 'pin'>[] = []) {
+  const used = new Set(existing.map((item) => item.pin))
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    const pin = String(Math.floor(100000 + Math.random() * 900000))
+    if (!used.has(pin) && pin !== ADMIN_PIN) return pin
+  }
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
+
+function normalizeLearner(item: StoredLearnerDraft, usedPins: Set<string>): StoredLearner {
+  const createdAt = item.createdAt || new Date().toISOString()
+  const rawPin = String(item.pin || '').replace(/\D/g, '').slice(0, 6)
+  const pin = /^\d{6}$/.test(rawPin) && !usedPins.has(rawPin) && rawPin !== ADMIN_PIN
+    ? rawPin
+    : generateLearnerPin([...usedPins].map((value) => ({ pin: value })))
+  usedPins.add(pin)
+
+  return {
+    id: item.id || `${Date.now()}-${item.email || item.name || pin}`,
+    name: item.name || '',
+    email: item.email || '',
+    pin,
+    level: item.level || 'basico',
+    goal: item.goal || '',
+    tools: item.tools || '',
+    notes: item.notes || '',
+    status: item.status === 'entregado' || item.status === 'activo' ? item.status : 'pendiente',
+    createdAt,
+    updatedAt: item.updatedAt || createdAt,
+  }
+}
+
+function normalizeLearners(items: StoredLearnerDraft[]) {
+  const usedPins = new Set<string>()
+  return items
+    .filter((item) => item && typeof item === 'object')
+    .map((item) => normalizeLearner(item, usedPins))
+}
+
+export function readAdminLearners(): StoredLearner[] {
+  const primaryRaw = storageGet(ADMIN_LEARNERS_KEY)
+  const backupRaw = storageGet(ADMIN_LEARNERS_BACKUP_KEY)
+  const primary = parseLearnerList(primaryRaw)
+  const backup = parseLearnerList(backupRaw)
+  const source = primary && primary.length ? primary : backup || primary || []
+  const learners = normalizeLearners(source)
+  const normalizedChanged = JSON.stringify(source) !== JSON.stringify(learners)
+
+  if ((!primaryRaw && backup?.length) || (!primary && backup) || normalizedChanged) writeAdminLearners(learners)
+  return learners
+}
+
+export function writeAdminLearners(items: StoredLearnerDraft[]): StoredLearner[] {
+  const learners = normalizeLearners(items)
+  const payload = JSON.stringify(learners)
+  storageSet(ADMIN_LEARNERS_KEY, payload)
+  storageSet(ADMIN_LEARNERS_BACKUP_KEY, payload)
+  try {
+    window.dispatchEvent(new CustomEvent(ADMIN_LEARNERS_EVENT, { detail: learners }))
+  } catch {
+    /* El evento solo sincroniza pestañas de esta misma sesión. */
+  }
+  return learners
 }
 
 function read(): StudentState {
@@ -146,10 +241,18 @@ export const store = {
   },
 
   unlockLearner(pin: string) {
-    const clean = pin.trim()
+    const clean = pin.replace(/\D/g, '').trim()
     if (clean === ADMIN_PIN) return this.unlockAdmin(clean)
-    const learner = readLearners().find((item) => item.pin === clean)
+    const learners = readAdminLearners()
+    const learner = learners.find((item) => item.pin === clean)
     if (!learner) return false
+    if (learner.status !== 'activo') {
+      writeAdminLearners(
+        learners.map((item) =>
+          item.id === learner.id ? { ...item, status: 'activo', updatedAt: new Date().toISOString() } : item,
+        ),
+      )
+    }
     commit({
       ...state,
       name: learner.name || state.name,

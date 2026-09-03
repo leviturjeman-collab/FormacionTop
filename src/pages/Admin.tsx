@@ -1,10 +1,20 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Check, Clipboard, KeyRound, Lock, Mail, Plus, RefreshCw, Trash2, UserCheck } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { Check, Clipboard, KeyRound, Lock, Mail, Plus, RefreshCw, Trash2, Upload, UserCheck } from 'lucide-react'
 import { useCourse } from '../course'
-import { ADMIN_LEARNERS_KEY, store, useStudent } from '../store'
+import {
+  ADMIN_LEARNERS_BACKUP_KEY,
+  ADMIN_LEARNERS_EVENT,
+  ADMIN_LEARNERS_KEY,
+  generateLearnerPin,
+  readAdminLearners,
+  store,
+  type LearnerStatus,
+  type StoredLearner,
+  useStudent,
+  writeAdminLearners,
+} from '../store'
 
 type AdminTab = 'estado' | 'crear' | 'alumnos' | 'pendiente'
-type LearnerStatus = 'pendiente' | 'entregado' | 'activo'
 
 const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'estado', label: 'Estado del curso' },
@@ -13,19 +23,7 @@ const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'pendiente', label: 'Pendiente real' },
 ]
 
-type LearnerPin = {
-  id: string
-  name: string
-  email: string
-  pin: string
-  level: string
-  goal: string
-  tools: string
-  notes: string
-  status: LearnerStatus
-  createdAt: string
-  updatedAt: string
-}
+type LearnerPin = StoredLearner
 
 const STATUS_LABELS: Record<LearnerStatus, string> = {
   pendiente: 'Sin entregar',
@@ -33,44 +31,8 @@ const STATUS_LABELS: Record<LearnerStatus, string> = {
   activo: 'Alumno activo',
 }
 
-function readPins(): LearnerPin[] {
-  try {
-    const raw = localStorage.getItem(ADMIN_LEARNERS_KEY)
-    const parsed = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed.map(normalizeLearner) : []
-  } catch {
-    return []
-  }
-}
-
-function normalizeLearner(item: Partial<LearnerPin>): LearnerPin {
-  const createdAt = item.createdAt || new Date().toISOString()
-  return {
-    id: item.id || `${Date.now()}-${item.email || item.name || 'alumno'}`,
-    name: item.name || '',
-    email: item.email || '',
-    pin: /^\d{6}$/.test(item.pin || '') ? item.pin! : generatePin(),
-    level: item.level || 'basico',
-    goal: item.goal || '',
-    tools: item.tools || '',
-    notes: item.notes || '',
-    status: item.status || 'pendiente',
-    createdAt,
-    updatedAt: item.updatedAt || createdAt,
-  }
-}
-
-function generatePin(existing: LearnerPin[] = []) {
-  const used = new Set(existing.map((item) => item.pin))
-  for (let attempt = 0; attempt < 50; attempt += 1) {
-    const pin = String(Math.floor(100000 + Math.random() * 900000))
-    if (!used.has(pin)) return pin
-  }
-  return String(Math.floor(100000 + Math.random() * 900000))
-}
-
 function emptyDraft(pins: LearnerPin[] = []) {
-  return { name: '', email: '', pin: generatePin(pins), goal: '', tools: '', notes: '', level: 'basico' }
+  return { name: '', email: '', pin: generateLearnerPin(pins), goal: '', tools: '', notes: '', level: 'basico' }
 }
 
 function validEmail(email: string) {
@@ -130,15 +92,31 @@ function AdminAccess() {
 
 function AdminPanel() {
   const course = useCourse()
-  const [pins, setPins] = useState<LearnerPin[]>(() => readPins())
-  const [draft, setDraft] = useState(() => emptyDraft())
+  const [pins, setPins] = useState<LearnerPin[]>(() => readAdminLearners())
+  const [draft, setDraft] = useState(() => emptyDraft(readAdminLearners()))
   const [copied, setCopied] = useState<string | null>(null)
   const [tab, setTab] = useState<AdminTab>('estado')
   const [query, setQuery] = useState('')
+  const [notice, setNotice] = useState('')
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    localStorage.setItem(ADMIN_LEARNERS_KEY, JSON.stringify(pins))
-  }, [pins])
+    const syncLearners = () => setPins(readAdminLearners())
+    const syncFromEvent = (event: Event) => {
+      const detail = (event as CustomEvent<LearnerPin[]>).detail
+      setPins(Array.isArray(detail) ? detail : readAdminLearners())
+    }
+    const syncFromStorage = (event: StorageEvent) => {
+      if (event.key === ADMIN_LEARNERS_KEY || event.key === ADMIN_LEARNERS_BACKUP_KEY) syncLearners()
+    }
+
+    window.addEventListener(ADMIN_LEARNERS_EVENT, syncFromEvent)
+    window.addEventListener('storage', syncFromStorage)
+    return () => {
+      window.removeEventListener(ADMIN_LEARNERS_EVENT, syncFromEvent)
+      window.removeEventListener('storage', syncFromStorage)
+    }
+  }, [])
 
   const suggestedTools = useMemo(
     () => course.toolPages.slice(0, 18).map((tool) => tool.label),
@@ -170,6 +148,12 @@ function AdminPanel() {
   const pinValid = /^\d{6}$/.test(draft.pin)
   const canCreate = draft.name.trim() && validEmail(draft.email) && pinValid && !emailTaken && !pinTaken
 
+  function savePins(next: Partial<LearnerPin>[]) {
+    const saved = writeAdminLearners(next)
+    setPins(saved)
+    return saved
+  }
+
   function createPin() {
     if (!canCreate) return
     const next = [{
@@ -185,8 +169,9 @@ function AdminPanel() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }, ...pins]
-    setPins(next)
-    setDraft(emptyDraft(next))
+    const saved = savePins(next)
+    setDraft(emptyDraft(saved))
+    setNotice('Alumno guardado. Ese PIN ya funciona en la entrada normal.')
   }
 
   function copy(value: string, id: string) {
@@ -200,11 +185,18 @@ function AdminPanel() {
   }
 
   function cycleStatus(id: string) {
-    setPins((current) => current.map((item) => {
+    savePins(pins.map((item) => {
       if (item.id !== id) return item
       const status: LearnerStatus = item.status === 'pendiente' ? 'entregado' : item.status === 'entregado' ? 'activo' : 'pendiente'
       return { ...item, status, updatedAt: new Date().toISOString() }
     }))
+  }
+
+  function deletePin(item: LearnerPin) {
+    if (!window.confirm(`Borrar a ${item.name} y su PIN ${item.pin}?`)) return
+    const saved = savePins(pins.filter((pin) => pin.id !== item.id))
+    setDraft((current) => ({ ...current, pin: generateLearnerPin(saved) }))
+    setNotice('Alumno borrado manualmente.')
   }
 
   function exportPins() {
@@ -217,6 +209,39 @@ function AdminPanel() {
     link.click()
     link.remove()
     URL.revokeObjectURL(url)
+    setNotice('Copia JSON descargada. Guárdala por si el navegador borra datos del sitio.')
+  }
+
+  function importPins(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result || '[]'))
+        if (!Array.isArray(parsed)) throw new Error('El archivo no contiene una lista.')
+        const merged = [...pins]
+        parsed.forEach((value) => {
+          if (!value || typeof value !== 'object') return
+          const incoming = value as Partial<LearnerPin>
+          const email = incoming.email?.trim().toLowerCase()
+          const index = email ? merged.findIndex((item) => item.email.toLowerCase() === email) : -1
+          if (index >= 0) {
+            merged[index] = { ...merged[index], ...incoming, email: email || merged[index].email }
+          } else {
+            merged.push(incoming as LearnerPin)
+          }
+        })
+        const saved = savePins(merged)
+        setDraft(emptyDraft(saved))
+        setNotice(`Importados y guardados ${saved.length} alumnos. Sus PINs ya funcionan en la entrada normal.`)
+      } catch {
+        setNotice('No pude importar ese JSON. Usa el archivo exportado desde este panel.')
+      }
+    }
+    reader.readAsText(file)
   }
 
   return (
@@ -238,6 +263,15 @@ function AdminPanel() {
         <div>
           <strong>Importante antes de usarlo con alumnos reales</strong>
           <p>Un PIN guardado en una web estática no protege datos por sí solo. Para acceso real hacen falta backend, base de datos, sesiones, permisos y registro de auditoría.</p>
+        </div>
+      </section>
+
+      <section className="st-admin-storage">
+        <Lock size={15} />
+        <div>
+          <strong>Los alumnos y PINs quedan guardados en este navegador</strong>
+          <p>No se borran al salir del perfil ni al recargar. Solo desaparecen si los borras aquí, limpias los datos del sitio o usas navegación privada. Exporta una copia JSON y podrás restaurarla con Importar JSON.</p>
+          {notice && <small>{notice}</small>}
         </div>
       </section>
 
@@ -274,7 +308,7 @@ function AdminPanel() {
           <label><span>Email del alumno</span><input type="email" value={draft.email} onChange={(event) => setDraft({ ...draft, email: event.target.value })} placeholder="laura@email.com" /></label>
           <div className="st-admin-pin-row">
             <label><span>PIN de 6 dígitos</span><input inputMode="numeric" maxLength={6} value={draft.pin} onChange={(event) => setDraft({ ...draft, pin: event.target.value.replace(/\D/g, '').slice(0, 6) })} placeholder="123456" /></label>
-            <button type="button" className="st-btn-ghost" onClick={() => setDraft({ ...draft, pin: generatePin(pins) })}><RefreshCw size={13} /> Generar</button>
+            <button type="button" className="st-btn-ghost" onClick={() => setDraft({ ...draft, pin: generateLearnerPin(pins) })}><RefreshCw size={13} /> Generar</button>
           </div>
           {draft.email && !validEmail(draft.email) && <p className="st-admin-field-error">El email no tiene formato válido.</p>}
           {emailTaken && <p className="st-admin-field-error">Ese email ya está guardado en alumnos.</p>}
@@ -314,7 +348,19 @@ function AdminPanel() {
             <span className="st-kicker">Alumnos preparados</span>
             <h2>PINs locales</h2>
           </div>
-          <button type="button" className="st-btn-ghost" onClick={exportPins} disabled={!pins.length}>Exportar JSON</button>
+          <div className="st-admin-actions">
+            <input
+              ref={importInputRef}
+              accept="application/json"
+              type="file"
+              onChange={importPins}
+              hidden
+            />
+            <button type="button" className="st-btn-ghost" onClick={() => importInputRef.current?.click()}>
+              <Upload size={13} /> Importar JSON
+            </button>
+            <button type="button" className="st-btn-ghost" onClick={exportPins} disabled={!pins.length}>Exportar JSON</button>
+          </div>
         </div>
         <div className="st-admin-learner-summary">
           <div><strong>{learnerStats.total}</strong><span>Total</span></div>
@@ -341,7 +387,7 @@ function AdminPanel() {
                 </button>
                 <span>{item.tools || 'Herramientas por definir'}</span>
                 <button type="button" title="Copiar email y PIN" onClick={() => copy(accessText(item), item.id)}>{copied === item.id ? <Check size={13} /> : <Clipboard size={13} />}</button>
-                <button type="button" onClick={() => setPins((current) => current.filter((pin) => pin.id !== item.id))}><Trash2 size={13} /></button>
+                <button type="button" onClick={() => deletePin(item)}><Trash2 size={13} /></button>
               </article>
             ))}
           </div>
