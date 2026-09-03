@@ -228,17 +228,23 @@ function StudentAccessGate() {
   const route = useRoute()
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
+  const [checking, setChecking] = useState(false)
   const cleanPin = pin.replace(/\D/g, '').slice(0, 6)
-  const canSubmit = cleanPin.length === 4 || cleanPin.length === 6
+  const canSubmit = (cleanPin.length === 4 || cleanPin.length === 6) && !checking
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (store.unlockLearner(cleanPin)) {
-      if (cleanPin !== '5555' && route.name === 'admin') navigate({ name: 'inicio' })
-      return
+    setChecking(true)
+    try {
+      if (await store.unlockLearnerOnline(cleanPin)) {
+        if (cleanPin !== '5555' && route.name === 'admin') navigate({ name: 'inicio' })
+        return
+      }
+      setError('PIN no encontrado. Pide tu acceso al profesor.')
+      setPin('')
+    } finally {
+      setChecking(false)
     }
-    setError('PIN no encontrado. Pide tu acceso al profesor.')
-    setPin('')
   }
 
   return (
@@ -273,7 +279,7 @@ function StudentAccessGate() {
             </div>
             {error && <p className="st-access-error">{error}</p>}
             <button type="submit" className="st-btn" disabled={!canSubmit}>
-              <Lock size={14} /> Desbloquear formación
+              <Lock size={14} /> {checking ? 'Comprobando PIN' : 'Desbloquear formación'}
             </button>
           </form>
         </div>

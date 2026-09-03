@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { LevelId } from './types'
+import { unlockRemotePin } from './learners-api'
 
 /**
  * Estado del alumno. Vive solo en su navegador: no hay servidor,
@@ -63,6 +64,7 @@ export interface SavedPrompt {
 }
 
 const ADMIN_PIN = '5555'
+let sessionAdminPin = ''
 const EMPTY: StudentState = {
   name: '',
   learnerUnlocked: false,
@@ -182,6 +184,31 @@ export function writeAdminLearners(items: StoredLearnerDraft[]): StoredLearner[]
   return learners
 }
 
+function upsertLocalLearner(learner: StoredLearner) {
+  const current = readAdminLearners()
+  const index = current.findIndex((item) => item.id === learner.id || item.email === learner.email || item.pin === learner.pin)
+  const next = index >= 0
+    ? current.map((item, itemIndex) => itemIndex === index ? { ...item, ...learner } : item)
+    : [learner, ...current]
+  writeAdminLearners(next)
+}
+
+function commitLearnerSession(learner: Pick<StoredLearner, 'name' | 'email'>) {
+  commit({
+    ...state,
+    name: learner.name || state.name,
+    learnerUnlocked: true,
+    learnerName: learner.name,
+    learnerEmail: learner.email,
+    adminUnlocked: false,
+    teacher: false,
+  })
+}
+
+export function getAdminPinForSession() {
+  return sessionAdminPin
+}
+
 function read(): StudentState {
   try {
     const raw = localStorage.getItem(KEY)
@@ -232,11 +259,13 @@ export const store = {
 
   unlockAdmin(pin: string) {
     if (pin.trim() !== ADMIN_PIN) return false
+    sessionAdminPin = pin.trim()
     commit({ ...state, learnerUnlocked: true, adminUnlocked: true, teacher: true, learnerName: 'Administrador' })
     return true
   },
 
   lockAdmin() {
+    sessionAdminPin = ''
     commit({ ...state, adminUnlocked: false, teacher: false })
   },
 
@@ -253,19 +282,29 @@ export const store = {
         ),
       )
     }
-    commit({
-      ...state,
-      name: learner.name || state.name,
-      learnerUnlocked: true,
-      learnerName: learner.name,
-      learnerEmail: learner.email,
-      adminUnlocked: false,
-      teacher: false,
-    })
+    commitLearnerSession(learner)
     return true
   },
 
+  async unlockLearnerOnline(pin: string) {
+    const clean = pin.replace(/\D/g, '').trim()
+    if (clean === ADMIN_PIN) return this.unlockAdmin(clean)
+    try {
+      const result = await unlockRemotePin(clean)
+      if (result.role === 'admin') return this.unlockAdmin(clean)
+      if (result.learner) {
+        upsertLocalLearner(result.learner)
+        commitLearnerSession(result.learner)
+        return true
+      }
+    } catch {
+      /* Si Supabase no responde, se prueba el respaldo local del navegador. */
+    }
+    return this.unlockLearner(clean)
+  },
+
   lockLearner() {
+    sessionAdminPin = ''
     commit({
       ...state,
       learnerUnlocked: false,

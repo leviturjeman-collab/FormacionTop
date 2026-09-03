@@ -6,6 +6,7 @@ import {
   ADMIN_LEARNERS_EVENT,
   ADMIN_LEARNERS_KEY,
   generateLearnerPin,
+  getAdminPinForSession,
   readAdminLearners,
   store,
   type LearnerStatus,
@@ -13,6 +14,7 @@ import {
   useStudent,
   writeAdminLearners,
 } from '../store'
+import { deleteRemoteLearner, fetchRemoteLearners, saveRemoteLearners } from '../learners-api'
 
 type AdminTab = 'estado' | 'crear' | 'alumnos' | 'pendiente'
 
@@ -37,6 +39,26 @@ function emptyDraft(pins: LearnerPin[] = []) {
 
 function validEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+}
+
+function mergeLearners(primary: LearnerPin[], secondary: LearnerPin[]) {
+  const merged = [...primary]
+  secondary.forEach((incoming) => {
+    const index = merged.findIndex(
+      (item) => item.id === incoming.id || item.email.toLowerCase() === incoming.email.toLowerCase() || item.pin === incoming.pin,
+    )
+    if (index < 0) {
+      merged.push(incoming)
+      return
+    }
+    const stableId = merged[index].id
+    const currentDate = Date.parse(merged[index].updatedAt || merged[index].createdAt || '')
+    const incomingDate = Date.parse(incoming.updatedAt || incoming.createdAt || '')
+    merged[index] = incomingDate > currentDate
+      ? { ...merged[index], ...incoming, id: stableId }
+      : { ...incoming, ...merged[index], id: stableId }
+  })
+  return merged
 }
 
 export default function Admin() {
@@ -98,6 +120,7 @@ function AdminPanel() {
   const [tab, setTab] = useState<AdminTab>('estado')
   const [query, setQuery] = useState('')
   const [notice, setNotice] = useState('')
+  const [syncing, setSyncing] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -115,6 +138,38 @@ function AdminPanel() {
     return () => {
       window.removeEventListener(ADMIN_LEARNERS_EVENT, syncFromEvent)
       window.removeEventListener('storage', syncFromStorage)
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    const adminPin = getAdminPinForSession()
+    if (!adminPin) {
+      setNotice('Para sincronizar Supabase, entra de nuevo con el PIN 5555 en esta pestana.')
+      return
+    }
+
+    async function syncWithSupabase() {
+      setSyncing(true)
+      try {
+        const localLearners = readAdminLearners()
+        const remoteLearners = await fetchRemoteLearners(adminPin)
+        const merged = writeAdminLearners(mergeLearners(remoteLearners, localLearners))
+        if (!active) return
+        setPins(merged)
+        setDraft((current) => ({ ...current, pin: generateLearnerPin(merged) }))
+        if (localLearners.length) await saveRemoteLearners(adminPin, merged)
+        if (active) setNotice('Supabase conectado. Alumnos y PINs sincronizados con la base de datos.')
+      } catch {
+        if (active) setNotice('Supabase aun no esta listo o falta la tabla. Mientras tanto se conserva la copia local.')
+      } finally {
+        if (active) setSyncing(false)
+      }
+    }
+
+    syncWithSupabase()
+    return () => {
+      active = false
     }
   }, [])
 
@@ -154,9 +209,9 @@ function AdminPanel() {
     return saved
   }
 
-  function createPin() {
+  async function createPin() {
     if (!canCreate) return
-    const next = [{
+    const learner = {
       id: `${Date.now()}-${draft.name}`,
       name: draft.name.trim(),
       email: draft.email.trim().toLowerCase(),
@@ -168,10 +223,23 @@ function AdminPanel() {
       status: 'pendiente' as LearnerStatus,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }, ...pins]
+    }
+    const next = [learner, ...pins]
     const saved = savePins(next)
     setDraft(emptyDraft(saved))
-    setNotice('Alumno guardado. Ese PIN ya funciona en la entrada normal.')
+    const adminPin = getAdminPinForSession()
+    if (!adminPin) {
+      setNotice('Alumno guardado localmente. Entra de nuevo con 5555 para sincronizarlo con Supabase.')
+      return
+    }
+    try {
+      const remote = await saveRemoteLearners(adminPin, [learner])
+      const merged = savePins(mergeLearners(remote, saved))
+      setDraft(emptyDraft(merged))
+      setNotice('Alumno guardado en Supabase. Ese PIN ya funciona en la entrada normal.')
+    } catch {
+      setNotice('Alumno guardado localmente, pero Supabase no respondio. Revisa que la tabla learners exista.')
+    }
   }
 
   function copy(value: string, id: string) {
@@ -184,19 +252,39 @@ function AdminPanel() {
     return `Acceso a la formación\nEmail: ${item.email}\nPIN: ${item.pin}`
   }
 
-  function cycleStatus(id: string) {
-    savePins(pins.map((item) => {
+  async function cycleStatus(id: string) {
+    const saved = savePins(pins.map((item) => {
       if (item.id !== id) return item
       const status: LearnerStatus = item.status === 'pendiente' ? 'entregado' : item.status === 'entregado' ? 'activo' : 'pendiente'
       return { ...item, status, updatedAt: new Date().toISOString() }
     }))
+    const updated = saved.find((item) => item.id === id)
+    const adminPin = getAdminPinForSession()
+    if (!updated || !adminPin) return
+    try {
+      const remote = await saveRemoteLearners(adminPin, [updated])
+      savePins(mergeLearners(remote, saved))
+      setNotice('Estado sincronizado con Supabase.')
+    } catch {
+      setNotice('Estado guardado localmente, pero no se pudo sincronizar con Supabase.')
+    }
   }
 
-  function deletePin(item: LearnerPin) {
+  async function deletePin(item: LearnerPin) {
     if (!window.confirm(`Borrar a ${item.name} y su PIN ${item.pin}?`)) return
     const saved = savePins(pins.filter((pin) => pin.id !== item.id))
     setDraft((current) => ({ ...current, pin: generateLearnerPin(saved) }))
-    setNotice('Alumno borrado manualmente.')
+    const adminPin = getAdminPinForSession()
+    if (!adminPin) {
+      setNotice('Alumno borrado localmente. Entra de nuevo con 5555 para sincronizar Supabase.')
+      return
+    }
+    try {
+      await deleteRemoteLearner(adminPin, item.id)
+      setNotice('Alumno borrado tambien en Supabase.')
+    } catch {
+      setNotice('Alumno borrado localmente, pero Supabase no confirmo el borrado.')
+    }
   }
 
   function exportPins() {
@@ -236,7 +324,18 @@ function AdminPanel() {
         })
         const saved = savePins(merged)
         setDraft(emptyDraft(saved))
-        setNotice(`Importados y guardados ${saved.length} alumnos. Sus PINs ya funcionan en la entrada normal.`)
+        const adminPin = getAdminPinForSession()
+        if (adminPin) {
+          saveRemoteLearners(adminPin, saved)
+            .then((remote) => {
+              const synced = savePins(mergeLearners(remote, saved))
+              setDraft(emptyDraft(synced))
+              setNotice(`Importados y sincronizados ${synced.length} alumnos. Sus PINs ya funcionan en la entrada normal.`)
+            })
+            .catch(() => setNotice('Importados localmente, pero Supabase no respondio.'))
+        } else {
+          setNotice(`Importados y guardados ${saved.length} alumnos localmente. Entra con 5555 para sincronizar Supabase.`)
+        }
       } catch {
         setNotice('No pude importar ese JSON. Usa el archivo exportado desde este panel.')
       }
@@ -271,6 +370,7 @@ function AdminPanel() {
         <div>
           <strong>Los alumnos y PINs quedan guardados en este navegador</strong>
           <p>No se borran al salir del perfil ni al recargar. Solo desaparecen si los borras aquí, limpias los datos del sitio o usas navegación privada. Exporta una copia JSON y podrás restaurarla con Importar JSON.</p>
+          {syncing && <small>Sincronizando con Supabase...</small>}
           {notice && <small>{notice}</small>}
         </div>
       </section>
