@@ -1,0 +1,103 @@
+{
+  "id": "alquiler-vacacional",
+  "title": "Prompts para Airbnb y alquiler vacacional",
+  "intro": "Prompts para anfitriones y gestores de viviendas turísticas: mensajes de huéspedes, check-in, limpieza, incidencias, reseñas y reportes a propietarios. Están escritos para empezar con borradores y revisión humana, no con respuestas automáticas a lo loco.",
+  "model": "ChatGPT para respuestas rápidas y textos de huésped, Claude para reportes largos y políticas, y Gemini si partes de documentos, reseñas exportadas o calendarios grandes.",
+  "categoryId": "contenido-negocio",
+  "blockTitle": "Airbnb y alquiler vacacional",
+  "blockDescription": "Mensajes, operaciones y reportes para viviendas turísticas.",
+  "useCase": "Gestionar reservas, huéspedes, limpiezas e incidencias sin perder trazabilidad.",
+  "audience": "Anfitriones, property managers e inmobiliarias turísticas.",
+  "toolId": "n8n",
+  "toolLabel": "n8n",
+  "source": "Alquiler vacacional",
+  "prompts": [
+    {
+      "name": "Borrador de respuesta a un huésped",
+      "when": "Cuando entra un mensaje por Airbnb, Booking, WhatsApp o correo y quieres contestar rápido sin prometer nada que no hayas comprobado.",
+      "prompt": "Actúa como responsable de atención al huésped para alquiler vacacional en España. Vas a preparar un BORRADOR de respuesta, no un mensaje enviado.\n\nDatos de la reserva:\n- Vivienda: [VIVIENDA]\n- Plataforma: [AIRBNB / BOOKING / WHATSAPP / CORREO]\n- Fechas: [FECHAS]\n- Número de huéspedes: [NÚMERO]\n- Hora de entrada/salida: [HORARIO]\n- Normas importantes: [NORMAS]\n- Estado de limpieza: [LISTA / PENDIENTE / NO LO SÉ]\n- Mensaje literal del huésped: [MENSAJE]\n\nDevuélveme:\n1. Tipo de mensaje: antes de reservar / antes de llegar / durante estancia / salida / incidencia / reseña.\n2. Datos que hay que comprobar antes de responder.\n3. Borrador de respuesta en español cercano, máximo 120 palabras.\n4. Si necesita revisión humana: SÍ/NO y por qué.\n5. Riesgo si se envía sin revisar.\n\nReglas: no prometas entrada temprana, reembolso, descuento, cambio de reserva, factura ni compensación si no está confirmado. Si falta un dato, dilo dentro del borrador como pendiente de confirmar.",
+      "fill": [
+        ["[VIVIENDA]", "Nombre interno. Ejemplo: \"Apartamento Las Canteras 2B\""],
+        ["[AIRBNB / BOOKING / WHATSAPP / CORREO]", "Canal por donde llegó el mensaje."],
+        ["[FECHAS]", "Ejemplo: \"12 al 16 de octubre\""],
+        ["[NÚMERO]", "Ejemplo: \"3 adultos y 1 niño\""],
+        ["[HORARIO]", "Ejemplo: \"entrada desde las 15:00, salida antes de las 11:00\""],
+        ["[NORMAS]", "Ejemplo: \"sin fiestas, no fumar, silencio desde las 22:00\""],
+        ["[LISTA / PENDIENTE / NO LO SÉ]", "Estado real, no supuesto."],
+        ["[MENSAJE]", "Copia literal del huésped."]
+      ],
+      "expect": "Una respuesta lista para revisar, con los riesgos claros y sin prometer nada delicado.",
+      "next": "Revisa los datos pendientes y solo envíalo si todo lo que promete está confirmado."
+    },
+    {
+      "name": "Checklist de limpieza entre reservas",
+      "when": "Cuando hay salida y entrada el mismo día, o cuando el equipo de limpieza necesita una lista clara en móvil.",
+      "prompt": "Actúa como coordinador de operaciones para viviendas turísticas. Crea un checklist de limpieza y reposición para esta vivienda:\n\nVivienda: [VIVIENDA]\nHabitaciones: [HABITACIONES]\nBaños: [BAÑOS]\nZonas especiales: [TERRAZA / PISCINA / GARAJE / CUNA / SOFÁ CAMA]\nHora de salida: [HORA SALIDA]\nHora de entrada siguiente: [HORA ENTRADA]\nProblemas conocidos: [PROBLEMAS]\n\nQuiero una tabla con estas columnas: ZONA | TAREA EXACTA | FOTO OBLIGATORIA | MATERIAL A REPONER | BLOQUEA ENTRADA SÍ/NO | A QUIÉN AVISAR.\n\nIncluye cama, baño, cocina, basura, toallas, sábanas, wifi, cerradura/código, aire acondicionado, olores, ruido, manchas, vajilla y objetos olvidados. No escribas \"revisar\" sin decir qué se mira.",
+      "fill": [
+        ["[VIVIENDA]", "Ejemplo: \"Estudio Puerto 4A\""],
+        ["[HABITACIONES]", "Ejemplo: \"1 dormitorio y sofá cama\""],
+        ["[BAÑOS]", "Ejemplo: \"1\""],
+        ["[TERRAZA / PISCINA / GARAJE / CUNA / SOFÁ CAMA]", "Lo que tenga esa vivienda."],
+        ["[HORA SALIDA]", "Ejemplo: \"11:00\""],
+        ["[HORA ENTRADA]", "Ejemplo: \"15:00\""],
+        ["[PROBLEMAS]", "Ejemplo: \"el huésped anterior avisó de una persiana rota\""]
+      ],
+      "expect": "Una tabla operativa, corta y usable en móvil, con tareas que bloquean entrada marcadas claramente.",
+      "next": "Pasa esa tabla a Sheets, Airtable o Notion y añade una columna de responsable."
+    },
+    {
+      "name": "Parte de incidencia con fotos y decisión",
+      "when": "Cuando aparece una avería, daño, falta de limpieza, queja vecinal o problema que puede afectar a la siguiente reserva.",
+      "prompt": "Actúa como responsable de incidencias de alquiler vacacional. Quiero convertir una incidencia en un parte claro para decidir qué hacer.\n\nDatos:\n- Vivienda: [VIVIENDA]\n- Reserva afectada: [RESERVA]\n- Quién avisa: [HUÉSPED / LIMPIEZA / VECINO / PROPIETARIO]\n- Descripción literal: [DESCRIPCIÓN]\n- Fotos disponibles: [FOTOS SÍ/NO Y QUÉ SE VE]\n- Próxima entrada: [FECHA Y HORA]\n- Coste estimado si existe: [COSTE]\n\nDevuélveme:\n1. Resumen en una frase.\n2. Nivel: bajo / medio / alto / bloquea entrada.\n3. Qué falta comprobar antes de contestar.\n4. Mensaje borrador al huésped, si toca.\n5. Mensaje borrador al proveedor o mantenimiento, si toca.\n6. Mensaje interno para el propietario, si toca.\n7. Qué NO debe hacerse automáticamente.\n\nReglas: no culpes al huésped sin prueba, no prometas dinero, no reclames daños automáticamente y no compartas datos personales si no son necesarios.",
+      "fill": [
+        ["[VIVIENDA]", "Nombre interno de la vivienda."],
+        ["[RESERVA]", "Código o fechas, sin datos personales si no hacen falta."],
+        ["[HUÉSPED / LIMPIEZA / VECINO / PROPIETARIO]", "Origen de la incidencia."],
+        ["[DESCRIPCIÓN]", "Copia literal de lo que dijeron."],
+        ["[FOTOS SÍ/NO Y QUÉ SE VE]", "Ejemplo: \"sí, foto de mesa rota y pared manchada\""],
+        ["[FECHA Y HORA]", "Ejemplo: \"mañana a las 15:00\""],
+        ["[COSTE]", "Ejemplo: \"cerrajero 80 €\" o \"no lo sé\""]
+      ],
+      "expect": "Un parte ordenado que ayuda a decidir sin convertir la incidencia en una pelea por chat.",
+      "next": "Guarda el parte en el registro de la vivienda y marca si bloquea o no la próxima entrada."
+    },
+    {
+      "name": "Reporte mensual para propietario",
+      "when": "Cuando gestionas viviendas de otras personas y necesitas explicar resultados sin mandar diez capturas sueltas.",
+      "prompt": "Actúa como gestor de alquiler vacacional preparando un reporte mensual para el propietario. Quiero un informe claro, de una página, con números ficticios si no te paso datos reales.\n\nDatos del mes:\n- Vivienda: [VIVIENDA]\n- Mes: [MES]\n- Noches ocupadas: [NOCHES OCUPADAS]\n- Noches libres: [NOCHES LIBRES]\n- Ingresos: [INGRESOS]\n- Gastos limpieza: [LIMPIEZA]\n- Gastos mantenimiento: [MANTENIMIENTO]\n- Incidencias: [INCIDENCIAS]\n- Reseñas: [RESEÑAS]\n- Próximas decisiones: [DECISIONES]\n\nDevuélveme una plantilla con estos bloques: resumen ejecutivo, ocupación, ingresos y gastos, incidencias, reseñas, tareas hechas, decisiones pendientes y recomendación del mes.\n\nCada bloque debe tener: dato, ejemplo escrito para propietario, decisión que ayuda a tomar y dato que no conviene mostrar por privacidad.",
+      "fill": [
+        ["[VIVIENDA]", "Ejemplo: \"Ático Centro 1\""],
+        ["[MES]", "Ejemplo: \"agosto 2026\""],
+        ["[NOCHES OCUPADAS]", "Ejemplo: \"24\""],
+        ["[NOCHES LIBRES]", "Ejemplo: \"7\""],
+        ["[INGRESOS]", "Ejemplo: \"2.840 €\""],
+        ["[LIMPIEZA]", "Ejemplo: \"360 €\""],
+        ["[MANTENIMIENTO]", "Ejemplo: \"95 €\""],
+        ["[INCIDENCIAS]", "Ejemplo: \"2: aire acondicionado y reposición de sábanas\""],
+        ["[RESEÑAS]", "Ejemplo: \"4,8 media; se repite que el check-in fue fácil\""],
+        ["[DECISIONES]", "Ejemplo: \"subir precio fines de semana de septiembre\""]
+      ],
+      "expect": "Un reporte entendible en dos minutos, con privacidad y decisiones pendientes claras.",
+      "next": "Convierte la plantilla en PDF o página privada y úsala siempre con la misma estructura."
+    }
+  ],
+  "canDo": [
+    "Preparar borradores de mensajes para huéspedes.",
+    "Crear checklists de limpieza y entrada.",
+    "Ordenar incidencias con fotos, nivel y responsable.",
+    "Resumir reseñas para encontrar problemas repetidos.",
+    "Preparar reportes para propietarios."
+  ],
+  "cantDo": [
+    "Prometer reembolsos o compensaciones sin revisión.",
+    "Acusar a un huésped de daños sin prueba.",
+    "Cambiar precios o disponibilidad sin comprobar calendario y margen.",
+    "Compartir datos personales completos con proveedores.",
+    "Sustituir normas legales o turísticas locales."
+  ],
+  "tips": [
+    "Empieza siempre por borradores revisados. Cuando lleves semanas sin corregir un tipo de respuesta, entonces piensas si se puede enviar sola.",
+    "Toda automatización de vivienda turística necesita registro: reserva, vivienda, canal, decisión, responsable y fecha.",
+    "Si hay dinero, daño, reclamación, DNI o cambio de reserva, no es automático: se escala."
+  ]
+}

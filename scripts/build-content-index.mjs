@@ -333,6 +333,74 @@ const EXTRA_INSTITUTIONAL_KITS = [
     notFor: ['Medir vanidad sin margen', 'Cruzar datos sin fuente', 'Escalar anuncios sin stock'],
   },
   {
+    id: 'airbnb-operaciones-huespedes',
+    order: -8.8,
+    title: 'Airbnb: mensajes, reservas y atención al huésped',
+    kicker: 'Alquiler vacacional',
+    audience: 'anfitriones, property managers, inmobiliarias turísticas y equipos que gestionan varias viviendas',
+    promise: 'Convierte mensajes de Airbnb, Booking, WhatsApp y correo en respuestas revisadas, tareas claras y registro de cada huésped.',
+    focus: 'gestionar comunicación de alquiler vacacional sin perder reservas, sin prometer cosas que la vivienda no tiene y sin responder automáticamente a ciegas',
+    entry: 'reserva, fechas, idioma, número de huéspedes, normas de la casa, mensajes del huésped, plataforma de origen y estado del pago',
+    output: 'cola de huéspedes, borradores de respuesta, prioridad, responsable, registro de conversación y alertas de casos sensibles',
+    tools: ['gmail', 'whatsapp', 'telegram', 'sheets', 'airtable', 'n8n', 'openai', 'claude'],
+    promptFamilies: ['automatizar', 'contenido-negocio', 'probar-reparar', 'seguridad-coste-privacidad'],
+    skillKeywords: ['airbnb', 'booking', 'huesped', 'reserva', 'whatsapp', 'alquiler vacacional', 'property manager'],
+    deliverables: ['Cola de huéspedes', 'Banco de respuestas', 'Árbol de escalado', 'Registro de reservas'],
+    fits: ['Preguntas repetidas antes de reservar', 'Huéspedes que escriben por varios canales', 'Gestores con varias viviendas', 'Respuestas en varios idiomas'],
+    notFor: ['Enviar mensajes sin revisión al principio', 'Prometer servicios no confirmados', 'Tratar DNI o pagos sin política clara'],
+  },
+  {
+    id: 'airbnb-checkin-limpieza-incidencias',
+    order: -8.7,
+    title: 'Airbnb: check-in, limpieza e incidencias',
+    kicker: 'Operación diaria',
+    audience: 'anfitriones, equipos de limpieza, mantenimiento, conserjería y property managers',
+    promise: 'Coordina check-in, salida, limpieza, parte de daños, reposición y avisos sin depender de memoria ni chats sueltos.',
+    focus: 'automatizar la operación diaria de viviendas turísticas con tareas, responsables, fotos, estados y aprobación humana antes de reclamar o cobrar',
+    entry: 'calendario de reservas, hora de entrada, hora de salida, equipo asignado, checklist de limpieza, fotos, incidencias y normas internas',
+    output: 'agenda operativa, tareas de limpieza, checklist por vivienda, parte de incidencia, aviso al responsable y registro histórico',
+    tools: ['calendar', 'gmail', 'whatsapp', 'sheets', 'airtable', 'n8n', 'openai', 'claude', 'canva'],
+    promptFamilies: ['automatizar', 'conectar-datos', 'probar-reparar', 'seguridad-coste-privacidad'],
+    skillKeywords: ['check-in', 'limpieza', 'mantenimiento', 'incidencia', 'calendario', 'airbnb', 'booking'],
+    deliverables: ['Checklist por vivienda', 'Workflow de limpieza', 'Parte de incidencia', 'Aviso de mantenimiento'],
+    fits: ['Entradas y salidas el mismo día', 'Limpiezas olvidadas', 'Daños fotografiados tarde', 'Reposiciones de última hora'],
+    notFor: ['Cobrar daños automáticamente', 'Compartir datos completos del huésped con proveedores', 'Sustituir revisión humana en reclamaciones'],
+  },
+  {
+    id: 'airbnb-precios-ocupacion-resenas',
+    order: -8.6,
+    title: 'Airbnb: precios, ocupación y reseñas',
+    kicker: 'Revenue y reputación',
+    audience: 'anfitriones con varias propiedades, gestores de alquiler vacacional y consultores de revenue',
+    promise: 'Monta un panel semanal para ver ocupación, noches vacías, precios, reseñas, incidencias repetidas y próximos cambios.',
+    focus: 'tomar decisiones de alquiler vacacional con datos simples antes de tocar precios, descuentos, normas o mensajes públicos',
+    entry: 'calendario, reservas, precio por noche, gastos, ocupación, reseñas, cancelaciones, incidencias y eventos locales',
+    output: 'dashboard semanal, alertas de huecos, resumen de reseñas, hipótesis de precio y lista de mejoras de la vivienda',
+    tools: ['sheets', 'airtable', 'gmail', 'n8n', 'openai', 'claude', 'calendar'],
+    promptFamilies: ['conectar-datos', 'automatizar', 'contenido-negocio', 'probar-reparar'],
+    skillKeywords: ['ocupacion', 'precio por noche', 'resenas', 'revenue', 'airbnb', 'booking', 'dashboard'],
+    deliverables: ['Dashboard de ocupación', 'Resumen de reseñas', 'Backlog de mejoras', 'Alertas de noches vacías'],
+    fits: ['Viviendas con temporadas fuertes', 'Precios puestos a ojo', 'Reseñas que se repiten', 'Decisiones semanales de ocupación'],
+    notFor: ['Cambiar precios sin revisar margen y calendario', 'Inventar datos de mercado', 'Responder reseñas delicadas sin persona'],
+  },
+  {
+    id: 'airbnb-portal-propietarios',
+    order: -8.5,
+    title: 'Airbnb: portal para propietarios y reportes',
+    kicker: 'Property management',
+    audience: 'gestores de viviendas que reportan a propietarios, inmobiliarias turísticas y equipos de administración',
+    promise: 'Prepara reportes claros para propietarios: ingresos, ocupación, incidencias, gastos, reseñas, tareas hechas y decisiones pendientes.',
+    focus: 'crear un sistema de reporting para alquiler vacacional que explique qué ha pasado en cada vivienda sin mandar capturas sueltas ni hojas imposibles',
+    entry: 'propiedades, reservas, ingresos, gastos, limpiezas, incidencias, reseñas, fotos y decisiones pendientes',
+    output: 'portal o informe mensual, tablero por vivienda, resumen ejecutivo, tareas pendientes y registro de decisiones',
+    tools: ['sheets', 'airtable', 'notion', 'gmail', 'canva', 'openai', 'claude', 'n8n', 'vercel'],
+    promptFamilies: ['contenido-negocio', 'conectar-datos', 'crear-web', 'entregar-equipo-cliente'],
+    skillKeywords: ['propietario', 'property manager', 'reporte mensual', 'vivienda turistica', 'airbnb', 'portal'],
+    deliverables: ['Informe mensual', 'Portal por vivienda', 'Resumen ejecutivo', 'Registro de decisiones'],
+    fits: ['Varios propietarios', 'Reportes manuales cada mes', 'Incidencias discutidas por WhatsApp', 'Necesidad de enseñar valor del gestor'],
+    notFor: ['Maquillar números', 'Compartir datos de huéspedes innecesarios', 'Publicar información privada sin permisos'],
+  },
+  {
     id: 'portal-app-institucional',
     order: 2,
     title: 'Portal web o app institucional',
@@ -522,18 +590,18 @@ const EXTRA_INSTITUTIONAL_KITS = [
   {
     id: 'ecommerce-productos-soporte',
     order: -4,
-    title: 'Ecommerce, catálogo y soporte de producto',
-    kicker: 'Tienda online',
-    audience: 'ecommerce, retail, atención al cliente y equipos de catálogo',
-    promise: 'Mejora fichas de producto, preguntas frecuentes, incidencias y seguimiento comercial con datos medibles.',
-    focus: 'organizar información de producto y soporte para vender mejor sin inventar características',
-    entry: 'catálogo, fotos, reseñas, mensajes de clientes, stock, precios y políticas de envío',
-    output: 'fichas mejoradas, FAQ, respuestas revisadas, incidencias clasificadas y checklist de publicación',
+    title: 'Comercio online esencial: catálogo, soporte y postventa',
+    kicker: 'Comercio compacto',
+    audience: 'tiendas pequeñas, retail, atención al cliente y equipos que venden por web, WhatsApp o Instagram',
+    promise: 'Agrupa lo importante de una tienda: fichas de producto, dudas frecuentes, incidencias, stock, seguimiento y checklist de publicación.',
+    focus: 'mantener un comercio online ordenado sin separar catálogo, soporte y postventa en cinco proyectos distintos',
+    entry: 'catálogo, fotos, reseñas, mensajes de clientes, stock, precios, envíos, devoluciones y canales de venta',
+    output: 'fichas base, FAQ, banco de respuestas, incidencias clasificadas, reglas de stock y checklist de publicación',
     tools: ['shopify', 'sheets', 'airtable', 'gmail', 'whatsapp', 'openai', 'claude', 'canva', 'n8n'],
     promptFamilies: ['contenido-negocio', 'automatizar', 'crear-web', 'arreglar-errores'],
     skillKeywords: ['ecommerce', 'producto', 'catalogo', 'soporte', 'ventas'],
-    deliverables: ['Ficha de producto estándar', 'Banco de respuestas', 'Workflow de incidencias', 'Checklist SEO'],
-    fits: ['Catálogos grandes', 'Productos con descripciones flojas', 'Preguntas repetidas', 'Incidencias postventa'],
+    deliverables: ['Ficha de producto estándar', 'Banco de respuestas', 'Workflow de incidencias', 'Checklist de publicación'],
+    fits: ['Tiendas pequeñas o medianas', 'Productos con descripciones flojas', 'Preguntas repetidas', 'Incidencias postventa'],
     notFor: ['Inventar claims de producto', 'Cambiar precios sin revisión', 'Usar imágenes sin derechos'],
   },
   {
@@ -718,10 +786,20 @@ function adaptWorkflow(workflow, scenario) {
   }
 }
 
+const COMPACTED_ECOMMERCE_KIT_IDS = new Set([
+  'ecommerce-catalogo-fichas-seo',
+  'ecommerce-conversion-cro-checkout',
+  'ecommerce-marketplaces-multicanal',
+  'ecommerce-campanas-creatividad-producto',
+  'ecommerce-analitica-margen-stock',
+])
+
 function expandInstitutionalKits(files) {
   if (!files.length) return files
   const base = files.find((kit) => kit.id === 'operaciones-ia') || files[0]
-  const generated = EXTRA_INSTITUTIONAL_KITS.map((scenario) => {
+  const generated = EXTRA_INSTITUTIONAL_KITS
+    .filter((scenario) => !COMPACTED_ECOMMERCE_KIT_IDS.has(scenario.id))
+    .map((scenario) => {
     const kit = cloneJson(base)
     kit.id = scenario.id
     kit.order = scenario.order

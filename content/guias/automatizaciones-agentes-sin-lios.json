@@ -1,0 +1,104 @@
+{
+  "id": "automatizaciones-agentes-sin-lios",
+  "title": "Automatizaciones y agentes sin líos",
+  "kicker": "Mapa técnico básico",
+  "intro": "Aquí traduces las palabras raras que aparecen cuando alguien habla de automatizar: workflow, trigger, API, webhook, agente, credenciales, logs, memoria y aprobación humana. No hace falta aprenderlas para presumir: hace falta entenderlas para no montar algo que mande, borre, cobre o publique sin control.",
+  "minutes": 30,
+  "theory": [
+    {
+      "title": "Automatización: mismo camino, muchas veces",
+      "text": "Una automatización sirve cuando el proceso se repite y tiene pasos bastante claros. Por ejemplo: llega un mensaje de un huésped, se clasifica, se busca la reserva, se prepara una respuesta y se avisa al responsable. Si cada caso es distinto y requiere criterio humano, no automatizas el final: automatizas la preparación.",
+      "analogy": "Es una cinta transportadora con paradas. No decide la fábrica entera, mueve una pieza por pasos conocidos."
+    },
+    {
+      "title": "Workflow: la receta de pasos",
+      "text": "Workflow significa flujo de trabajo. Es la lista ordenada de lo que pasa: entrada, limpieza de datos, decisión, acción, registro y aviso. En n8n cada paso suele ser un nodo. Si no sabes dibujar el workflow en una hoja, todavía no estás listo para montarlo en una herramienta.",
+      "analogy": null
+    },
+    {
+      "title": "Trigger: lo que arranca todo",
+      "text": "El trigger es el disparador. Puede ser un formulario enviado, un email nuevo, una fila nueva en Sheets, una reserva que cambia, una hora del día o un botón que pulsas. Elegir mal el trigger crea automatizaciones pesadas: se ejecutan demasiado, duplican tareas o se activan cuando todavía faltan datos.",
+      "analogy": "Es el timbre de la puerta. Si suena por cualquier cosa, nadie descansa."
+    },
+    {
+      "title": "API y webhook: dos formas de hablar entre apps",
+      "text": "Una API es una puerta oficial para pedir o cambiar datos de una app. Tu flujo llama a la API de un CRM para crear un contacto, o a la de una hoja para escribir una fila. Un webhook es una dirección que espera a que algo le llegue. Un formulario manda datos a un webhook y el flujo despierta. API es llamar a una puerta; webhook es poner un buzón.",
+      "analogy": null
+    },
+    {
+      "title": "Agente: decide el siguiente paso con herramientas",
+      "text": "Un agente no es una automatización más larga. Es un sistema donde la IA puede elegir entre herramientas permitidas: consultar una reserva, preparar un borrador, buscar una política o escalar a una persona. Por eso necesita límites: qué herramientas existen, cuántos pasos puede dar, cuánto puede gastar y qué acciones tiene prohibidas.",
+      "analogy": "No le das las llaves de la casa. Le das una caja con tres herramientas y una hoja que dice cuándo puede usarlas."
+    },
+    {
+      "title": "Aprobación humana: el freno bueno",
+      "text": "La aprobación humana no es un fracaso de la automatización. Es lo que permite usarla en procesos reales. Si hay dinero, datos personales, daño, queja fuerte, contrato, precio, publicación o borrado, el sistema puede preparar todo, pero una persona decide antes de que salga.",
+      "analogy": null
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Convierte una idea en workflow",
+      "where": "En ChatGPT, Claude o Gemini",
+      "action": "Usa un caso real y pequeño: un huésped pregunta si puede entrar dos horas antes. Pide que lo convierta en pasos numerados, separando lo automático de lo humano.",
+      "prompt": "Quiero automatizar este caso pequeño: un huésped de alquiler vacacional pregunta si puede entrar dos horas antes.\n\nDatos disponibles: calendario de reservas, hora de salida del huésped anterior, estado de limpieza, normas de entrada, canal por donde escribió y teléfono del responsable.\n\nHazme el workflow en castellano normal, con esta tabla: PASO | QUÉ PASA | HERRAMIENTA | DATO QUE NECESITA | QUÉ SE GUARDA EN EL REGISTRO | CUÁNDO PARA Y AVISA A UNA PERSONA.\n\nNo uses palabras técnicas sin traducirlas. Si algo puede afectar a dinero, reserva o promesa al huésped, márcalo como revisión humana.",
+      "expect": "Una tabla donde se ve trigger, datos, decisión, borrador, registro y revisión humana. No debe decir simplemente \"la IA responde\".",
+      "stuck": "Si sale genérico, pídele que lo rehaga con nombres concretos: Apartamento Centro 2B, salida 11:00, limpieza 12:00, entrada 15:00."
+    },
+    {
+      "title": "Decide si necesitas automatización o agente",
+      "where": "En la misma conversación",
+      "action": "Compara tres casos: enviar instrucciones de wifi, gestionar daño en sofá y responder reseña negativa. Pide cuál va con automatización simple, cuál con borrador y cuál con agente.",
+      "prompt": "Tengo estos tres casos de alquiler vacacional:\n1. El huésped pregunta la clave del wifi.\n2. Limpieza manda una foto de un sofá roto.\n3. Un huésped deja una reseña negativa diciendo que la vivienda estaba sucia.\n\nPara cada caso dime si conviene: automatización simple, borrador revisado, agente con herramientas o solo persona. Explica por qué en lenguaje sencillo. Añade qué dato tendría que mirar el sistema antes de actuar y qué acción quedaría prohibida.",
+      "expect": "Wifi puede ser más automático si el dato está confirmado. Daños y reseñas negativas deben ir con revisión o persona.",
+      "stuck": "Si te recomienda automatizar todo, responde: sé más conservador y piensa en qué podría salir caro o ilegal."
+    },
+    {
+      "title": "Lista tus credenciales sin escribir las claves",
+      "where": "En una nota o en una hoja",
+      "action": "Haz una tabla con las cuentas que tocaría un flujo: Airbnb o correo, Sheets/Airtable, WhatsApp, n8n y la IA. No pongas contraseñas: solo para qué sirve cada permiso.",
+      "prompt": "Ayúdame a hacer una tabla de credenciales para un proyecto de automatización. Proyecto: gestión de mensajes, limpieza e incidencias de alquiler vacacional.\n\nColumnas: SERVICIO | PARA QUÉ SE USA | PERMISO MÍNIMO | QUÉ NO DEBE PODER HACER | QUIÉN ES RESPONSABLE | CÓMO SE REVOCA.\n\nServicios: Airbnb/Booking si aplica, Gmail, WhatsApp Business, Sheets o Airtable, n8n, OpenAI o Claude, Vercel si hay portal.",
+      "expect": "Una tabla de permisos mínimos. Debe aparecer revocar/desconectar, no solo conectar.",
+      "stuck": "Si te pide pegar claves, no lo hagas. Las claves nunca van en un chat ni en una guía."
+    },
+    {
+      "title": "Define los logs que te salvarán cuando falle",
+      "where": "En ChatGPT, Claude o Gemini",
+      "action": "Pide una tabla de registro para saber qué pasó en cada ejecución: entrada, salida, error, coste, persona responsable y estado.",
+      "prompt": "Diseña el registro mínimo para una automatización de alquiler vacacional. Debe servir para saber qué pasó cuando un huésped diga \"nadie me contestó\" o cuando el propietario pregunte por una incidencia.\n\nQuiero columnas con nombre claro, ejemplo relleno y para qué sirve. Incluye fecha, vivienda, reserva, canal, tipo de caso, dato de entrada, decisión, borrador creado, persona que aprobó, mensaje enviado, error, coste aproximado y estado final.\n\nNo incluyas DNI completo, teléfono completo ni datos personales que no hagan falta.",
+      "expect": "Una tabla que puedas llevar a Sheets o Airtable y que no exponga datos personales innecesarios.",
+      "stuck": "Si la tabla es enorme, pídele versión mínima con máximo 12 columnas."
+    }
+  ],
+  "canDo": [
+    "Distinguir automatización simple, workflow y agente con herramientas.",
+    "Elegir un trigger razonable para no duplicar acciones.",
+    "Separar datos, decisión, acción, registro y aviso.",
+    "Diseñar permisos mínimos sin pegar claves en ningún sitio.",
+    "Poner aprobación humana donde hay riesgo real."
+  ],
+  "cantDo": [
+    "Convertir una idea borrosa en un sistema seguro sin dibujar antes el proceso.",
+    "Dar a una IA permiso para enviar, borrar, cobrar o publicar sin freno.",
+    "Usar datos personales completos cuando basta una referencia.",
+    "Medir calidad solo por si respondió bonito.",
+    "Saber si una API, precio o permiso sigue igual sin comprobar la web oficial."
+  ],
+  "words": [
+    ["Workflow", "La receta de pasos de un proceso: qué entra, qué se mira, qué se decide, qué se hace y qué se guarda."],
+    ["Trigger", "El disparador que arranca el flujo: email nuevo, formulario, horario, botón, fila nueva o reserva cambiada."],
+    ["Nodo", "Un paso dentro de herramientas como n8n. Un nodo lee, transforma, decide, llama a una app o guarda algo."],
+    ["API", "Puerta oficial de una app para leer o cambiar datos desde otra herramienta."],
+    ["Webhook", "Dirección que espera recibir datos. Cuando llegan, despierta el flujo."],
+    ["Credencial", "Llave de acceso a una cuenta o servicio. Se guarda fuera del prompt y fuera del código público."],
+    ["Token", "Tipo de credencial. Es como una contraseña para programas."],
+    ["OAuth", "Forma de dar permiso a una app sin escribirle tu contraseña."],
+    ["Agente", "IA que puede elegir entre herramientas permitidas para avanzar paso a paso."],
+    ["Tool calling", "Cuando el modelo pide usar una herramienta concreta con unos datos concretos."],
+    ["Log", "Registro de lo que pasó: entrada, decisión, salida, error, coste y responsable."],
+    ["Idempotente", "Una acción que puedes repetir sin duplicar el resultado. Ejemplo: actualizar una reserva por su código en vez de crear otra."],
+    ["Fallback", "Plan B cuando algo falla: guardar en pendientes, avisar a una persona o responder con borrador."],
+    ["Rate limit", "Límite de uso de una API por minuto, hora o mes."],
+    ["Aprobación humana", "Punto donde el sistema se para y una persona decide antes de hacer algo sensible."]
+  ]
+}

@@ -168,17 +168,44 @@ export default function Guia({ guideId }: { guideId?: string }) {
                 </div>
 
                 <details className="st-task-detail" open={index === 0 || hecha}>
-                  <summary>Ver instrucciones, prompt y evidencia</summary>
+                  <summary>Abrir ejemplo paso a paso</summary>
                   <div>
-                    <p className="st-task-action">{task.action}</p>
+                    <div className="st-step-guide">
+                      <section>
+                        <b>Ejemplo real</b>
+                        <p>{task.title}</p>
+                      </section>
+                      <section>
+                        <b>Paso a paso</b>
+                        <ol>
+                          <li>{task.where}</li>
+                          <li>{task.action}</li>
+                          {task.prompt && <li>Copia el prompt de abajo, cambia los datos entre corchetes y pégalo en la IA.</li>}
+                        </ol>
+                      </section>
+                    </div>
                     {task.prompt && <TaskPrompt text={task.prompt} />}
-                    <p className="st-task-expected"><b>Tienes que ver:</b> {task.expect}</p>
+                    <div className="st-step-guide">
+                      <section>
+                        <b>Qué mirar al final</b>
+                        <p>{task.expect}</p>
+                      </section>
+                    </div>
                     {task.stuck && (
                       <p className="st-task-stuck">
                         <HelpCircle size={12} />
                         <span><b>Si no te sale:</b> {task.stuck}</span>
                       </p>
                     )}
+                    <button
+                      type="button"
+                      className={`st-task-ok${hecha ? ' done' : ''}`}
+                      onClick={() => setDone((current) => current.includes(index) ? current : [...current, index])}
+                      disabled={hecha}
+                    >
+                      {hecha ? <CheckCircle2 size={14} /> : <Check size={14} />}
+                      {hecha ? 'Hecho' : 'OK, hecho'}
+                    </button>
                   </div>
                 </details>
               </li>

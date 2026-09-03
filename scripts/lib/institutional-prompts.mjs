@@ -20,6 +20,11 @@ const CATEGORY_META = [
     intro: 'Prompts para tiendas online, catálogo, fichas de producto, SEO, conversión, checkout, stock, marketplaces, soporte, postventa, campañas y margen sin inventar claims ni activar acciones comerciales sin revisión.',
   },
   {
+    id: 'alquiler-vacacional',
+    title: 'Airbnb y alquiler vacacional',
+    intro: 'Prompts para anfitriones y property managers: reservas, mensajes de huéspedes, check-in, limpieza, incidencias, reseñas, precios, reportes y automatizaciones con revisión humana.',
+  },
+  {
     id: 'automatizar',
     title: 'Automatizar',
     intro: 'Prompts para diseñar flujos institucionales con disparador, validación, aprobación, registro, recuperación y parada controlada.',
@@ -216,14 +221,13 @@ const BASE_FAMILY_CATEGORY = {
   'arreglar-errores': 'probar-reparar',
   'pedir-cambios': 'programar',
   'contenido-negocio': 'crear-contenido',
+  'alquiler-vacacional': 'alquiler-vacacional',
 }
 
 const KIT_SCENARIOS = [
-  ['Lanzamiento de tienda online con IA', 'preparar una tienda online vendible con catálogo, páginas críticas, checkout revisado, pruebas de compra, analítica básica y checklist de publicación'],
-  ['Catálogo y fichas de producto', 'normalizar atributos, beneficios verificables, descripciones, SEO, variantes, imágenes, FAQs y control de publicación para productos online'],
-  ['Conversión, carrito y recuperación de ventas', 'mejorar home, colección, ficha, carrito, checkout, emails y mensajes de recuperación sin prometer descuentos ni contactar sin consentimiento'],
-  ['Soporte y postventa ecommerce', 'ordenar consultas, incidencias, devoluciones, reseñas, garantías y seguimiento de pedidos con borradores revisados y escalado humano'],
-  ['Marketplaces y multicanal', 'adaptar productos y operaciones a Shopify, WooCommerce, Amazon, Etsy, redes sociales, WhatsApp y feeds comerciales con control de stock y margen'],
+  ['Comercio online esencial con IA', 'preparar una tienda vendible sin separar en proyectos distintos catálogo, ficha, checkout, soporte, stock, postventa y prueba de publicación'],
+  ['Airbnb y alquiler vacacional operativo', 'ordenar reservas, huéspedes, mensajes, check-in, limpieza, incidencias, reseñas, reportes y revisión humana para viviendas turísticas'],
+  ['Automatizaciones para property managers', 'diseñar flujos de WhatsApp, correo, calendario, Sheets, Airtable y n8n para varias viviendas sin perder registro ni prometer dinero automáticamente'],
   ['Sistema operativo de IA para equipo', 'coordinar herramientas, prompts, automatizaciones, permisos y evidencias para que un equipo trabaje con IA de forma consistente'],
   ['Portal web o app institucional', 'diseñar una web o aplicación institucional con contenido real, rutas claras, despliegue, QA y mantenimiento'],
   ['Sistema documental y RAG', 'convertir documentos internos en respuestas con fuentes, permisos, actualización y prueba de calidad'],
@@ -235,6 +239,7 @@ const KIT_SCENARIOS = [
 const SOURCE_LABELS = {
   'Biblioteca anterior': 'Biblioteca anterior',
   'E-commerce': 'E-commerce',
+  'alquiler-vacacional': 'Alquiler vacacional',
   Programa: 'Programa',
   'Kits institucionales': 'Kits institucionales',
 }
@@ -404,6 +409,7 @@ function importToolPrompt(tool, prompt, index) {
 
 function importBasePrompt(family, prompt, index) {
   const categoryId = BASE_FAMILY_CATEGORY[family.id] || 'proyecto-institucional'
+  const source = family.source || 'Biblioteca anterior'
   let text = `Actúa como responsable institucional y usa el siguiente prompt base dentro de una organización real. No respondas como si fuera una tarea personal suelta: adapta la salida a equipo, evidencias, permisos, coste, mantenimiento, revisión humana y trazabilidad. Contexto obligatorio antes de responder: institución [INSTITUCION], área [AREA_EQUIPO], persona [PERFIL_PERSONA], proceso [PROCESO_O_PROBLEMA], entrada [ENTRADA_REAL], salida [SALIDA_ESPERADA], volumen [VOLUMEN_Y_FRECUENCIA], restricciones [RESTRICCIONES], datos sensibles [DATOS_SENSIBLES] y fecha [FECHA_REVISION].\n\n## Prompt base de la biblioteca anterior\n${prompt.prompt}\n\n## Reglas institucionales\nConserva la intención del prompt base, pero termina siempre con una ficha de decisión, una prueba con datos ficticios, una evidencia que se guarda, un responsable, riesgos de privacidad y coste, una alternativa manual y una condición de parada. Si faltan datos, pregunta una sola cosa. Si algo puede haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL.`
 
   while (wordCount(text) < 590) {
@@ -415,7 +421,7 @@ function importBasePrompt(family, prompt, index) {
     categoryId,
     toolId: 'general',
     toolLabel: 'General institucional',
-    source: 'Biblioteca anterior',
+    source,
     name: `${family.title} · ${prompt.name}`,
     when: prompt.when || `Úsalo como prompt institucional general para ${family.title.toLowerCase()}.`,
     prompt: text,

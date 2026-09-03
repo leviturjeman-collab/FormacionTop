@@ -188,19 +188,19 @@ const GROUPS: SkillGroup[] = [
   },
   {
     id: 'ecommerce',
-    title: 'Ecommerce, marketing y crecimiento',
-    intro: 'Skills para optimizar proyectos comerciales: producto, copy, catálogo, Amazon, conversión, campañas y creatividad.',
+    title: 'Comercio, alquiler vacacional y crecimiento',
+    intro: 'Skills para proyectos comerciales compactos: tiendas, reservas, Airbnb, property management, soporte, formularios, campañas y creatividad.',
     items: [
-      skill('openai/imagegen', 'https://officialskills.sh/openai/skills/imagegen', 'Visuales de producto, mockups y variantes.', 'Ecommerce, ads y contenido.', 'OpenAI', REPOS.openai),
+      skill('openai/imagegen', 'https://officialskills.sh/openai/skills/imagegen', 'Visuales de producto, vivienda, mockups y variantes.', 'Ecommerce, Airbnb, ads y contenido.', 'OpenAI', REPOS.openai),
       skill('openai/sora', 'https://officialskills.sh/openai/skills/sora', 'Vídeo corto generado o remezclado.', 'Campañas, demos y social.', 'OpenAI', REPOS.openai),
       skill('openai/speech', 'https://officialskills.sh/openai/skills/speech', 'Locuciones para demos y anuncios.', 'Contenido accesible y video marketing.', 'OpenAI', REPOS.openai),
-      skill('figma/figma-implement-design', 'https://officialskills.sh/figma/skills/figma-implement-design', 'Pasar diseños de Figma a código con fidelidad.', 'Páginas de venta y producto.', 'Equipo oficial', REPOS.voltagent),
-      skill('netlify/netlify-image-cdn', 'https://officialskills.sh/netlify/skills/netlify-image-cdn', 'Optimizar y transformar imágenes.', 'Catálogos, portfolios y tiendas.', 'Equipo oficial', REPOS.voltagent),
+      skill('figma/figma-implement-design', 'https://officialskills.sh/figma/skills/figma-implement-design', 'Pasar diseños de Figma a código con fidelidad.', 'Páginas de venta, reservas y producto.', 'Equipo oficial', REPOS.voltagent),
+      skill('netlify/netlify-image-cdn', 'https://officialskills.sh/netlify/skills/netlify-image-cdn', 'Optimizar y transformar imágenes.', 'Catálogos, portfolios, viviendas y tiendas.', 'Equipo oficial', REPOS.voltagent),
       skill('feichanggege/ecommerce-visual-copywriting-skill', 'https://github.com/feichanggege/ecommerce-visual-copywriting-skill', 'Copy visual para ecommerce.', 'Fichas de producto y creatividades.', 'Comunidad', REPOS.ecommerceCopy),
       skill('nexscope-ai/Amazon-Skills', 'https://github.com/nexscope-ai/Amazon-Skills', 'Skills para Amazon marketplace.', 'Listings, SEO y operaciones Amazon.', 'Comunidad', REPOS.amazon),
       skill('medusajs/medusa-agent-skills', 'https://github.com/medusajs/medusa-agent-skills', 'Operaciones de ecommerce sobre Medusa.', 'Tiendas headless.', 'Comunidad', REPOS.medusa),
       skill('anthropics/campaign-planning', 'https://github.com/anthropics/skills', 'Marketing operativo para agentes.', 'Campañas, calendario y copy.', 'Claude', REPOS.anthropics),
-      skill('netlify/netlify-forms', 'https://officialskills.sh/netlify/skills/netlify-forms', 'Formularios HTML con antispam.', 'Captación, leads y soporte sencillo.', 'Equipo oficial', REPOS.voltagent),
+      skill('netlify/netlify-forms', 'https://officialskills.sh/netlify/skills/netlify-forms', 'Formularios HTML con antispam.', 'Captación, reservas, incidencias y soporte sencillo.', 'Equipo oficial', REPOS.voltagent),
     ],
   },
   {
@@ -312,7 +312,7 @@ export default function Skills() {
           <span>Buscar skill, uso, repo o plataforma</span>
           <span className="st-piece-search">
             <Search size={13} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="pdf, playwright, n8n, seguridad, memoria, ecommerce..." />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="pdf, playwright, n8n, seguridad, airbnb, ecommerce..." />
           </span>
         </label>
       </section>
