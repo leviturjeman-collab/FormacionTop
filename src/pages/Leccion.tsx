@@ -19,7 +19,6 @@ import { Bars, Chat, Checklist, FileTree, Flashcards } from '../components/Visua
 import { ToolStrip } from '../components/Brand'
 import TeacherPanel from '../components/TeacherPanel'
 import Piece from '../components/Piece'
-import Notebook from '../components/Notebook'
 
 function AssetCode({ asset }: { asset: LessonAsset }) {
   const [copied, setCopied] = useState(false)
@@ -253,26 +252,33 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                   <div>
                     <div className="st-step-guide">
                       <section>
-                        <b>1. Entra aquí</b>
-                        <p>{step.where}</p>
+                        <b>Ejemplo real</b>
+                        <p>{step.title}</p>
                       </section>
                       <section>
-                        <b>2. Haz esto</b>
-                        <p>{step.action}</p>
+                        <b>Paso a paso</b>
+                        <ol>
+                          <li>{step.where}</li>
+                          <li>{step.action}</li>
+                        </ol>
                       </section>
                       <section>
-                        <b>3. Comprueba esto</b>
+                        <b>Qué mirar al final</b>
                         <p>{step.expected}</p>
                       </section>
                     </div>
 
-                    <Notebook
-                      slug={slug}
-                      level={active}
-                      noteKey={String(index)}
-                      label="Apunta tu resultado"
-                      placeholder="Escribe una frase: qué has visto, qué has guardado o qué falta…"
-                    />
+                    <button
+                      type="button"
+                      className={`st-task-ok${hecha ? ' done' : ''}`}
+                      onClick={() => {
+                        if (!hecha) store.toggleCheck(slug, active, 100 + index)
+                      }}
+                      disabled={hecha}
+                    >
+                      <CheckCircle2 size={14} />
+                      {hecha ? 'Hecho' : 'OK, hecho'}
+                    </button>
                   </div>
                 </details>
               </li>
@@ -281,16 +287,8 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         </ol>
 
         <p className="st-evidence">
-          <b>Guarda esto:</b> {content.practice.evidence}
+          <b>Resultado final:</b> {content.practice.evidence}
         </p>
-        <Notebook
-          slug={slug}
-          level={active}
-          noteKey="evidencia"
-          label="Evidencia de la lección"
-          placeholder="Lo que enseñarías a alguien para demostrar que has hecho esta lección…"
-          rows={4}
-        />
       </section>
       )}
 

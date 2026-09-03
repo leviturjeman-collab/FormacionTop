@@ -116,7 +116,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
               )}
 
               <p className="st-prompt-expect"><b>3. Al terminar mira esto:</b> {prompt.expect}</p>
-              {prompt.next && <p className="st-prompt-next"><b>4. Después haz esto:</b> {prompt.next}</p>}
+              {prompt.next && <p className="st-prompt-next"><b>4. Siguiente paso:</b> {prompt.next}</p>}
               <div className="st-prompt-flow">
                 <span>1. Entra en ChatGPT, Claude o Gemini</span>
                 <span>2. Copia y pega el prompt</span>

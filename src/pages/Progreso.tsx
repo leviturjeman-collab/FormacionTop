@@ -1,4 +1,4 @@
-import { Download, FileText, Trash2 } from 'lucide-react'
+import { Download, Trash2 } from 'lucide-react'
 import { useCourse, useIndexes } from '../course'
 import { href } from '../router'
 import { store, useStudent } from '../store'
@@ -9,13 +9,29 @@ export default function Progreso() {
   const student = useStudent()
 
   const entries = Object.entries(student.lessons)
-    .filter(([, progress]) => progress.done.length > 0 || Object.keys(progress.quiz).length > 0)
+    .filter(([, progress]) =>
+      progress.done.length > 0 ||
+      Object.values(progress.checks || {}).some((checks) => (checks || []).length > 0)
+    )
     .sort((a, b) => b[1].updatedAt.localeCompare(a[1].updatedAt))
 
   const totalDone = Object.values(student.lessons).reduce((sum, item) => sum + item.done.length, 0)
-  const quizzes = Object.values(student.lessons).flatMap((item) => Object.values(item.quiz))
-  const quizCorrect = quizzes.reduce((sum, item) => sum + (item?.correct || 0), 0)
-  const quizTotal = quizzes.reduce((sum, item) => sum + (item?.total || 0), 0)
+  const totalChecks = Object.values(student.lessons).reduce(
+    (sum, item) => sum + Object.values(item.checks || {}).reduce((acc, checks) => acc + (checks || []).length, 0),
+    0,
+  )
+
+  const lessonInfo = (slug: string) => {
+    if (slug.startsWith('curso:')) {
+      const lessonId = slug.slice('curso:'.length)
+      const lesson = course.curso.find((item) => item.id === lessonId)
+      return lesson
+        ? { title: lesson.title, link: href({ name: 'curso', lessonId }) }
+        : null
+    }
+    const lesson = bySlug.get(slug)
+    return lesson ? { title: lesson.title, link: href({ name: 'leccion', slug }) } : null
+  }
 
   const download = () => {
     const blob = new Blob([store.export()], { type: 'application/json' })
@@ -28,41 +44,6 @@ export default function Progreso() {
     link.remove()
     URL.revokeObjectURL(url)
   }
-
-  // El cuaderno se exporta como texto legible, no como JSON: es lo que el
-  // alumno enseña a un cliente o entrega al profesor.
-  const downloadNotebook = () => {
-    const parts: string[] = ['CUADERNO DEL CURSO', '='.repeat(60), '']
-    for (const [slug, progress] of entries) {
-      const lesson = bySlug.get(slug)
-      if (!lesson || !progress.notes) continue
-      for (const [level, notes] of Object.entries(progress.notes)) {
-        const written = Object.entries(notes || {}).filter(([, text]) => text.trim())
-        if (!written.length) continue
-        parts.push(`${lesson.title}  ·  nivel ${level}`, '-'.repeat(60))
-        for (const [key, text] of written) {
-          parts.push(key === 'evidencia' ? 'EVIDENCIA:' : `Paso ${Number(key) + 1}:`, text.trim(), '')
-        }
-        parts.push('')
-      }
-    }
-    const blob = new Blob([parts.join('\n')], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'cuaderno-del-curso.txt'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
-  }
-
-  const notesWritten = Object.values(student.lessons).reduce(
-    (sum, item) => sum + Object.values(item.notes || {}).reduce(
-      (acc, level) => acc + Object.values(level || {}).filter((text) => text.trim()).length, 0,
-    ),
-    0,
-  )
 
   return (
     <div className="st-page">
@@ -85,12 +66,12 @@ export default function Progreso() {
           <span>lecciones tocadas</span>
         </div>
         <div>
-          <strong>{quizTotal ? `${Math.round((quizCorrect / quizTotal) * 100)}%` : '—'}</strong>
-          <span>aciertos en los quizzes</span>
+          <strong>{totalChecks}</strong>
+          <span>tareas marcadas con OK</span>
         </div>
         <div>
-          <strong>{notesWritten}</strong>
-          <span>notas en el cuaderno</span>
+          <strong>{course.stages.length}</strong>
+          <span>bloques de la ruta</span>
         </div>
       </div>
 
@@ -98,10 +79,6 @@ export default function Progreso() {
         <button type="button" className="st-btn-ghost" onClick={download}>
           <Download size={13} />
           Descargar mi progreso
-        </button>
-        <button type="button" className="st-btn-ghost" onClick={downloadNotebook} disabled={!notesWritten}>
-          <FileText size={13} />
-          Descargar mi cuaderno
         </button>
         <button
           type="button"
@@ -123,28 +100,24 @@ export default function Progreso() {
             <tr>
               <th>Lección</th>
               <th>Niveles</th>
-              <th>Quiz</th>
+              <th>Tareas OK</th>
             </tr>
           </thead>
           <tbody>
             {entries.map(([slug, progress]) => {
-              const lesson = bySlug.get(slug)
+              const lesson = lessonInfo(slug)
               if (!lesson) return null
-              const quiz = Object.entries(progress.quiz)
+              const checks = Object.values(progress.checks || {}).reduce((sum, list) => sum + (list || []).length, 0)
               return (
                 <tr key={slug}>
-                  <td><a href={href({ name: 'leccion', slug })}>{lesson.title}</a></td>
+                  <td><a href={lesson.link}>{lesson.title}</a></td>
                   <td>
                     {progress.done.length
                       ? progress.done.map((level) => <span key={level} className="st-pill">{level}</span>)
                       : '—'}
                   </td>
                   <td>
-                    {quiz.length
-                      ? quiz.map(([level, result]) => (
-                        <span key={level} className="st-pill">{level}: {result?.correct}/{result?.total}</span>
-                      ))
-                      : '—'}
+                    {checks ? <span className="st-pill">{checks} OK</span> : '—'}
                   </td>
                 </tr>
               )

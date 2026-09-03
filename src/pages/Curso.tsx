@@ -8,7 +8,6 @@ import { useCourse } from '../course'
 import { href } from '../router'
 import { store, useLessonProgress, useStudent } from '../store'
 import { BrandMark } from '../components/Brand'
-import Notebook from '../components/Notebook'
 import Piece from '../components/Piece'
 
 /**
@@ -517,34 +516,42 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                   <div>
                     <div className="st-step-guide">
                       <section>
-                        <b>1. Entra aquí</b>
-                        <p>{task.where}</p>
+                        <b>Ejemplo real</b>
+                        <p>{task.title}</p>
                       </section>
                       <section>
-                        <b>2. Haz esto</b>
-                        <p>{task.action}</p>
+                        <b>Paso a paso</b>
+                        <ol>
+                          <li>{task.where}</li>
+                          <li>{task.action}</li>
+                          {task.prompt && <li>Copia el prompt de abajo, pégalo en la IA y cambia los huecos por tus datos.</li>}
+                        </ol>
                       </section>
                     </div>
                     {task.prompt && <Prompt text={task.prompt} />}
                     <div className="st-step-guide">
                       <section>
-                        <b>3. Comprueba esto</b>
+                        <b>Qué mirar al final</b>
                         <p>{task.expect}</p>
                       </section>
                     </div>
                     {task.stuck && (
                       <p className="st-task-stuck">
                         <HelpCircle size={12} />
-                        <span><b>4. Si no sale:</b> {task.stuck}</span>
+                        <span><b>Si algo no encaja:</b> {task.stuck}</span>
                       </p>
                     )}
-                    <Notebook
-                      slug={`curso:${lessonId}`}
-                      level="intermedio"
-                      noteKey={String(index)}
-                      label="Apunta tu resultado"
-                      placeholder="Escribe una frase: qué has visto, qué has guardado o qué falta…"
-                    />
+                    <button
+                      type="button"
+                      className={`st-task-ok${hecha ? ' done' : ''}`}
+                      onClick={() => {
+                        if (!hecha) store.toggleCheck(`curso:${lessonId}`, 'intermedio', index)
+                      }}
+                      disabled={hecha}
+                    >
+                      <CheckCircle2 size={14} />
+                      {hecha ? 'Hecho' : 'OK, hecho'}
+                    </button>
                   </div>
                 </details>
               </li>
