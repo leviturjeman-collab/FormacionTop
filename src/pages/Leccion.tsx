@@ -19,7 +19,6 @@ import { Bars, Chat, Checklist, FileTree, Flashcards } from '../components/Visua
 import { ToolStrip } from '../components/Brand'
 import TeacherPanel from '../components/TeacherPanel'
 import Piece from '../components/Piece'
-import Notebook from '../components/Notebook'
 
 function AssetCode({ asset }: { asset: LessonAsset }) {
   const [copied, setCopied] = useState(false)
@@ -145,7 +144,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         <div>
           <ListChecks size={15} />
           <strong>{esFicha ? '2. Usa lo necesario' : '2. Haz práctica'}</strong>
-          <small>{esFicha ? 'Copia el archivo, dato o idea que necesites y vuelve a tu tarea.' : 'Completa los pasos marcables y guarda una evidencia corta.'}</small>
+          <small>{esFicha ? 'Copia el archivo, dato o idea que necesites y vuelve a tu tarea.' : 'Lee el ejemplo, sigue los pasos y marca OK cuando lo hayas visto.'}</small>
         </div>
         <div>
           <Wrench size={15} />
@@ -249,18 +248,37 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                 </div>
 
                 <details className="st-task-detail" open={index === 0 || hecha}>
-                  <summary>Ver instrucciones y evidencia</summary>
+                  <summary>Abrir pasos</summary>
                   <div>
-                    <p className="st-task-action">{step.action}</p>
-                    <p className="st-task-expected"><b>Tienes que ver:</b> {step.expected}</p>
+                    <div className="st-step-guide">
+                      <section>
+                        <b>Ejemplo real</b>
+                        <p>{step.title}</p>
+                      </section>
+                      <section>
+                        <b>Paso a paso</b>
+                        <ol>
+                          <li>{step.where}</li>
+                          <li>{step.action}</li>
+                        </ol>
+                      </section>
+                      <section>
+                        <b>Qué mirar al final</b>
+                        <p>{step.expected}</p>
+                      </section>
+                    </div>
 
-                    <Notebook
-                      slug={slug}
-                      level={active}
-                      noteKey={String(index)}
-                      label={`Qué te ha salido`}
-                      placeholder="Pega aquí el resultado, o escribe qué has decidido…"
-                    />
+                    <button
+                      type="button"
+                      className={`st-task-ok${hecha ? ' done' : ''}`}
+                      onClick={() => {
+                        if (!hecha) store.toggleCheck(slug, active, 100 + index)
+                      }}
+                      disabled={hecha}
+                    >
+                      <CheckCircle2 size={14} />
+                      {hecha ? 'Hecho' : 'OK, hecho'}
+                    </button>
                   </div>
                 </details>
               </li>
@@ -268,17 +286,13 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
           })}
         </ol>
 
-        <p className="st-evidence">
-          <b>Guarda esto:</b> {content.practice.evidence}
-        </p>
-        <Notebook
-          slug={slug}
-          level={active}
-          noteKey="evidencia"
-          label="Evidencia de la lección"
-          placeholder="Lo que enseñarías a alguien para demostrar que has hecho esta lección…"
-          rows={4}
-        />
+        <div className="st-final-check">
+          <CheckCircle2 size={15} />
+          <div>
+            <b>Al final deberías ver esto</b>
+            <p>{content.practice.evidence}</p>
+          </div>
+        </div>
       </section>
       )}
 

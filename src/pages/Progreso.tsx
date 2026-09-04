@@ -1,4 +1,4 @@
-import { Download, FileText, Trash2 } from 'lucide-react'
+import { Download, Trash2 } from 'lucide-react'
 import { useCourse, useIndexes } from '../course'
 import { href } from '../router'
 import { store, useStudent } from '../store'
@@ -37,41 +37,6 @@ export default function Progreso() {
     URL.revokeObjectURL(url)
   }
 
-  // El cuaderno se exporta como texto legible, no como JSON: es lo que el
-  // alumno enseña a un cliente o entrega al profesor.
-  const downloadNotebook = () => {
-    const parts: string[] = ['CUADERNO DEL CURSO', '='.repeat(60), '']
-    for (const [slug, progress] of entries) {
-      const lesson = bySlug.get(slug)
-      if (!lesson || !progress.notes) continue
-      for (const [level, notes] of Object.entries(progress.notes)) {
-        const written = Object.entries(notes || {}).filter(([, text]) => text.trim())
-        if (!written.length) continue
-        parts.push(`${lesson.title}  ·  nivel ${level}`, '-'.repeat(60))
-        for (const [key, text] of written) {
-          parts.push(key === 'evidencia' ? 'EVIDENCIA:' : `Paso ${Number(key) + 1}:`, text.trim(), '')
-        }
-        parts.push('')
-      }
-    }
-    const blob = new Blob([parts.join('\n')], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'cuaderno-del-curso.txt'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
-  }
-
-  const notesWritten = Object.values(student.lessons).reduce(
-    (sum, item) => sum + Object.values(item.notes || {}).reduce(
-      (acc, level) => acc + Object.values(level || {}).filter((text) => text.trim()).length, 0,
-    ),
-    0,
-  )
-
   return (
     <div className="st-page">
       <div className="st-page-title">
@@ -101,20 +66,12 @@ export default function Progreso() {
           <strong>{cursoDone}/{cursoBase.length}</strong>
           <span>{locale === 'en' ? 'Program lessons completed' : 'lecciones del Programa completadas'}</span>
         </div>
-        <div>
-          <strong>{notesWritten}</strong>
-          <span>{locale === 'en' ? 'notes in the notebook' : 'notas en el cuaderno'}</span>
-        </div>
       </div>
 
       <div className="st-actions">
         <button type="button" className="st-btn-ghost" onClick={download}>
           <Download size={13} />
           {locale === 'en' ? 'Download my progress' : 'Descargar mi progreso'}
-        </button>
-        <button type="button" className="st-btn-ghost" onClick={downloadNotebook} disabled={!notesWritten}>
-          <FileText size={13} />
-          {locale === 'en' ? 'Download my notebook' : 'Descargar mi cuaderno'}
         </button>
         <button
           type="button"

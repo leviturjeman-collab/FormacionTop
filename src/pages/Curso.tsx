@@ -8,7 +8,6 @@ import { useCourse } from '../course'
 import { href } from '../router'
 import { store, useLessonProgress, useStudent } from '../store'
 import { BrandMark } from '../components/Brand'
-import Notebook from '../components/Notebook'
 import Piece from '../components/Piece'
 import { useLocale } from '../i18n'
 
@@ -166,7 +165,7 @@ export function CursoIndice() {
       <section className="st-program-guide">
         <div><span>1</span><strong>{locale === 'en' ? 'Read' : 'Lee'}</strong><small>{locale === 'en' ? 'First understand the idea with simple examples.' : 'Primero entiende la idea con ejemplos sencillos.'}</small></div>
         <div><span>2</span><strong>{locale === 'en' ? 'Do' : 'Haz'}</strong><small>{locale === 'en' ? 'Then complete the tasks you can check off.' : 'Después completa las tareas que se pueden marcar.'}</small></div>
-        <div><span>3</span><strong>{locale === 'en' ? 'Save' : 'Guarda'}</strong><small>{locale === 'en' ? 'Note the evidence so you don’t lose the result.' : 'Apunta la evidencia para no perder el resultado.'}</small></div>
+        <div><span>3</span><strong>{locale === 'en' ? 'Check' : 'Comprueba'}</strong><small>{locale === 'en' ? 'Compare it with the example and tap OK.' : 'Mira que coincide con el ejemplo y marca OK.'}</small></div>
         <div><span>4</span><strong>{locale === 'en' ? 'Continue' : 'Sigue'}</strong><small>{locale === 'en' ? 'Come back here and open the next lesson.' : 'Vuelve aquí y abre la siguiente lección.'}</small></div>
       </section>
 
@@ -462,24 +461,46 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                 </div>
 
                 <details className="st-task-detail" open={index === 0 || hecha}>
-                  <summary>{locale === 'en' ? 'See instructions, prompt and evidence' : 'Ver instrucciones, prompt y evidencia'}</summary>
+                  <summary>{locale === 'en' ? 'Open steps' : 'Abrir pasos'}</summary>
                   <div>
-                    <p className="st-task-action">{task.action}</p>
+                    <div className="st-step-guide">
+                      <section>
+                        <b>{locale === 'en' ? 'Real example' : 'Ejemplo real'}</b>
+                        <p>{task.title}</p>
+                      </section>
+                      <section>
+                        <b>{locale === 'en' ? 'Step by step' : 'Paso a paso'}</b>
+                        <ol>
+                          <li>{task.where}</li>
+                          <li>{task.action}</li>
+                          {task.prompt && <li>{locale === 'en' ? 'Copy the prompt below, paste it into the AI and replace the placeholders with your data.' : 'Copia el prompt de abajo, pégalo en la IA y cambia los huecos por tus datos.'}</li>}
+                        </ol>
+                      </section>
+                    </div>
                     {task.prompt && <Prompt text={task.prompt} />}
-                    <p className="st-task-expected"><b>{locale === 'en' ? 'You should see:' : 'Tienes que ver:'}</b> {task.expect}</p>
+                    <div className="st-step-guide">
+                      <section>
+                        <b>{locale === 'en' ? 'What to check at the end' : 'Qué mirar al final'}</b>
+                        <p>{task.expect}</p>
+                      </section>
+                    </div>
                     {task.stuck && (
                       <p className="st-task-stuck">
                         <HelpCircle size={12} />
-                        <span><b>{locale === 'en' ? "If it doesn't work:" : 'Si no te sale:'}</b> {task.stuck}</span>
+                        <span><b>{locale === 'en' ? "If something doesn't fit:" : 'Si algo no encaja:'}</b> {task.stuck}</span>
                       </p>
                     )}
-                    <Notebook
-                      slug={`curso:${lessonId}`}
-                      level="intermedio"
-                      noteKey={String(index)}
-                      label={locale === 'en' ? 'What you got' : 'Qué te ha salido'}
-                      placeholder={locale === 'en' ? 'Paste the result here or note what you decided…' : 'Pega aquí el resultado o apunta lo que has decidido…'}
-                    />
+                    <button
+                      type="button"
+                      className={`st-task-ok${hecha ? ' done' : ''}`}
+                      onClick={() => {
+                        if (!hecha) store.toggleCheck(`curso:${lessonId}`, 'intermedio', index)
+                      }}
+                      disabled={hecha}
+                    >
+                      <CheckCircle2 size={14} />
+                      {hecha ? (locale === 'en' ? 'Done' : 'Hecho') : (locale === 'en' ? 'OK, done' : 'OK, hecho')}
+                    </button>
                   </div>
                 </details>
               </li>
