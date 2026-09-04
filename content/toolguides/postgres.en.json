@@ -1,0 +1,67 @@
+{
+  "id": "postgres",
+  "tool": "postgresql",
+  "plain": "PostgreSQL is a filing cabinet for your data that lives on a computer running 24 hours a day. Think of it as an Excel sheet that can handle 40 million rows without crashing, that twenty people can use at once without stepping on each other, and that you query by typing a request in one line instead of dragging the mouse around. It's free, it's been running for thirty years, and it's used by everything from your bank to the app you opened on your phone this morning. With an add-on called pgvector it can also search by meaning: you ask for complaints about shipping and it pulls up the message that said \"the package arrived three days late,\" where the word shipping doesn't appear anywhere.",
+  "account": {
+    "url": "supabase.com",
+    "free": "PostgreSQL itself is free software: it costs $0 and always will. What you pay for is the computer it lives on. Supabase sets it up for you, and its Free plan gives you 2 projects, 500 MB of data (about 500,000 rows of ordinary text), and pgvector included, with no card required. More than enough for the whole course. Two real downsides of the free plan: if you don't touch the project for 7 days it pauses itself and you have to wake it up manually from the dashboard (the data isn't deleted, it's just asleep), and it doesn't do automatic backups. The Pro plan is about $25 a month and fixes both.",
+    "steps": [
+      ["Create the account", "Go to supabase.com and click \"Start your project,\" the green button at the top right. It lets you sign in with a GitHub account or your email. It never asks for a card."],
+      ["Create the project", "Click \"New project.\" It asks for three things: Name, put something like ai-course; Database Password, the database's password; and Region, which part of the world the physical computer will be in. Choose whichever region is closest to you: responses arrive faster."],
+      ["Save the password before continuing", "That Database Password can never be viewed again. Click \"Generate a password,\" copy it, and paste it into your password manager RIGHT NOW, before touching anything else. If you lose it you can set a different one in Project Settings > Database, but recovering the original is impossible."],
+      ["Create your first table", "The project takes a couple of minutes to set up (\"Setting up project\"). Once it's done, click \"Table Editor\" in the left menu, then \"New table.\" Name: customers. Add three columns with \"Add column\": name of type text, city of type text, spend of type numeric. Click \"Save.\""],
+      ["Enter three rows by hand", "Inside the table, click \"Insert\" > \"Insert row.\" Fill in Marta / Valencia / 340, then Luis / Bilbao / 120, then Nadia / Valencia / 95. The screen is a grid just like Excel; at this point you haven't written a single line of code."],
+      ["Write your first query", "Left menu, \"SQL Editor,\" \"New query\" button. Type SELECT * FROM customers; and click \"Run\" at the bottom right, or Ctrl+Enter. Your three rows appear. The asterisk means \"all columns.\""],
+      ["Turn on search by meaning", "In that same SQL Editor, type CREATE EXTENSION IF NOT EXISTS vector; and click Run. It says \"Success.\" You've just activated pgvector: your database now knows how to store meanings, not just text. You can also do this with the mouse under Database > Extensions, searching for vector and flipping the switch."]
+    ],
+    "warning": "There's no Ctrl+Z in a database. If you type DELETE FROM customers; with no condition, all 12,400 rows vanish in under a second, there's no recycle bin, and on Supabase's free plan there's no backup to fall back on either. The habit that will save your career: write the command first as a SELECT with your condition, look at how many rows come back below, and only if it's exactly what you expected do you change the word SELECT to DELETE."
+  },
+  "first": [
+    "Open \"Table Editor,\" go into customers and check your three rows are there. Click a cell and change it: it saves itself, there's no save button.",
+    "Open \"SQL Editor\" > \"New query\" and type SELECT * FROM customers; Click Run. The three rows come out. Read it out loud: show me everything in the customers table.",
+    "Filter: SELECT name, spend FROM customers WHERE city = 'Valencia'; Marta and Nadia come out, and only two columns. WHERE is Excel's filter, typed instead of clicked.",
+    "Group: SELECT city, COUNT(*), SUM(spend) FROM customers GROUP BY city ORDER BY SUM(spend) DESC; That's a whole pivot table in one line, and Valencia comes out on top with 435.",
+    "Write a query wrong on purpose, for example SELECT * FROM customer; without the final s. You'll see in red \"relation customer does not exist\": the table customer doesn't exist. Learning to read those warnings is half the job."
+  ],
+  "words": [
+    ["Table", "A named Excel sheet with rules. Its columns are decided in advance and everything you put in has to fit them. A normal project has several: customers, orders, tickets."],
+    ["Row", "One specific thing that table stores: a customer, an order, a message. It's the horizontal line, just like in Excel. If you have 12,400 customers, you have 12,400 rows."],
+    ["Column", "A piece of data of the same kind repeated across every row: the name, the city, the signup date. The difference from Excel is that here you decide ahead of time what goes in each column, and it won't let you put in anything else."],
+    ["SQL", "The language you talk to it in. It reads almost like plain English, pronounced \"S-Q-L\" or \"sequel,\" and with six words (select, from, where, order by, group by, limit) you'll cover 90% of what you'll ever do."],
+    ["SELECT", "The \"show me\" command. It only looks, it never changes anything, so you can get it wrong a thousand times without breaking anything. SELECT name FROM customers means: show me the name column from the customers table."],
+    ["WHERE", "The filter. It goes after the table and says which rows the command applies to. WHERE city = 'Valencia' keeps only the ones from Valencia. If you leave it off, the command applies to every row: great when you're looking, disastrous when you're deleting."],
+    ["Embedding", "A long list of numbers, say 1,536 numbers, that summarizes a text's meaning. Two sentences that mean the same thing produce similar lists of numbers even if they don't share a single word. They're generated by a separate language model and it's cheap: turning 8,000 support messages into numbers costs less than 10 cents."],
+    ["pgvector", "A free PostgreSQL add-on that teaches it to store those lists of numbers and quickly find the ones most similar to a given one. It's what turns \"find me shipping complaints\" into results that include \"the package arrived late.\" It's turned on with one line, and on Supabase it's already available."]
+  ],
+  "matters": [
+    "WHERE before touching anything. UPDATE and DELETE with no condition eat the whole table, take 300 milliseconds, and can't be undone. Always write the command first as a SELECT, count the rows that come back, and only then convert it into the one that changes things. Nobody picks up this habit until they've deleted something once.",
+    "One piece of data per cell, and each column with its own type. In Excel you cram \"Marta Ruiz - Valencia\" into one box and make do. Here, if the city lives glued to the name inside one text field, you'll never be able to filter by city. And if you store prices as text instead of as a number, sorting will tell you 9 is bigger than 100, because it compares letter by letter like a dictionary.",
+    "Indexes. An index is an ordered cheat sheet the database builds on top of a column. Without it, finding a customer among 500,000 rows means reading all 500,000: about 4 seconds. With it, 3 milliseconds. With pgvector the difference is even bigger: searching by meaning across 100,000 texts with no index takes seconds, and with an HNSW index it drops to tens of milliseconds. The index doesn't change the result, only how long you wait for it.",
+    "The connection string is a password. It's that line starting with postgresql:// with your password written inside it in plain sight. Whoever has it can get into your data from anywhere in the world without asking anyone's permission. Don't paste it into a chat, a screenshot, or a file that ends up uploaded to the internet. If it leaks, rotate it that same day under Project Settings > Database."
+  ],
+  "ignore": [
+    "Database design theory: normal forms, entity-relationship diagrams, cardinalities. It's a whole subject and it's well thought out, but with three reasonable tables you'll work for months without missing it.",
+    "The server's internal settings: how much memory it reserves, how it internally decides the path to resolve each query, how it's tuned to run faster. That starts to matter with millions of rows and lots of people hitting it at once. Until then, the defaults are fine.",
+    "The debate over whether to use pgvector or a dedicated meaning-only store (Pinecone, Qdrant, Weaviate). Below a million text fragments, pgvector is more than enough and saves you keeping two systems in sync. You'll have that debate the day you actually need it, and you'll notice."
+  ],
+  "questions": [
+    {
+      "prompt": "You have a customers table with 12,400 rows. You're asked to delete the 3 customers from Fresno. You write DELETE FROM customers; you click Run, and it shows \"Success. No rows returned.\" You breathe a sigh of relief. What actually happened?",
+      "options": [
+        {"text": "You've deleted all 12,400 customers. \"No rows returned\" only means the command doesn't give back a list to show you, not that it did nothing.", "correct": true, "why": "Correct, and here's what hurts: without WHERE, the command applies to every row in the table. The success message is honest, it did exactly what you asked. On the free plan there's no automatic backup to fall back on, so the table is genuinely empty now."},
+        {"text": "It hasn't deleted anything, because you didn't say which rows to delete and the database doesn't guess.", "correct": false, "why": "It's really believed because that's exactly how Excel would behave: with nothing selected, the Delete key does no harm. It breaks because SQL doesn't read \"no condition\" as \"no rows,\" it reads it as \"all of them.\" The absence of a filter isn't uncertainty, it's an order."},
+        {"text": "It only deleted the first row, and you'd need to repeat the command once for each customer.", "correct": false, "why": "Sounds reasonable if you're thinking row by row, like dragging a formula down cell by cell. It breaks because SQL always works on the whole set of rows matching the condition and touches them all at once. One command, every matching row affected."}
+      ],
+      "explain": "In SQL, the condition isn't an optional detail: it's the brake. Without WHERE, the command applies to everything."
+    },
+    {
+      "prompt": "You have 8,000 support messages in a table. You write SELECT * FROM tickets WHERE text LIKE '%shipping%' and get 210 results. Your boss insists there are missing shipping complaints and shows you one that says \"the package arrived three days late.\" Why wasn't that one among the 210?",
+      "options": [
+        {"text": "Because LIKE searches for that sequence of letters and that message doesn't contain the word shipping. Finding it requires searching by meaning, which is what pgvector does.", "correct": true, "why": "Exactly. LIKE compares characters, not ideas: if the letters aren't there, the row doesn't show up. With pgvector, \"package,\" \"arrived,\" and \"late\" produce a list of numbers close to your shipping query's, and the message comes up even though it doesn't share a single word with you."},
+        {"text": "Because the table has no index, and without an index the search misses rows along the way.", "correct": false, "why": "It's believed because the word index sounds exactly like what makes you find things, like a book's index. It breaks because an index only changes how long it takes, never what comes back: without an index you'd have waited a few extra seconds and gotten exactly those same 210 rows."},
+        {"text": "Because LIKE is case-sensitive and you need to use ILIKE to also catch \"Shipping\" written with a capital letter.", "correct": false, "why": "This is a real gotcha you're going to run into: LIKE is case-sensitive, ILIKE fixes it, and accented characters hide results the same way. But it breaks in exactly this case: \"the package arrived three days late\" doesn't contain the word shipping, capitalized, lowercase, or otherwise. You'd recover other complaints, not this one."}
+      ],
+      "explain": "Searching by letters finds what was written; searching by meaning finds what was meant."
+    }
+  ]
+}
