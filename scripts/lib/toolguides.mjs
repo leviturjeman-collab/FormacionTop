@@ -1,4 +1,4 @@
-import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS } from './automations-reales.mjs'
+import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS, realAutomationsFor } from './automations-reales.mjs'
 
 const MAX_TOOL_AUTOMATIONS = 25
 
@@ -1208,7 +1208,7 @@ export function completeToolGuide(existing, tool, locale = 'es') {
   } else if (AUTOMATION_PLATFORMS.has(tool.id)) {
     guide.automations = TASK_AUTOMATIONS.slice(0, MAX_TOOL_AUTOMATIONS).map((item, index) => automationFor(tool, profile, item, index, locale))
   } else if (REAL_AUTOMATIONS[tool.id]) {
-    guide.automations = REAL_AUTOMATIONS[tool.id].slice(0, MAX_TOOL_AUTOMATIONS)
+    guide.automations = realAutomationsFor(tool.id, locale).slice(0, MAX_TOOL_AUTOMATIONS)
   } else {
     guide.automations = []
   }
