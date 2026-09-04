@@ -313,6 +313,7 @@ function porAreaPrimera(course: ReturnType<typeof useCourse>) {
 
 export function CursoLeccion({ lessonId }: { lessonId: string }) {
   const course = useCourse()
+  const locale = useLocale()
   const progress = useLessonProgress(`curso:${lessonId}`)
   const hechas = progress.checks.intermedio || []
 
@@ -343,35 +344,37 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
   return (
     <article className="st-lesson">
-      <a className="st-lesson-back" href={href({ name: 'curso' })}><ArrowLeft size={13} /> Volver al programa</a>
+      <a className="st-lesson-back" href={href({ name: 'curso' })}><ArrowLeft size={13} /> {locale === 'en' ? 'Back to the program' : 'Volver al programa'}</a>
       <header className="st-lesson-head">
         <span className="st-kicker">
-          {leccion.tool ? `Especialización · ${toolMeta?.label || leccion.tool}` : 'Ruta principal'} · {posicion + 1} de {rutaActual.length}{stage ? ` · ${stage.title}` : ''}
+          {leccion.tool
+            ? (locale === 'en' ? `Specialization · ${toolMeta?.label || leccion.tool}` : `Especialización · ${toolMeta?.label || leccion.tool}`)
+            : (locale === 'en' ? 'Main path' : 'Ruta principal')} · {posicion + 1} {locale === 'en' ? 'of' : 'de'} {rutaActual.length}{stage ? ` · ${stage.title}` : ''}
         </span>
         <h1>{leccion.title}</h1>
         <p className="st-lesson-headline">{leccion.promise}</p>
         <div className="st-lesson-meta">
           <span><Clock size={11} /> {leccion.minutes} min</span>
-          <span>{leccion.tasks.length} tareas</span>
-          <span>{leccion.theory.length} apartados</span>
+          <span>{leccion.tasks.length} {locale === 'en' ? 'tasks' : 'tareas'}</span>
+          <span>{leccion.theory.length} {locale === 'en' ? 'sections' : 'apartados'}</span>
         </div>
       </header>
 
       <section className="st-lesson-map">
         <div>
           <BookOpen size={15} />
-          <strong>1. Entiende</strong>
-          <small>Lee el primer bloque abierto. Los demás se abren si necesitas más contexto.</small>
+          <strong>{locale === 'en' ? '1. Understand' : '1. Entiende'}</strong>
+          <small>{locale === 'en' ? 'Read the first open block. The others open if you need more context.' : 'Lee el primer bloque abierto. Los demás se abren si necesitas más contexto.'}</small>
         </div>
         <div>
           <ListChecks size={15} />
-          <strong>2. Haz</strong>
-          <small>Completa las tareas de “Tu turno” y marca cada una cuando veas el resultado.</small>
+          <strong>{locale === 'en' ? '2. Do' : '2. Haz'}</strong>
+          <small>{locale === 'en' ? 'Complete the tasks in “Your turn” and check each one off once you see the result.' : 'Completa las tareas de “Tu turno” y marca cada una cuando veas el resultado.'}</small>
         </div>
         <div>
           <Wrench size={15} />
-          <strong>3. Sigue</strong>
-          <small>{siguiente ? 'Usa el botón “Siguiente” al final.' : 'Esta es la última de esta ruta.'}</small>
+          <strong>{locale === 'en' ? '3. Continue' : '3. Sigue'}</strong>
+          <small>{siguiente ? (locale === 'en' ? 'Use the “Next” button at the end.' : 'Usa el botón “Siguiente” al final.') : (locale === 'en' ? 'This is the last lesson in this path.' : 'Esta es la última de esta ruta.')}</small>
         </div>
       </section>
 
@@ -381,9 +384,9 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
       </section>
 
       <section className="st-lesson-section-intro">
-        <span className="st-kicker">Primero entiende esto</span>
-        <h2>La explicación está en bloques plegables</h2>
-        <p>Abre solo lo que necesites. El primer bloque viene abierto para que sepas por dónde empezar.</p>
+        <span className="st-kicker">{locale === 'en' ? 'First understand this' : 'Primero entiende esto'}</span>
+        <h2>{locale === 'en' ? 'The explanation is in collapsible blocks' : 'La explicación está en bloques plegables'}</h2>
+        <p>{locale === 'en' ? 'Open only what you need. The first block comes open so you know where to start.' : 'Abre solo lo que necesites. El primer bloque viene abierto para que sepas por dónde empezar.'}</p>
       </section>
 
       <div className="st-blocks">
@@ -391,7 +394,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
           <details key={index} className="st-block st-block-seccion" open={index === 0}>
             <summary>
               <span><Lightbulb size={15} /><strong>{part.title}</strong></span>
-              <span className="st-block-summary-meta"><i>Abrir</i></span>
+              <span className="st-block-summary-meta"><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
             </summary>
             <div className="st-block-body">
               <p className="st-part-text">{part.text}</p>
@@ -399,7 +402,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                 <p className="st-guide-analogy"><Quote size={13} /> <span>{part.analogy}</span></p>
               )}
               {part.example && (
-                <p className="st-curso-example"><b>Por ejemplo:</b> {part.example}</p>
+                <p className="st-curso-example"><b>{locale === 'en' ? 'For example:' : 'Por ejemplo:'}</b> {part.example}</p>
               )}
               {/* El dibujo va pegado al concepto que explica, no en un anexo. */}
               {part.visual && <Piece piece={part.visual} />}
@@ -411,8 +414,8 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
       {leccion.words?.length > 0 && (
         <details className="st-block st-block-palabras">
           <summary>
-            <span><Languages size={15} /><strong>Las palabras que vas a leer, en cristiano</strong></span>
-            <span className="st-block-summary-meta"><b>{leccion.words.length}</b><i>Abrir</i></span>
+            <span><Languages size={15} /><strong>{locale === 'en' ? 'The words you’re about to read, in plain terms' : 'Las palabras que vas a leer, en cristiano'}</strong></span>
+            <span className="st-block-summary-meta"><b>{leccion.words.length}</b><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
           </summary>
           <div className="st-block-body">
             <dl className="st-words">
@@ -427,12 +430,12 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
       <section className="st-tasks">
         <div className="st-tasks-head">
           <div>
-            <span className="st-kicker">Tu turno</span>
-            <h2>Hazlo paso a paso</h2>
-            <p>Primero abre la instrucción, después haz la acción y al final marca el círculo cuando lo hayas visto en pantalla.</p>
+            <span className="st-kicker">{locale === 'en' ? 'Your turn' : 'Tu turno'}</span>
+            <h2>{locale === 'en' ? 'Do it step by step' : 'Hazlo paso a paso'}</h2>
+            <p>{locale === 'en' ? 'First open the instruction, then do the action, and finally check the circle once you see it on screen.' : 'Primero abre la instrucción, después haz la acción y al final marca el círculo cuando lo hayas visto en pantalla.'}</p>
           </div>
           <span className="st-piece-badge" data-full={percent === 100 ? 'true' : undefined}>
-            {hechas.length}/{leccion.tasks.length} tareas
+            {hechas.length}/{leccion.tasks.length} {locale === 'en' ? 'tasks' : 'tareas'}
           </span>
         </div>
         <div className="st-checkbar"><span style={{ width: `${percent}%` }} /></div>
@@ -448,7 +451,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                     className="st-task-tick"
                     onClick={() => store.toggleCheck(`curso:${lessonId}`, 'intermedio', index)}
                     aria-pressed={hecha}
-                    aria-label={hecha ? 'Marcar como pendiente' : 'Marcar como hecha'}
+                    aria-label={hecha ? (locale === 'en' ? 'Mark as pending' : 'Marcar como pendiente') : (locale === 'en' ? 'Mark as done' : 'Marcar como hecha')}
                   >
                     {hecha ? <CheckCircle2 size={18} /> : <Circle size={18} />}
                   </button>
@@ -459,23 +462,23 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                 </div>
 
                 <details className="st-task-detail" open={index === 0 || hecha}>
-                  <summary>Ver instrucciones, prompt y evidencia</summary>
+                  <summary>{locale === 'en' ? 'See instructions, prompt and evidence' : 'Ver instrucciones, prompt y evidencia'}</summary>
                   <div>
                     <p className="st-task-action">{task.action}</p>
                     {task.prompt && <Prompt text={task.prompt} />}
-                    <p className="st-task-expected"><b>Tienes que ver:</b> {task.expect}</p>
+                    <p className="st-task-expected"><b>{locale === 'en' ? 'You should see:' : 'Tienes que ver:'}</b> {task.expect}</p>
                     {task.stuck && (
                       <p className="st-task-stuck">
                         <HelpCircle size={12} />
-                        <span><b>Si no te sale:</b> {task.stuck}</span>
+                        <span><b>{locale === 'en' ? "If it doesn't work:" : 'Si no te sale:'}</b> {task.stuck}</span>
                       </p>
                     )}
                     <Notebook
                       slug={`curso:${lessonId}`}
                       level="intermedio"
                       noteKey={String(index)}
-                      label="Qué te ha salido"
-                      placeholder="Pega aquí el resultado o apunta lo que has decidido…"
+                      label={locale === 'en' ? 'What you got' : 'Qué te ha salido'}
+                      placeholder={locale === 'en' ? 'Paste the result here or note what you decided…' : 'Pega aquí el resultado o apunta lo que has decidido…'}
                     />
                   </div>
                 </details>
@@ -487,17 +490,17 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       <details className="st-block st-block-importa">
         <summary>
-          <span><Scale size={15} /><strong>Lo que importa y lo que no</strong></span>
-          <span className="st-block-summary-meta"><b>{leccion.matters.length + leccion.ignore.length}</b><i>Abrir</i></span>
+          <span><Scale size={15} /><strong>{locale === 'en' ? 'What matters and what doesn’t' : 'Lo que importa y lo que no'}</strong></span>
+          <span className="st-block-summary-meta"><b>{leccion.matters.length + leccion.ignore.length}</b><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
         </summary>
         <div className="st-block-body">
           <div className="st-matters">
             <div className="st-matters-yes">
-              <strong><Check size={11} /> Presta atención a esto</strong>
+              <strong><Check size={11} /> {locale === 'en' ? 'Pay attention to this' : 'Presta atención a esto'}</strong>
               <ul>{leccion.matters.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
             <div className="st-matters-no">
-              <strong><Ban size={11} /> Puedes ignorar esto</strong>
+              <strong><Ban size={11} /> {locale === 'en' ? 'You can ignore this' : 'Puedes ignorar esto'}</strong>
               <ul>{leccion.ignore.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
           </div>
@@ -506,23 +509,23 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       {leccion.pieces?.length ? (
         <section className="st-interactive">
-          <h2>Practica con esto</h2>
+          <h2>{locale === 'en' ? 'Practice with this' : 'Practica con esto'}</h2>
           {leccion.pieces.map((piece, index) => <Piece key={index} piece={piece} />)}
         </section>
       ) : null}
 
       {leccion.errors?.length > 0 && (
         <section className="st-errors">
-          <h3><AlertTriangle size={12} /> Lo que se te va a romper</h3>
+          <h3><AlertTriangle size={12} /> {locale === 'en' ? "What's going to break on you" : 'Lo que se te va a romper'}</h3>
           <p className="st-errors-intro">
-            El mensaje tal y como sale en pantalla, qué significa en castellano y qué hacer.
+            {locale === 'en' ? 'The message exactly as it appears on screen, what it means in plain terms, and what to do.' : 'El mensaje tal y como sale en pantalla, qué significa en castellano y qué hacer.'}
           </p>
           <ol>
             {leccion.errors.map((fallo) => (
               <li key={fallo.message}>
                 <code>{fallo.message}</code>
-                <p className="st-error-means"><b>Qué significa</b> {fallo.means}</p>
-                <p className="st-error-fix"><b>Qué haces</b> {fallo.fix}</p>
+                <p className="st-error-means"><b>{locale === 'en' ? 'What it means' : 'Qué significa'}</b> {fallo.means}</p>
+                <p className="st-error-fix"><b>{locale === 'en' ? 'What to do' : 'Qué haces'}</b> {fallo.fix}</p>
               </li>
             ))}
           </ol>
@@ -531,17 +534,17 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       <details className="st-block st-block-importa">
         <summary>
-          <span><Check size={15} /><strong>Atajos prácticos y límites</strong></span>
-          <span className="st-block-summary-meta"><b>{leccion.canDo.length + leccion.cantDo.length}</b><i>Abrir</i></span>
+          <span><Check size={15} /><strong>{locale === 'en' ? 'Practical shortcuts and limits' : 'Atajos prácticos y límites'}</strong></span>
+          <span className="st-block-summary-meta"><b>{leccion.canDo.length + leccion.cantDo.length}</b><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
         </summary>
         <div className="st-block-body">
           <div className="st-matters">
             <div className="st-matters-yes">
-              <strong><Check size={11} /> Esto la IA sí lo hace bien</strong>
+              <strong><Check size={11} /> {locale === 'en' ? 'The AI does this well' : 'Esto la IA sí lo hace bien'}</strong>
               <ul>{leccion.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
             <div className="st-matters-no">
-              <strong><Ban size={11} /> Esto no lo hace</strong>
+              <strong><Ban size={11} /> {locale === 'en' ? "It doesn't do this" : 'Esto no lo hace'}</strong>
               <ul>{leccion.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
           </div>
@@ -554,11 +557,12 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       <section className="st-lesson-complete" data-done={leccionCompleta ? 'true' : undefined}>
         <div>
-          <span className="st-kicker">Cierre de la lección</span>
-          <h2>{leccionCompleta ? 'Lección completada' : 'Cuando termines, marca la lección'}</h2>
+          <span className="st-kicker">{locale === 'en' ? 'Lesson wrap-up' : 'Cierre de la lección'}</span>
+          <h2>{leccionCompleta ? (locale === 'en' ? 'Lesson completed' : 'Lección completada') : (locale === 'en' ? 'When you finish, mark the lesson' : 'Cuando termines, marca la lección')}</h2>
           <p>
-            Usa este botón al terminar toda la lección. Sirve para que el Programa marque esta pieza como hecha y sepa
-            por dónde tienes que seguir.
+            {locale === 'en'
+              ? 'Use this button once you finish the whole lesson. It lets Programa mark this piece as done and know where you need to go next.'
+              : 'Usa este botón al terminar toda la lección. Sirve para que el Programa marque esta pieza como hecha y sepa por dónde tienes que seguir.'}
           </p>
         </div>
         <button
@@ -568,7 +572,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
           aria-pressed={leccionCompleta}
         >
           {leccionCompleta ? <CheckCircle2 size={15} /> : <Circle size={15} />}
-          {leccionCompleta ? 'Quitar completado' : 'Marcar lección completada'}
+          {leccionCompleta ? (locale === 'en' ? 'Remove completion' : 'Quitar completado') : (locale === 'en' ? 'Mark lesson completed' : 'Marcar lección completada')}
         </button>
       </section>
 
@@ -576,12 +580,12 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         {anterior ? (
           <a href={href({ name: 'curso', lessonId: anterior.id })}>
             <ArrowLeft size={14} />
-            <span><em>Anterior</em><b>{anterior.title}</b></span>
+            <span><em>{locale === 'en' ? 'Previous' : 'Anterior'}</em><b>{anterior.title}</b></span>
           </a>
         ) : <span />}
         {siguiente && (
           <a className="next" href={href({ name: 'curso', lessonId: siguiente.id })}>
-            <span><em>Siguiente</em><b>{siguiente.title}</b></span>
+            <span><em>{locale === 'en' ? 'Next' : 'Siguiente'}</em><b>{siguiente.title}</b></span>
             <ArrowRight size={14} />
           </a>
         )}

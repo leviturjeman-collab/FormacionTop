@@ -4,7 +4,7 @@ import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from
 import { useCourse, useIndexes } from '../course'
 import { href, type Route } from '../router'
 import { useStudent } from '../store'
-import { useLocale } from '../i18n'
+import { useLocale, type Locale } from '../i18n'
 import Filters, { applyFilters } from '../components/Filters'
 import LessonList from '../components/LessonList'
 import { BrandMark } from '../components/Brand'
@@ -515,25 +515,28 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
 }
 
 /** La guía de la herramienta, con los mismos bloques que usan las lecciones. */
-function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Block[] {
+function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string, locale: Locale): Block[] {
+  const en = locale === 'en'
   const blocks: Block[] = [
-    { kind: 'idea', title: `Qué es ${label}, sin tecnicismos`, text: guide.plain },
+    { kind: 'idea', title: en ? `What ${label} is, without jargon` : `Qué es ${label}, sin tecnicismos`, text: guide.plain },
     {
       kind: 'primeros',
-      title: 'Lo primero que tienes que hacer dentro',
-      text: 'En este orden. Cada paso te prepara para el siguiente.',
+      title: en ? 'The first things to do inside' : 'Lo primero que tienes que hacer dentro',
+      text: en ? 'In this order. Each step prepares you for the next.' : 'En este orden. Cada paso te prepara para el siguiente.',
       items: guide.first,
     },
     {
       kind: 'palabras',
-      title: 'Las palabras que vas a leer, en cristiano',
-      text: 'Ninguna es tan complicada como suena.',
+      title: en ? "The words you'll read, in plain language" : 'Las palabras que vas a leer, en cristiano',
+      text: en ? "None of them are as complicated as they sound." : 'Ninguna es tan complicada como suena.',
       items: guide.words.map(([term, meaning]) => ({ term, meaning })),
     },
     {
       kind: 'importa',
-      title: 'Lo que importa y lo que no',
-      text: 'Lo de la izquierda te va a costar tiempo o dinero si lo ignoras. Lo de la derecha te lo puedes saltar entero mientras aprendes.',
+      title: en ? "What matters and what doesn't" : 'Lo que importa y lo que no',
+      text: en
+        ? 'The left column will cost you time or money if you ignore it. The right column you can skip entirely while you learn.'
+        : 'Lo de la izquierda te va a costar tiempo o dinero si lo ignoras. Lo de la derecha te lo puedes saltar entero mientras aprendes.',
       matters: guide.matters,
       ignore: guide.ignore,
     },
@@ -544,7 +547,7 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
   if (guide.shortcuts?.length) {
     blocks.push({
       kind: 'palabras',
-      title: 'Atajos y botones que vas a usar cada día',
+      title: en ? "Shortcuts and buttons you'll use every day" : 'Atajos y botones que vas a usar cada día',
       items: guide.shortcuts.map(([term, meaning]) => ({ term, meaning })),
     })
   }
@@ -552,7 +555,7 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
   if (guide.daily?.length) {
     blocks.push({
       kind: 'comprobar',
-      title: `El 20% de ${label} que resuelve el 80% del trabajo`,
+      title: en ? `The 20% of ${label} that solves 80% of the work` : `El 20% de ${label} que resuelve el 80% del trabajo`,
       items: guide.daily,
     })
   }
@@ -560,7 +563,7 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
   for (const template of guide.templates || []) {
     blocks.push({
       kind: 'receta',
-      title: `Listo para usar: ${template.name}`,
+      title: en ? `Ready to use: ${template.name}` : `Listo para usar: ${template.name}`,
       text: `${template.what} ${template.how}`,
       code: template.code,
       lang: 'json',
@@ -571,34 +574,43 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
   if (guide.errors?.length) {
     blocks.push({
       kind: 'palabras',
-      title: 'Errores que te vas a encontrar, con su arreglo',
+      title: en ? "Errors you'll run into, with the fix" : 'Errores que te vas a encontrar, con su arreglo',
       items: guide.errors.map(([term, meaning]) => ({ term, meaning })),
     })
   }
 
   blocks.push({
     kind: 'comprobar',
-    title: `Checklist antes de usar ${label} en un proyecto real`,
-    items: [
-      `Sé qué problema resuelve ${label} y cuál no.`,
-      'He probado primero con datos ficticios o una copia.',
-      'Sé dónde mirar el resultado, el historial o el error.',
-      'Tengo claro cómo detenerlo, deshacerlo o recuperar una copia.',
-      'He comprobado permisos, privacidad y uso comercial.',
-      'He apuntado cómo se mide el coste antes de repetirlo muchas veces.',
-    ],
+    title: en ? `Checklist before using ${label} on a real project` : `Checklist antes de usar ${label} en un proyecto real`,
+    items: en
+      ? [
+        `I know which problem ${label} solves and which it doesn't.`,
+        'I tested first with fake data or a copy.',
+        'I know where to look at the result, the history, or the error.',
+        "I'm clear on how to stop it, undo it, or recover a copy.",
+        'I checked permissions, privacy and commercial use.',
+        'I noted how the cost is measured before repeating it many times.',
+      ]
+      : [
+        `Sé qué problema resuelve ${label} y cuál no.`,
+        'He probado primero con datos ficticios o una copia.',
+        'Sé dónde mirar el resultado, el historial o el error.',
+        'Tengo claro cómo detenerlo, deshacerlo o recuperar una copia.',
+        'He comprobado permisos, privacidad y uso comercial.',
+        'He apuntado cómo se mide el coste antes de repetirlo muchas veces.',
+      ],
   })
 
   blocks.push({
     kind: 'coste',
-    title: 'Precio, créditos, tareas y tokens',
-    text: usageText(guide, label),
-    items: usageItems(guide, label),
+    title: en ? 'Price, credits, tasks and tokens' : 'Precio, créditos, tareas y tokens',
+    text: usageText(guide, label, locale),
+    items: usageItems(guide, label, locale),
   })
 
   blocks.push({
     kind: 'cuenta',
-    title: 'Cuenta, plan y acceso',
+    title: en ? 'Account, plan and access' : 'Cuenta, plan y acceso',
     account: {
       url: guide.account.url,
       free: guide.account.free,
@@ -612,6 +624,7 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string): Bloc
 
 function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string; toolId: string }) {
   const [selected, setSelected] = useState<NonNullable<ToolGuide['catalog']>['items'][number] | null>(null)
+  const locale = useLocale()
 
   function jumpToAutomations() {
     setSelected(null)
@@ -625,8 +638,8 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
       {guide.catalog?.items?.length ? (
         <section className="st-tool-inside" id="piezas">
           <div className="st-section-head">
-            <div><span className="st-kicker">Dentro de {label}</span><h2>Qué hay aquí y cuándo usarlo</h2></div>
-            <span>{guide.catalog.items.length} piezas explicadas</span>
+            <div><span className="st-kicker">{locale === 'en' ? `Inside ${label}` : `Dentro de ${label}`}</span><h2>{locale === 'en' ? "What's here and when to use it" : 'Qué hay aquí y cuándo usarlo'}</h2></div>
+            <span>{guide.catalog.items.length} {locale === 'en' ? 'pieces explained' : 'piezas explicadas'}</span>
           </div>
           <p className="st-tool-inside-intro">{guide.catalog.intro}</p>
           <div className="st-inside-grid">
@@ -635,14 +648,14 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
                 <span>{item.group}</span>
                 <h3>{item.name}</h3>
                 <p>{item.what}</p>
-                <div><strong>Úsalo cuando</strong><p>{item.useWhen}</p></div>
-                <em className="st-card-action">Abrir ficha</em>
+                <div><strong>{locale === 'en' ? 'Use it when' : 'Úsalo cuando'}</strong><p>{item.useWhen}</p></div>
+                <em className="st-card-action">{locale === 'en' ? 'Open card' : 'Abrir ficha'}</em>
               </button>
             ))}
           </div>
           {selected && (
-            <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={`Ficha de ${selected.name}`}>
-              <button type="button" className="st-focus-backdrop" onClick={() => setSelected(null)} aria-label="Cerrar" />
+            <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={locale === 'en' ? `Card for ${selected.name}` : `Ficha de ${selected.name}`}>
+              <button type="button" className="st-focus-backdrop" onClick={() => setSelected(null)} aria-label={locale === 'en' ? 'Close' : 'Cerrar'} />
               <article className="st-focus-sheet">
                 <header>
                   <div>
@@ -650,16 +663,16 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
                     <h3>{selected.name}</h3>
                     <p>{selected.what}</p>
                   </div>
-                  <button type="button" className="st-icon-close" onClick={() => setSelected(null)} aria-label="Cerrar ficha"><X size={16} /></button>
+                  <button type="button" className="st-icon-close" onClick={() => setSelected(null)} aria-label={locale === 'en' ? 'Close card' : 'Cerrar ficha'}><X size={16} /></button>
                 </header>
                 <dl className="st-focus-dl">
-                  <div><dt>Úsalo cuando</dt><dd>{selected.useWhen}</dd></div>
-                  {selected.model && <div><dt>Cómo elegir</dt><dd>{selected.model}</dd></div>}
-                  {selected.avoidWhen && <div><dt>No lo uses así</dt><dd>{selected.avoidWhen}</dd></div>}
+                  <div><dt>{locale === 'en' ? 'Use it when' : 'Úsalo cuando'}</dt><dd>{selected.useWhen}</dd></div>
+                  {selected.model && <div><dt>{locale === 'en' ? 'How to choose' : 'Cómo elegir'}</dt><dd>{selected.model}</dd></div>}
+                  {selected.avoidWhen && <div><dt>{locale === 'en' ? "Don't use it like this" : 'No lo uses así'}</dt><dd>{selected.avoidWhen}</dd></div>}
                 </dl>
                 <div className="st-focus-actions">
-                  {guide.prompts?.length ? <a className="st-btn" href={`#/prompts/herramienta-${encodeURIComponent(toolId)}`}>Ver prompts de {label}</a> : null}
-                  {guide.automations?.length ? <button type="button" className="st-btn-ghost" onClick={jumpToAutomations}>Ver automatizaciones</button> : null}
+                  {guide.prompts?.length ? <a className="st-btn" href={`#/prompts/herramienta-${encodeURIComponent(toolId)}`}>{locale === 'en' ? `See ${label} prompts` : `Ver prompts de ${label}`}</a> : null}
+                  {guide.automations?.length ? <button type="button" className="st-btn-ghost" onClick={jumpToAutomations}>{locale === 'en' ? 'See automations' : 'Ver automatizaciones'}</button> : null}
                 </div>
               </article>
             </div>
@@ -675,6 +688,7 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
 type ToolPrompt = NonNullable<ToolGuide['prompts']>[number]
 
 function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: string }) {
+  const locale = useLocale()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
@@ -697,17 +711,17 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
     <section className={`st-tool-prompts${open ? ' open' : ''}`} id="prompts-herramienta">
       <button type="button" className="st-tool-prompts-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
         <span>
-          <small>Prompts de {label}</small>
-          <strong>{prompts.length} prompts listos para copiar</strong>
+          <small>{locale === 'en' ? `${label} prompts` : `Prompts de ${label}`}</small>
+          <strong>{prompts.length} {locale === 'en' ? 'prompts ready to copy' : 'prompts listos para copiar'}</strong>
         </span>
-        <span>{open ? 'Ocultar' : 'Abrir'} <ChevronDown size={14} /></span>
+        <span>{locale === 'en' ? (open ? 'Hide' : 'Open') : (open ? 'Ocultar' : 'Abrir')} <ChevronDown size={14} /></span>
       </button>
       {open && (
         <div className="st-tool-prompts-panel">
           <aside>
             <label className="st-tool-prompt-search">
               <Search size={13} />
-              <input value={query} onChange={(event) => { setQuery(event.target.value); setSelected(0) }} placeholder="Filtrar prompts..." />
+              <input value={query} onChange={(event) => { setQuery(event.target.value); setSelected(0) }} placeholder={locale === 'en' ? 'Filter prompts...' : 'Filtrar prompts...'} />
             </label>
             <div className="st-tool-prompt-list">
               {filtered.map((prompt, index) => (
@@ -716,29 +730,31 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
                   <span>{prompt.name}</span>
                 </button>
               ))}
-              {!filtered.length && <p>No hay prompts con ese filtro.</p>}
+              {!filtered.length && <p>{locale === 'en' ? 'No prompts match that filter.' : 'No hay prompts con ese filtro.'}</p>}
             </div>
           </aside>
           {active && (
             <article className="st-tool-prompt-detail">
               <header>
                 <div>
-                  <span className="st-kicker">Prompt seleccionado</span>
+                  <span className="st-kicker">{locale === 'en' ? 'Selected prompt' : 'Prompt seleccionado'}</span>
                   <h3>{active.name}</h3>
-                  {(active.when || active.model) && <p>{[active.when, active.model ? `Elección recomendada: ${active.model}.` : ''].filter(Boolean).join(' ')}</p>}
+                  {(active.when || active.model) && <p>{[active.when, active.model ? (locale === 'en' ? `Recommended choice: ${active.model}.` : `Elección recomendada: ${active.model}.`) : ''].filter(Boolean).join(' ')}</p>}
                 </div>
                 <button type="button" className="st-btn" onClick={copyPrompt}>
                   {copied ? <Check size={13} /> : <Clipboard size={13} />}
-                  {copied ? 'Copiado' : 'Copiar'}
+                  {locale === 'en' ? (copied ? 'Copied' : 'Copy') : (copied ? 'Copiado' : 'Copiar')}
                 </button>
               </header>
               <details>
-                <summary>Ver el prompt completo</summary>
+                <summary>{locale === 'en' ? 'View the full prompt' : 'Ver el prompt completo'}</summary>
                 <pre><code>{active.prompt}</code></pre>
               </details>
               <div className="st-tool-prompt-help">
-                <strong>Cómo usarlo</strong>
-                <span>Cópialo entero, rellena los huecos entre corchetes y pégalo en ChatGPT, Claude o Gemini. Lo importante se comprueba antes de usar datos reales.</span>
+                <strong>{locale === 'en' ? 'How to use it' : 'Cómo usarlo'}</strong>
+                <span>{locale === 'en'
+                  ? 'Copy it in full, fill in the placeholders in brackets, and paste it into ChatGPT, Claude, or Gemini. Check anything important before using real data.'
+                  : 'Cópialo entero, rellena los huecos entre corchetes y pégalo en ChatGPT, Claude o Gemini. Lo importante se comprueba antes de usar datos reales.'}</span>
               </div>
             </article>
           )}
@@ -750,19 +766,22 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
 
 function AutomationLibrary({ automations, label }: { automations: ToolAutomation[]; label: string }) {
   const [selected, setSelected] = useState<ToolAutomation | null>(null)
+  const locale = useLocale()
   return (
     <section className="st-automation-library" id="automatizaciones">
       <div className="st-section-head">
-        <div><span className="st-kicker">Flujos dentro de la herramienta</span><h2>Automatizaciones que puedes construir con {label}</h2></div>
-        <span>{automations.length} recorridos</span>
+        <div><span className="st-kicker">{locale === 'en' ? 'Flows inside the tool' : 'Flujos dentro de la herramienta'}</span><h2>{locale === 'en' ? `Automations you can build with ${label}` : `Automatizaciones que puedes construir con ${label}`}</h2></div>
+        <span>{automations.length} {locale === 'en' ? 'walkthroughs' : 'recorridos'}</span>
       </div>
-      <p className="st-tool-inside-intro">Cada recorrido tiene un disparador, una validación, una acción observable y una ruta de recuperación. Las conexiones reales necesitan tus propias credenciales y primero se prueban con datos ficticios.</p>
+      <p className="st-tool-inside-intro">{locale === 'en'
+        ? 'Every walkthrough has a trigger, a validation step, an observable action, and a recovery path. Real connections need your own credentials and are tested first with fake data.'
+        : 'Cada recorrido tiene un disparador, una validación, una acción observable y una ruta de recuperación. Las conexiones reales necesitan tus propias credenciales y primero se prueban con datos ficticios.'}</p>
       <div className="st-automation-grid">
         {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} onOpen={() => setSelected(automation)} />)}
       </div>
       {selected && (
-        <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={`Automatización ${selected.name}`}>
-          <button type="button" className="st-focus-backdrop" onClick={() => setSelected(null)} aria-label="Cerrar" />
+        <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={locale === 'en' ? `Automation ${selected.name}` : `Automatización ${selected.name}`}>
+          <button type="button" className="st-focus-backdrop" onClick={() => setSelected(null)} aria-label={locale === 'en' ? 'Close' : 'Cerrar'} />
           <article className="st-focus-sheet st-focus-sheet-wide">
             <header>
               <div>
@@ -770,16 +789,16 @@ function AutomationLibrary({ automations, label }: { automations: ToolAutomation
                 <h3>{selected.name}</h3>
                 <p>{selected.goal}</p>
               </div>
-              <button type="button" className="st-icon-close" onClick={() => setSelected(null)} aria-label="Cerrar automatización"><X size={16} /></button>
+              <button type="button" className="st-icon-close" onClick={() => setSelected(null)} aria-label={locale === 'en' ? 'Close automation' : 'Cerrar automatización'}><X size={16} /></button>
             </header>
             <dl className="st-focus-dl">
-              <div><dt>Disparador</dt><dd>{selected.trigger}</dd></div>
-              <div><dt>Credenciales</dt><dd>{selected.credentials}</dd></div>
+              <div><dt>{locale === 'en' ? 'Trigger' : 'Disparador'}</dt><dd>{selected.trigger}</dd></div>
+              <div><dt>{locale === 'en' ? 'Credentials' : 'Credenciales'}</dt><dd>{selected.credentials}</dd></div>
             </dl>
-            <h4>Pasos del flujo</h4>
+            <h4>{locale === 'en' ? 'Flow steps' : 'Pasos del flujo'}</h4>
             <ol className="st-focus-steps">{selected.steps.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}</ol>
             {selected.code && <div className="st-code"><em>n8n · Code</em><pre><code>{selected.code}</code></pre></div>}
-            <div className="st-automation-test"><strong>Prueba</strong><p>{selected.test}</p><strong>Si falla</strong><p>{selected.failure}</p></div>
+            <div className="st-automation-test"><strong>{locale === 'en' ? 'Test' : 'Prueba'}</strong><p>{selected.test}</p><strong>{locale === 'en' ? 'If it fails' : 'Si falla'}</strong><p>{selected.failure}</p></div>
           </article>
         </div>
       )}
@@ -798,11 +817,23 @@ function AutomationCard({ automation, onOpen }: { automation: ToolAutomation; on
   )
 }
 
-function usageText(guide: NonNullable<ToolPage['guide']>, label: string) {
+function usageText(guide: NonNullable<ToolPage['guide']>, label: string, locale: Locale) {
+  if (locale === 'en') {
+    return guide.usage?.explanation || `Before paying or activating anything, check how ${label} measures usage. Text tools tend to count tokens; video tools tend to spend credits; automation platforms count tasks or runs; and local tools don't charge to open them, though calls to connected APIs can still have a cost. Numbers change, so this guide teaches you to measure consumption inside the tool itself and to work with a limit.`
+  }
   return guide.usage?.explanation || `Antes de pagar o activar nada, comprueba cómo mide el uso ${label}. Las herramientas de texto suelen contar tokens; las de vídeo suelen gastar créditos; las plataformas de automatización cuentan tareas o ejecuciones; y las herramientas locales no cobran por abrirlas, aunque las llamadas a APIs conectadas sí pueden tener coste. Las cifras cambian, así que esta guía enseña a medir el consumo dentro de la propia herramienta y a trabajar con un límite.`
 }
 
-function usageItems(guide: NonNullable<ToolPage['guide']>, label: string) {
+function usageItems(guide: NonNullable<ToolPage['guide']>, label: string, locale: Locale) {
+  if (locale === 'en') {
+    return guide.usage?.examples || [
+      `${label}: a short test with fake data before doing a real run.`,
+      `A controlled repetition to check how much a single unit of work consumes.`,
+      `A log with date, model or plan, input, output and approximate consumption.`,
+      `A spending or run limit before letting it run on its own.`,
+      `The date of the last check: prices, limits and plan names can change.`,
+    ]
+  }
   return guide.usage?.examples || [
     `${label}: una prueba corta con datos ficticios antes de hacer una ejecución real.`,
     `Una repetición controlada para comprobar cuánto consume una unidad de trabajo.`,
@@ -826,13 +857,14 @@ const CONNECTIONS: Record<string, string[]> = {
 
 function ToolConnections({ tool }: { tool: string }) {
   const course = useCourse()
+  const locale = useLocale()
   const connected = (CONNECTIONS[tool] || ['n8n', 'openai', 'github']).map((id) => course.toolPages.find((item) => item.id === id)).filter(Boolean) as ToolPage[]
   if (!connected.length) return null
   return (
     <section className="st-tool-connections">
-      <div className="st-section-head"><div><span className="st-kicker">También puedes hacerlo con</span><h2>Herramientas relacionadas</h2></div><span>Selecciona una para ver su guía</span></div>
+      <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'You can also do it with' : 'También puedes hacerlo con'}</span><h2>{locale === 'en' ? 'Related tools' : 'Herramientas relacionadas'}</h2></div><span>{locale === 'en' ? 'Select one to see its guide' : 'Selecciona una para ver su guía'}</span></div>
       <div className="st-tool-connection-grid">
-        {connected.map((item) => <a key={item.id} href={href({ name: 'herramienta', toolId: item.id, filters: {} })}><strong>{item.label}</strong><span>{item.guide ? 'Guía disponible' : `${item.count} lecciones`}</span><ArrowRight size={13} /></a>)}
+        {connected.map((item) => <a key={item.id} href={href({ name: 'herramienta', toolId: item.id, filters: {} })}><strong>{item.label}</strong><span>{item.guide ? (locale === 'en' ? 'Guide available' : 'Guía disponible') : `${item.count} ${locale === 'en' ? 'lessons' : 'lecciones'}`}</span><ArrowRight size={13} /></a>)}
       </div>
     </section>
   )

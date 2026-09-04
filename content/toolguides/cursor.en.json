@@ -1,0 +1,200 @@
+{
+  "id": "cursor",
+  "tool": "cursor",
+  "plain": "Cursor is the same code editor as always (it's built on top of Visual Studio Code, so if you've seen one you've seen the other) but with the AI built in instead of living in another window. The practical difference is that you don't paste it snippets of code: it already has your whole project in front of it. You point it at a file, tell it what you want in English, and it proposes the change marked in green and red for you to accept or reject. It's the tool for someone who already writes some code and wants to go faster, not for someone who's never programmed.",
+  "account": {
+    "url": "cursor.com",
+    "free": "There's a free plan, with a limited number of monthly requests to the good models and no limit on simple autocomplete. The paid plan was around 20 dollars a month as of August 2026, and that's what most people end up paying if they use it daily. You can also plug in your own OpenAI or Anthropic key and pay by usage: cheaper if you use it lightly and pricier if you use it a lot, and you also lose some features that depend on their own infrastructure. Check at cursor.com, since these plans change.",
+    "steps": [
+      [
+        "Download from cursor.com",
+        "Big button in the center, detects your system. It's about 200 MB. Only from that domain: there are imitations out there."
+      ],
+      [
+        "Import your VS Code settings",
+        "The first time, it offers to bring over extensions, shortcuts, and theme from your Visual Studio Code. Say yes: it saves you half an hour and doesn't break your existing VS Code, which keeps working separately."
+      ],
+      [
+        "Sign in",
+        "With Google or GitHub. Without an account the AI part, which is exactly what you're here for, doesn't work."
+      ],
+      [
+        "Open a FOLDER, not a file",
+        "'File' → 'Open Folder'. This matters more here than in any other editor: Cursor's whole advantage is that it sees your entire project. Open a single file and you've turned it into an expensive notepad."
+      ],
+      [
+        "Try the shortcut that changes everything",
+        "Select a few lines of code and press Ctrl+K (Cmd+K on Mac). A little box opens: write in English what you want it to do with that. It proposes it in green and red, and you accept or reject."
+      ],
+      [
+        "Check your usage",
+        "In Settings, the usage section. The good models get used up faster than you'd think. Knowing how many requests you have left changes how you work."
+      ]
+    ],
+    "warning": "Cursor writes directly into your files, just like Claude Code. Before your first real session: install Git and make a commit. This isn't a hygiene tip, it's the only thing that gets your project back when you accidentally accept a change that touches nine files. Ctrl+Z doesn't cross files, and the trash bin doesn't catch what got overwritten."
+  },
+  "first": [
+    "Open a folder with a project you already have, even a small one. Cursor with no context is useless.",
+    "Press Ctrl+L to open the chat and ask it «explain what this project does and which file is the important one». It's the best way to confirm it can see your code.",
+    "Select a function and press Ctrl+K: ask it to add comments in English. Look at the green and red before accepting.",
+    "Try writing a comment describing what you want and wait: autocomplete will propose several lines at once. Press Tab to accept.",
+    "Make a commit before asking for anything big. Then ask for a change that touches two files and compare it with git before approving anything."
+  ],
+  "shortcuts": [
+    [
+      "Ctrl+K (Cmd+K) — change what's selected",
+      "Select code, press it, type in English what you want. It's the shortcut used the most and the one to learn first. It hands you back the change marked for you to accept or reject."
+    ],
+    [
+      "Ctrl+L (Cmd+L) — open the side chat",
+      "For asking without changing anything: «what does this do», «why is this failing», «where's the function that does X». Doesn't touch files."
+    ],
+    [
+      "Ctrl+I — agent mode (Composer)",
+      "Here it can touch several files at once for a big task. It's the powerful mode and the dangerous one: use it only with a commit already made."
+    ],
+    [
+      "@ inside the chat",
+      "Typing @ points it exactly at what to look at: @file, @folder, @whole codebase. It's the difference between a generic answer and one that knows your project."
+    ],
+    [
+      "Tab — accept the suggestion",
+      "Autocomplete proposes in gray what it thinks you're about to write. Tab accepts, Esc rejects. Read it before accepting out of habit: that's the habit that slips in subtle errors."
+    ],
+    [
+      ".cursorrules or project rules",
+      "A file where you write how you want it to work on THIS project: comment language, style, what to never touch. Written once, applied always."
+    ],
+    [
+      "The model selector",
+      "Above the chat. Big models reason better and cost more. For renaming variables, use the fast one; for designing something, the good one."
+    ],
+    [
+      "The diff on every proposal",
+      "The green and red before accepting. Looking at it isn't optional: accepting blindly is exactly how people break working projects."
+    ]
+  ],
+  "daily": [
+    "A commit before every session. Not negotiable. It's the one thing that makes everything else reversible.",
+    "Point at context with @ instead of hoping it guesses. «Fix the login» gives mediocre results; «@auth.ts fix the login» gives useful ones.",
+    "Read the diff before accepting, always. Cursor proposes well most of the time, and the minority of the time it proposes badly is what costs you the afternoon.",
+    "Use Ctrl+K for small things and agent mode only for big ones. Opening the agent to rename a variable is like using an excavator to plant a flower.",
+    "Write the project rules on day one: language, style, which files to never touch. Written once, and you stop repeating it in every message.",
+    "When it gets tangled twice in a row, stop. Undo with git, rethink the request, and try again. Pushing through is how you run out of monthly requests and end up with a broken project."
+  ],
+  "templates": [
+    {
+      "name": "The project rules file",
+      "what": "A file at your project's root where you explain once and for all how work happens here: in what language, with what style, what not to touch, and what to warn you about before doing. It applies to everything it does on this project and saves you repeating it in every message.",
+      "how": "1) Create a file at the root called .cursorrules (with the dot in front). 2) Paste this and adapt it. 3) Save. 4) Close and reopen the folder. 5) Test it by asking for something small: the comments should come back in English.",
+      "fill": [
+        [
+          "Language",
+          "Comments in English, variable names in English: this is the standard and avoids odd mixing"
+        ],
+        [
+          "What not to touch",
+          "The list of files it must never modify. This is the rule that prevents the most headaches"
+        ],
+        [
+          "Warnings",
+          "What it needs to tell you BEFORE doing: deleting, installing, changing configuration"
+        ]
+      ],
+      "code": "# How we work on this project\n\n## Language\n- Always talk to me in plain English.\n- Code comments in English; variable and function\n  names in English.\n- Translate every technical term the first time you use it.\n\n## Style\n- I prefer long, clear code over short and clever.\n- Every function has a comment above it: what goes in and what comes out.\n- Don't add new libraries without telling me and explaining why.\n\n## What you must NEVER touch\n- .env, .env.local, or any file with keys.\n- The /migrations folder.\n- The deployment configuration file.\n\n## Warn me BEFORE doing this\n- Deleting any file.\n- Installing dependencies.\n- Changing something that affects more than three files.\n\n## When you're not sure\n- Say so. I'd rather hear \"I don't know\" than an invented function name."
+    }
+  ],
+  "errors": [
+    [
+      "It changed files I never asked it to touch",
+      "You gave it a broad instruction in agent mode and it interpreted it loosely. Undo with git (git checkout on the affected files, or go back to the last commit) and repeat the request narrowed down: «change ONLY this file, don't touch any other». And add that rule to .cursorrules so you don't repeat it."
+    ],
+    [
+      "It ran out of requests / You've hit your limit",
+      "You've used up your plan's calls to the good models. Simple autocomplete usually keeps working. Either wait for the cycle to reset, upgrade your plan, or plug in your own key. Meanwhile, use the fast model for mechanical work."
+    ],
+    [
+      "Suggestions don't show up or the chat doesn't respond",
+      "Almost always an expired session or a network problem. Check bottom right whether your account shows up. Close the editor entirely and reopen it before investigating further: fixes most cases."
+    ],
+    [
+      "It proposes code that uses functions that don't exist in my project",
+      "It doesn't have what it needs in front of it. You haven't pointed it there with @. Repeat the request explicitly naming the relevant files with @, or first ask it to search for where that's defined. On a large project, hoping it guesses doesn't work."
+    ],
+    [
+      "I accepted a suggestion and now it doesn't compile",
+      "Happens. Check the commit diff or use the editor's local history to see what came in. If you can't pin it down, go back to the last commit and repeat the change in smaller pieces, accepting and testing one at a time."
+    ],
+    [
+      "It's extremely slow with my project",
+      "Usually it's indexing a huge folder, almost always node_modules or a data folder. Add them to .cursorignore (same format as .gitignore) so it stops looking at them."
+    ]
+  ],
+  "prompts": [
+    {
+      "name": "Understand a project I just inherited",
+      "prompt": "I have a project open in Cursor that I didn't write and I need to understand it before touching anything. Use @whole codebase. Don't give me a generic summary: answer me like this. One: what this application does from the user's point of view, in five lines and no jargon. Two: which file is the entry point and which three or four files are where the important logic actually lives; tell me why those. Three: sketch out in text the path of a typical user action, from clicking to seeing the result, naming the files it passes through. Four: what outside services it needs to work (databases, APIs, keys) and what would happen if each one were missing. Five: which parts are clearly unfinished, commented out, or abandoned. Six: what three things about this project are going to give me trouble, and why. Seven: if you see anything that's a security risk, tell me that first, before anything else, even if I didn't ask. Don't change a single file: this is read-only."
+    },
+    {
+      "name": "Ask for a change without it taking out something else",
+      "prompt": "I want you to make a change to this project, but before touching anything I want a plan and I want to approve it myself. Work like this, and don't skip a single step. One: tell me which files you're going to touch and why each one; if it's more than three, stop and explain whether all of them are really necessary. Two: tell me what could break elsewhere in the project from making this change, especially anything depending on what you're modifying. Three: tell me how I'll check, with my own hands, in under two minutes, that the change works and hasn't broken anything. Four: wait for me to say go ahead. Five: once I do, do it in the safest order, starting with what carries the least risk, and show me the changes one at a time. Six: when done, tell me in two lines exactly what you changed and whether anything was left half-done. Rule you can't skip: don't touch configuration files or files with keys without warning me first. What I want to achieve is: [DESCRIBE IT IN ENGLISH, BY THE RESULT, NOT THE SOLUTION]."
+    },
+    {
+      "name": "Fix a bug by finding the cause, not the symptom",
+      "prompt": "Something's failing in this project and I want you to find the cause, not paper over the symptom. Work like a detective and show me your reasoning. One: ask me for whatever you need to reproduce it: exactly what I do, what I expected, and what happens instead, and the full error message if there is one. Two: before proposing any change, tell me where you think the problem is and what evidence in the code makes you think so; point me to the file and line. Three: give me two more possible causes, even if they seem less likely, and how to rule them out. Four: propose the smallest fix that resolves the cause, not the one that makes the message disappear. If the difference between the two isn't clear, explain it to me. Five: tell me what test I need to run to confirm it's fixed, and what other test I need to run to confirm you haven't broken something nearby. Six: tell me whether this bug points to a deeper problem that's going to show up again in a different form. What's failing is: [DESCRIBE IT]."
+    }
+  ],
+  "words": [
+    [
+      "Composer / agent mode",
+      "The mode where it can touch several files at once for a big task. Powerful and dangerous: only with a commit already made."
+    ],
+    [
+      "Diff",
+      "The green and the red: what's added and what's removed. Always looked at before accepting."
+    ],
+    [
+      "Context",
+      "What the AI has in front of it when answering. With @ you point it at which files to look at instead of hoping it guesses."
+    ],
+    [
+      "Autocomplete (Tab)",
+      "What it proposes in gray as you type. Tab accepts. Reading it before accepting is what separates going fast from introducing errors."
+    ],
+    [
+      "Project rules (.cursorrules)",
+      "A file where you define how it should work on this project. Written once, applied always."
+    ],
+    [
+      "Request",
+      "Each call to a good model. Your plan has a monthly number of these; simple autocomplete usually doesn't count."
+    ],
+    [
+      "Indexing",
+      "The process of reading your project so it can answer about it. If it's slow, it's usually indexing folders it shouldn't be."
+    ],
+    [
+      "Model",
+      "Which AI is answering. Big ones reason better and cost more; for mechanical work use the fast one."
+    ],
+    [
+      "Commit",
+      "A save point for the whole project. It's your way back when you accept something you shouldn't have."
+    ],
+    [
+      "@",
+      "The symbol you use to tell it what to look at: a file, a folder, or the whole project."
+    ]
+  ],
+  "matters": [
+    "Git set up and a commit made before every session. Cursor writes directly into your files, and Ctrl+Z doesn't cross nine files. Without this, a badly accepted change has no way back.",
+    "Read the diff before accepting. Always. Most proposals are good, and precisely because of that you get into the habit of accepting without looking, which is when the mistake that costs you the day slips in.",
+    "Point at context with @. It's the difference between a generic textbook answer and one that knows your project. People who say the AI doesn't work for them are almost always failing to point at context.",
+    "Open folders, never loose files. This tool's entire advantage is that it sees the whole project; with a loose file it's a normal editor with a subscription."
+  ],
+  "ignore": [
+    "Agent mode during the first days. Start with Ctrl+K on small pieces and watch how it responds. The agent touching twelve files while you still don't know how to read a diff is a recipe for disaster.",
+    "Constantly switching models. While you're learning, stick with one. Switching all the time makes it impossible to tell whether the result improves because of the model or because of how you're asking for things.",
+    "Extensions and themes. They come from VS Code and work the same way. Spending the first afternoon customizing colors is not starting."
+  ]
+}

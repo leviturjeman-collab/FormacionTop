@@ -1,0 +1,156 @@
+{
+  "id": "definir-idea",
+  "title": "Turning a vague idea into a project you can build",
+  "intro": "You have an idea in your head along the lines of \"I want something to help with orders\" and no idea where to start. This family of prompts turns it into a defined project: what goes in, what comes out, who uses it, and what the smallest version is that already saves you time on day one. Use them in order, in the same chat, before asking anyone to build anything.",
+  "model": "ChatGPT works well for the interview and the everyday back-and-forth, but for the long entry and the final brief, reach for Claude, which handles long texts better without losing the thread; Gemini only if your idea lives inside Google (Drive, Sheets, Gmail).",
+  "prompts": [
+    {
+      "name": "The interview: let it ask you",
+      "when": "The very first message of all, when all you have is a vague sentence and no answers.",
+      "prompt": "Act as a product consultant who works with people who have no technical background. Your job today is NOT to give me solutions, it's to pull the information out of my head through questions.\n\nMy idea, exactly as it comes out: [YOUR IDEA IN ONE SENTENCE].\nWhat I do for work and what my normal day looks like: [YOUR WORK AND YOUR ROUTINE].\n\nInterview rules, follow them strictly:\n1. Ask me ONE question per message and wait for my answer. Never several at once.\n2. Each question, two lines max, in plain language. If you use a technical word, translate it in parentheses.\n3. Under each question, give me three possible example answers, so I understand what you're asking. I can pick one or write my own.\n4. If my answer is vague (\"it depends,\" \"more or less,\" \"the usual\"), don't accept it: follow up with a specific case until I give you a real fact.\n5. Don't propose any solution, tool, technology, or program name until the interview is over.\n6. Start with what I do today with no help at all: step by step, with what papers, at what time of day, and how long it takes me.\n\nOnce you have enough to describe the whole project (figure around twelve questions), write \"INTERVIEW DONE\" and stop there, without summarizing yet.\n\nStart with the first question.",
+      "fill": [
+        [
+          "[YOUR IDEA IN ONE SENTENCE]",
+          "Exactly as you think of it, no polishing. Real example: \"I want something to help with orders at my shop, which right now I write down in a notebook.\""
+        ],
+        [
+          "[YOUR WORK AND YOUR ROUTINE]",
+          "Three or four lines about what you do each day. Example: \"I run a bakery, I get about 15 orders a day through WhatsApp and phone calls, and at 6am I put together the list of what needs baking.\""
+        ]
+      ],
+      "expect": "A single short question, with three example answers underneath. No feature lists, no technology talk. If it dumps ten questions at once or starts recommending software, it hasn't followed the rules: tell it \"start over, one question only\" and continue.",
+      "next": "Answer with real cases from this week, with names and numbers. Once it writes INTERVIEW DONE, continue with the next prompt in the same chat, without opening a new one."
+    },
+    {
+      "name": "The project profile",
+      "when": "Right after the interview, with your answers still in the same chat.",
+      "prompt": "You now have my interview answers. Turn them into a one-page project profile, written so someone who has never coded can understand it.\n\nUse exactly these sections, in this order:\n1. WORKING NAME: what we call this, in two or three words.\n2. THE PROBLEM IN ONE SENTENCE: what's hurting me today, no embellishment, no sales pitch.\n3. WHO USES IT: every person who'll touch it, how tech-savvy they are, and what device they use it from (phone, computer, tablet).\n4. WHAT GOES IN: the information I feed the system, where it comes from, and what form it arrives in today (a WhatsApp message, a piece of paper, a call, an email, a spreadsheet).\n5. WHAT COMES OUT: what it hands back to me, with a written example of the actual output, word for word.\n6. WHAT IT DOES INSIDE: the steps, in four or five sentences, without a single technical word.\n7. WHAT IT DOESN'T DO: the list of things anyone would assume are included that this project leaves out on purpose.\n8. HOW I'LL KNOW IT WORKS: a measurable signal, along the lines of \"it takes me ten minutes instead of an hour.\"\n\nIf you're missing a detail for any section, don't make it up: write \"MISSING:\" and tell me exactly what you need from me.\n\nWhen you're done, don't add advice or next steps. Just the profile.",
+      "fill": [],
+      "expect": "A one-page document with all eight sections filled in and, if applicable, a few \"MISSING:\" flags pointing out what you haven't told it. This is your first real document.",
+      "next": "Read it in full and hand-correct anything that doesn't match your reality. The AI writes very convincingly about things that aren't true of your business; only you can catch that. Then save it in a notes app: you'll paste it into almost every prompt that follows."
+    },
+    {
+      "name": "Walking through a real case",
+      "when": "When the profile sounds right but you want to check it against a real case.",
+      "prompt": "Let's check whether the profile holds up against a real case. Project profile: [PASTE THE PROJECT PROFILE HERE]. And here's a real case from my work: [A SPECIFIC CASE FROM THIS WEEK, WITH NAMES AND NUMBERS].\n\nWrite me the complete walkthrough of that case inside the project, from the very first second to when it's considered done, as a table with four columns: STEP / WHO DOES IT (me, someone else, or the system on its own) / WHAT SHOWS ON SCREEN / WHAT HAPPENS BEHIND THE SCENES.\n\nRules:\n- No summarizing: one step per row, even if it comes to twenty rows.\n- In \"what shows on screen,\" describe specific buttons and text, as if you were pointing it out to me with your finger.\n- Flag with a warning every step that needs a person to decide something, and every step that can't be undone: sending a message to a customer, charging a payment, deleting something.\n- After the table, tell me three moments along the way where this would break down in real life, and why.\n\nAnd close with a single sentence: which is the most expensive step of the whole table to build.\n\nIf the case I give you doesn't fit the profile, don't force it: tell me exactly where it goes off-plan.",
+      "fill": [
+        [
+          "[PASTE THE PROJECT PROFILE HERE]",
+          "The page you got from the previous prompt, copied in full."
+        ],
+        [
+          "[A SPECIFIC CASE FROM THIS WEEK, WITH NAMES AND NUMBERS]",
+          "A real case, the messier the better. Example: \"on Tuesday Maria ordered 3 cakes for Saturday over WhatsApp, on Thursday she swapped one for gluten-free, and in the end her brother came to pick them up.\""
+        ]
+      ],
+      "expect": "A long table, with warnings on the risky steps, and three breaking points. This is where the gaps you hadn't noticed show up: who notifies the customer, what happens if they change their mind, who takes the payment.",
+      "next": "If a step sounds off, tell it \"step 7 doesn't work like that, this is what actually happens\" and ask for the table again. Once the table describes your real work, the profile is solid."
+    },
+    {
+      "name": "Does this already exist?",
+      "when": "Before building anything, so you don't spend three weeks building something that costs $15 a month off the shelf.",
+      "prompt": "Before building anything I want to know if this has already been invented. Here's my project: [PASTE THE PROJECT PROFILE HERE].\n\nSearch for and compare what already exists on the market that solves this, or almost this, paying attention to widely-used options. Present it as a table with these columns: NAME / WHAT IT SOLVES FROM MY LIST / WHAT IT DOESN'T SOLVE / APPROXIMATE MONTHLY PRICE / WHETHER THERE'S A FREE VERSION AND ITS LIMITS / HOW LONG IT WOULD TAKE ME TO GET IT RUNNING.\n\nInclude at least one option that isn't paid software: a well-built spreadsheet, a template, or something already included in tools I use daily.\n\nAt the end write an honest verdict in three lines, picking one of these three options: (a) buy it ready-made and don't build anything; (b) build your own version, because what exists doesn't fit for these specific reasons; (c) start using what exists and only build the piece that's missing.\n\nIf you're unsure about a price or a feature because it may have changed, say so in those words instead of giving me a made-up figure.",
+      "fill": [
+        [
+          "[PASTE THE PROJECT PROFILE HERE]",
+          "The full profile. The more specific the \"what it doesn't do\" section, the better it filters the alternatives."
+        ]
+      ],
+      "expect": "A table of three to six alternatives with prices and a clear verdict. This is the single highest-return answer in the whole family: sometimes it saves you the entire project.",
+      "next": "Prices and features expire and the AI recites them from memory: go to the site of the two options that convince you and check before paying anything."
+    },
+    {
+      "name": "Choosing how to build it",
+      "when": "You already know it's worth building yourself and need to decide what form it takes: a website, a spreadsheet, a messaging bot.",
+      "prompt": "Help me decide what form to build this in. My project: [PASTE THE PROJECT PROFILE HERE]. My level: I've never coded and I work by writing to an AI on its website, copying and pasting what it tells me. [NUMBER OF PEOPLE] people are going to use it. I can spend at most [AMOUNT] a month.\n\nPropose three different ways to build the same thing, ranked from least to most effort. For each one tell me: WHAT IT IS, in two sentences; WHAT I'D HAVE TO LEARN to use it; HOW LONG until I have a first working version; MONTHLY COST, counting every paid piece; WHAT HAPPENS AS IT GROWS, with more people and more volume; and WHAT LOCKS ME IN to that option, meaning what would be hard to undo if I regret it six months from now.\n\nTranslate every technical word the first time you use it, in parentheses and in plain language.\n\nFinish by recommending a single option and explaining in three lines why that one and not the other two, keeping in mind that what matters most to me is [WHAT MATTERS MOST TO YOU].",
+      "fill": [
+        [
+          "[PASTE THE PROJECT PROFILE HERE]",
+          "The full profile, again."
+        ],
+        [
+          "[NUMBER OF PEOPLE]",
+          "How many people will actually use it. Example: \"2 (me and my business partner).\" If it's just you, say so: it changes the recommendation a lot."
+        ],
+        [
+          "[AMOUNT]",
+          "Your real monthly cap. Example: \"$0, I want to start with only free tools\" or \"up to $20.\""
+        ],
+        [
+          "[WHAT MATTERS MOST TO YOU]",
+          "One single thing: speed, price, not breaking, or looking good to show a client."
+        ]
+      ],
+      "expect": "Three paths compared with timelines and prices, and a single recommendation at the end. Pay special attention to the \"what locks me in\" column: that's where future regret lives.",
+      "next": "If the recommendation sounds like gibberish, ask it: \"explain the option you recommend like I'm twelve, and tell me what I do on day one.\""
+    },
+    {
+      "name": "Trimming down to the smallest useful version",
+      "when": "When the profile has gotten away from you and is now fifteen things. This prompt is mandatory before building.",
+      "prompt": "Be honest with me: what we've described is too big for a first version. Here's the profile: [PASTE THE PROJECT PROFILE HERE].\n\nTrim it down to the smallest version that already saves me time on day one. To do it, sort everything in the profile into three piles and justify each decision in one line:\n- VERSION 1: what, if missing, makes this useless. Five things max, not one more.\n- LATER: what's good but can wait two months with no harm done.\n- NEVER: what sounds nice but doesn't actually change my day.\n\nEvery time you send something to the \"later\" pile, tell me what I do by hand in the meantime and how long that'll take.\n\nThen write version 1 as a single sentence in this template, filling in the blanks yourself: \"When (this) happens, the system does (this other thing), and I see (this).\"\n\nAnd finish with the acid test: if you could only keep ONE thing from version 1 working, which would you keep and why? Give me a single answer, not two.",
+      "fill": [
+        [
+          "[PASTE THE PROJECT PROFILE HERE]",
+          "The profile, with whatever corrections you've already made by hand."
+        ]
+      ],
+      "expect": "Three lists, a sentence summarizing version 1, and a single answer to the acid test. If the \"version 1\" list has more than five things, tell it \"too much, cut it in half\" and repeat.",
+      "next": "That sentence, \"when X happens, the system does Y and I see Z,\" is what you're going to build first. Save it separately: it's your target."
+    },
+    {
+      "name": "The list of what gets saved",
+      "when": "Once you know what it does and need to know what information it has to remember.",
+      "prompt": "Let's work out the information this project needs to store. Project profile: [PASTE THE PROJECT PROFILE HERE]. And here's a real example of what I handle today: [PASTE A REAL ORDER, RECORD, OR MESSAGE WITH NAMES CHANGED].\n\nGive me the list of things the system needs to remember, in plain language, no database jargon. For each piece of data stored, give me a table with: FIELD NAME / WHAT IT IS, EXPLAINED TO A PERSON / A REAL EXAMPLE / WHETHER IT CAN BE LEFT BLANK / WHO FILLS IT IN (me, the customer, or the system on its own).\n\nThen explain in four sentences how they relate to each other, along the lines of \"a customer has many orders, and each order has several line items.\"\n\nSeparately flag, with a clear warning, any personal data that shows up (name, phone, address, email), and tell me in one line what obligations I have around that data if I'm going to use this with real customers.\n\nFinish with three questions I should answer before we consider this list final.",
+      "fill": [
+        [
+          "[PASTE THE PROJECT PROFILE HERE]",
+          "Better to use the profile already trimmed to version 1 than the long one."
+        ],
+        [
+          "[PASTE A REAL ORDER, RECORD, OR MESSAGE WITH NAMES CHANGED]",
+          "An authentic example copied verbatim: the customer's WhatsApp message, the row from your spreadsheet, the note from the notebook. Change names and phone numbers before pasting."
+        ]
+      ],
+      "expect": "A table with fifteen or twenty fields, with examples, and a section flagging the personal data. It serves as the script for the conversation where this actually gets built.",
+      "next": "Answer the three closing questions in the same chat. They're usually exactly the ones that would ruin the project if you left them for later."
+    },
+    {
+      "name": "What could go wrong",
+      "when": "Before building, when the plan looks perfect. That's exactly when this is due.",
+      "prompt": "Put on the hat of the most pessimistic person on the team. Here's the plan: [PASTE THE PROFILE AND THE VERSION 1 SENTENCE HERE].\n\nTell me everything that could go wrong, grouped into four sections:\n1. EDGE CASES: real life that doesn't fit the plan. A half-finished order, someone who changes their mind, two things with the same name, a number typed wrong, someone who writes everything in caps with no accents.\n2. SOMETHING BREAKS: what happens if the internet drops, if the phone dies mid-way, if two people touch the same thing at once.\n3. I MESS IT UP: where I'm going to screw up using it in a rush on a Monday morning.\n4. WHAT CAN'T BE UNDONE: every action the system takes that deletes something, charges a payment, or sends a message to someone else.\n\nRank them by how much damage they cause, one to ten. For the five worst, give me a cheap fix, along the lines of \"ask for confirmation before\" or \"always save a copy of.\"\n\nDon't tell me it's all going to be fine. If part of my plan strikes you as a genuinely bad idea, say so in those words.",
+      "fill": [
+        [
+          "[PASTE THE PROFILE AND THE VERSION 1 SENTENCE HERE]",
+          "The trimmed profile plus the \"when X happens, the system does Y and I see Z\" sentence that came out of the trimming prompt."
+        ]
+      ],
+      "expect": "An uncomfortable list, ranked by severity, with cheap fixes for the five worst. Pay attention to section 4: anything that deletes, charges, or messages a customer is irreversible and should ask for confirmation first.",
+      "next": "Fold the five cheap fixes into the profile, under \"what it does inside.\" Don't open a new document."
+    },
+    {
+      "name": "The one-page brief",
+      "when": "At the very end, to take the project into a fresh chat and start building.",
+      "prompt": "Last task with this idea. Pull together everything we've discussed and write me a one-page brief I can copy and paste into a completely new chat, so a different AI can start building this without having been part of this conversation.\n\nWrite it in second person, addressed to that AI, and have it contain: what's being built and for whom; what goes in and what comes out, with a real example of each; the steps it takes internally; the list of what gets stored; what's left out of version 1 and shouldn't be built; what tools it'll be built with and why; the skill level of who'll be operating it, who has never coded and works by copying and pasting whatever the AI says; and a final instruction to ask before assuming anything and to explain every step in plain language.\n\nFormat: plain, continuous text, no tables, no bold, no flourishes, ready to paste at once. Don't assume anything is known: whoever reads it hasn't seen this conversation.\n\nBefore writing it, check whether you're missing any detail from me and ask. Only once you have everything, write it out in full.",
+      "fill": [],
+      "expect": "A continuous block of text, half a page or a bit more, no decoration, that makes sense without having read anything before it. If it opens with \"as we discussed\" or \"based on what we talked about,\" that's wrong: ask it to rewrite with no references to this conversation.",
+      "next": "Save it in a text file on your desktop. That brief opens the first build chat, and you paste it in again any time the AI loses track."
+    }
+  ],
+  "canDo": [
+    "Ask you the questions you didn't know you needed to answer, one at a time, without letting you get away with \"it depends.\"",
+    "Turn a loose sentence into a profile with input, output, steps, users, and what's left out.",
+    "Trim mercilessly down to the version that already helps you on day one, and tell you what to do by hand in the meantime.",
+    "Write you the brief you then paste into another chat to have it built, without that chat having seen any of this."
+  ],
+  "cantDo": [
+    "It doesn't know your business: whatever it makes up about your orders will sound reasonable and be wrong until you correct it.",
+    "It doesn't know whether your idea will have customers. It validates the definition, not the market: that's checked by people who pay.",
+    "Tool prices and features come from memory and go stale; before paying $15 or $30 a month, check on the vendor's own site.",
+    "It doesn't build you anything with these prompts: this is only for defining. Building is a different conversation, with the one-page brief in front of it."
+  ],
+  "tips": [
+    "Answer the interview with real cases from this week, with names, times, and numbers. Every \"more or less\" you let slip gets you back a made-up profile.",
+    "Work through all nine prompts in the same chat. Open a new one and the AI remembers absolutely nothing: paste the profile in first, or you're starting from zero.",
+    "When an answer sounds good but empty, tell it \"give me the version I won't like\" or \"tell me what you forgot to ask me.\" That's where the useful stuff comes out."
+  ]
+}
