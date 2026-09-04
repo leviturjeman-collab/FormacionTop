@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { BadgeCheck, Check, RotateCcw, X } from 'lucide-react'
 import type { LevelId, QuizQuestion } from '../types'
 import { store } from '../store'
+import { useLocale } from '../i18n'
 
 /**
  * Autoevaluación.
@@ -29,6 +30,7 @@ function hash(value: string) {
 }
 
 export default function Quiz({ questions, slug, level }: { questions: QuizQuestion[]; slug: string; level: LevelId }) {
+  const locale = useLocale()
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [round, setRound] = useState(0)
 
@@ -69,11 +71,15 @@ export default function Quiz({ questions, slug, level }: { questions: QuizQuesti
   }
 
   return (
-    <section className="st-quiz" aria-label="Autoevaluación">
+    <section className="st-quiz" aria-label={locale === 'en' ? 'Self-check' : 'Autoevaluación'}>
       <header className="st-quiz-head">
         <div>
-          <h2>Compruébalo</h2>
-          <p>Responde sin volver atrás. Fallar aquí es gratis; fallar en el proyecto de un cliente, no.</p>
+          <h2>{locale === 'en' ? 'Check yourself' : 'Compruébalo'}</h2>
+          <p>
+            {locale === 'en'
+              ? "Answer without going back. Getting it wrong here is free; getting it wrong on a client's project isn't."
+              : 'Responde sin volver atrás. Fallar aquí es gratis; fallar en el proyecto de un cliente, no.'}
+          </p>
         </div>
         <span className="st-quiz-score" data-state={finished ? (correctCount === prepared.length ? 'perfect' : 'done') : 'pending'}>
           {answeredCount}/{prepared.length}
@@ -133,15 +139,21 @@ export default function Quiz({ questions, slug, level }: { questions: QuizQuesti
       {finished && (
         <footer className="st-quiz-footer">
           <p>
-            {correctCount === prepared.length
-              ? 'Todas correctas. Este nivel lo tienes.'
-              : correctCount >= prepared.length / 2
-                ? `${correctCount} de ${prepared.length}. Vuelve a leer los fallos: ahí está lo que todavía no encaja.`
-                : `${correctCount} de ${prepared.length}. Merece la pena releer la lección antes de seguir; no es tiempo perdido.`}
+            {locale === 'en'
+              ? correctCount === prepared.length
+                ? "All correct. You've got this level."
+                : correctCount >= prepared.length / 2
+                  ? `${correctCount} of ${prepared.length}. Re-read what you got wrong: that's what still doesn't click.`
+                  : `${correctCount} of ${prepared.length}. It's worth re-reading the lesson before moving on; it's not wasted time.`
+              : correctCount === prepared.length
+                ? 'Todas correctas. Este nivel lo tienes.'
+                : correctCount >= prepared.length / 2
+                  ? `${correctCount} de ${prepared.length}. Vuelve a leer los fallos: ahí está lo que todavía no encaja.`
+                  : `${correctCount} de ${prepared.length}. Merece la pena releer la lección antes de seguir; no es tiempo perdido.`}
           </p>
           <button type="button" className="st-btn-ghost" onClick={retry}>
             <RotateCcw size={15} />
-            Repetir
+            {locale === 'en' ? 'Retry' : 'Repetir'}
           </button>
         </footer>
       )}

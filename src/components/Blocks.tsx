@@ -8,6 +8,7 @@ import type { Block, BlockKind, GlossaryItem } from '../types'
 import { BrandMark, ToolStrip } from './Brand'
 import Parts from './Parts'
 import Install from './Install'
+import { useLocale } from '../i18n'
 
 const ICONS: Record<BlockKind, typeof Lightbulb> = {
   idea: Lightbulb,
@@ -38,6 +39,7 @@ const ICONS: Record<BlockKind, typeof Lightbulb> = {
 }
 
 function CodeBlock({ code, lang }: { code: string; lang?: string }) {
+  const locale = useLocale()
   const [copied, setCopied] = useState(false)
   return (
     <div className="st-code">
@@ -55,7 +57,7 @@ function CodeBlock({ code, lang }: { code: string; lang?: string }) {
         }}
       >
         <Copy size={11} />
-        {copied ? 'Copiado' : 'Copiar'}
+        {copied ? (locale === 'en' ? 'Copied' : 'Copiado') : (locale === 'en' ? 'Copy' : 'Copiar')}
       </button>
       <pre><code>{code}</code></pre>
     </div>
@@ -70,6 +72,7 @@ const strings = (items?: (string | GlossaryItem)[]) =>
   (items || []).filter((item): item is string => typeof item === 'string')
 
 export default function Blocks({ blocks }: { blocks: Block[] }) {
+  const locale = useLocale()
   return (
     <div className="st-blocks">
       {blocks.map((block, index) => {
@@ -89,7 +92,7 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
               </span>
               <span className="st-block-summary-meta">
                 {itemCount ? <b>{itemCount}</b> : null}
-                <i>Abrir</i>
+                <i>{locale === 'en' ? 'Open' : 'Abrir'}</i>
               </span>
             </summary>
 
@@ -198,14 +201,20 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
             {block.kind === 'codigo' && block.code && (
               <>
                 <CodeBlock code={block.code} lang={block.lang} />
-                {block.lang === 'prompt' && <small className="st-prompt-length">{block.code.trim().split(/\s+/).filter(Boolean).length} palabras · incluye preguntas, criterios, pruebas, límites y siguiente paso</small>}
+                {block.lang === 'prompt' && (
+                  <small className="st-prompt-length">
+                    {locale === 'en'
+                      ? `${block.code.trim().split(/\s+/).filter(Boolean).length} words · includes questions, criteria, tests, limits and next step`
+                      : `${block.code.trim().split(/\s+/).filter(Boolean).length} palabras · incluye preguntas, criterios, pruebas, límites y siguiente paso`}
+                  </small>
+                )}
               </>
             )}
 
             {block.kind === 'receta' && block.code && (
               <div className="st-recipe">
                 {block.install && (
-                  <p className="st-recipe-install"><b>Instalar:</b> <code>{block.install}</code></p>
+                  <p className="st-recipe-install"><b>{locale === 'en' ? 'Install:' : 'Instalar:'}</b> <code>{block.install}</code></p>
                 )}
                 <CodeBlock code={block.code} lang={block.lang} />
                 {block.lines && (
@@ -220,7 +229,7 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
                 )}
                 {block.errors && block.errors.length > 0 && (
                   <div className="st-recipe-errors">
-                    <strong>Errores que vas a ver</strong>
+                    <strong>{locale === 'en' ? 'Errors you will see' : 'Errores que vas a ver'}</strong>
                     <dl>
                       {block.errors.map(([error, fix]) => (
                         <div key={error}>
@@ -231,7 +240,7 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
                     </dl>
                   </div>
                 )}
-                {block.adapt && <p className="st-recipe-adapt"><b>Para tu proyecto:</b> {block.adapt}</p>}
+                {block.adapt && <p className="st-recipe-adapt"><b>{locale === 'en' ? 'For your project:' : 'Para tu proyecto:'}</b> {block.adapt}</p>}
               </div>
             )}
 
@@ -255,11 +264,11 @@ export default function Blocks({ blocks }: { blocks: Block[] }) {
             {block.kind === 'importa' && (
               <div className="st-matters">
                 <div className="st-matters-yes">
-                  <strong><Check size={11} /> Presta atención a esto</strong>
+                  <strong><Check size={11} /> {locale === 'en' ? 'Pay attention to this' : 'Presta atención a esto'}</strong>
                   <ul>{(block.matters || []).map((item) => <li key={item}>{item}</li>)}</ul>
                 </div>
                 <div className="st-matters-no">
-                  <strong><X size={11} /> Puedes ignorar esto</strong>
+                  <strong><X size={11} /> {locale === 'en' ? 'You can ignore this' : 'Puedes ignorar esto'}</strong>
                   <ul>{(block.ignore || []).map((item) => <li key={item}>{item}</li>)}</ul>
                 </div>
               </div>

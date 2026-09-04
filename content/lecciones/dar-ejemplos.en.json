@@ -1,0 +1,179 @@
+{
+  "id": "dar-ejemplos",
+  "number": 8,
+  "stageId": "prompting",
+  "title": "Giving examples: the trick that changes the result the most",
+  "promise": "You'll know how to build a request with worked examples inside it, check across two chats how much the result improves, and spot when your own examples are the ones messing it up.",
+  "minutes": 25,
+  "why": "Marta makes ceramics in Talavera and had forty product listings to write for her shop. She asked for \"describe this vase in a warm, professional tone\" and got forty paragraphs all wearing the same agency-brochure face. Then she pasted one of her own listings, written by hand two years ago, and added three words: \"like this, this style.\" The next thirty-nine came out in her voice, and she didn't change a single instruction: she changed the fact that there was now something to copy.",
+  "theory": [
+    {
+      "title": "An adjective is an opinion; an example is proof",
+      "text": "When you write \"in a warm tone,\" the AI has to guess what warm means to you. It's read millions of texts someone called warm: some use casual language, some throw in emojis, some talk about \"your everyday life.\" What it hands you back is the average of all of them, and that average is exactly the text that sounds like nobody in particular. An example of yours kills the guessing outright: it stops interpreting a word and starts copying a result it has right in front of it. The doubt that'll come up now is whether you should stop giving instructions altogether, and the answer is no: the instruction says what to do and the example says what it has to end up looking like, and together they work much better than either alone. An instruction with no example stays ambiguous; an example with no instruction gets copied too literally. The rule of thumb that'll always serve you: if you catch yourself writing a third adjective to explain the same nuance, stop writing and paste an example instead.",
+      "analogy": "It's the difference between describing to a hairdresser the cut you want and showing them a photo. With the description you leave the place praying. With the photo, you're both talking about the same cut from minute one.",
+      "example": "Ask for \"a brief, professional follow-up email\" and you get back \"I hope this message finds you well.\" Paste below it a real five-line email of yours that starts \"Hi Luis, writing about order 4471\" and that template-y politeness disappears without you having to ban it."
+    },
+    {
+      "title": "A real example has two halves",
+      "text": "The most common mistake is pasting only the result you like. The AI sees a nice piece of text, but doesn't know what raw material it came from, so it can't repeat the transformation: at best it imitates the style, and sometimes not even that. A complete example has input and output: this is what comes in, and this is exactly what I want to come out of it. With the pair in front of it, the model stops imitating a text and starts imitating a process, and that's where the jump becomes obvious. Mark the two halves with a clearly visible label, INPUT and OUTPUT, or EMAIL and RECORD, because if you don't, once your example gets long the AI confuses the sample with the real work and hands you back the sample itself, processed. If your task has no input material, like \"write a LinkedIn post about X,\" then the topic is the input and it also needs showing: sample topic on top, sample post below. When you're unsure what's input and what's output, ask yourself which part changes every time you do the task, because that's the input.",
+      "example": "Bicis Duero, a bike shop in Valladolid, gets orders by email. Their example isn't \"a nice-looking order record,\" it's this: INPUT, the exact email from Ana at Ciclos Pisuerga asking for twelve inner tubes by Friday; OUTPUT, the record with customer, part numbers, date, urgency, and what's left to confirm. The whole pair fits in ten lines and does more work than half a page of instructions."
+    },
+    {
+      "title": "How many: one fixes the format, three lock in the criterion",
+      "text": "Zero examples is fine when the task is obvious and you don't care about format: \"summarize this in three lines\" doesn't need a sample. One alone already fixes most formatting problems: length, structure, where the capital letters go, whether it's casual or formal. Three is the number that locks in the criterion, and the reason is concrete: with three, the model can see what repeats and what changes between them, and it reads what repeats as your rule. Five to eight makes sense when the task brings up odd cases that need teaching one by one: the email with no date, the order with two shipping addresses, the return. Going past ten almost never helps and starts getting in the way. In the ChatGPT, Claude, or Gemini app you don't pay per example, but each one eats into the conversation's memory, and in a long chat the model starts losing sight of what you told it at the start. Always start with three and only go up when you have a specific failure in front of you that a new example would fix.",
+      "example": "If you ever move this to the API (connecting the AI to your own program, no chat box), examples do cost money: five examples of three hundred words is about two thousand tokens, which at the roughly three-dollars-per-million a mid-tier model usually costs comes out to half a cent per call. Processing a thousand emails with those five examples runs about $6.50. With three examples instead of five, about $3.80. Check the day's price before trusting the figure."
+    },
+    {
+      "title": "Variety beats quantity",
+      "text": "Three similar examples are worth less than two clearly different ones. If the three emails you paste are all clean orders, from domestic customers, with a single part number and a clear date, what you've done is teach the easy case three times. The AI learns from the differences: what changes between your examples tells it what's variable, and what stays the same tells it what's mandatory. Choose examples that cover the edges of the work: the normal case, the case missing data, the case that brings up two things at once, and the case where the correct answer is to refuse. That last one is the most valuable and the one everyone skips: teaching it once that when a piece of data is missing the correct output is \"not provided\" saves you dozens of made-up details later. And if your task has categories, high, normal, and low, make sure they all show up in the examples, because if four out of five samples are urgent, it'll flag even the PDF catalog request as urgent.",
+      "analogy": "It's like training an intern on day one. If you hand them three identical, perfect orders, it works fine until Thursday. Thursday the weird order shows up and they call you, because the weird one was exactly the one thing you never taught them."
+    },
+    {
+      "title": "The silent bug: it also copies what you didn't want",
+      "text": "The AI can't tell the pattern you meant to teach apart from the patterns that slipped in by accident, because to it, anything that repeats across your examples is a signal. If your three samples all have exactly three bullet points, the fourth answer will have three bullet points even if the case calls for two or seven. If in all three the customer is from Chicago, you'll see Chicago show up somewhere you never put it. If all three are short, it won't give you a long answer even when you need one, and you'll experience it as \"it's being lazy today.\" This is called example contamination and it's cause number one of \"I don't get why it's doing that.\" It's caught with a two-minute test: feed it a case that deliberately breaks the pattern, one that asks for five bullet points when your examples always have three, and watch whether it obeys the case or the pattern. If it obeys the pattern, don't add more instructions: change the examples so they vary right on that point.",
+      "example": "Javier, a physical therapist in Zamora, summarizes session notes. His four examples were all about knees, because that's what he had on hand. With a shoulder patient, the AI slipped \"assess load on squats\" into the plan. It didn't invent that out of nowhere: it copied it from the examples. He swapped one knee example for a neck one and the problem was gone."
+    },
+    {
+      "title": "Where to get examples from when you have none",
+      "text": "Writing an example by hand is the best-spent half hour of the whole project, because it forces you to decide things you'd been putting off for months: what happens if the date is missing, whether the price includes tax, whether the customer's name includes a last name. If you already have history, don't make anything up: grab three real cases from your files and black out personal data before pasting them — names, phone numbers, addresses, account numbers. If you're starting completely from scratch, ask the AI for five candidates, throw out three, hand-correct the other two, and those two are now genuinely yours; what it generates alone sounds like AI, which is exactly the problem you were trying to get away from. The way this turns into a system instead of a one-off trick is the loop: every time it gives you a bad answer, correct it by hand and save that corrected pair into your template. In three weeks you'll have six or eight examples covering the failures that actually happen, not the ones you imagined. Save them in a text file on your computer, never only in the chat, because conversations get lost, get deleted, or end up buried, and with them weeks of tuning evaporate.",
+      "analogy": "It's a chef's notebook. They don't write down the recipe that worked perfectly the first time, they write down the day the sauce broke and what they did to fix it. That notebook is the one worth money."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "See with your own eyes how much a single example changes",
+      "where": "In the ChatGPT, Claude, or Gemini app, in two separate new chats",
+      "action": "Open a new chat (the button is top left and usually says \"New chat\" or a + sign). Paste only TEST A and send. Copy the answer into a notepad. Now open ANOTHER new chat, don't continue in the same one, because if you do, the AI remembers the previous exchange and the comparison is worthless. In that second chat, paste only TEST B. Put both answers side by side and look at three things: length, whether it's casual or formal, and whether it sounds like a generic catalog or like a person.",
+      "prompt": "--- TEST A (paste this alone, in a new chat) ---\nWrite the product listing for this item for an online store, in a warm, professional tone, about 60 words.\n\nITEM: Glazed ceramic vase, 28 cm tall, wheel-thrown, cobalt blue over white clay, suitable for fresh flowers with water.\n\n\n--- TEST B (paste this alone, in ANOTHER new chat) ---\nWrite the listing for the NEW ITEM, copying the style, length, and structure of the EXAMPLE. Don't explain anything: just give me the listing.\n\nEXAMPLE\nInput: Glazed ceramic bowl, 18 cm diameter, wheel-thrown, olive green over white clay, dishwasher safe.\nOutput: One of those bowls that never stays in the cabinet. Eighteen centimeters of white clay, raised on the wheel, one at a time, and dipped in an olive green that shifts with the light. No two alike: you can feel the hand in the rim. Goes in the dishwasher without drama, though you'll feel a little bad about it.\n\nNEW ITEM\nGlazed ceramic vase, 28 cm tall, wheel-thrown, cobalt blue over white clay, suitable for fresh flowers with water.",
+      "expect": "Answer A sounds like a catalog: phrases like \"an elegant piece that will bring distinction to any space.\" Answer B has the length of the example, opens with a short, dry sentence, is casual, and mentions a specific physical detail. If you can tell at a glance they belong to two different worlds, the task worked.",
+      "stuck": "If both answers look the same to you, you've almost certainly put them in the same chat and the second message dragged the first one along. Start over with two genuinely new chats. If they're still similar, stretch the example in TEST B to eight or ten lines: the shorter the example, the less there is for it to copy."
+    },
+    {
+      "title": "Write your first input-output pair by hand",
+      "where": "In Notepad on Windows, TextEdit on Mac, or any plain text editor",
+      "action": "Pick a task you actually do and repeat: turning emails into records, summarizing meetings, writing product descriptions, drafting review responses. Create a file and write two blocks. On top, INPUT: and below it the material exactly as it reaches you in real life, typos and half-finished sentences included; don't clean it up, that's the whole point. Then OUTPUT: and the exact result you'd want, written by you, word for word, with no \"etc.\" and no blanks left. Save it as examples.txt in a folder called Templates. If it takes you more than twenty minutes, that's a clear signal: you haven't actually decided how the task should work yet, and that has to get resolved before asking anyone to do it.",
+      "expect": "A file with two labeled blocks where the OUTPUT is complete, no gaps and no brackets to fill in. If rereading it you think \"well, more or less like this,\" it's not ready yet: it has to be the one you'd accept exactly as it is, untouched.",
+      "stuck": "If you don't know what to put in the OUTPUT, do it backwards: dig through your email or your folders for a result you did well months ago, paste it as OUTPUT, then find what material it came from and paste that as INPUT. A rescued example beats an invented one."
+    },
+    {
+      "title": "Build the full request with three labeled examples",
+      "where": "In the ChatGPT, Claude, or Gemini app, in a new chat",
+      "action": "Copy the whole prompt and paste it exactly as-is into a new chat. Before sending, replace the line that says [paste your email here] with a real case of yours. As you read it, notice the structure, because it's the one you'll reuse for the rest of your life: first who it is and what it does, then the output format, then the hard rules, then the examples separated by equal-sign lines, and finally the new case. Examples always go at the end of the request and before the real case, never mixed into the instructions.",
+      "prompt": "You're the order assistant for Bicis Duero, a bike shop in Valladolid. You turn customer emails into order records.\n\nALWAYS return these five fields, in this order, one per line:\nCustomer:\nParts:\nDelivery date:\nUrgency: (high / normal / low)\nNeeds confirming:\n\nRules:\n- Don't make up data. If a field doesn't appear in the email, write: not provided.\n- Anything you mark as not provided also has to appear under Needs confirming.\n- Don't write anything outside those five fields. No greeting, no explanation, no closing comment.\n\nHere are worked examples. Study them and apply the same criteria.\n\n=== EXAMPLE 1 ===\nEMAIL:\nHi, this is Ana from Ciclos Pisuerga. I need 12 tubes 700x25 and 4 chains, 11-speed. For Friday the 20th if possible, we have a delivery going out Saturday.\nRECORD:\nCustomer: Ciclos Pisuerga (Ana)\nParts: 12 x tube 700x25; 4 x 11-speed chain\nDelivery date: Friday the 20th\nUrgency: high\nNeeds confirming: chain brand\n\n=== EXAMPLE 2 ===\nEMAIL:\nHi. Send me the usual whenever you can. Thanks. Robert\nRECORD:\nCustomer: Robert (company: not provided)\nParts: not provided\nDelivery date: not provided\nUrgency: low\nNeeds confirming: what \"the usual\" means; company; delivery date\n\n=== EXAMPLE 3 ===\nEMAIL:\nGood morning, this is Rueda Libre shop. We're going to need 30 Shimano B01S brake pads and 2 rear wheels, 29-inch, before end of month. Heads up, the invoice needs to go to the new business name, Rueda Libre Services LLC, tax ID 47-0000000. If the wheels can't make it in time, send the pads first.\nRECORD:\nCustomer: Rueda Libre (bill to Rueda Libre Services LLC, tax ID 47-0000000)\nParts: 30 x Shimano B01S brake pads; 2 x rear wheel, 29-inch\nDelivery date: before end of month\nUrgency: normal\nNeeds confirming: shipping address; confirm whether a split shipment is OK, pads first\n\n----------------------------------------\nREAL CASE, STARTS HERE. Do exactly the same with this one:\n\nEMAIL:\n[paste your email here]\nRECORD:",
+      "expect": "Five lines, in the order you asked for, no greeting or sign-off, and the words \"not provided\" wherever the email said nothing. If the email you pasted had a missing field, that field also has to show up below, under Needs confirming.",
+      "stuck": "If it gives you an explanation before the record, the \"nothing outside those five fields\" rule got lost among all that text: repeat it also at the end, right below the last example. If it processes EXAMPLE 3 instead of your email, the separation isn't clear: keep the dashed line and REAL CASE, STARTS HERE clearly visible, and make sure you actually replaced the bracket."
+    },
+    {
+      "title": "Trigger contamination on purpose so you can recognize it later",
+      "where": "In the ChatGPT, Claude, or Gemini app, in a new chat",
+      "action": "Paste this whole prompt without changing anything. It's rigged on purpose: all three examples set urgency to high and action to \"call today,\" even though one of them is just a thank-you note. The new message has no urgency at all and even says \"no rush whatsoever.\" Send it and read the answer carefully before continuing.",
+      "prompt": "Classify the NEW MESSAGE by copying the format of the examples.\n\nEXAMPLE 1\nMessage: My order never arrived and it was supposed to be here Monday.\nResponse:\n- Type: shipping issue\n- Urgency: high\n- Action: call today\n\nEXAMPLE 2\nMessage: Do you have the mountain boot in size 10?\nResponse:\n- Type: stock inquiry\n- Urgency: high\n- Action: call today\n\nEXAMPLE 3\nMessage: Just wanted to say thanks, everything's perfect.\nResponse:\n- Type: thank you\n- Urgency: high\n- Action: call today\n\nNEW MESSAGE\nWriting to ask for the PDF catalog whenever you get a chance, no rush whatsoever.\nResponse:",
+      "expect": "It'll most likely mark \"Urgency: high\" and \"Action: call today\" for a message that literally says there's no rush. That's contamination in real time: it copied the pattern from your examples over the actual content of the case. Save that answer, because it's the entire lesson summarized in three lines.",
+      "stuck": "If it gets it right and marks it low urgency, which does happen sometimes depending on the model and the day, raise the dose: add a fourth and fifth example with \"high\" and \"call today\" and try again. The more the pattern repeats, the more it weighs. Then fix it yourself: change EXAMPLE 3 to \"Urgency: low\" and \"Action: none\" and check that it now classifies the new message correctly."
+    },
+    {
+      "title": "Audit your own examples before trusting them",
+      "where": "In the ChatGPT, Claude, or Gemini app, in a new chat",
+      "action": "Take the request you built in the previous task with your examples inside it. Open a new chat, paste this review prompt, and where it says [paste your whole prompt here], paste it in full. It's important to tell it NOT to execute it, otherwise it'll go do the task instead of reviewing it. Read the list of accidental patterns it gives you and fix at least one before moving on.",
+      "prompt": "I'm going to paste a request with examples I'm using. DO NOT execute it. Your job is to review it.\n\nTell me, in this order and being specific:\n\n1. What patterns repeat across ALL my examples that I probably didn't mean to teach. Look at length, number of bullet points or lines, proper names, cities, order of fields, language, customer type, and dominant category. Point to the exact line where you see it.\n2. Three real situations that will come up that none of my examples cover.\n3. If two of my examples contradict each other, tell me which ones and at exactly what point.\n4. Rewrite just ONE of my examples to break the most serious accidental pattern, without changing the task or the output format. Give me the whole rewritten example, ready to replace the old one.\n\nDon't tell me it's fine if it isn't. If something looks correct, say so in one line and move to the next point.\n\n=== MY REQUEST ===\n[paste your whole prompt here, with its examples]\n=== END OF MY REQUEST ===\n\nRemember: don't execute it, review it.",
+      "expect": "A list of findings like \"all three examples have exactly five lines,\" \"all three customers are businesses, none is an individual,\" \"urgency is high or normal in all three, never low.\" And at the end, a rewritten example you can copy and paste over the old one.",
+      "stuck": "If it goes ahead and does the task instead of reviewing it, it missed the \"DO NOT execute it\": try again and also put it at the end, right after the pasted request. If the review comes out generic, like \"you could add more variety,\" reply: \"Be specific. Quote me the exact line in each example where you see the pattern, and tell me what real case would break because of it.\""
+    },
+    {
+      "title": "Manufacture examples when you have none",
+      "where": "In the ChatGPT, Claude, or Gemini app, in a new chat",
+      "action": "This is the shortcut for starting from zero, but with one condition: what comes out of this is candidates, not examples. Paste the prompt, swapping the two brackets for your business and your task. When it gives you the five pairs, ruthlessly throw out the three worst and rewrite the other two by hand, in your own words and your own way of saying things. The pair you don't touch will sound like AI, and the example exists precisely to stop sounding like AI.",
+      "prompt": "I work at [describe it: for example, a physical therapy clinic in Zamora with two therapists] and I want to build a request with examples for this task: [describe it in one sentence, for example: turning my loose session notes into a summary with progress, treatment applied, and plan for the next session].\n\nGenerate 5 candidate INPUT / OUTPUT pairs to use as examples. Conditions:\n\n- Make them deliberately different from each other: one normal and complete, one missing key data, one that brings up two matters at once, one where the correct answer is to say data is missing and not proceed, and one long and messy the way people write when they're in a hurry.\n- The INPUTS have to sound like real text: typos, abbreviations, half-finished sentences, no structure. Nothing that reads like a manual.\n- The OUTPUTS should all match each other in format, field by field.\n- Below each pair, one line starting with \"This teaches it:\" explaining what the model learns from that specific example and not from the others.\n- No real or plausible-sounding personal data: use clearly made-up names.\n\nAt the end, tell me which THREE you'd pick if you could only use three, and why those and not the others.",
+      "expect": "Five numbered pairs, each with its \"This teaches it:\" line, and at the end a recommendation of three with reasoning. The inputs should feel a bit uncomfortably messy: if they're well-written, they're not doing their job.",
+      "stuck": "If the inputs come out too clean, tell it: \"The inputs still sound like an exercise. Rewrite them the way someone in a hurry would type on their phone: no capitals, no punctuation, abbreviations, and a half-finished word here and there.\" If all five come out similar, ask: \"All five are variations of the same case. Make them genuinely different: change the customer type, the length, and which field is missing in each.\""
+    },
+    {
+      "title": "Add the example that says \"I can't\"",
+      "where": "In the ChatGPT, Claude, or Gemini app, in a new chat",
+      "action": "This is the example almost nobody adds, and the one that prevents the most made-up data. The idea is to teach it once, in your own format, what a correct refusal looks like, so refusing stops being a rare exception and becomes just another valid output. Paste the prompt, filling in the brackets with your task and your format. Then take what it gives you, paste it as a fourth example into the request you built earlier, and test the whole thing with a case that's deliberately missing the key data.",
+      "prompt": "I want to add an example to my request whose correct answer is refusing to complete the task.\n\nMy task is: [describe it in one sentence].\nMy output format is exactly this: [paste your format here, field by field].\n\nGive me three things, no more:\n\n1. A realistic INPUT where answering would be a mistake: the key data is missing, the message is cut off, or it asks for something outside my task. It should sound like a real message, not an exam question.\n2. The exact OUTPUT I want for that input, respecting my format field by field, stating precisely what's missing and not filling in anything on its own.\n3. One single rule sentence, written to go at the top of the request, that turns that behavior into the norm instead of the exception. Short, no vague adjectives.\n\nDon't give me variants or alternatives. One of each.",
+      "expect": "An input that looks like a real message cut off mid-way, an output that respects your format but makes clear what's missing, and a rule sentence like \"If a field is missing the data needed, write: not provided, and don't proceed with assumptions.\"",
+      "stuck": "If the OUTPUT it gives you breaks your format and turns into an apology paragraph, cut it off: \"The refusal has to stay inside my format, with the same fields. No paragraphs, no apologies: fields that can be filled get filled, and the ones that can't get 'not provided.'\" If the input sounds artificial, ask for three versions and keep the messiest one."
+    },
+    {
+      "title": "Find the minimum number: test with 1, with 3, and with 5",
+      "where": "In the ChatGPT, Claude, or Gemini app, in three new chats",
+      "action": "Prepare three versions of the same request in your notepad: one with a single example, one with three, and one with five. Also prepare five real cases of yours to test, and use the same five every time. Run the five cases through the one-example version in a new chat. Repeat in another chat with the three-example version. Repeat in another with the five-example version. Write down how many of the five came out right in each version. Keep the shortest version that gives you the same result as the longest: every extra example is memory you spend and contamination you risk introducing without noticing.",
+      "expect": "A little three-line table in your notepad like: \"1 example: 2 of 5 / 3 examples: 4 of 5 / 5 examples: 4 of 5.\" The normal pattern is a big jump from one to three, and barely any difference from three to five. Once you see it in your own numbers, you stop debating it.",
+      "stuck": "If all five cases come out right in all three versions, your test cases are too easy: add one missing a field and one that brings up two matters at once. If they all come out wrong in all three, the problem isn't the examples but the output format or the rules; go back to the audit task and fix the request before adding more examples."
+    },
+    {
+      "title": "Save the template outside the chat, ready to reuse",
+      "where": "On your computer (Notepad or TextEdit) and, if you want, in Claude Projects or ChatGPT Projects",
+      "action": "First, the safe route. Open Notepad, paste the winning request in full with its examples inside, and save it as order-template.txt in a folder called Templates. Leave a final line that says NEW CASE: and nothing else, so you always know where the material goes. Then, the convenient route. In the Claude app, look in the left sidebar for Projects, create one, name it, and paste your request into the project's instructions box; from then on, every chat you open inside that project already has the examples loaded and you just paste the case. In ChatGPT the equivalent is Projects and custom GPTs, and there's also Customize ChatGPT in the menu under your name, bottom left. These menu names shift every few months, so if you don't see that exact wording, look for whatever mentions instructions.",
+      "expect": "A .txt file on your computer you can open six months from now and use without remembering anything, and if you did the second part, a project in the app where you open a chat and it's all already loaded. The real test: close everything, open the file, and solve a new case in two minutes without having to think.",
+      "stuck": "If you can't find Projects in your app, no problem: the .txt file does exactly the same job with one extra copy-paste, and it's yours besides, not dependent on the app moving its buttons around. If you write the template in Word instead of a plain text editor, Word inserts curly quotes and odd dashes that sometimes confuse the format; use Notepad."
+    }
+  ],
+  "matters": [
+    "Examples need to be real, not \"as if.\" A made-up example teaches a clean world that doesn't exist, and the day a real email arrives, typo and handwritten date and all, the system fails and you won't know why. Pull material from your own files and black out personal data: it takes five extra minutes and saves you weeks of odd failures.",
+    "Labeling the two halves and separating examples from the real case. If you don't put INPUT and OUTPUT clearly visible, plus a line marking where the real work begins, sooner or later the AI hands you back the sample itself, processed, and you're left staring at the screen not understanding anything.",
+    "Deliberately varying what you don't want it to copy. If all your examples are the same length, have the same number of bullet points, and talk about the same type of customer, the AI will copy all three, and you'll blame it on \"it's being dumb today.\" The two-minute test, feeding it a case that breaks the pattern, tells you before it costs you a customer.",
+    "Saving examples in a file, not in the chat. Three weeks of tuning fits into a 2 KB .txt, and that file is the real asset in all of this. The chat closes, the conversation sinks in the list, and the work evaporates without warning."
+  ],
+  "ignore": [
+    "The academic names: few-shot, one-shot, zero-shot. They mean \"with several examples,\" \"with one,\" and \"with none.\" You'll recognize them when you see them in any documentation, and that's all you need; no need to memorize anything else.",
+    "Fine-tuning the model on your data, what's called fine-tuning. It needs hundreds of examples, costs money and time, and in most cases five well-chosen examples inside the prompt give you an equivalent result for zero dollars. That day may come, or it may not, but it's certainly not today.",
+    "The exact order you place the examples in. It matters somewhat, the last one weighs slightly more, but it's the last thing to touch. Fix variety and contamination first; order is the decimal point of something that doesn't work yet."
+  ],
+  "canDo": [
+    "Copy the format with almost uncomfortable fidelity. If in your example the date reads 03/14/2026, they'll all come out that way; if you put a colon and a space, they'll all have a colon and a space.",
+    "Infer the rule you never explained. If in your three examples you redacted the customer's phone number without saying anything about it, it'll redact it in the fourth one too.",
+    "Imitate a personal tone (yours, your company's, your boss's) far better than you'd be able to describe it with adjectives.",
+    "Generate candidate examples at full speed when you're starting from zero, so your job is reduced to throwing out the bad ones and fixing the two that are worth keeping."
+  ],
+  "cantDo": [
+    "Guess the exception you never taught it. Faced with a case that doesn't resemble any of your examples, it'll do something, it always does something, and that something will be different every time you ask.",
+    "Tell you which of your examples is the correct one. If you give it two that contradict each other, one with the date including the year and one without, it won't warn you: it'll blend both criteria and leave the inconsistency in the output.",
+    "Remember your examples from one chat to another. New chat, blank memory. You have to paste them again every time, unless you put them into a project or the app's custom instructions.",
+    "Hold the criterion steady across two hundred cases in a row without being reminded. Over long stretches it drifts little by little, so it's worth splitting the work into batches and starting each batch with the examples in front of it."
+  ],
+  "words": [
+    [
+      "Guided example (few-shot)",
+      "Putting one or more samples you've already solved inside the request, so the AI sees what the result should look like instead of having to imagine it."
+    ],
+    [
+      "No examples (zero-shot)",
+      "Asking for the task plain, with only the explanation, without showing it any worked sample."
+    ],
+    [
+      "Input-output pair",
+      "A complete sample: on one side the material exactly as it reaches you, on the other the finished result you want to get out of that material."
+    ],
+    [
+      "Label or delimiter",
+      "A text marker, like INPUT: and OUTPUT:, or a line of dashes, that separates one part of the request from another so they don't get mixed up."
+    ],
+    [
+      "Example contamination",
+      "The AI copying things from your samples that you never meant to teach it: how long they are, a name that keeps repeating, the number of bullet points in the list."
+    ],
+    [
+      "Edge case",
+      "A situation that's rare but does happen for real: the order with no date, the customer with two addresses, the message that cuts off halfway."
+    ],
+    [
+      "Golden case",
+      "A saved case paired with its correct answer written by hand by you. It works as a sample and also lets you check later whether the system is still performing just as well."
+    ],
+    [
+      "Context window",
+      "The amount of text the AI can keep in mind at once in a conversation. Whatever falls off the top stops being taken into account."
+    ],
+    [
+      "Token",
+      "The small chunk the AI splits text into so it can count it. A normal word usually takes up one or two."
+    ],
+    [
+      "Template",
+      "An already-written, saved request, with its examples inside, ready to reuse by changing only the new case."
+    ]
+  ],
+  "next": "Chaining requests: splitting a big job into two or three steps where one step's output feeds in as the next step's material, with each step carrying its own examples."
+}

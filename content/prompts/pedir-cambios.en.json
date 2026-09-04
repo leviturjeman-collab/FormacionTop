@@ -1,0 +1,118 @@
+{
+  "id": "pedir-cambios",
+  "title": "Asking for changes without breaking what already works",
+  "intro": "Once something of yours already works, every change is a risk. This family is about requesting improvements one at a time, finding out exactly what the AI touched, and being able to roll back when things get worse. Use it from the moment you have a working first version, not before.",
+  "model": "Claude for this one, because it handles long files without losing the thread and is the sharpest at comparing two versions and explaining what changed; ChatGPT works for everyday tweaks, and Gemini if your project lives inside Google (Docs, Sheets, Drive).",
+  "prompts": [
+    {
+      "name": "The contract: what doesn't get touched",
+      "when": "The moment you open a new chat to make changes, before asking for the first one.",
+      "prompt": "Act as the developer responsible for maintaining a project that ALREADY WORKS and can't be broken. The project is: [WHAT YOUR PROJECT IS IN ONE SENTENCE]. Before we make any changes I want to set the ground rules for this conversation, and I want you to follow them in every reply after this.\n\nRules:\n1. These parts are untouchable. You can't modify them, rename them, or \"improve them along the way\": [LIST OF THINGS THAT WORK AND DON'T GET TOUCHED].\n2. Every time I ask for a change, change only that. If getting there requires touching something else, tell me BEFORE and wait for my answer.\n3. Never give me a trimmed file with \"...rest stays the same...\". Either give me the whole file, or give me only the exact snippet and tell me where it goes.\n4. Don't change names, visible text, colors, or structure unless I've explicitly asked for it.\n5. If something I ask for clashes with these rules, tell me instead of just doing it.\n6. I'm not a programmer. Any technical word you use, explain it in parentheses the first time.\n\nReply now with only two things: (a) these rules repeated in your own words, so I can confirm you understood them, and (b) whatever questions you need to ask me about the project before we start. Don't write any code yet.",
+      "fill": [
+        ["[WHAT YOUR PROJECT IS IN ONE SENTENCE]", "A plain-language sentence. For example: \"a one-page site for my yoga studio, with a schedule and a WhatsApp booking button.\""],
+        ["[LIST OF THINGS THAT WORK AND DON'T GET TOUCHED]", "What already works for you and would hurt to lose. For example: \"the booking button, the contact form that emails me, the copy on the pricing page, and how it looks on mobile.\""]
+      ],
+      "expect": "The rules repeated in its own words and two or three questions about your project. Zero code.",
+      "next": "Answer its questions and you can ask for the first change in that same chat. This contract only applies inside this conversation: open a new one, and paste it back in."
+    },
+    {
+      "name": "A save point before touching anything",
+      "when": "Right before requesting a change that makes you nervous.",
+      "prompt": "We're about to change something that currently works, and I want to be able to go back if it goes wrong. Before touching anything, prepare me a save point.\n\nHere's what I have working right now:\n[PASTE THE COMPLETE CONTENT OF THE WORKING VERSION HERE]\n\nDo this, in this order, without changing a single comma:\n1. Give me that same content back exactly as-is, no improvements, no corrections, inside a block I can copy, headed with the title \"VERSION [NAME FOR THIS VERSION] — DO NOT TOUCH\".\n2. Write me three lines in plain English about what this version does and what has to keep working the same way after the change.\n3. Tell me what file or screen this lives in and what I should call the copy I'm going to save on my computer.\n4. Give me 4 to 6 checks I can run with the mouse to confirm it currently works. Nothing technical: things like \"I open this, click this button, and see this.\" I'll repeat these same checks after the change.\n\nDon't make any change yet, not even a small one. If what I pasted looks incomplete or cut off, tell me and don't fill in the missing parts on your own.",
+      "fill": [
+        ["[PASTE THE COMPLETE CONTENT OF THE WORKING VERSION HERE]", "The entire text or code the AI gave you last time it was working well. In full, first line to last. If it's very long, paste it in two consecutive messages, letting it know it's coming in parts."],
+        ["[NAME FOR THIS VERSION]", "Something that helps you recognize it. For example: \"v1-works-march-14\"."]
+      ],
+      "expect": "Your content returned untouched and labeled, a three-line summary, and a jargon-free checklist.",
+      "next": "Copy that block into a text file on your computer with the date in the name. That copy is your rollback. Warning: if you paste the new version over the old one without saving a copy, the old one is gone with no way to recover it."
+    },
+    {
+      "name": "Changing one thing",
+      "when": "The everyday change: you want to touch something specific and have everything else stay exactly the same.",
+      "prompt": "You're the developer maintaining this project, and your number one priority is not to break anything that already works.\n\nHere's what currently exists:\n[PASTE THE COMPLETE CURRENT CONTENT HERE]\n\nI want a single change: [DESCRIBE THE CHANGE IN ONE SENTENCE, THE WAY YOU'D TELL A FRIEND].\n\nThis has to keep working exactly as it does now: [LIST WHAT CAN'T BREAK].\n\nConditions for this request:\n- Change the bare minimum. If along the way you spot other things worth improving, note them at the end in a \"for another day\" list, but don't touch them.\n- Don't rename anything, don't reorder anything, and don't rewrite parts that already work just because you'd prefer them differently.\n- If the change forces you to touch something on the untouchable list, don't do it: explain why and propose two alternatives.\n- If you're missing information to do it right, ask me first instead of assuming.\n\nGive me the answer in this exact order:\n1. In one sentence, what you're going to change.\n2. The complete, updated content, ready to copy and paste in full.\n3. The list of areas you touched, one by one.\n4. Three specific checks I can do with the mouse to know it worked.\n5. What signs would tell me something broke.",
+      "fill": [
+        ["[PASTE THE COMPLETE CURRENT CONTENT HERE]", "The version currently live, in full. Not from three changes ago: the current one."],
+        ["[DESCRIBE THE CHANGE IN ONE SENTENCE, THE WAY YOU'D TELL A FRIEND]", "For example: \"I want the booking button to be green and say BOOK CLASS instead of Submit.\""],
+        ["[LIST WHAT CAN'T BREAK]", "For example: \"clicking the button still needs to send the WhatsApp message, and the page still needs to look good on mobile.\""]
+      ],
+      "expect": "A small change, the whole file ready to paste, the list of what was touched, and how to check it. And, if you got too ambitious, a warning instead of the change.",
+      "next": "Paste the new version, run the three checks, and save this as your new good version if it passes. If it doesn't, reach for the rollback prompt."
+    },
+    {
+      "name": "Tell me what you changed",
+      "when": "When the AI hands you a new version and you have no idea what it did under the hood.",
+      "prompt": "You just gave me a new version of this. Before I paste it into my project I want to understand what you did to it. I'm not a programmer, so explain it with no jargon.\n\nGive me the explanation with this structure:\n\n1. HEADLINE: one sentence, what's different now from the point of view of whoever uses it. No internal detail.\n2. CHANGES ONE BY ONE: for each change, three lines — what it was before, what it is now, and why you did it that way. Write it as if telling me over coffee. If you have to use a technical word, explain it in parentheses the first time.\n3. WHAT I DIDN'T TOUCH: the list of things that stay exactly the same, so I can relax.\n4. RISKS: what's most likely to break because of this change, and how I'd notice it from the outside.\n5. HOW I CHECK IT: numbered steps I can follow with the mouse. Each step with what I should see if it's working.\n6. ROLLBACK: exactly what I need to do to put it back the way it was if I don't like it.\n\nDon't repeat the full content again, only the explanation. And if you changed something I didn't ask for, tell me that first and spell it out clearly.",
+      "fill": [
+        ["(no brackets)", "This prompt has no blanks to fill: paste it as-is right after the AI hands you the new version, in the same chat. If you're using it in a different chat, paste in the old version and the new one first."]
+      ],
+      "expect": "A plain-language explanation, the list of what stays untouched, the risks, and check steps you can follow knowing nothing.",
+      "next": "Run the checks from point 5 before accepting the change. If point 2 shows something you didn't ask for, tell it to remove it and give you the version without that extra."
+    },
+    {
+      "name": "Rolling back",
+      "when": "You applied a change, you don't like it or it made things worse, and you want the previous version.",
+      "prompt": "I want to undo the last change and go back exactly to the version that worked. Note: I don't want an \"improved\" version of the old one, and not a mix of the two either. I want the old one, as-is.\n\nWORKING VERSION I want to go back to:\n[PASTE THE SAVED WORKING VERSION HERE]\n\nCURRENT VERSION, the one I want to discard:\n[PASTE THE VERSION I HAVE NOW]\n\nDo this:\n1. Give me back the working version, complete and without changing a single comma, ready to copy and paste in full. Even if you see errors or things that could be improved, don't fix them.\n2. Tell me what I'll lose by going back, as a short list in plain English, so I can decide with my eyes open.\n3. Warn me if the current version has left anything outside that doesn't get fixed by pasting this content back in: settings I changed, new files, saved data, accounts created. Tell me which and what to do about them.\n4. Give me the exact steps to put it back the way it was: what I paste, where, and in what order.\n5. Tell me how to check, after going back, that it's actually working again.\n\nIf what I pasted as the good version looks incomplete or cut off, don't fill it in on your own: tell me what's missing and we stop there.",
+      "fill": [
+        ["[PASTE THE SAVED WORKING VERSION HERE]", "The text file you saved from the save-point prompt. If you didn't save it, scroll up in the chat itself: the AI doesn't remember it, but the conversation is still there."],
+        ["[PASTE THE VERSION I HAVE NOW]", "The broken or disliked version. This lets it tell you what you're losing and whether it left anything loose outside."]
+      ],
+      "expect": "Your good version returned untouched, the list of what you're giving up, and the steps to put it back the way it was.",
+      "next": "Apply the steps, confirm it works again, and only then try the change again, smaller this time. Warning: if you never saved the good version and already overwrote it, this can't be done; the AI doesn't have your file, only what you paste to it."
+    },
+    {
+      "name": "Compare two versions and decide",
+      "when": "You have two options on the table and don't know which to keep.",
+      "prompt": "I have two versions of the same thing and need to decide which to keep. Don't mix them and don't invent a third one: I want an honest comparison.\n\nVERSION A:\n[PASTE VERSION A HERE]\n\nVERSION B:\n[PASTE VERSION B HERE]\n\nWhat matters to me, in order of priority: [WHAT MATTERS TO YOU].\n\nGive me:\n1. A table with the real differences, row by row: what A does, what B does, and why that difference matters to me. Only real differences, not style or how it's written internally.\n2. What A does that B doesn't, and what B does that A doesn't.\n3. Risks of each: what's more likely to break with each one and why.\n4. Your recommendation, with a reason, based on what I told you matters. Commit, don't tell me \"it depends.\"\n5. If the right answer is \"keep A but take one specific thing from B,\" tell me exactly what and why, but don't apply it yet.\n\nIf both versions do essentially the same thing, tell me clearly instead of inventing differences to pad this out. And I'm not a programmer: explain each difference by what shows on the outside, not by how it's built underneath.",
+      "fill": [
+        ["[PASTE VERSION A HERE]", "One of the two versions, in full. For example, the one the AI gave you Monday."],
+        ["[PASTE VERSION B HERE]", "The other one, in full. For example, the one it gave you today after asking for a redesign."],
+        ["[WHAT MATTERS TO YOU]", "Rank it from most to least important. For example: \"1) that I can understand and tweak it myself, 2) that it loads fast on mobile, 3) that it doesn't force me to pay for any extra service.\""]
+      ],
+      "expect": "A table of real differences, the risks of each option, and a recommendation with a name attached.",
+      "next": "Pick one, save it as your good version, and put the other out of your mind. If it proposed the hybrid from point 5, request it as a single change using the change-one-thing prompt."
+    },
+    {
+      "name": "It broke and I don't know why",
+      "when": "It used to work, it doesn't anymore, and you have no idea what happened.",
+      "prompt": "Something that used to work has stopped working and I don't know why. I'm not a programmer, so I need you to play detective and walk me through it step by step.\n\nWhat it did when it worked: [WHAT IT USED TO DO]\nWhat it does now: [WHAT HAPPENS NOW, IN AS MUCH DETAIL AS YOU CAN]\nMessage that appears, if any: [COPY THE FULL MESSAGE, EVEN IF YOU DON'T UNDERSTAND IT]\nThe last thing I changed before it broke: [THE LAST THING YOU TOUCHED, EVEN IF IT SEEMS SILLY]\nCurrent content:\n[PASTE THE COMPLETE CURRENT CONTENT HERE]\n\nDo it like this, and follow the order:\n1. Tell me in one sentence, no jargon, what you think is happening.\n2. Give me the three most likely causes, from most to least likely, with an approximate confidence percentage for each.\n3. For the first cause, give me ONE check under two minutes that I can do with the mouse. Tell me what I'll see if that's the cause and what I'll see if it isn't.\n4. Stop there and wait for my answer. Don't touch anything yet.\n5. Don't give me five changes at once: one, we check, and we continue. If you give me several at once and it works, we won't know which one it was.\n\nIf you need to see something I haven't pasted, ask me for it and tell me where to find it, with the names of the buttons or menus to look for.",
+      "fill": [
+        ["[WHAT IT USED TO DO]", "For example: \"clicking Book would open WhatsApp with the message already written.\""],
+        ["[WHAT HAPPENS NOW, IN AS MUCH DETAIL AS YOU CAN]", "For example: \"I click Book and nothing happens, the page just stays still. Same on mobile.\" The more specific, the better the diagnosis."],
+        ["[COPY THE FULL MESSAGE, EVEN IF YOU DON'T UNDERSTAND IT]", "The red text or the little error window, copied in full, exactly as it appears. If none shows up, write \"no message appears.\""],
+        ["[THE LAST THING YOU TOUCHED, EVEN IF IT SEEMS SILLY]", "For example: \"I changed the button color\" or \"I pasted a new version you gave me yesterday.\" This is the single most valuable clue."],
+        ["[PASTE THE COMPLETE CURRENT CONTENT HERE]", "What exists right now, broken and all. In full."]
+      ],
+      "expect": "A one-sentence hypothesis, three suspects ranked by likelihood, and a single quick check for you to run.",
+      "next": "Run only that check and report the result, even if it's \"I don't see anything.\" Repeat until you find the cause. If you saved the good version, trying a rollback is the fastest route of all."
+    },
+    {
+      "name": "Breaking a big change into pieces",
+      "when": "What you want is major and you know that asking for it all at once will end in a mess.",
+      "prompt": "I want to make a big change to something that already works, and I don't want to ask for it all at once: if it breaks, I won't know what caused it. Help me split it into small steps.\n\nWhat exists now: [DESCRIBE OR PASTE WHAT YOU HAVE]\nWhere I want to get to: [DESCRIBE THE FINAL RESULT YOU WANT]\nWhat can't break along the way: [LIST OF THINGS THAT HAVE TO KEEP WORKING]\n\nGive me a plan with these conditions:\n- 3 to 7 steps, each small enough that if it fails, I'll know exactly what broke it.\n- After each step the project has to keep working and I have to be able to see it with my own eyes. No \"this stays half-done until step 5.\"\n- For each step, tell me: what gets touched, what does NOT get touched, how I check with the mouse that it worked, and how I undo it if it didn't.\n- Flag which step is the riskiest and explain why.\n- Order them so the risky one doesn't land at the end, once everything else is already built on top of it.\n- Tell me at which step I should save a backup copy before continuing.\n\nGive me only the plan. Don't write any code yet: we'll go step by step and I'll tell you \"let's do step 1,\" \"let's do step 2.\"",
+      "fill": [
+        ["[DESCRIBE OR PASTE WHAT YOU HAVE]", "If it fits, paste the whole content. If not, describe it: \"a one-page site with a schedule, prices, and a WhatsApp button.\""],
+        ["[DESCRIBE THE FINAL RESULT YOU WANT]", "For example: \"that classes can also be booked and paid for right on the site, without going out to WhatsApp.\""],
+        ["[LIST OF THINGS THAT HAVE TO KEEP WORKING]", "For example: \"the schedule, the contact form, and how it looks on mobile.\""]
+      ],
+      "expect": "A numbered plan of 3 to 7 steps, each with its check and its rollback, and the risky step flagged.",
+      "next": "Save the plan in a text file and request one step per message using the change-one-thing prompt. Don't jump ahead even if you're in a hurry."
+    }
+  ],
+  "canDo": [
+    "Make a specific change and afterward tell you, area by area, what it touched and what it left alone.",
+    "Compare two versions you paste in and point out the differences that actually matter when using it.",
+    "Return an earlier version to you untouched if you paste it in, so you can roll back.",
+    "Work out the most likely causes of a failure from the error message and the last thing you touched."
+  ],
+  "cantDo": [
+    "It doesn't remember your project. It only knows what you've pasted into that conversation; a new chat starts from zero.",
+    "It can't see your screen or test anything. When it says \"it works now,\" that's a prediction, not a verified check.",
+    "It can't undo anything for you. If you didn't save the good version, there's no going back: you have to be the one holding the copy.",
+    "It doesn't know what you changed in another chat, or what someone else touched. If you don't tell it, as far as it's concerned it never happened."
+  ],
+  "tips": [
+    "One change per message. Ask for three at once and something breaks, and you won't know which of the three caused it — rolling back will cost you triple.",
+    "Before pasting anything new, save the working version to a text file with the date in the name (for example \"site-2026-03-14-works.txt\"). It takes ten seconds and is the one thing that saves you when it goes wrong.",
+    "As a chat runs long, the AI starts forgetting the beginning and rewriting things that were already fine. Open a new one, paste in the current version, and paste the untouchable contract back in too. Paid plans (around $20-23 a month) handle longer conversations, but opening a new chat works just as well on the free tier."
+  ]
+}

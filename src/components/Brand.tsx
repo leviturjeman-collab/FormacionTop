@@ -1,5 +1,6 @@
 import { BRAND_ICONS } from '../brand-icons'
 import { useCourse } from '../course'
+import { useLocale } from '../i18n'
 
 /**
  * Logo oficial de una herramienta.
@@ -47,6 +48,7 @@ export function ToolStrip({ tools, size = 18 }: { tools: string[]; size?: number
 
 /** Solo los logos, sin texto, para tarjetas compactas. */
 export function ToolDots({ tools, size = 15 }: { tools: string[]; size?: number }) {
+  const locale = useLocale()
   const course = useCourse()
   const known = tools
     .map((id) => course.tools.find((tool) => tool.id === id))
@@ -56,7 +58,7 @@ export function ToolDots({ tools, size = 15 }: { tools: string[]; size?: number 
   if (!known.length) return null
 
   return (
-    <span className="st-tools" aria-label={`Herramientas: ${known.map((tool) => tool.label).join(', ')}`}>
+    <span className="st-tools" aria-label={`${locale === 'en' ? 'Tools' : 'Herramientas'}: ${known.map((tool) => tool.label).join(', ')}`}>
       {known.map((tool) => (
         <span key={tool.id} title={tool.label}>
           <BrandMark icon={tool.icon} size={size} />

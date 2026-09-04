@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Check, User } from 'lucide-react'
 import type { TimelinePiece } from '../types'
+import { useLocale } from '../i18n'
 
 /**
  * Línea de tiempo de una ejecución.
@@ -10,6 +11,7 @@ import type { TimelinePiece } from '../types'
  * proceso como una secuencia con coste, no como una caja negra.
  */
 export default function Timeline({ piece }: { piece: TimelinePiece }) {
+  const locale = useLocale()
   const [open, setOpen] = useState<number | null>(0)
 
   const total = piece.steps.reduce((sum, step) => sum + step.ms, 0)
@@ -21,7 +23,7 @@ export default function Timeline({ piece }: { piece: TimelinePiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">{(total / 1000).toFixed(1)} s de principio a fin</span>
+        <span className="st-piece-badge">{(total / 1000).toFixed(1)} s {locale === 'en' ? 'start to finish' : 'de principio a fin'}</span>
       </header>
 
       <div className="st-timeline">
@@ -54,7 +56,7 @@ export default function Timeline({ piece }: { piece: TimelinePiece }) {
               {open === index && (
                 <div className="st-timeline-detail">
                   <p>{step.detail}</p>
-                  {step.fails && <p className="st-timeline-fail"><AlertTriangle size={11} /> Si falla aquí: {step.fails}</p>}
+                  {step.fails && <p className="st-timeline-fail"><AlertTriangle size={11} /> {locale === 'en' ? 'If it fails here:' : 'Si falla aquí:'} {step.fails}</p>}
                 </div>
               )}
             </li>

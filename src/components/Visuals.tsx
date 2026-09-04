@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ArrowDownUp, CircleCheck, Circle, FileCode, Folder, RotateCw, Sparkles, User, Wrench } from 'lucide-react'
 import type { BarsPiece, ChatPiece, ChecklistPiece, FileTreePiece, FlashcardsPiece } from '../types'
+import { useLocale } from '../i18n'
 
 /* ------------------------------------------------------------------ *
  * ÁRBOL DE ARCHIVOS                                                   *
@@ -8,6 +9,7 @@ import type { BarsPiece, ChatPiece, ChecklistPiece, FileTreePiece, FlashcardsPie
 
 /** La estructura de carpetas del proyecto, sacada de las rutas de la lección. */
 export function FileTree({ piece }: { piece: FileTreePiece }) {
+  const locale = useLocale()
   const [copied, setCopied] = useState<string | null>(null)
 
   return (
@@ -17,7 +19,7 @@ export function FileTree({ piece }: { piece: FileTreePiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">{piece.nodes.filter((node) => node.isFile).length} archivos</span>
+        <span className="st-piece-badge">{piece.nodes.filter((node) => node.isFile).length} {locale === 'en' ? 'files' : 'archivos'}</span>
       </header>
 
       <ul className="st-tree">
@@ -31,11 +33,11 @@ export function FileTree({ piece }: { piece: FileTreePiece }) {
                   window.setTimeout(() => setCopied(null), 1400)
                 }, () => undefined)
               }}
-              title={`Copiar ${node.path}`}
+              title={locale === 'en' ? `Copy ${node.path}` : `Copiar ${node.path}`}
             >
               {node.isFile ? <FileCode size={12} /> : <Folder size={12} />}
               <code>{node.name}</code>
-              {copied === node.path && <em>copiado</em>}
+              {copied === node.path && <em>{locale === 'en' ? 'copied' : 'copiado'}</em>}
             </button>
           </li>
         ))}
@@ -92,6 +94,7 @@ export function Checklist({ piece }: { piece: ChecklistPiece }) {
  * ------------------------------------------------------------------ */
 
 export function Bars({ piece }: { piece: BarsPiece }) {
+  const locale = useLocale()
   const [sorted, setSorted] = useState(false)
   const items = useMemo(
     () => (sorted ? [...piece.items].sort((a, b) => b.value - a.value) : piece.items),
@@ -107,7 +110,7 @@ export function Bars({ piece }: { piece: BarsPiece }) {
         </div>
         <button type="button" className="st-btn-ghost" onClick={() => setSorted((value) => !value)}>
           <ArrowDownUp size={13} />
-          {sorted ? 'Orden original' : 'Ordenar'}
+          {locale === 'en' ? (sorted ? 'Original order' : 'Sort') : (sorted ? 'Orden original' : 'Ordenar')}
         </button>
       </header>
 
@@ -129,6 +132,7 @@ export function Bars({ piece }: { piece: BarsPiece }) {
  * ------------------------------------------------------------------ */
 
 export function Flashcards({ piece }: { piece: FlashcardsPiece }) {
+  const locale = useLocale()
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const card = piece.cards[index]
@@ -152,21 +156,21 @@ export function Flashcards({ piece }: { piece: FlashcardsPiece }) {
         <button type="button" className={`st-flash-card${flipped ? ' flipped' : ''}`} onClick={() => setFlipped((value) => !value)}>
           {flipped ? (
             <>
-              <em>Qué significa</em>
+              <em>{locale === 'en' ? 'What it means' : 'Qué significa'}</em>
               <p>{card.meaning}</p>
             </>
           ) : (
             <>
-              <em>Explícalo en voz alta</em>
+              <em>{locale === 'en' ? 'Explain it out loud' : 'Explícalo en voz alta'}</em>
               <strong>{card.term}</strong>
-              <span><RotateCw size={12} /> Pulsa para comprobar</span>
+              <span><RotateCw size={12} /> {locale === 'en' ? 'Tap to check' : 'Pulsa para comprobar'}</span>
             </>
           )}
         </button>
 
         <div className="st-flash-nav">
-          <button type="button" className="st-btn-ghost" onClick={() => move(-1)}>Anterior</button>
-          <button type="button" className="st-btn-ghost" onClick={() => move(1)}>Siguiente</button>
+          <button type="button" className="st-btn-ghost" onClick={() => move(-1)}>{locale === 'en' ? 'Previous' : 'Anterior'}</button>
+          <button type="button" className="st-btn-ghost" onClick={() => move(1)}>{locale === 'en' ? 'Next' : 'Siguiente'}</button>
         </div>
       </div>
     </figure>
@@ -177,13 +181,23 @@ export function Flashcards({ piece }: { piece: FlashcardsPiece }) {
  * CONVERSACIÓN                                                        *
  * ------------------------------------------------------------------ */
 
-const ROLE = {
-  sistema: { icon: Wrench, label: 'Instrucciones del sistema' },
-  usuario: { icon: User, label: 'Tú' },
-  asistente: { icon: Sparkles, label: 'El modelo' },
+function roleFor(locale: 'es' | 'en') {
+  return locale === 'en'
+    ? {
+        sistema: { icon: Wrench, label: 'System instructions' },
+        usuario: { icon: User, label: 'You' },
+        asistente: { icon: Sparkles, label: 'The model' },
+      }
+    : {
+        sistema: { icon: Wrench, label: 'Instrucciones del sistema' },
+        usuario: { icon: User, label: 'Tú' },
+        asistente: { icon: Sparkles, label: 'El modelo' },
+      }
 }
 
 export function Chat({ piece }: { piece: ChatPiece }) {
+  const locale = useLocale()
+  const ROLE = roleFor(locale)
   const [shown, setShown] = useState(2)
 
   return (
@@ -195,7 +209,7 @@ export function Chat({ piece }: { piece: ChatPiece }) {
         </div>
         {shown < piece.turns.length && (
           <button type="button" className="st-btn-ghost" onClick={() => setShown((value) => value + 1)}>
-            Siguiente turno
+            {locale === 'en' ? 'Next turn' : 'Siguiente turno'}
           </button>
         )}
       </header>
@@ -212,7 +226,11 @@ export function Chat({ piece }: { piece: ChatPiece }) {
           )
         })}
         {shown >= piece.turns.length && (
-          <p className="st-chat-end">Fin de la conversación. Fíjate en el turno donde deja de adivinar y empieza a comprobar.</p>
+          <p className="st-chat-end">
+            {locale === 'en'
+              ? 'End of the conversation. Notice the turn where it stops guessing and starts checking.'
+              : 'Fin de la conversación. Fíjate en el turno donde deja de adivinar y empieza a comprobar.'}
+          </p>
         )}
       </div>
     </figure>

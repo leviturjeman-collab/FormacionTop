@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AlertTriangle, CircleAlert, CircleCheck } from 'lucide-react'
 import type { CasesPiece } from '../types'
 import Parts from './Parts'
+import { useLocale } from '../i18n'
 
 const ICONS = { feliz: CircleCheck, ambiguo: CircleAlert, roto: AlertTriangle }
 
@@ -12,6 +13,7 @@ const ICONS = { feliz: CircleCheck, ambiguo: CircleAlert, roto: AlertTriangle }
  * en cada una. El caso roto es el que enseña de verdad.
  */
 export default function CaseSim({ piece }: { piece: CasesPiece }) {
+  const locale = useLocale()
   const [active, setActive] = useState(piece.cases[0].id)
   const current = piece.cases.find((item) => item.id === active) || piece.cases[0]
 
@@ -25,7 +27,7 @@ export default function CaseSim({ piece }: { piece: CasesPiece }) {
       </header>
 
       <div className="st-cases">
-        <div className="st-cases-tabs" role="tablist" aria-label="Casos de la lección">
+        <div className="st-cases-tabs" role="tablist" aria-label={locale === 'en' ? 'Lesson cases' : 'Casos de la lección'}>
           {piece.cases.map((item) => {
             const Icon = ICONS[item.id as keyof typeof ICONS] || CircleCheck
             return (

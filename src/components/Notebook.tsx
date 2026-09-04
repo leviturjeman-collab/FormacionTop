@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Check, NotebookPen } from 'lucide-react'
 import type { LevelId } from '../types'
 import { store, useLessonProgress } from '../store'
+import { useLocale } from '../i18n'
 
 /**
  * Campo del cuaderno.
@@ -25,6 +26,7 @@ export default function Notebook({
   placeholder: string
   rows?: number
 }) {
+  const locale = useLocale()
   const progress = useLessonProgress(slug)
   const saved = progress.notes?.[level]?.[noteKey] || ''
   const [value, setValue] = useState(saved)
@@ -49,8 +51,8 @@ export default function Notebook({
       <span>
         <NotebookPen size={11} />
         {label}
-        {flash && <b><Check size={10} /> guardado</b>}
-        {!flash && value && <b>{value.trim().split(/\s+/).length} palabras</b>}
+        {flash && <b><Check size={10} /> {locale === 'en' ? 'saved' : 'guardado'}</b>}
+        {!flash && value && <b>{value.trim().split(/\s+/).length} {locale === 'en' ? 'words' : 'palabras'}</b>}
       </span>
       <textarea
         value={value}

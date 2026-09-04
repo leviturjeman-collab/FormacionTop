@@ -2,30 +2,32 @@ import { MessageCircleQuestion, Presentation, Timer } from 'lucide-react'
 import type { Lesson, LevelId } from '../types'
 import { href } from '../router'
 import { buildScript } from '../teacher'
+import { useLocale } from '../i18n'
 
 /**
  * Guion de clase. Solo se ve con el modo profesor activado; el alumno nunca
  * lo carga.
  */
 export default function TeacherPanel({ lesson, level }: { lesson: Lesson; level: LevelId }) {
+  const locale = useLocale()
   const script = buildScript(lesson, level)
 
   return (
     <section className="st-teacher">
       <header>
         <div>
-          <span className="st-kicker">Modo profesor</span>
-          <h2>Guion de clase</h2>
+          <span className="st-kicker">{locale === 'en' ? 'Teacher mode' : 'Modo profesor'}</span>
+          <h2>{locale === 'en' ? 'Class script' : 'Guion de clase'}</h2>
         </div>
         <div className="st-teacher-actions">
           <span className="st-piece-badge"><Timer size={11} /> {script.minutes} min</span>
           <a className="st-btn-ghost" href={href({ name: 'presentar', slug: lesson.slug, level })}>
-            <Presentation size={13} /> Presentar
+            <Presentation size={13} /> {locale === 'en' ? 'Present' : 'Presentar'}
           </a>
         </div>
       </header>
 
-      <p className="st-teacher-opener"><b>Para abrir:</b> {script.opener}</p>
+      <p className="st-teacher-opener"><b>{locale === 'en' ? 'To open:' : 'Para abrir:'}</b> {script.opener}</p>
 
       <ol className="st-teacher-beats">
         {script.beats.map((beat, index) => (
@@ -46,7 +48,7 @@ export default function TeacherPanel({ lesson, level }: { lesson: Lesson; level:
 
       {script.mistakes.length > 0 && (
         <div className="st-teacher-mistakes">
-          <strong>Se van a equivocar en esto</strong>
+          <strong>{locale === 'en' ? "They'll get this wrong" : 'Se van a equivocar en esto'}</strong>
           <ul>
             {script.mistakes.map((mistake, index) => (
               <li key={index}>{mistake.error}</li>
@@ -55,7 +57,7 @@ export default function TeacherPanel({ lesson, level }: { lesson: Lesson; level:
         </div>
       )}
 
-      <p className="st-teacher-opener"><b>Para cerrar:</b> {script.closer}</p>
+      <p className="st-teacher-opener"><b>{locale === 'en' ? 'To close:' : 'Para cerrar:'}</b> {script.closer}</p>
     </section>
   )
 }

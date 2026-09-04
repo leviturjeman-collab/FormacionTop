@@ -1,0 +1,253 @@
+{
+  "id": "trabajo-diario",
+  "title": "Prompts for everyday work",
+  "intro": "These are the prompts you'll use every morning, before you even remember you're using AI: emails, meetings, minutes, proposals, and texts to check before hitting send. They don't teach you anything new, they just take work off your plate. Copy them, fill in the brackets, and paste them into your AI's text box.",
+  "model": "ChatGPT works great for almost all of this because it handles everyday tasks well and swallows attached documents; use Claude when you're pasting very long transcripts or minutes, and Gemini if your meetings and documents already live in Google Meet, Docs, and Gmail; the free plan on any of the three is plenty for this family, and the paid one (around $23 a month) only pays off if you're pasting in huge documents daily.",
+  "prompts": [
+    {
+      "name": "Writing an email from scratch",
+      "when": "When you have to write to someone and you've spent five minutes staring at a blank subject line.",
+      "prompt": "Act as my email assistant. You write on my behalf, in plain everyday English, and your only goal is for whoever reads it to understand within ten seconds what's going on and what they need to do.\n\nContext:\n- I am: [YOUR NAME AND ROLE]\n- I'm writing to: [WHO YOU'RE WRITING TO AND YOUR RELATIONSHIP WITH THEM]\n- What I want this email to achieve: [THE GOAL, IN ONE SENTENCE]\n- What this person already knows about it: [BACKGROUND]\n- Tone: [TONE]\n- Max length: [NUMBER] words\n\nTask: write the whole email. Rules you can't skip:\n1. Subject line under 60 characters that says what it's really about. No \"Question\" or \"Follow-up.\"\n2. The first sentence is the reason for the email. No \"Hope you're doing well\" or long intros.\n3. If I'm asking for something, put it on its own line, starting with the verb, with the deadline if there is one.\n4. Short sentences. No \"circle back,\" \"leverage,\" or \"looking forward to your feedback.\"\n\nOutput format, in this order and with these headings:\nSUBJECT:\nBODY:\nWHAT I ASSUMED: list of things you took for granted because I didn't tell you.\n\nIf you're missing important information, don't make it up inside the email: write [PENDING] in that spot and ask me at the end, with a maximum of three questions, all short-answer.",
+      "fill": [
+        [
+          "[YOUR NAME AND ROLE]",
+          "Who you are to the recipient. Example: \"Laura Gil, office manager at Meridian Workshops.\""
+        ],
+        [
+          "[WHO YOU'RE WRITING TO AND YOUR RELATIONSHIP WITH THEM]",
+          "Name, title, and how well you know each other. Example: \"Javier Ortiz, CFO of a client we've worked with for three years, we're on a first-name basis.\""
+        ],
+        [
+          "[THE GOAL, IN ONE SENTENCE]",
+          "What you want to happen after they read it. Example: \"Get written confirmation that they approve the budget before Friday.\""
+        ],
+        [
+          "[BACKGROUND]",
+          "What they already know, so the AI doesn't explain it back to them. Example: \"I sent the quote two weeks ago and they haven't replied.\" If they know nothing about it, write \"nothing.\""
+        ],
+        [
+          "[TONE]",
+          "How you want to sound. Example: \"cordial but firm, without sounding like a complaint.\""
+        ],
+        [
+          "[NUMBER]",
+          "Max body word count. For a normal email, 120. For a delicate one, 180."
+        ]
+      ],
+      "expect": "A specific subject line, an email you can read in one pass, and a short list below of what the AI made up on its own.",
+      "next": "Read the \"what I assumed\" list first: that's usually where the errors are. Fix those points, tell it \"only change that and leave the rest,\" and copy it into your email. Sending has no undo, so reread it yourself first."
+    },
+    {
+      "name": "Replying to an email you received",
+      "when": "When you open an email, know what you want to say, and don't feel like finding the polite way to say it.",
+      "prompt": "You're my email assistant. Draft a reply in plain everyday English that I can send exactly as-is.\n\nHere's the email I received, between the dashed lines:\n------\n[THE RECEIVED EMAIL]\n------\n\nWhat I want to reply, said bluntly and unfiltered: [WHAT YOU WANT TO SAY]\nMy relationship with this person: [RELATIONSHIP]\nTone I want: [TONE]\n\nTask, in three parts:\n1. WHAT THEY'RE REALLY ASKING FOR: in three points max, say what this person is asking me for, including what they're asking indirectly or between the lines. If there's a hidden deadline, flag it.\n2. SHORT REPLY: a version under 80 words, to get by.\n3. FULL REPLY: a more polished version that addresses every point, answering the questions one by one in the same order they were asked.\n\nRules: don't promise anything I haven't said I'll do. If I need to say no, say it clearly in the first line and explain the reason after, no beating around the bush or repeated apologies. Don't use \"unfortunately,\" \"shortly,\" or \"please don't hesitate to reach out.\"\n\nIf there's something in the email you can't answer because you don't have the information, leave [PENDING] in its place and flag it for me at the end. Don't invent dates, figures, or commitments.",
+      "fill": [
+        [
+          "[THE RECEIVED EMAIL]",
+          "Copy the whole email from your inbox and paste it here, subject included. The more complete, the better it understands the context. Remove any phone numbers or account numbers it doesn't need to see."
+        ],
+        [
+          "[WHAT YOU WANT TO SAY]",
+          "No politeness needed, the AI adds that. Example: \"tell them no, that deadline is impossible, earliest is the 20th, and if they want it sooner they'll have to pay for overtime.\""
+        ],
+        [
+          "[RELATIONSHIP]",
+          "Example: \"a new supplier, we don't have much rapport yet\" or \"my boss, who's been in a bad mood for two weeks.\""
+        ],
+        [
+          "[TONE]",
+          "Example: \"friendly but leaving no room to negotiate\" or \"neutral and very brief.\""
+        ]
+      ],
+      "expect": "A summary of what they're asking for (including what's not stated outright) and two draft replies, one quick and one full.",
+      "next": "Pick the version that fits, paste the text into your email, and double-check any date or figure yourself before sending. If the reply sounds templated, tell it: \"rewrite it as if a busy but polite person wrote it.\""
+    },
+    {
+      "name": "Summarizing a long meeting",
+      "when": "After a ninety-minute meeting, when you have a transcript or a set of chaotic notes.",
+      "prompt": "You're the meeting secretary. Your job is to let someone who wasn't there understand what happened in two minutes of reading.\n\nYou have the notes from a meeting about [MEETING TOPIC], lasting [DURATION], with these attendees: [ATTENDEES AND THEIR ROLES].\n\n------\n[THE TRANSCRIPT OR NOTES]\n------\n\nGive me back, with these exact headings:\n\n1. IN FIVE LINES: what was discussed and where it landed, for someone who wasn't there and isn't going to read further.\n2. DECISIONS MADE: only things that were settled, each with who made the call. If something was debated but not settled, it doesn't go here.\n3. OPEN ITEMS: what's still up in the air, and what it would take to close it.\n4. DISAGREEMENTS: where there was no agreement and what each side argued. If there weren't any, write \"none\" and don't pad it out.\n5. HEADS UP: things said in passing that could cause problems later (deadlines that don't line up, dependencies between tasks, someone who committed without being sure).\n\nRules: always distinguish between what was said and what you're inferring. When you infer something, start the sentence with \"Interpretation:\". Don't make up names: if it's unclear who's speaking, write \"unidentified speaker.\" If the transcript is garbled or cut off somewhere, tell me at the end instead of filling in the gap yourself.",
+      "fill": [
+        [
+          "[MEETING TOPIC]",
+          "One sentence. Example: \"monthly review of the online store project with the client.\""
+        ],
+        [
+          "[DURATION]",
+          "Example: \"1 hr 40 min.\" Helps the AI calibrate how much content to expect."
+        ],
+        [
+          "[ATTENDEES AND THEIR ROLES]",
+          "Names and what each one's role is. Example: \"Marta (client, she's the decision-maker), Pedro (our designer), me (I run the project).\" Without this, the AI doesn't know who's calling the shots."
+        ],
+        [
+          "[THE TRANSCRIPT OR NOTES]",
+          "The full text. Zoom, Teams, Meet, and even your phone generate automatic transcripts; messy handwritten notes work too. If it's very long and the AI complains, paste it in chunks and say \"this is part 1 of 3, wait before summarizing.\""
+        ]
+      ],
+      "expect": "A five-line summary plus four separate sections, with decisions kept apart from things that were only discussed, and the AI's interpretations clearly flagged as such.",
+      "next": "Check the decisions section: it's the one people will quote three weeks from now. Then chain into the next prompt to pull out the tasks. If you're sending the summary to attendees, first ask it to \"rewrite it in a neutral tone, no adjectives.\""
+    },
+    {
+      "name": "Pulling tasks out of meeting minutes",
+      "when": "When you have the minutes or the meeting summary and need to know who's doing what before Friday.",
+      "prompt": "You're a project manager obsessed with making sure no task goes without an owner. Your job is to pull every commitment out of this text and put it in a table.\n\nSource text (minutes, summary, or meeting notes):\n------\n[THE MINUTES OR SUMMARY]\n------\nMeeting date: [DATE]\nTeam and who's who: [NAMES AND ROLES]\n\nGive me back a table with these columns, in this order:\nTASK (starts with a verb) | OWNER | DEADLINE | SOURCE SENTENCE FROM THE TEXT | CONFIDENCE (high, medium, or low)\n\nRules that determine whether this is useful:\n- Don't invent owners. If nobody took it on, write UNASSIGNED.\n- Don't invent dates. If nobody gave one, write NO DATE. If someone said \"next week,\" calculate the real date counting from the meeting date and mark it medium confidence.\n- The source sentence column is mandatory and has to be literal, copied from the text. If you can't copy a sentence backing up a task, that task doesn't exist and you drop it.\n- Low CONFIDENCE means \"I'm guessing here.\" Use it without hesitation.\n\nUnder the table, add two sections:\nGHOST TASKS: things mentioned as necessary that nobody took ownership of.\nWHAT TO ASK: at most five specific questions to close out the UNASSIGNED and NO DATE items.",
+      "fill": [
+        [
+          "[THE MINUTES OR SUMMARY]",
+          "The minutes as-is, or the summary from the previous prompt. The more literal the text, the better the quotes come out."
+        ],
+        [
+          "[DATE]",
+          "The real meeting date, in month/day/year format. Without this, \"next week\" means nothing."
+        ],
+        [
+          "[NAMES AND ROLES]",
+          "Example: \"Ana handles design, Luis handles development, Rocío is the client and approves budgets.\" That way the AI doesn't assign design tasks to the wrong person."
+        ]
+      ],
+      "expect": "A task table with owner and date, each backed by a sentence copied from the minutes, plus a list of tasks that ended up orphaned.",
+      "next": "Copy the table into your task manager or a spreadsheet. Rows marked UNASSIGNED or low confidence are tomorrow's email: send them to the group asking who's taking them. Ghost tasks are usually the ones that blow up the project a month later."
+    },
+    {
+      "name": "Triaging your inbox",
+      "when": "Monday morning, forty unread messages, and no idea where to start.",
+      "prompt": "You're my chief of staff. You're going to triage a batch of messages and tell me the order to tackle them in. Triage means sorting by urgency, the way it's done in a hospital.\n\nMy categories, and you can't use any others: [YOUR CATEGORIES].\nMy role and what's actually my responsibility: [YOUR ROLE AND RESPONSIBILITIES].\nToday is: [TODAY'S DATE].\n\nMessages:\n------\n[THE MESSAGES, NUMBERED]\n------\n\nGive me back a table with: No. | WHO SENT IT | WHAT IT'S ABOUT (10 words max) | CATEGORY | URGENCY (today, this week, or can wait) | WHAT I DO (a sentence starting with a verb) | MINUTES IT TAKES.\n\nIf a message doesn't clearly fit any of my categories, mark it UNCLASSIFIED and explain in one line why you're unsure. I'd rather have an honest UNCLASSIFIED than a forced label.\n\nAfter the table, give me three lists:\nORDER OF ATTACK: the numbers in the order I'd tackle them, with one sentence on why that one goes first.\nONE-LINE FIXES: the numbers that get resolved with a reply under twenty words.\nWATCH THESE: messages where someone is politely and subtly asking for something important, or where a deadline has already passed.",
+      "fill": [
+        [
+          "[YOUR CATEGORIES]",
+          "Four to six, the ones you actually use. Example: \"client, supplier, internal, new business, admin, noise.\""
+        ],
+        [
+          "[YOUR ROLE AND RESPONSIBILITIES]",
+          "So it knows what's actually urgent for you. Example: \"I manage three client accounts; invoicing and contracts are handled by someone else.\""
+        ],
+        [
+          "[TODAY'S DATE]",
+          "The real date. Lets it catch deadlines that have already passed."
+        ],
+        [
+          "[THE MESSAGES, NUMBERED]",
+          "Copy the sender, subject, and the first few lines of each, numbered starting from 1. No need for the full email. Skip anything with bank details or third parties' personal data."
+        ]
+      ],
+      "expect": "A table with messages ranked by urgency and a clear list of where to start, including the ones that get resolved in one line.",
+      "next": "Start with the one-line fixes: in ten minutes you'll clear half the inbox. For the complicated ones, run each through the \"reply to an email\" prompt. Save this prompt with your categories already filled in and reuse it every morning."
+    },
+    {
+      "name": "Preparing a client proposal",
+      "when": "When a potential client has said \"send me something in writing\" and you don't know where to start.",
+      "prompt": "Act as a consultant with twenty years selling services to clients like mine. Write me a business proposal in plain everyday English, to send by email or as a document.\n\nDetails:\n- What I sell: [WHAT YOU OFFER]\n- The client: [WHO THE CLIENT IS AND WHAT THEY DO]\n- The problem they told me about, in their words: [THE CLIENT'S PROBLEM]\n- What we've already discussed: [PRIOR CONVERSATIONS]\n- Budget we've talked about: [BUDGET]\n- Timeline: [TIMELINE]\n- Who I'm competing with: [COMPETITION]\n\nRequired structure, with these headings:\n1. WHAT I UNDERSTOOD: the client's problem told in their words, not mine. If they don't recognize themselves in this paragraph, the rest doesn't matter.\n2. WHAT I'M PROPOSING: the solution in three paragraphs max, no jargon.\n3. WHAT YOU GET: a list of concrete deliverables, things they can touch, open, or use.\n4. HOW AND WHEN: phases with approximate dates and what I need from them at each one.\n5. INVESTMENT: the price, broken down.\n6. WHAT'S NOT INCLUDED: what's out, said plainly. This section prevents half the problems.\n7. NEXT STEP: one single concrete action, with a date.\n\nRules: no \"innovative solutions,\" \"synergies,\" or \"strategic partner.\" Zero empty adjectives. Don't invent prices, timelines, or case studies of mine: where a detail is missing, write [FILL IN] and say what's missing. At the end, tell me the three questions I should ask the client before sending this.",
+      "fill": [
+        [
+          "[WHAT YOU OFFER]",
+          "Your service in one sentence, no marketing spin. Example: \"I design and build Shopify stores and get them fully running.\""
+        ],
+        [
+          "[WHO THE CLIENT IS AND WHAT THEY DO]",
+          "Example: \"a family-run winery, six employees, they sell to distributors and want to start selling direct.\""
+        ],
+        [
+          "[THE CLIENT'S PROBLEM]",
+          "Copy verbatim what they told you, even if it's poorly phrased. Example: \"we're losing margin to distributors and don't know who's buying our wine.\""
+        ],
+        [
+          "[PRIOR CONVERSATIONS]",
+          "What you've already discussed, so it isn't repeated back to them. You can paste in the email or the meeting summary directly."
+        ],
+        [
+          "[BUDGET]",
+          "Be honest. Example: \"they told me not to go over $4,500.\" If money hasn't come up, write \"hasn't been discussed\" and the AI will leave the price blank instead of inventing one."
+        ],
+        [
+          "[TIMELINE]",
+          "Example: \"they want it running before the holiday shopping season.\""
+        ],
+        [
+          "[COMPETITION]",
+          "If you know they're getting other quotes, say so: it changes the approach to the pricing section. If you don't know, write \"don't know.\""
+        ]
+      ],
+      "expect": "A complete proposal with all seven sections, [FILL IN] flags in any gaps missing your details, and three questions you should ask the client before sending it.",
+      "next": "Find every [FILL IN] and complete it yourself: a price or a deadline invented by an AI can cost you real money. Ask the client the three questions before sending anything. Once it's finalized, run it through the review-a-text prompt."
+    },
+    {
+      "name": "Reviewing a text before sending it",
+      "when": "Right before hitting send on something important: a delicate email, a proposal, a message to your boss.",
+      "prompt": "You're a demanding editor and a suspicious lawyer at the same time. You're not going to polish my text: you're going to find where it fails.\n\nText:\n------\n[YOUR TEXT]\n------\nI'm sending this to: [RECIPIENT AND YOUR RELATIONSHIP WITH THEM]\nWhat I want to achieve: [GOAL]\nWhat I do NOT want to happen: [THE RISK YOU'RE WORRIED ABOUT]\n\nGive me back three sections, with these headings:\n\n1. ERRORS: spelling mistakes, grammar issues, misspelled names, dates or figures that don't match each other, and sentences that don't make sense on the first read. Each with the original sentence and the correction.\n\n2. RISKS: this is where I really need you. Point out ambiguous sentences that can be read two ways; commitments I'm making without realizing it (\"we'll handle everything,\" \"as soon as I can\"); the tone, if it sounds harsher, softer, or more aggressive than I intend; and anything the reader could use against me later. Explain each risk in one line.\n\n3. CORRECTED VERSION: the whole text, ready to copy, fixing the above while keeping my way of writing. Don't make it longer.\n\nFinish with one line: \"IF YOU CHANGE ONLY ONE THING, CHANGE THIS:\" and tell me what. If the text is fine and doesn't need touching, say so clearly instead of inventing improvements to justify yourself.",
+      "fill": [
+        [
+          "[YOUR TEXT]",
+          "The whole text, exactly as you were about to send it. Works with emails, proposals, work messages on WhatsApp, or a LinkedIn post."
+        ],
+        [
+          "[RECIPIENT AND YOUR RELATIONSHIP WITH THEM]",
+          "Example: \"the head of purchasing at a large client, we've only spoken twice, both by email.\""
+        ],
+        [
+          "[GOAL]",
+          "Example: \"get them to approve the date change without it looking like our fault.\""
+        ],
+        [
+          "[THE RISK YOU'RE WORRIED ABOUT]",
+          "What you're afraid of. Example: \"that it sounds like an excuse\" or \"that they'll think I'm taking on a cost I'm not willing to.\" This detail is what makes the review useful."
+        ]
+      ],
+      "expect": "A list of objective errors, a list of risks you probably hadn't noticed, the corrected text, and one priority piece of advice.",
+      "next": "Read the risks section even if you change nothing else: that's where the commitments you were unintentionally making show up. Only copy the corrected version if it still sounds like you; if it sounds like a brochure, ask it to rewrite it \"in my own words, changing only the risky part.\" Once sent, there's no taking it back."
+    },
+    {
+      "name": "Preparing for a meeting",
+      "when": "The evening before a meeting that matters to you: a client, a negotiation, an uncomfortable conversation.",
+      "prompt": "Act as someone prepping me for an important meeting, not as a fancy-agenda generator.\n\nDetails:\n- Meeting with: [WHO AND THEIR TITLE]\n- Purpose: [WHAT THE MEETING IS ABOUT]\n- Duration: [DURATION]\n- What I want to get out of it: [YOUR GOAL]\n- What I think the other side wants: [THEIR GOAL]\n- History: [WHAT'S HAPPENED BETWEEN YOU BEFORE]\n- What's at stake for me: [WHAT HAPPENS IF IT GOES BADLY]\n\nGive me back, with these headings:\n1. GOAL IN ONE SENTENCE: what has to have happened by the time I walk out for the meeting to have been worth it.\n2. TIMED SCRIPT: the blocks of the meeting with minutes for each, adding up to the real duration.\n3. THE THREE QUESTIONS: the three questions I absolutely have to ask, and what information each one is after.\n4. OBJECTIONS: the four things they're going to say to slow me down, and how I respond to each in two sentences. Be realistic, not optimistic.\n5. WHAT TO BRING: data, figures, or documents I should have on hand.\n6. WHERE MY LIMIT IS: what a good outcome looks like, what an acceptable one looks like, and at what point it's better not to close anything today.\n7. HOW I OPEN AND HOW I CLOSE: the exact opening line and the closing line with the next step.\n\nIf you're missing information to prepare any section, ask me before writing the rest instead of guessing.",
+      "fill": [
+        [
+          "[WHO AND THEIR TITLE]",
+          "Example: \"Elena Vidal, Director of Operations; she's the one who signs, not the one who proposes.\""
+        ],
+        [
+          "[WHAT THE MEETING IS ABOUT]",
+          "Example: \"annual contract renewal, they want to renegotiate the price down.\""
+        ],
+        [
+          "[DURATION]",
+          "The real minutes you have. Example: \"30 minutes, and she's always late.\""
+        ],
+        [
+          "[YOUR GOAL]",
+          "Concrete and measurable. Example: \"walk out with the renewal signed, or with a date to sign.\""
+        ],
+        [
+          "[THEIR GOAL]",
+          "Even if it's just a hunch, write it down. Example: \"I think they want a 15% discount because they have a cheaper competitor on the table.\""
+        ],
+        [
+          "[WHAT'S HAPPENED BETWEEN YOU BEFORE]",
+          "Example: \"we've worked well together for two years, but the last project was delivered three weeks late.\""
+        ],
+        [
+          "[WHAT HAPPENS IF IT GOES BADLY]",
+          "Example: \"it's 30% of my annual revenue.\" Flags how much you're risking and changes the whole prep."
+        ]
+      ],
+      "expect": "A timed script that actually fits in the meeting, the objections you're going to get with a response already prepared, and your limit written down before walking in.",
+      "next": "Read it twenty minutes beforehand, not while walking through the door. The part that'll help you most is the limit section: having it written down before you sit down keeps you from agreeing to something out of momentum. After the meeting, feed your notes into the summarize prompt and the task-extraction prompt."
+    }
+  ],
+  "canDo": [
+    "Turn a pile of messy text (a transcript, a handful of notes, an email thread) into something structured and readable in two minutes.",
+    "Write the same thing in five different tones and three lengths for you to choose from, in the time it'd take you to just decide on the subject line.",
+    "Find the ambiguous sentences in your own text and the commitments you're making without realizing it.",
+    "Sort forty messages by urgency and tell you which ones get resolved in a single line."
+  ],
+  "cantDo": [
+    "It knows nothing about your meeting unless you paste in the transcript or notes: it wasn't there, and the text box doesn't connect to your calendar or your inbox.",
+    "It doesn't know your client, your history together, or why the purchasing manager is in a bad mood this week. If you don't tell it, it makes something up, and it sounds convincing.",
+    "It doesn't know whether your price is right or whether a deadline is realistic. Leave a gap, and it fills it with reasonable-sounding, made-up numbers.",
+    "It doesn't hit send for you, and it doesn't carry the responsibility either: the email is signed by you, and once sent it can't be undone."
+  ],
+  "tips": [
+    "Paste in two of your own old emails and tell it: \"this is my style, write like me.\" The difference between generic text and text that sounds like you comes right from that, and it costs nothing.",
+    "Always give it a number: \"120 words max,\" \"three points,\" \"four objections.\" Without a number it hands back twice what you need and you end up trimming it yourself.",
+    "End every prompt with \"tell me what you assumed and what you still need to know.\" That way whatever it made up shows up in a list at the end, instead of hidden inside a paragraph that sounds convincing."
+  ]
+}

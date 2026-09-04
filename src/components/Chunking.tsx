@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { ChunkingPiece } from '../types'
+import { useLocale } from '../i18n'
 
 /**
  * Simulador de troceado para RAG.
@@ -9,6 +10,7 @@ import type { ChunkingPiece } from '../types'
  * real: dónde se parte una idea por la mitad y qué recupera la búsqueda.
  */
 export default function Chunking({ piece }: { piece: ChunkingPiece }) {
+  const locale = useLocale()
   const [size, setSize] = useState(240)
   const [overlap, setOverlap] = useState(40)
   const [mode, setMode] = useState<'caracteres' | 'parrafos'>('caracteres')
@@ -57,60 +59,66 @@ export default function Chunking({ piece }: { piece: ChunkingPiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">{chunks.length} fragmentos</span>
+        <span className="st-piece-badge">{locale === 'en' ? `${chunks.length} fragments` : `${chunks.length} fragmentos`}</span>
       </header>
 
       <div className="st-calc">
         <div className="st-calc-controls">
           <label className="st-calc-row">
-            <span>Estrategia</span>
+            <span>{locale === 'en' ? 'Strategy' : 'Estrategia'}</span>
             <select value={mode} onChange={(event) => setMode(event.target.value as typeof mode)}>
-              <option value="caracteres">Cortar cada N caracteres</option>
-              <option value="parrafos">Cortar por párrafos</option>
+              <option value="caracteres">{locale === 'en' ? 'Cut every N characters' : 'Cortar cada N caracteres'}</option>
+              <option value="parrafos">{locale === 'en' ? 'Cut by paragraphs' : 'Cortar por párrafos'}</option>
             </select>
-            <b>{mode === 'parrafos' ? 'respeta el sentido' : 'ciego al contenido'}</b>
+            <b>{mode === 'parrafos' ? (locale === 'en' ? 'respects meaning' : 'respeta el sentido') : (locale === 'en' ? 'blind to content' : 'ciego al contenido')}</b>
           </label>
 
           {mode === 'caracteres' && (
             <>
               <label className="st-calc-row">
-                <span>Tamaño</span>
+                <span>{locale === 'en' ? 'Size' : 'Tamaño'}</span>
                 <input type="range" min={80} max={900} step={20} value={size} onChange={(event) => setSize(Number(event.target.value))} />
-                <b>{size} car.</b>
+                <b>{size} {locale === 'en' ? 'ch.' : 'car.'}</b>
               </label>
               <label className="st-calc-row">
-                <span>Solapamiento</span>
+                <span>{locale === 'en' ? 'Overlap' : 'Solapamiento'}</span>
                 <input type="range" min={0} max={200} step={10} value={overlap} onChange={(event) => setOverlap(Number(event.target.value))} />
-                <b>{overlap} car.</b>
+                <b>{overlap} {locale === 'en' ? 'ch.' : 'car.'}</b>
               </label>
             </>
           )}
 
           <label className="st-calc-row">
-            <span>Pregunta</span>
+            <span>{locale === 'en' ? 'Question' : 'Pregunta'}</span>
             <input
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="escribe una pregunta sobre el texto"
+              placeholder={locale === 'en' ? 'type a question about the text' : 'escribe una pregunta sobre el texto'}
               style={{ flex: 1, minWidth: 0, padding: '6px 8px', border: '1px solid var(--st-line)', background: 'var(--st-surface)', fontSize: 9 }}
             />
-            <b>{scored ? `${scored.length} recuperados` : '—'}</b>
+            <b>{scored ? (locale === 'en' ? `${scored.length} retrieved` : `${scored.length} recuperados`) : '—'}</b>
           </label>
 
           <p className="st-calc-hint">
-            {mode === 'parrafos'
-              ? 'Cortar por párrafos respeta las ideas completas. Es lo que deberías hacer casi siempre.'
-              : cut > chunks.length / 2
-                ? `${cut} de ${chunks.length} fragmentos cortan una frase por la mitad. Ese fragmento recuperado llega al modelo incompleto.`
-                : 'Pocos cortes a mitad de frase. Aun así, comprueba si alguna idea queda repartida entre dos fragmentos.'}
+            {locale === 'en'
+              ? (mode === 'parrafos'
+                  ? 'Cutting by paragraphs respects complete ideas. This is what you should do almost always.'
+                  : cut > chunks.length / 2
+                    ? `${cut} of ${chunks.length} fragments cut a sentence in half. That retrieved fragment reaches the model incomplete.`
+                    : 'Few mid-sentence cuts. Still, check whether an idea ends up split across two fragments.')
+              : (mode === 'parrafos'
+                  ? 'Cortar por párrafos respeta las ideas completas. Es lo que deberías hacer casi siempre.'
+                  : cut > chunks.length / 2
+                    ? `${cut} de ${chunks.length} fragmentos cortan una frase por la mitad. Ese fragmento recuperado llega al modelo incompleto.`
+                    : 'Pocos cortes a mitad de frase. Aun así, comprueba si alguna idea queda repartida entre dos fragmentos.')}
           </p>
         </div>
 
         <div className="st-chunk-list">
           {chunks.map((chunk, index) => (
             <div key={index} className={`st-chunk${scored?.includes(index) ? ' hit' : ''}`}>
-              <span>#{index + 1}{scored?.includes(index) ? ' · recuperado' : ''}</span>
+              <span>#{index + 1}{scored?.includes(index) ? (locale === 'en' ? ' · retrieved' : ' · recuperado') : ''}</span>
               <p>{chunk}</p>
             </div>
           ))}

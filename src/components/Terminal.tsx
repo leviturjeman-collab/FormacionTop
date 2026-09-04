@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CornerDownLeft, TriangleAlert } from 'lucide-react'
 import type { TerminalPiece } from '../types'
+import { useLocale } from '../i18n'
 
 interface Line {
   kind: 'command' | 'output' | 'error' | 'note'
@@ -15,8 +16,9 @@ interface Line {
  * y reconocer una salida correcta antes de tocar su propia máquina.
  */
 export default function Terminal({ piece }: { piece: TerminalPiece }) {
+  const locale = useLocale()
   const [lines, setLines] = useState<Line[]>([
-    { kind: 'note', text: 'Simulación. Aquí no se ejecuta nada en tu ordenador.' },
+    { kind: 'note', text: locale === 'en' ? 'Simulation. Nothing runs on your computer here.' : 'Simulación. Aquí no se ejecuta nada en tu ordenador.' },
   ])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -43,12 +45,18 @@ export default function Terminal({ piece }: { piece: TerminalPiece }) {
       if (!step) {
         setLines((current) => [
           ...current,
-          { kind: 'error', text: `Ese comando no está en esta práctica.\nPrueba con uno de los de la derecha: son los que aparecen en esta lección.` },
+          {
+            kind: 'error',
+            text:
+              locale === 'en'
+                ? `That command isn't part of this exercise.\nTry one of the ones on the right: those are the ones that appear in this lesson.`
+                : `Ese comando no está en esta práctica.\nPrueba con uno de los de la derecha: son los que aparecen en esta lección.`,
+          },
         ])
         setTyping(false)
         return
       }
-      const output = step.output || '(sin salida: este comando no imprime nada cuando funciona)'
+      const output = step.output || (locale === 'en' ? '(no output: this command prints nothing when it works)' : '(sin salida: este comando no imprime nada cuando funciona)')
       setLines((current) => [
         ...current,
         { kind: 'output', text: output },
@@ -68,7 +76,7 @@ export default function Terminal({ piece }: { piece: TerminalPiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">{doneCommands.length}/{piece.steps.length} probados</span>
+        <span className="st-piece-badge">{doneCommands.length}/{piece.steps.length} {locale === 'en' ? 'tried' : 'probados'}</span>
       </header>
 
       <div className="st-term-grid">
@@ -77,7 +85,7 @@ export default function Terminal({ piece }: { piece: TerminalPiece }) {
             <i style={{ background: "#ff5f57" }} />
             <i style={{ background: "#febc2e" }} />
             <i style={{ background: "#28c840" }} />
-            <em>{piece.prompt.replace(/\s*\$$/, '')} — simulación</em>
+            <em>{piece.prompt.replace(/\s*\$$/, '')} — {locale === 'en' ? 'simulation' : 'simulación'}</em>
           </div>
           <div className="st-term-body" ref={bodyRef}>
             {lines.map((line, index) => (
@@ -98,12 +106,12 @@ export default function Terminal({ piece }: { piece: TerminalPiece }) {
                 ref={inputRef}
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="escribe un comando y pulsa intro"
+                placeholder={locale === 'en' ? 'type a command and press enter' : 'escribe un comando y pulsa intro'}
                 spellCheck={false}
                 autoComplete="off"
-                aria-label="Comando"
+                aria-label={locale === 'en' ? 'Command' : 'Comando'}
               />
-              <button type="submit" aria-label="Ejecutar" disabled={typing}>
+              <button type="submit" aria-label={locale === 'en' ? 'Run' : 'Ejecutar'} disabled={typing}>
                 <CornerDownLeft size={14} />
               </button>
             </form>
@@ -111,7 +119,7 @@ export default function Terminal({ piece }: { piece: TerminalPiece }) {
         </div>
 
         <aside className="st-term-list">
-          <h5>Comandos de esta lección</h5>
+          <h5>{locale === 'en' ? 'Commands for this lesson' : 'Comandos de esta lección'}</h5>
           <ol>
             {piece.steps.map((step) => (
               <li key={step.command}>

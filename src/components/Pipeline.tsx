@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowDown, Ban, Brain, Database, Filter, Play, Send, Shuffle, User, Wrench } from 'lucide-react'
 import type { PipelinePiece } from '../types'
+import { useLocale } from '../i18n'
 
 /**
  * Tubería de trabajo.
@@ -9,19 +10,35 @@ import type { PipelinePiece } from '../types'
  * natural de un procedimiento y se lee mucho mejor que un diagrama de nodos
  * cuando los pasos van en orden.
  */
-const SHAPES: Record<string, { icon: typeof Play; label: string }> = {
-  entrada: { icon: Play, label: 'Entra' },
-  filtro: { icon: Filter, label: 'Se comprueba' },
-  transforma: { icon: Shuffle, label: 'Se transforma' },
-  decide: { icon: Brain, label: 'Se decide' },
-  guarda: { icon: Database, label: 'Se guarda' },
-  envia: { icon: Send, label: 'Se envía' },
-  persona: { icon: User, label: 'Aprueba una persona' },
-  salida: { icon: Ban, label: 'Sale' },
-  paso: { icon: Wrench, label: 'Paso' },
+function shapesFor(locale: 'es' | 'en'): Record<string, { icon: typeof Play; label: string }> {
+  return locale === 'en'
+    ? {
+        entrada: { icon: Play, label: 'Enters' },
+        filtro: { icon: Filter, label: 'Is checked' },
+        transforma: { icon: Shuffle, label: 'Is transformed' },
+        decide: { icon: Brain, label: 'Is decided' },
+        guarda: { icon: Database, label: 'Is stored' },
+        envia: { icon: Send, label: 'Is sent' },
+        persona: { icon: User, label: 'A person approves' },
+        salida: { icon: Ban, label: 'Exits' },
+        paso: { icon: Wrench, label: 'Step' },
+      }
+    : {
+        entrada: { icon: Play, label: 'Entra' },
+        filtro: { icon: Filter, label: 'Se comprueba' },
+        transforma: { icon: Shuffle, label: 'Se transforma' },
+        decide: { icon: Brain, label: 'Se decide' },
+        guarda: { icon: Database, label: 'Se guarda' },
+        envia: { icon: Send, label: 'Se envía' },
+        persona: { icon: User, label: 'Aprueba una persona' },
+        salida: { icon: Ban, label: 'Sale' },
+        paso: { icon: Wrench, label: 'Paso' },
+      }
 }
 
 export default function Pipeline({ piece }: { piece: PipelinePiece }) {
+  const locale = useLocale()
+  const SHAPES = shapesFor(locale)
   const [open, setOpen] = useState<number | null>(0)
 
   return (
@@ -31,7 +48,7 @@ export default function Pipeline({ piece }: { piece: PipelinePiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">{piece.stations.length} estaciones</span>
+        <span className="st-piece-badge">{piece.stations.length} {locale === 'en' ? 'stations' : 'estaciones'}</span>
       </header>
 
       <ol className="st-pipeline">

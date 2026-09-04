@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Pause, Play, RotateCcw } from 'lucide-react'
 import type { FlowPiece } from '../types'
+import { useLocale } from '../i18n'
 
 const NODE_W = 178
 const NODE_H = 74
@@ -14,6 +15,7 @@ const PAD = 42
  * El alumno puede pulsar cada nodo o reproducir el recorrido en orden.
  */
 export default function FlowDiagram({ piece }: { piece: FlowPiece }) {
+  const locale = useLocale()
   const [selected, setSelected] = useState<string | null>(null)
   const [playing, setPlaying] = useState(false)
   const [cursor, setCursor] = useState(-1)
@@ -113,11 +115,13 @@ export default function FlowDiagram({ piece }: { piece: FlowPiece }) {
         <div className="st-piece-actions">
           <button type="button" className="st-btn-ghost" onClick={() => { setPlaying((value) => !value); if (cursor < 0) setCursor(0) }}>
             {playing ? <Pause size={15} /> : <Play size={15} />}
-            {playing ? 'Pausar' : 'Recorrer'}
+            {playing
+              ? (locale === 'en' ? 'Pause' : 'Pausar')
+              : (locale === 'en' ? 'Walk through' : 'Recorrer')}
           </button>
           <button type="button" className="st-btn-ghost" onClick={reset}>
             <RotateCcw size={15} />
-            Reiniciar
+            {locale === 'en' ? 'Reset' : 'Reiniciar'}
           </button>
           {piece.download && (
             <a className="st-btn-ghost" href={piece.download} download>
@@ -195,7 +199,11 @@ export default function FlowDiagram({ piece }: { piece: FlowPiece }) {
             {active.type && <code >{active.type}</code>}
           </>
         ) : (
-          <p >Pulsa cualquier nodo para ver qué hace y qué revisar dentro. O pulsa «Recorrer» para verlo en orden.</p>
+          <p >
+            {locale === 'en'
+              ? 'Click any node to see what it does and what to check inside. Or click "Walk through" to see it in order.'
+              : 'Pulsa cualquier nodo para ver qué hace y qué revisar dentro. O pulsa «Recorrer» para verlo en orden.'}
+          </p>
         )}
       </figcaption>
     </figure>

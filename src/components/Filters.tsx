@@ -2,6 +2,7 @@ import type { Lesson } from '../types'
 import { useCourse } from '../course'
 import { href, navigate, toggleFilter, type Filters as FilterState, type Route } from '../router'
 import { useStudent } from '../store'
+import { useLocale } from '../i18n'
 
 /**
  * Barra de filtros combinables.
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export default function Filters({ route, lessons, hide = [] }: Props) {
+  const locale = useLocale()
   const course = useCourse()
   const student = useStudent()
   if (!('filters' in route)) return null
@@ -53,36 +55,36 @@ export default function Filters({ route, lessons, hide = [] }: Props) {
       .filter((tool) => lessons.some((lesson) => lesson.tools.includes(tool.id)))
       .slice(0, 12)
       .map((tool) => ({ value: tool.id, label: tool.label }))
-    if (tools.length > 1) rows.push({ key: 'tool', label: 'Herramienta', options: tools })
+    if (tools.length > 1) rows.push({ key: 'tool', label: locale === 'en' ? 'Tool' : 'Herramienta', options: tools })
   }
 
   if (!hide.includes('section')) {
     const sections = course.sections
       .filter((section) => lessons.some((lesson) => lesson.sectionId === section.id))
       .map((section) => ({ value: section.id, label: section.label }))
-    if (sections.length > 1) rows.push({ key: 'section', label: 'Sección', options: sections })
+    if (sections.length > 1) rows.push({ key: 'section', label: locale === 'en' ? 'Section' : 'Sección', options: sections })
   }
 
   if (!hide.includes('kind')) {
     const kinds = Object.entries(course.kinds)
       .filter(([id]) => lessons.some((lesson) => lesson.kind === id))
       .map(([id, meta]) => ({ value: id, label: meta.label }))
-    if (kinds.length > 1) rows.push({ key: 'kind', label: 'Tipo', options: kinds })
+    if (kinds.length > 1) rows.push({ key: 'kind', label: locale === 'en' ? 'Type' : 'Tipo', options: kinds })
   }
 
   if (!hide.includes('stage')) {
     const stages = course.stages
       .filter((stage) => lessons.some((lesson) => lesson.stageId === stage.id))
       .map((stage) => ({ value: stage.id, label: `${stage.number}. ${stage.title}` }))
-    if (stages.length > 1) rows.push({ key: 'stage', label: 'Área', options: stages })
+    if (stages.length > 1) rows.push({ key: 'stage', label: locale === 'en' ? 'Area' : 'Área', options: stages })
   }
 
   rows.push({
     key: 'done',
-    label: 'Estado',
+    label: locale === 'en' ? 'Status' : 'Estado',
     options: [
-      { value: 'no', label: 'Pendientes' },
-      { value: 'si', label: 'Empezadas' },
+      { value: 'no', label: locale === 'en' ? 'Pending' : 'Pendientes' },
+      { value: 'si', label: locale === 'en' ? 'Started' : 'Empezadas' },
     ],
   })
 
@@ -122,7 +124,7 @@ export default function Filters({ route, lessons, hide = [] }: Props) {
             className="st-filter-clear"
             href={href({ ...route, filters: {} } as Route)}
           >
-            Quitar los {active} filtros
+            {locale === 'en' ? `Remove the ${active} filters` : `Quitar los ${active} filtros`}
           </a>
         </div>
       )}
