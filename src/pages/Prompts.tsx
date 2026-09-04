@@ -268,7 +268,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
       <section className="st-prompt-steps" aria-label="Flujo recomendado para usar prompts">
         <div><span>01</span><strong>Abre un bloque</strong><small>Cada bloque va de una cosa: una tarea o una herramienta. Pulsa el título para desplegarlo.</small></div>
         <div><span>02</span><strong>Busca si dudas</strong><small>Escribe cualquier palabra: correo, error, privacidad, vídeo, RAG, web, propuesta...</small></div>
-        <div><span>03</span><strong>Guarda evidencia</strong><small>Copia el prompt, rellena corchetes y guarda el resultado útil en Mi proyecto.</small></div>
+        <div><span>03</span><strong>Comprueba</strong><small>Copia el prompt, rellena corchetes y revisa si la respuesta sirve.</small></div>
       </section>
 
       <section className="st-prompt-refine st-prompt-refine-top" aria-label="Buscar en toda la biblioteca">

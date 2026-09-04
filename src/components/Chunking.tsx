@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import type { ChunkingPiece } from '../types'
 
+const QUICK_SEARCHES = ['coste', 'cliente', 'error', 'permiso']
+
 /**
  * Simulador de troceado para RAG.
  *
@@ -12,7 +14,7 @@ export default function Chunking({ piece }: { piece: ChunkingPiece }) {
   const [size, setSize] = useState(240)
   const [overlap, setOverlap] = useState(40)
   const [mode, setMode] = useState<'caracteres' | 'parrafos'>('caracteres')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(QUICK_SEARCHES[0])
 
   const chunks = useMemo(() => {
     const text = piece.text.trim()
@@ -86,17 +88,17 @@ export default function Chunking({ piece }: { piece: ChunkingPiece }) {
             </>
           )}
 
-          <label className="st-calc-row">
-            <span>Pregunta</span>
-            <input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="escribe una pregunta sobre el texto"
-              style={{ flex: 1, minWidth: 0, padding: '6px 8px', border: '1px solid var(--st-line)', background: 'var(--st-surface)', fontSize: 9 }}
-            />
+          <div className="st-calc-row st-calc-search-preset">
+            <span>Búsqueda rápida</span>
+            <div>
+              {QUICK_SEARCHES.map((item) => (
+                <button key={item} type="button" className={query === item ? 'on' : ''} onClick={() => setQuery(item)}>
+                  {item}
+                </button>
+              ))}
+            </div>
             <b>{scored ? `${scored.length} recuperados` : '—'}</b>
-          </label>
+          </div>
 
           <p className="st-calc-hint">
             {mode === 'parrafos'

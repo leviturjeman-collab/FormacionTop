@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CornerDownLeft, TriangleAlert } from 'lucide-react'
+import { Play, TriangleAlert } from 'lucide-react'
 import type { TerminalPiece } from '../types'
 
 interface Line {
@@ -10,44 +10,32 @@ interface Line {
 /**
  * Terminal simulada.
  *
- * El alumno escribe el comando (o lo pulsa en la lista) y ve la salida que
- * debería obtener. No se ejecuta nada: es una maqueta para practicar el gesto
- * y reconocer una salida correcta antes de tocar su propia máquina.
+ * El alumno pulsa comandos ya preparados y ve la salida que debería obtener.
+ * No se ejecuta nada: es una maqueta para reconocer una salida correcta antes
+ * de tocar su propia máquina.
  */
 export default function Terminal({ piece }: { piece: TerminalPiece }) {
   const [lines, setLines] = useState<Line[]>([
     { kind: 'note', text: 'Simulación. Aquí no se ejecuta nada en tu ordenador.' },
   ])
-  const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const [doneCommands, setDoneCommands] = useState<string[]>([])
   const bodyRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: 'smooth' })
   }, [lines])
 
-  const run = (raw: string) => {
-    const command = raw.trim()
+  const run = (command: string) => {
     if (!command || typing) return
 
     const step = piece.steps.find((item) => item.command === command)
-      || piece.steps.find((item) => item.command.startsWith(command) || command.startsWith(item.command.split(' ').slice(0, 2).join(' ')))
+    if (!step) return
 
     setLines((current) => [...current, { kind: 'command', text: command }])
-    setInput('')
     setTyping(true)
 
     window.setTimeout(() => {
-      if (!step) {
-        setLines((current) => [
-          ...current,
-          { kind: 'error', text: `Ese comando no está en esta práctica.\nPrueba con uno de los de la derecha: son los que aparecen en esta lección.` },
-        ])
-        setTyping(false)
-        return
-      }
       const output = step.output || '(sin salida: este comando no imprime nada cuando funciona)'
       setLines((current) => [
         ...current,
@@ -56,23 +44,26 @@ export default function Terminal({ piece }: { piece: TerminalPiece }) {
       ])
       setDoneCommands((current) => (current.includes(step.command) ? current : [...current, step.command]))
       setTyping(false)
-    }, 420)
+  }, 420)
   }
 
   const progress = Math.round((doneCommands.length / piece.steps.length) * 100)
+  const caption = piece.caption
+    .replace(/Escribe el comando o p[uú]lsalo en la lista:?/i, 'Pulsa un comando de la lista:')
+    .replace(/escribe el comando/i, 'pulsa un comando')
 
   return (
     <figure className="st-piece">
       <header className="st-piece-head">
         <div>
           <h4>{piece.title}</h4>
-          <p>{piece.caption}</p>
+          <p>{caption}</p>
         </div>
         <span className="st-piece-badge">{doneCommands.length}/{piece.steps.length} probados</span>
       </header>
 
       <div className="st-term-grid">
-        <div className="st-term-window" onClick={() => inputRef.current?.focus()}>
+        <div className="st-term-window">
           <div className="st-term-bar">
             <i style={{ background: "#ff5f57" }} />
             <i style={{ background: "#febc2e" }} />
@@ -86,27 +77,10 @@ export default function Terminal({ piece }: { piece: TerminalPiece }) {
               </pre>
             ))}
             {typing && <pre className="st-term-line">▍</pre>}
-            <form
-              className="st-term-input"
-              onSubmit={(event) => {
-                event.preventDefault()
-                run(input)
-              }}
-            >
+            <div className="st-term-input st-term-input-readonly">
               <span>{piece.prompt}</span>
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder="escribe un comando y pulsa intro"
-                spellCheck={false}
-                autoComplete="off"
-                aria-label="Comando"
-              />
-              <button type="submit" aria-label="Ejecutar" disabled={typing}>
-                <CornerDownLeft size={14} />
-              </button>
-            </form>
+              <code>Elige un comando de la lista</code>
+            </div>
           </div>
         </div>
 
@@ -121,6 +95,7 @@ export default function Terminal({ piece }: { piece: TerminalPiece }) {
                   onClick={() => run(step.command)}
                   disabled={typing}
                 >
+                  <Play size={11} />
                   <code>{step.command}</code>
                 </button>
                 {step.note && (

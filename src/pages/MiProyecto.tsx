@@ -44,6 +44,12 @@ function selectedLabel(options: Choice[], id: string) {
   return options.find((item) => item.id === id)?.label || id
 }
 
+function suggestedProjectName(goal: GoalId, audience: string) {
+  const goalLabel = selectedLabel(GOALS, goal)
+  const audienceLabel = audience ? selectedLabel(AUDIENCES, audience).toLowerCase() : 'mi ruta'
+  return `${goalLabel} para ${audienceLabel}`
+}
+
 function toolSuggestion(goal: GoalId, tools: ToolPage[]) {
   const ids = GOALS.find((item) => item.id === goal)?.tools || []
   return ids.map((id) => tools.find((tool) => tool.id === id)).filter(Boolean) as ToolPage[]
@@ -51,10 +57,11 @@ function toolSuggestion(goal: GoalId, tools: ToolPage[]) {
 
 function buildPrompt(draft: ProjectProfile, goal: GoalId, audience: string, outcome: string, tools: ToolPage[]) {
   const toolNames = tools.length ? tools.map((tool) => tool.label).join(', ') : 'recomiéndame las herramientas adecuadas'
-  return `Actúa como mi directora de proyecto y profesora. Quiero construir: ${draft.name || '[NOMBRE DEL PROYECTO]'}.
+  const projectName = suggestedProjectName(goal, audience)
+  return `Actúa como mi directora de proyecto y profesora. Quiero construir: ${projectName}.
 
 OBJETIVO
-Quiero ${selectedLabel(GOALS, goal).toLowerCase()}. Mi descripción todavía está en lenguaje normal: ${draft.problem || '[EXPLICA QUÉ QUIERES CONSEGUIR]'}.
+Quiero ${selectedLabel(GOALS, goal).toLowerCase()}. Mi descripción todavía está en lenguaje normal: ${projectName}.
 
 PERSONA Y RESULTADO
 Lo utilizará: ${selectedLabel(AUDIENCES, audience).toLowerCase()}. La primera versión debe conseguir: ${selectedLabel(OUTCOMES, outcome).toLowerCase()}.
@@ -129,7 +136,8 @@ export default function MiProyecto() {
   }, [student.project])
 
   function save() {
-    store.setProject({ ...draft, audience, outcome, goal: selectedLabel(GOALS, goal), tools: chosenTools.map((tool) => tool.label).join(', '), toolIds: selectedTools, projectType: goal, promptBrief: prompt, savedPrompts: student.project?.savedPrompts || draft.savedPrompts || [], updatedAt: new Date().toISOString() })
+    const name = suggestedProjectName(goal, audience)
+    store.setProject({ ...draft, name, problem: name, audience, outcome, goal: selectedLabel(GOALS, goal), tools: chosenTools.map((tool) => tool.label).join(', '), toolIds: selectedTools, projectType: goal, promptBrief: prompt, savedPrompts: student.project?.savedPrompts || draft.savedPrompts || [], updatedAt: new Date().toISOString() })
     setSaved(true)
   }
 
@@ -160,9 +168,9 @@ export default function MiProyecto() {
       <section className="st-project-wizard">
         {step === 0 && <WizardChoice title="¿Qué quieres conseguir?" hint="No necesitas saber todavía qué herramienta usar." options={GOALS} value={goal} onChange={(value) => { setGoal(value as GoalId); setSelectedTools([]); setSaved(false) }} />}
 
-        {step === 1 && <div><WizardHeading icon={<Target size={16} />} title="¿Quién va a utilizarlo?" hint="Esto cambia el nivel de explicación, los permisos y el tipo de entrega." /><ChoiceGrid options={AUDIENCES} value={audience} onChange={setAudience} /><label className="st-wizard-input"><span>Nombre provisional del proyecto</span><input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Ej. Clasificador de solicitudes" /></label></div>}
+        {step === 1 && <div><WizardHeading icon={<Target size={16} />} title="¿Quién va a utilizarlo?" hint="Esto cambia el nivel de explicación, los permisos y el tipo de entrega." /><ChoiceGrid options={AUDIENCES} value={audience} onChange={setAudience} />{audience && <ReadOnlyChoiceSummary label="Nombre provisional" value={suggestedProjectName(goal, audience)} />}</div>}
 
-        {step === 2 && <div><WizardHeading icon={<Compass size={16} />} title="¿Qué tiene que existir al terminar la primera versión?" hint="Escoge el resultado que puedas comprobar con tus propios ojos." /><ChoiceGrid options={OUTCOMES} value={outcome} onChange={setOutcome} /><label className="st-wizard-input"><span>Cuéntalo en una frase, si ya lo sabes</span><textarea rows={3} value={draft.problem} onChange={(event) => setDraft({ ...draft, problem: event.target.value })} placeholder="Ej. Recibir solicitudes, clasificarlas y dejar un registro que el equipo pueda revisar." /></label></div>}
+        {step === 2 && <div><WizardHeading icon={<Compass size={16} />} title="¿Qué tiene que existir al terminar la primera versión?" hint="Escoge el resultado que puedas comprobar con tus propios ojos." /><ChoiceGrid options={OUTCOMES} value={outcome} onChange={setOutcome} />{outcome && <ReadOnlyChoiceSummary label="Primera versión" value={selectedLabel(OUTCOMES, outcome)} />}</div>}
 
         {step === 3 && <div><WizardHeading icon={<Wrench size={16} />} title="Elige las herramientas que quieres explorar" hint="Puedes seleccionar varias. La academia te dirá cuáles encajan y cuál usar primero." /><div className="st-tool-pick-note"><Lightbulb size={14} /><span>Recomendadas para tu objetivo: {suggestions.map((tool) => tool.label).join(', ') || 'elige una para que aparezcan recomendaciones'}.</span></div><div className="st-tool-picker">{course.toolPages.map((tool) => <ToolChoice key={tool.id} tool={tool} selected={selectedTools.includes(tool.id)} recommended={suggestions.some((item) => item.id === tool.id)} onClick={() => toggleTool(tool.id)} />)}</div></div>}
 
@@ -243,3 +251,4 @@ function WizardHeading({ icon, title, hint }: { icon: ReactNode; title: string; 
 function ChoiceGrid({ options, value, onChange }: { options: Choice[]; value: string; onChange: (value: string) => void }) { return <div className="st-choice-grid">{options.map((option) => <button key={option.id} type="button" className={value === option.id ? 'selected' : ''} onClick={() => onChange(option.id)}><span>{value === option.id ? <Check size={14} /> : <MousePointer2 size={14} />}</span><strong>{option.label}</strong><small>{option.description}</small></button>)}</div> }
 function WizardChoice({ title, hint, options, value, onChange }: { title: string; hint: string; options: Choice[]; value: string; onChange: (value: string) => void }) { return <div><WizardHeading icon={<Target size={16} />} title={title} hint={hint} /><ChoiceGrid options={options} value={value} onChange={onChange} /></div> }
 function ToolChoice({ tool, selected, recommended, onClick }: { tool: ToolPage; selected: boolean; recommended: boolean; onClick: () => void }) { return <button type="button" className={`st-tool-choice${selected ? ' selected' : ''}`} onClick={onClick}><span className="st-tool-choice-mark">{selected ? <Check size={13} /> : <Wrench size={13} />}</span><span><strong>{tool.label}</strong><small>{recommended ? 'Recomendada para este objetivo' : tool.guide ? 'Guía completa disponible' : `${tool.count} lecciones seleccionadas`}</small></span></button> }
+function ReadOnlyChoiceSummary({ label, value }: { label: string; value: string }) { return <div className="st-choice-summary"><span>{label}</span><strong>{value}</strong></div> }

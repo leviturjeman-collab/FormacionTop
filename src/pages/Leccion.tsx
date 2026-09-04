@@ -144,7 +144,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         <div>
           <ListChecks size={15} />
           <strong>{esFicha ? '2. Usa lo necesario' : '2. Haz práctica'}</strong>
-          <small>{esFicha ? 'Copia el archivo, dato o idea que necesites y vuelve a tu tarea.' : 'Completa los pasos marcables y guarda una evidencia corta.'}</small>
+          <small>{esFicha ? 'Copia el archivo, dato o idea que necesites y vuelve a tu tarea.' : 'Lee el ejemplo, sigue los pasos y marca OK cuando lo hayas visto.'}</small>
         </div>
         <div>
           <Wrench size={15} />
@@ -286,9 +286,13 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
           })}
         </ol>
 
-        <p className="st-evidence">
-          <b>Resultado final:</b> {content.practice.evidence}
-        </p>
+        <div className="st-final-check">
+          <CheckCircle2 size={15} />
+          <div>
+            <b>Al final deberías ver esto</b>
+            <p>{content.practice.evidence}</p>
+          </div>
+        </div>
       </section>
       )}
 

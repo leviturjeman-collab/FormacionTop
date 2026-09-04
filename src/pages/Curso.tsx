@@ -180,7 +180,7 @@ export function CursoIndice() {
       <section className="st-program-guide">
         <div><span>1</span><strong>Lee</strong><small>Primero entiende la idea con ejemplos sencillos.</small></div>
         <div><span>2</span><strong>Haz</strong><small>Después completa las tareas que se pueden marcar.</small></div>
-        <div><span>3</span><strong>Guarda</strong><small>Apunta la evidencia para no perder el resultado.</small></div>
+        <div><span>3</span><strong>Comprueba</strong><small>Mira que coincide con el ejemplo y marca OK.</small></div>
         <div><span>4</span><strong>Sigue</strong><small>Vuelve aquí y abre la siguiente lección.</small></div>
       </section>
 
@@ -419,7 +419,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         <div>
           <ListChecks size={15} />
           <strong>2. Haz</strong>
-          <small>Completa las tareas de “Tu turno” y marca cada una cuando veas el resultado.</small>
+          <small>Completa las tareas de “Tu turno” y marca cada una cuando lo veas en pantalla.</small>
         </div>
         <div>
           <Wrench size={15} />
