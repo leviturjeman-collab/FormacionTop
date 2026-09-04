@@ -1,0 +1,317 @@
+{
+  "id": "whatsapp",
+  "tool": "whatsapp",
+  "plain": "WhatsApp isn't one thing, it's three. There's regular WhatsApp, there's the free WhatsApp Business app you download to your phone like any other app, and there's the official channel for a program to send messages on its own, which Meta calls the WhatsApp Business Platform. That third one works like a bank's call center, not like your chat: the customer can write to you whenever they want, but you can only message them first using phrases Meta has approved in writing beforehand. And if the customer wrote to you less than a day ago, then you can reply with whatever you want, for free.",
+  "account": {
+    "url": "developers.facebook.com",
+    "free": "The API (application programming interface: the plug your program uses to talk to WhatsApp) costs nothing. Meta doesn't charge a sign-up fee or a monthly fee for the Cloud API. They also give you a free test number that can message 5 of your own phones, with free, unlimited templates for testing. What you pay for are the messages YOU initiate, one by one, since July 1, 2025. What you reply within the 24 hours after a customer writes to you is free and uncapped, since November 2024. Order of magnitude in Spain, so you can do the math: a marketing template runs about 5-8 cents per message, an authentication one 3-5 cents, and a utility one 1-2 cents (and €0 if you send it within the open 24-hour window). Don't trust these figures down to the cent: Meta publishes a per-country price list that changes every few months, and that's the one that governs. In plain terms: 1,000 marketing messages a month run about €50-80; 10,000 run €500-800. If instead of going straight to Meta you go through a middleman, add their fee on top: some charge €0 (Twilio, which instead marks up every message), and some charge €49 a month with no markup. Verify it on their site the day you're about to pay.",
+    "steps": [
+      [
+        "Decide which of the three WhatsApps you need",
+        "If it's you replying by hand, the WhatsApp Business phone app is more than enough: free, quick replies, away message, catalog. Only go for the API if you need a program to send or reply without you. This step isn't a formality: half the people who set up the API didn't actually need it."
+      ],
+      [
+        "Get a number that's NOT on any WhatsApp",
+        "A prepaid eSIM or a €5-10 SIM card works. It needs to be able to receive an SMS or a call once. Don't use your personal phone or the number you already use with the WhatsApp Business app: see the warning above."
+      ],
+      [
+        "Create the app at developers.facebook.com",
+        "Top right, 'My Apps' and then the green 'Create app' button. It asks for a name (only you see it), an email, and the type: choose 'Business'. At the end it asks you to link it to a 'Business portfolio'; if you don't have one, it lets you create one right there."
+      ],
+      [
+        "Add the WhatsApp product and copy the three pieces of data",
+        "In the product list, the 'WhatsApp' card, 'Set up' button. You'll enter 'API Setup'. There you have: 'Temporary access token' (temporary token, expires in 24h), 'Phone number ID' (the line's ID, a long number that is NOT your phone number), and 'WhatsApp Business Account ID'. Copy them into a notes app."
+      ],
+      [
+        "Send yourself the hello_world message",
+        "In the 'To' dropdown, click 'Manage phone number list' and add your phone with the country code and no +. You'll get a 6-digit code by WhatsApp; enter it. Now the blue 'Send message' button. If your phone rings, the API is already working. Without writing a single line of code."
+      ],
+      [
+        "Generate the permanent token",
+        "The 24-hour one is useless for anything real. Go to business.facebook.com, 'Business settings', left column 'Users' → 'System users' → 'Add' → role 'Admin'. Then 'Generate new token', choose your app, expiration 'Never', and check the permissions 'whatsapp_business_messaging' and 'whatsapp_business_management'. Copy it NOW: it's never shown again."
+      ],
+      [
+        "Register your real number",
+        "In 'API Setup', 'Add phone number'. It asks for a display name (has to resemble your real business; generic ones like 'Deals' get rejected), your number, and a 6-digit PIN you make up yourself and need to write down: they'll ask for it again. You verify by SMS or call. You start with a limit of 250 new customers every 24 hours."
+      ]
+    ],
+    "warning": "The number gets burned and there's no going back. If the number you want to use is already on regular WhatsApp or the WhatsApp Business app, you have to delete that account from the phone before registering it, and you lose the chat history forever: that can't be undone. And the other way around too: once a number lives on the Cloud API, it can never go back to the phone app. You reply from a web dashboard, not from your phone. Use a new number."
+  },
+  "first": [
+    "Send yourself the 'hello_world' message from the 'Send message' button in the dashboard. Two minutes, zero code, and you already know the pipe works.",
+    "Reply to that message from your phone. You've just opened the 24-hour window: from now on the API can write to you whatever it wants, for free, until the same time tomorrow.",
+    "Put the wa.me link on your site today (template 1 in this guide). It's the only thing in this whole guide that makes money on day one and costs €0.",
+    "Save the three pieces of data in a password manager: Phone number ID, WhatsApp Business Account ID, and the permanent token. The token is your number's key: whoever has it writes under your name.",
+    "Create a template in the 'Utility' category in WhatsApp Manager and see how long it takes to get approved. Usually it's minutes, but it's worth seeing the process before you need it in a rush."
+  ],
+  "shortcuts": [
+    [
+      "wa.me/34600111222?text=Hello",
+      "The magic link. Opens a chat with you, message already written, on mobile and desktop. Country code, no +, no spaces, no dashes. Spaces and special characters go URL-encoded (%20, %C3%B3). Works without the API, without a business account, and without paying anything. It's 80% of WhatsApp's value for a small business."
+    ],
+    [
+      "Blue 'Send message' button in API Setup",
+      "Sends the test message without writing code. Whenever something breaks, come here first: if it goes through from this button but not from your program, the bug is yours and not Meta's."
+    ],
+    [
+      "business.facebook.com/wa/manage",
+      "The WhatsApp Manager. Here, and only here, you see your templates and their status, your number's quality rating (green, yellow, red), your messaging limit, and how much you've spent. Bookmark it."
+    ],
+    [
+      "The test number's 'Manage phone number list'",
+      "Adds up to 5 recipient phones. While you're in testing mode, any other number gives an error. It's cause number one of error (#131030)."
+    ],
+    [
+      "The 'hello_world' template",
+      "Comes pre-approved out of the box on every account. It's your fire test: if hello_world goes through but yours doesn't, the problem is in your template, not the token or the number."
+    ],
+    [
+      "Graph API Explorer (developers.facebook.com/tools/explorer)",
+      "A form where you fire calls at the API without writing any code: pick your app, paste the route, click 'Submit'. Good for checking whether a token works before you drive yourself crazy with the code."
+    ],
+    [
+      "'Utility' category instead of 'Marketing'",
+      "Not a keyboard shortcut, a billing shortcut. The same information can cost you 1 cent or 7 depending on the category. Utility is for something the customer expects (their order, their appointment, their invoice). If you dress it up as something else, Meta recategorizes it on its own and charges you the expensive rate anyway."
+    ],
+    [
+      "Typing '/' in the WhatsApp Business app",
+      "On your phone, inside a chat, the slash opens your saved quick replies. Type '/hours' and the whole paragraph comes out. It's the 'automation' for people who don't want the API."
+    ],
+    [
+      "Webhooks → 'Test' → 'messages'",
+      "In your app's dashboard there's a button that fires a fake message at your webhook. Saves you from asking a friend to message you every time you change a line."
+    ],
+    [
+      "Click-to-WhatsApp ads and your Facebook page's button",
+      "When someone messages you from there, the window isn't 24 hours but 72, and that conversation isn't charged. If you're doing lead generation, come in through this door and no other."
+    ]
+  ],
+  "daily": [
+    "Design for replying, not for interrupting. Everything that happens within 24 hours of the customer's last message is free-form text and it's free. Everything outside that is an approved template and gets billed. If your idea requires writing to people who've been silent for weeks, your idea is expensive.",
+    "Every message you initiate goes through a template. No exceptions, no tricks, no library that gets around it. Write the templates before the code.",
+    "The category is the price. Utility, marketing, or authentication. Before sending 5,000 messages, multiply: number of messages times that category's per-cent cost. Do it on a napkin, not after the invoice.",
+    "Check your number's color once a week in WhatsApp Manager. Green is normal, yellow is a warning, red means your limit is about to get cut. The color drops when people block or report you, not when you send a lot.",
+    "Keep dated consent records. Who gave you permission, when, and where they checked the box. In Spain you can be asked for this and 'they told me over the phone' doesn't count.",
+    "Always test with the test number before touching the real one. A badly written loop that sends 300 marketing templates is €20 and a number in the red, and neither of those undoes itself.",
+    "The token never goes inside code you upload to the internet. It goes in an environment variable (a box outside the code where the server keeps its keys). If it leaks into a public repository, Meta detects it and invalidates it — hopefully before a stranger does."
+  ],
+  "templates": [
+    {
+      "name": "Floating WhatsApp button for your site (€0, no API)",
+      "what": "A green button fixed in the bottom-right corner that opens a chat with you with the message already written. Works for any site: store, services page, portfolio. Doesn't need the API, a business account, verification, or any payment. For 80% of small businesses, this is all that was ever needed.",
+      "how": "1) Copy the whole block. 2) On your site, paste it right before </body>. In WordPress: Appearance → Theme Editor → footer.php, or better, an 'insert code in the footer' plugin. In Shopify: Online Store → Themes → Edit code → theme.liquid, before </body>. On an AI-built site: tell it 'paste this right before the closing body tag' and it'll know where. 3) Change the number 34600111222 to yours in BOTH places it appears (in the href and in the script). 4) Save, reload the site with Ctrl+Shift+R, and test it from your phone, not from your computer.",
+      "fill": [
+        [
+          "34600111222",
+          "Your number with the country code in front, no +, no spaces, no dashes"
+        ],
+        [
+          "The text after ?text=",
+          "What you want to appear already written in the customer's chat"
+        ],
+        [
+          "#25D366",
+          "Leave it if you want WhatsApp green; swap it for your brand color if you prefer"
+        ],
+        [
+          "[YOUR BUSINESS] in the script",
+          "Your business's name, for the automatic per-page message"
+        ]
+      ],
+      "code": "<!-- 1) Paste this right before the </body> tag of your site -->\n<a id=\"wa-button\"\n   href=\"https://wa.me/34600111222?text=Hi%2C%20I%27m%20coming%20from%20the%20website%20and%20I%27d%20like%20some%20information\"\n   target=\"_blank\" rel=\"noopener\"\n   aria-label=\"Message us on WhatsApp\">\n  <!-- Generic chat bubble. If you want WhatsApp's official logo,\n       ask the AI for it or download it from Meta's brand page: there are usage rules. -->\n  <svg viewBox=\"0 0 24 24\" width=\"30\" height=\"30\" fill=\"currentColor\" aria-hidden=\"true\">\n    <path d=\"M12 2C6.5 2 2 6 2 11c0 2.2.9 4.2 2.4 5.7L3 22l5.5-1.4C9.6 21.5 10.8 22 12 22c5.5 0 10-4 10-9S17.5 2 12 2z\"/>\n  </svg>\n  <span>Message us</span>\n</a>\n\n<!-- 2) The styles. You can paste them right here or in your stylesheet -->\n<style>\n  #wa-button {\n    position: fixed;\n    right: 20px;\n    bottom: 20px;\n    z-index: 9999;\n    display: inline-flex;\n    align-items: center;\n    gap: 10px;\n    padding: 12px 18px 12px 14px;\n    border-radius: 999px;\n    background: #25D366;          /* WhatsApp's official green */\n    color: #fff;\n    font: 600 15px/1 system-ui, -apple-system, \"Segoe UI\", sans-serif;\n    text-decoration: none;\n    box-shadow: 0 6px 20px rgba(0,0,0,.25);\n    transition: transform .15s ease, box-shadow .15s ease;\n  }\n  #wa-button:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.3); }\n  #wa-button:focus-visible { outline: 3px solid #075E54; outline-offset: 3px; }\n\n  /* On mobile we keep just the circle, so it doesn't cover half the screen */\n  @media (max-width: 600px) {\n    #wa-button { padding: 14px; right: 16px; bottom: 16px; }\n    #wa-button span { display: none; }\n  }\n  @media (prefers-reduced-motion: reduce) {\n    #wa-button { transition: none; }\n  }\n</style>\n\n<!-- 3) Optional but very useful: the message already says which page it's from -->\n<script>\n  document.getElementById('wa-button').addEventListener('click', function () {\n    var number = '34600111222';                 // YOUR number: country code, no + or spaces\n    var text  = 'Hi, I\\'m coming from \"' + document.title + '\" and I\\'d like some information.';\n    this.href = 'https://wa.me/' + number + '?text=' + encodeURIComponent(text);\n  });\n</script>"
+    },
+    {
+      "name": "Auto-reply bot with the WhatsApp Cloud API",
+      "what": "A program that sits listening, receives every message a customer sends you, and replies on its own. It's the whole skeleton: the verification Meta requires, receiving the message, and sending the response. Good for covering after-hours, filtering repeat questions, or plugging in an AI that gives real answers.",
+      "how": "1) Create an empty folder and paste the code into a file called index.js. 2) In the terminal, inside that folder: npm init -y, then npm install express, then node index.js. 3) That program lives on your computer and Meta can't see it. You need a public address: the quick way is deploying to Railway or Render (free to start) and the quick-and-dirty way to test is ngrok. 4) With the address in hand, go to your app at developers.facebook.com → WhatsApp → Configuration → 'Edit' next to Webhook. In 'Callback URL' put your address ending in /webhook, and in 'Verify token' put exactly the same phrase you set as VERIFY_TOKEN. 5) Click 'Verify and save'. 6) Right below, in 'Webhook fields', click 'Manage' and subscribe to 'messages'. Everyone forgets this last click, and then nothing arrives.",
+      "fill": [
+        [
+          "WHATSAPP_TOKEN",
+          "The system user's permanent token, the one starting with EAA that doesn't expire"
+        ],
+        [
+          "PHONE_NUMBER_ID",
+          "The 'Phone number ID' from the API Setup panel. It's a long number, NOT your phone number"
+        ],
+        [
+          "VERIFY_TOKEN",
+          "A phrase you make up yourself (e.g.: my-store-2026-lettuce). The same one in the code and in Meta"
+        ],
+        [
+          "The think() function",
+          "Your replies, or the call to whichever AI you want to use"
+        ],
+        [
+          "[YOUR BUSINESS] and https://YOUR-SITE.com/pricing",
+          "Your business's name and your real pricing page"
+        ]
+      ],
+      "code": "// index.js  -  WhatsApp auto-reply bot with Meta's official Cloud API\n// You need Node.js 18 or higher (comes with fetch built in).\n//\n// In the terminal, inside an empty folder:\n//   npm init -y\n//   npm install express\n//   node index.js\n//\n// The three variables below are NOT written here. They're set outside:\n//   in Windows PowerShell:  $env:WHATSAPP_TOKEN=\"EAAG...\"\n//   in Railway or Render:   the \"Variables\" / \"Environment\" tab\n\nconst express = require('express');\nconst app = express();\napp.use(express.json());\n\nconst TOKEN         = process.env.WHATSAPP_TOKEN;   // system user's permanent token\nconst PHONE_ID      = process.env.PHONE_NUMBER_ID;  // \"Phone number ID\", NOT the phone number\nconst VERIFY_TOKEN  = process.env.VERIFY_TOKEN;     // a phrase you make up, the same one you paste into Meta\n\n// ---------------------------------------------------------------\n// 1) Meta calls this ONCE, to check that the URL is yours\n// ---------------------------------------------------------------\napp.get('/webhook', (req, res) => {\n  const mode      = req.query['hub.mode'];\n  const token     = req.query['hub.verify_token'];\n  const challenge = req.query['hub.challenge'];\n\n  if (mode === 'subscribe' && token === VERIFY_TOKEN) {\n    console.log('Meta has verified the webhook. Good.');\n    return res.status(200).send(challenge);\n  }\n  console.error('Verification failed: the verify token does not match.');\n  return res.sendStatus(403);\n});\n\n// ---------------------------------------------------------------\n// 2) Every message a customer sends you lands here\n// ---------------------------------------------------------------\napp.post('/webhook', async (req, res) => {\n  res.sendStatus(200);   // reply NOW. If you're slow, Meta retries and the customer gets everything twice.\n\n  try {\n    const value = req.body\n      && req.body.entry && req.body.entry[0]\n      && req.body.entry[0].changes && req.body.entry[0].changes[0]\n      && req.body.entry[0].changes[0].value;\n\n    const msg = value && value.messages && value.messages[0];\n    if (!msg) return;    // it wasn't a message: it was a \"delivered\" or \"read\" notice\n\n    const from = msg.from; // customer's number, with country code, no +\n\n    if (msg.type !== 'text') {\n      await sendText(from, 'For now I only understand text. Type your question.');\n      return;\n    }\n\n    const reply = await think(msg.text.body);\n    await sendText(from, reply);\n\n  } catch (e) {\n    console.error('Failed processing the message:', e);\n  }\n});\n\n// ---------------------------------------------------------------\n// 3) Replying within the 24h window: free-form text and free\n// ---------------------------------------------------------------\nasync function sendText(to, text) {\n  const url = 'https://graph.facebook.com/v21.0/' + PHONE_ID + '/messages';\n\n  const r = await fetch(url, {\n    method: 'POST',\n    headers: {\n      'Authorization': 'Bearer ' + TOKEN,\n      'Content-Type': 'application/json'\n    },\n    body: JSON.stringify({\n      messaging_product: 'whatsapp',\n      to: to,\n      type: 'text',\n      text: { body: text.slice(0, 4000) }   // the real limit is 4096 characters\n    })\n  });\n\n  if (!r.ok) {\n    // This is where you'll see (#131047) if the 24h window has closed on you\n    console.error('WhatsApp said no:', r.status, await r.text());\n  }\n}\n\n// ---------------------------------------------------------------\n// 4) What it replies. Swap this for a call to whichever AI you use.\n// ---------------------------------------------------------------\nasync function think(text) {\n  const t = text.toLowerCase();\n  if (t.includes('hours') || t.includes('open'))    return 'We\\'re open 9am to 6pm, Monday to Friday.';\n  if (t.includes('price') || t.includes('cost'))    return 'You can see our prices here: https://YOUR-SITE.com/pricing';\n  if (t.includes('order'))                          return 'Give me your order number and I\\'ll tell you where it stands.';\n  return 'Hi, I\\'m [YOUR BUSINESS]\\'s assistant. Ask me about hours, prices, or orders.';\n}\n\napp.listen(3000, () => console.log('Listening on port 3000. Still needs to be exposed to the internet.'));"
+    },
+    {
+      "name": "A utility template Meta approves on the first try",
+      "what": "The 'your order has shipped' notice, written so it sails through review and lands in the cheap category. Works just as well for 'your appointment is tomorrow', 'your invoice is ready', or 'your reservation is confirmed'. It's the message you CAN send even if the customer hasn't written to you in a month.",
+      "how": "You have two routes. The easy one: business.facebook.com/wa/manage → 'Message Templates' → blue 'Create template' button, and fill in the form by copying the text below. The developer one: send the first JSON block to the address commented at the top. In both cases, the step people skip is the example: Meta rejects the template if you don't give it a sample value for each variable. Approval usually takes 1 minute to a couple of hours. Once approved, the second block is what you send every time you want to notify someone, and THAT does get billed.",
+      "fill": [
+        [
+          "{{YOUR_WABA_ID}}",
+          "Your 'WhatsApp Business Account ID', from the API Setup panel"
+        ],
+        [
+          "{{YOUR_PHONE_NUMBER_ID}}",
+          "Your 'Phone number ID', the long number from the same panel"
+        ],
+        [
+          "order_shipped",
+          "The name you give it: lowercase, no accents, with underscores"
+        ],
+        [
+          "https://yoursite.com/orders",
+          "The real page where the customer sees their order"
+        ],
+        [
+          "34600111222",
+          "The customer's phone, with country code, no +"
+        ],
+        [
+          "Marta / A-1042 / Thursday, August 21",
+          "The real data for that specific order, in that same order"
+        ]
+      ],
+      "code": "/* ==========================================================\n   STEP 1 - CREATE the template. Done ONCE.\n   POST https://graph.facebook.com/v21.0/{YOUR_WABA_ID}/message_templates\n   Header: Authorization: Bearer {YOUR_TOKEN}\n   ========================================================== */\n{\n  \"name\": \"order_shipped\",\n  \"language\": \"en\",\n  \"category\": \"UTILITY\",\n  \"components\": [\n    {\n      \"type\": \"BODY\",\n      \"text\": \"Hi {{1}}, your order {{2}} has left our warehouse. Estimated delivery date: {{3}}.\",\n      \"example\": {\n        \"body_text\": [[\"Marta\", \"A-1042\", \"Thursday, August 21\"]]\n      }\n    },\n    {\n      \"type\": \"FOOTER\",\n      \"text\": \"Reply to this message if you need anything.\"\n    },\n    {\n      \"type\": \"BUTTONS\",\n      \"buttons\": [\n        { \"type\": \"URL\", \"text\": \"View my order\", \"url\": \"https://yoursite.com/orders\" }\n      ]\n    }\n  ]\n}\n\n/* ==========================================================\n   STEP 2 - SEND the already-approved template. This DOES cost money.\n   POST https://graph.facebook.com/v21.0/{YOUR_PHONE_NUMBER_ID}/messages\n   Header: Authorization: Bearer {YOUR_TOKEN}\n   ========================================================== */\n{\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"34600111222\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"order_shipped\",\n    \"language\": { \"code\": \"en\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"Marta\" },\n          { \"type\": \"text\", \"text\": \"A-1042\" },\n          { \"type\": \"text\", \"text\": \"Thursday, August 21\" }\n        ]\n      }\n    ]\n  }\n}\n\n/* WATCH THE LANGUAGE: if you create the template as \"en\" and send it\n   requesting \"en_US\", you'll hit error (#132001) and nobody notices why. Make them match. */"
+    },
+    {
+      "name": "Ready-to-import n8n flow",
+      "what": "The same auto-reply bot as before but with no code to write and no server to maintain: n8n does the plumbing. It receives the message, checks it's a real message (and not a 'read' receipt), and replies. It's the starting point for later adding AI, a spreadsheet, or your database, by dragging boxes.",
+      "how": "1) In n8n, top right, the three dots → 'Import from clipboard' and paste the whole block. 2) You'll see five boxes. Click 'Reply via WhatsApp' and change PUT_YOUR_PHONE_NUMBER_ID_HERE and PUT_YOUR_PERMANENT_TOKEN_HERE to your own. It's better practice to save the token in 'Credentials' instead of hardcoding it, but first get it working. 3) Turn the flow on with the toggle top right: until it's active, the production URL doesn't exist. 4) Copy the 'Production URL' from the 'Meta verifies the URL' box and paste it into Meta as the Callback URL. 5) Subscribe to the 'messages' field. Honest warning: n8n changes its nodes' version numbers every few months. If importing tells you a node is unknown, hand this JSON to the AI and ask it to update it to your n8n version; it's a one-minute fix.",
+      "fill": [
+        [
+          "PUT_YOUR_PHONE_NUMBER_ID_HERE",
+          "The 'Phone number ID' from the API Setup panel"
+        ],
+        [
+          "PUT_YOUR_PERMANENT_TOKEN_HERE",
+          "The token that never expires, right after the word Bearer and a space"
+        ],
+        [
+          "The text 'Hi, we've received your message...'",
+          "Your automatic reply text"
+        ],
+        [
+          "path: whatsapp",
+          "Leave it, unless you already have another flow using that same route"
+        ]
+      ],
+      "code": "{\n  \"name\": \"WhatsApp auto-reply\",\n  \"nodes\": [\n    {\n      \"parameters\": { \"httpMethod\": \"GET\", \"path\": \"whatsapp\", \"responseMode\": \"responseNode\", \"options\": {} },\n      \"id\": \"a1\",\n      \"name\": \"Meta verifies the URL\",\n      \"type\": \"n8n-nodes-base.webhook\",\n      \"typeVersion\": 2,\n      \"position\": [-220, -160],\n      \"webhookId\": \"whatsapp-verification\"\n    },\n    {\n      \"parameters\": {\n        \"respondWith\": \"text\",\n        \"responseBody\": \"={{ $json.query['hub.challenge'] }}\",\n        \"options\": {}\n      },\n      \"id\": \"a2\",\n      \"name\": \"Return the challenge\",\n      \"type\": \"n8n-nodes-base.respondToWebhook\",\n      \"typeVersion\": 1,\n      \"position\": [40, -160]\n    },\n    {\n      \"parameters\": { \"httpMethod\": \"POST\", \"path\": \"whatsapp\", \"responseMode\": \"onReceived\", \"options\": {} },\n      \"id\": \"b1\",\n      \"name\": \"A message comes in\",\n      \"type\": \"n8n-nodes-base.webhook\",\n      \"typeVersion\": 2,\n      \"position\": [-220, 100],\n      \"webhookId\": \"whatsapp-messages\"\n    },\n    {\n      \"parameters\": {\n        \"conditions\": {\n          \"options\": { \"caseSensitive\": true, \"typeValidation\": \"loose\" },\n          \"conditions\": [\n            {\n              \"id\": \"c1\",\n              \"leftValue\": \"={{ $json.body.entry[0].changes[0].value.messages }}\",\n              \"rightValue\": \"\",\n              \"operator\": { \"type\": \"array\", \"operation\": \"exists\", \"singleValue\": true }\n            }\n          ],\n          \"combinator\": \"and\"\n        },\n        \"options\": {}\n      },\n      \"id\": \"b2\",\n      \"name\": \"It's a real message\",\n      \"type\": \"n8n-nodes-base.filter\",\n      \"typeVersion\": 2,\n      \"position\": [40, 100]\n    },\n    {\n      \"parameters\": {\n        \"method\": \"POST\",\n        \"url\": \"https://graph.facebook.com/v21.0/PUT_YOUR_PHONE_NUMBER_ID_HERE/messages\",\n        \"sendHeaders\": true,\n        \"headerParameters\": {\n          \"parameters\": [\n            { \"name\": \"Authorization\", \"value\": \"Bearer PUT_YOUR_PERMANENT_TOKEN_HERE\" }\n          ]\n        },\n        \"sendBody\": true,\n        \"specifyBody\": \"json\",\n        \"jsonBody\": \"={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.body.entry[0].changes[0].value.messages[0].from, type: 'text', text: { body: 'Hi, we\\'ve received your message. We\\'ll reply within 10 minutes.' } }) }}\",\n        \"options\": {}\n      },\n      \"id\": \"b3\",\n      \"name\": \"Reply via WhatsApp\",\n      \"type\": \"n8n-nodes-base.httpRequest\",\n      \"typeVersion\": 4.2,\n      \"position\": [300, 100]\n    }\n  ],\n  \"connections\": {\n    \"Meta verifies the URL\": { \"main\": [[{ \"node\": \"Return the challenge\", \"type\": \"main\", \"index\": 0 }]] },\n    \"A message comes in\": { \"main\": [[{ \"node\": \"It's a real message\", \"type\": \"main\", \"index\": 0 }]] },\n    \"It's a real message\": { \"main\": [[{ \"node\": \"Reply via WhatsApp\", \"type\": \"main\", \"index\": 0 }]] }\n  },\n  \"settings\": { \"executionOrder\": \"v1\" },\n  \"pinData\": {}\n}"
+    }
+  ],
+  "errors": [
+    [
+      "(#131030) Recipient phone number not in allowed list",
+      "You're using Meta's test number, which can only message the 5 phones you've registered by hand. Not a bug in your code. Fix: API Setup panel → 'To' dropdown → 'Manage phone number list' → add that number and confirm the 6-digit code that arrives by WhatsApp. Once you register your real number, this limitation goes away."
+    ],
+    [
+      "(#131047) Re-engagement message: Message failed to send because more than 24 hours have passed since the customer last replied to this number.",
+      "The window has closed on you. That customer hasn't written to you in over 24 hours, so you can no longer send them free-form text. Fix: send them an approved template (and pay for it). There's no way to reopen the window yourself: only they can reopen it by messaging you. If this happens to you often, your automation is designed wrong, not coded wrong."
+    ],
+    [
+      "(#190) Error validating access token: Session has expired on [date]",
+      "You're using the dashboard's temporary token, which lasts 24 hours. Happens to everyone on day two. Fix: generate the permanent token from business.facebook.com → Business settings → System users → Generate new token, with expiration 'Never' and the whatsapp_business_messaging and whatsapp_business_management permissions. If the permanent token also fails, the system user doesn't have your number assigned as active."
+    ],
+    [
+      "(#132001) Template name does not exist in the translation",
+      "The template's name or language doesn't match what's registered. 90% of the time it's the language: you created it as 'en' and are requesting it as 'en_US', or vice versa. Fix: open WhatsApp Manager, look at the exact language shown on the template, and copy it exactly. Also happens if the template is in 'Pending' status and not yet approved."
+    ],
+    [
+      "The callback URL or verify token couldn't be validated. Please verify the provided information or try again later.",
+      "Meta called your address and you didn't return what it expected. Three causes, in order of frequency: the 'Verify token' phrase isn't identical to the one in your code (check for trailing spaces); your program isn't running at that moment; or the URL isn't https (it has to be https, http won't do). Fix: open your URL ending in /webhook in the browser; if nothing loads, the problem is your server, not Meta."
+    ],
+    [
+      "Your template shows as 'Rejected' with reason INVALID_FORMAT or ABUSIVE_CONTENT",
+      "INVALID_FORMAT almost always means the variable examples are missing, two variables are stuck together, or the message starts or ends in a variable. ABUSIVE_CONTENT triggers on shouting capital letters, promises of money, fake urgency, or asking for personal data. Fix: correct it and resend; you can edit a rejected template. If several get rejected in a row, Meta starts scrutinizing your account, so don't send blindly."
+    ],
+    [
+      "This phone number is already registered with WhatsApp. Please delete the account before proceeding.",
+      "That number already has a regular WhatsApp or a WhatsApp Business app account. Fix: on the phone, Settings → Account → Delete my account, and wait a few minutes. Serious warning: this deletes that number's chat history forever and it cannot be recovered in any way. If the history matters to you, stop and use a different number."
+    ],
+    [
+      "(#131056) (Business Account, Consumer Account) pair rate limit hit. Please retry after some delay.",
+      "You're sending too many messages to the SAME person too fast. It's a per-pair limit, not one for your whole account. Almost always a loop in your code or a webhook you're responding to late, causing Meta to retry. Fix: check that you return 200 the instant you receive the message, before starting to process it, and add a pause between sends to the same number."
+    ]
+  ],
+  "prompts": [
+    {
+      "name": "Build a WhatsApp auto-reply bot from scratch, without knowing how to code",
+      "prompt": "You're my programmer. I don't code: you write the code and I copy and paste it. I want an automatic WhatsApp reply bot using Meta's official WhatsApp Cloud API. No unofficial libraries like Baileys or whatsapp-web.js, because they get my number banned. My situation: [DESCRIBE YOUR BUSINESS IN ONE SENTENCE]. Customers mostly ask me about [TOPIC 1], [TOPIC 2], and [TOPIC 3]. I already have the app created at developers.facebook.com and I have the Phone Number ID, the WhatsApp Business Account ID, and a permanent token. I use [WINDOWS / MAC] and I want this to live on [RAILWAY / RENDER / VERCEL / MY OWN COMPUTER WITH NGROK]. I need, in this order and without skipping anything: 1) the complete server file, with the GET webhook verification and the POST reception, ready to paste, in Node.js and without unusual frameworks; 2) the exact commands I need to type in the terminal, one per line, to install and start it; 3) exactly where to put the token so it doesn't end up published online; 4) the exact URL I need to paste into Meta and what to write in the Verify token field; 5) how I check in under two minutes that it's working. Explain every step as if it's the first time I've opened a terminal. After each block of code tell me what I should see on screen if it went well, and what I'll see if it went wrong. If any step could cost me money, send real messages, or break something irreversible, warn me BEFORE that step, not after."
+    },
+    {
+      "name": "Write templates Meta approves on the first try and that don't run up the bill",
+      "prompt": "Act as a WhatsApp Business Platform template specialist who has pushed hundreds through Meta's review and knows why they get rejected. I need [NUMBER] templates for [MY BUSINESS, DESCRIBED IN ONE SENTENCE], in natural English, for these specific cases: [CASE 1], [CASE 2], [CASE 3]. Rules you must follow: tell me for each template the exact category (UTILITY, MARKETING, or AUTHENTICATION) and why, reminding me that MARKETING costs quite a bit more per message than UTILITY. If something I've asked for as a utility message is actually promotional, tell me straight: Meta recategorizes it on its own and charges me the expensive rate anyway, or rejects it outright. Use variables {{1}}, {{2}} and give me a filled-in sample value for each one, because without examples Meta rejects the template. No shouting capital letters, no excess emoji, no word URGENT, no promises of money, no requesting personal data inside the message. Each template's name in lowercase, no accents, with underscores. The body, max 1024 characters, and it shouldn't start or end with a variable. Give me for each template: name, category, language, body text, footer if needed, buttons if needed, and the complete JSON ready to create it via API. At the end, a table with what it would cost to send 1,000 of each in Spain, warning me the exact figure comes from Meta's official price list and not from you."
+    },
+    {
+      "name": "Calculate the real cost and decide whether the API is worth it",
+      "prompt": "Help me decide with numbers, not opinions, which WhatsApp route suits me. Do the math with my data, don't give me a generic answer. My data: I sell [WHAT YOU SELL]. I have [NUMBER] customers or orders a month. In a month I'm the one who writes first to about [NUMBER] customers (alerts, reminders, promotions), and I receive about [NUMBER] messages from customers writing to me. I'm in Spain and so are my customers. Right now I handle this [BY HAND FROM MY PHONE / WITH THE WHATSAPP BUSINESS APP / I DON'T HANDLE IT AT ALL]. Compare these four options with their real monthly cost in euros: 1) the free WhatsApp Business app, by hand, with quick replies and away message; 2) a simple wa.me link on the site and nothing else; 3) the WhatsApp Cloud API directly with Meta, counting templates one by one and knowing that replying within the 24-hour window is free; 4) a middleman like 360dialog, Wati, Twilio, or Respond.io, with their monthly fee and per-message markup. For each option tell me: monthly cost, my hours of work per month, what breaks if volume doubles, and what I WON'T be able to do with it. If you're not sure of a price, say so clearly and give me a range instead of making up a number. End with a one-sentence recommendation and the specific threshold, in messages per month, at which it would make sense for me to switch options."
+    },
+    {
+      "name": "Decode a WhatsApp API error",
+      "prompt": "I got an error from the WhatsApp Cloud API and I don't know what it means. Here it is exactly as it is, untouched: [PASTE THE COMPLETE ERROR, INCLUDING THE NUMBER IN PARENTHESES AND THE FULL JSON RESPONSE IF YOU HAVE IT]. Context so you don't have to guess: I was trying to [WHAT YOU WERE EXACTLY DOING]. I'm using [META'S TEST NUMBER / MY REAL, ALREADY-REGISTERED NUMBER]. The recipient is [MY OWN PHONE / A CUSTOMER'S PHONE]. The last time that person wrote to me was [EXACTLY HOW LONG AGO]. My token is [THE TEMPORARY 24-HOUR ONE FROM THE DASHBOARD / THE PERMANENT SYSTEM USER ONE]. And this is the code or configuration I'm using: [PASTE THE CODE OR SCREEN]. Answer me in this format: 1) in one sentence and no jargon, what happened; 2) which of these three it is: a configuration mistake on my end, a platform limit, or the 24-hour window closing on me; 3) the specific fix, with exact clicks and the literal button names I'll see on screen, or the corrected code, complete and ready to paste; 4) how I check in 30 seconds that it's already fixed. Don't give me five possible causes ranked by probability: tell me the most likely one given my data, and if you need one more piece of information to be sure, ask me exactly one thing. If the fix involves spending money, sending real messages, or something irreversible, warn me first."
+    },
+    {
+      "name": "Turn my site into a WhatsApp conversation machine",
+      "prompt": "I want WhatsApp to bring me customers from my site without paying for the API or setting up servers. You're my programmer and I just copy and paste what you give me. My WhatsApp number is [+YOUR COUNTRY CODE AND NUMBER] and my business is [DESCRIBE IT IN ONE SENTENCE]. My site is built with [WORDPRESS / SHOPIFY / PLAIN HTML / WEBFLOW / SOMETHING ELSE]. I need six things. First: the correct wa.me link with the message already written, explaining to me how spaces and special characters get encoded so it doesn't break when pasted. Second: a floating button in the bottom-right corner, with the complete HTML and CSS ready to paste, that looks good on mobile, doesn't cover the footer, and is keyboard-accessible. Third: have the pre-filled message change depending on the page, so if the visitor is looking at [SPECIFIC PRODUCT OR SERVICE] the message already says what they're asking about. Fourth: three different versions of the pre-filled text, and tell me which one usually converts better and why, without making up statistics. Fifth: a QR code that leads to that same chat with the same message, to put on [STOREFRONT / INVOICES / BUSINESS CARD]. Sixth: exactly where to paste each piece in [MY PLATFORM], with the literal menu, file, and field name. At the end, tell me if any of this requires a privacy notice in Spain and give me the exact sentence I'd need to add."
+    }
+  ],
+  "words": [
+    [
+      "Cloud API",
+      "Meta's official plug for a program to send and receive WhatsApp messages. 'Cloud' because the hardware is Meta's and you just talk to it over the internet. It's the only official channel left."
+    ],
+    [
+      "WABA (WhatsApp Business Account)",
+      "Your business account within Meta. Not your number: it's the folder holding your numbers, your templates, and your invoice. Its ID gets asked of you a thousand times."
+    ],
+    [
+      "Phone number ID",
+      "A long number identifying your line within Meta. NOT your phone number, even though both are numbers. Mix them up and every API call fails with a generic error."
+    ],
+    [
+      "Template",
+      "A phrase with blanks that Meta has read and approved before you use it. It's the only thing you can send to someone who hasn't written to you in the last 24 hours. Billed one at a time."
+    ],
+    [
+      "24-hour window",
+      "The stretch during which you can talk freely and for free. Starts every time the customer writes to you and lasts exactly one day. Outside it, only paid templates. This rule shapes your entire automation's design."
+    ],
+    [
+      "Webhook",
+      "The internet address where Meta leaves incoming messages, like the mailbox the postman drops letters into. You give it a URL and Meta calls that URL every time something happens."
+    ],
+    [
+      "Token",
+      "A very long password proving you're you. Whoever has it can write on your business's behalf. The dashboard's expires in 24 hours; the real one is generated separately and doesn't expire."
+    ],
+    [
+      "Opt-in",
+      "The customer's permission to write to them. Has to be explicit and saved: a box they checked, a form, a written 'yes'. Without it there's no legal business in Spain, and Meta requires it too."
+    ],
+    [
+      "BSP (Business Solution Provider)",
+      "An authorized middleman (Twilio, 360dialog, Wati, Respond.io) that sells you WhatsApp access with a nice inbox on top. Charges a fee, a per-message markup, or both."
+    ],
+    [
+      "Quality and messaging limit",
+      "Meta gives you a traffic light (green, yellow, red) based on how much people block or report you, and a cap on new customers per day: 250 to start, then 1,000, 10,000, and so on. Red lowers the cap. The cap doesn't rise by paying."
+    ]
+  ],
+  "matters": [
+    "The number gets burned and there's no going back. Putting a number on the Cloud API requires deleting its regular WhatsApp account first, and that destroys the chat history forever. And that number can never go back to the phone app either. Buy a €5-10 prepaid eSIM and don't touch your lifelong number.",
+    "The 24-hour window isn't a technical detail, it's your bill. Replying is free; interrupting costs per message. If your idea consists of writing to lists of people who haven't talked to you in weeks, you're setting up a business of sending marketing templates at 5-8 cents each, and that needs to pencil out before you write a single line of code.",
+    "The customer's permission isn't paperwork. In Spain, GDPR and e-commerce law apply, and the AEPD fines commercial sending without consent. But before the fine comes Meta's punishment: if people block you, your number goes red, your limit drops, and you can end up with the account closed. Keep a record of who gave you permission and when.",
+    "Unofficial libraries will get your number shut down. There are free projects (Baileys, whatsapp-web.js, and similar) that connect by pretending to be WhatsApp Web and promise all this without templates or payments. They work until they don't: Meta detects them and blocks the number, with no warning and no appeal. Fine for an experiment of yours. Never for the number your customers write to."
+  ],
+  "ignore": [
+    "The On-Premises API. It's the old version you installed on your own server, and Meta shut it down in 2025. If a tutorial talks about Docker, 'wacore' and 'webapp' containers, or a MySQL database for WhatsApp, close it: it's outdated and will waste your afternoon.",
+    "Flows, product catalog, cart, interactive buttons, dropdown lists, and video messages. All of that exists and is great, but it's decoration on top of a message that first has to arrive. Send plain text until the whole pipeline works; you can decorate later.",
+    "Business verification and moving up a messaging tier. You start with 250 new customers every 24 hours, and that's far more than you'll move in your first month. Verification requires incorporation documents, tax ID, and invoices, and takes days. Do it when 250 genuinely becomes too small, not before."
+  ]
+}

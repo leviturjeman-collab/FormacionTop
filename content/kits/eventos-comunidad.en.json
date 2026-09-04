@@ -1,0 +1,1489 @@
+{
+  "id": "eventos-comunidad",
+  "order": 19,
+  "title": "Events and community",
+  "kicker": "Events",
+  "promise": "Registrations that confirm themselves with a QR ticket, reminders by Telegram and email, check-in with no lines, a next-day survey, and a summary management reads in two minutes.",
+  "audience": "associations, training centers, small town councils, professional communities, and any team organizing talks, workshops, or conferences",
+  "plain": "This is event logistics turned into a circuit. Organizing a talk or a conference always has the same five pain points: signing people up without losing anyone, knowing how many will actually show, the entrance line with a printed list and a pen, chasing feedback afterward, and management's \"how did it go?\" email once nobody remembers anymore. This kit solves them in sequence: the registration form saves to a sheet with capacity control, each person gets their confirmation with a QR code that's their ticket, the night before, the reminder goes out (a person approves the batch before it sends), at the door the QR gets scanned and check-in logs itself, the next day the survey reaches those who came, and with the responses the system drafts the management summary: how many signed up, how many came, what score they give, and what they ask for next time. The AI writes announcements, reminds people politely, and summarizes opinions; the decisions — who gets invited, what happens with the waitlist, what gets told to management — stay yours. It works the same for a 40-person talk as for a 300-person conference: the capacity changes, not the circuit.",
+  "fits": [
+    "Associations managing registrations by answering emails one by one",
+    "Workshops with limited spots where more people always sign up than fit and nobody manages the waitlist",
+    "Free events with 40% no-shows because signing up costs nothing",
+    "The entrance line with the printed list, the pen, and the row of waiting people",
+    "Reminders sent by hand the night before, whenever someone remembers",
+    "Satisfaction surveys sent late that 5% of people answer",
+    "The summary for management or the board thrown together by hand days later",
+    "Monthly talk series where every edition is organized from scratch",
+    "Communities with a Telegram group who want to notify people without spamming",
+    "Knowing which channel brings registrants who actually show up: the poster, the email, or word of mouth"
+  ],
+  "notFor": [
+    "Paid ticket sales. As soon as money is involved you need a payment gateway with its own tax and consumer obligations: use a ticketing platform and keep the rest of this kit's circuit",
+    "Massive events with thousands of attendees and professional access control. There, check-in is hardware and staff, not a sheet",
+    "Sending the announcement to purchased lists or people who haven't asked to hear from you. Besides being illegal, it burns the sender's reputation",
+    "Replacing the decision of who to invite or who gets a spot in selective events. The system orders the queue; the criteria are yours",
+    "One-off events for 15 people. At that scale, a form and ten manual emails cost less than building this: come back once you repeat or grow"
+  ],
+  "scopes": [
+    {
+      "id": "minimo",
+      "label": "Minimum",
+      "what": "The form saves itself to the sheet with capacity control and automatic QR confirmation. The waitlist logs itself. Reminders and check-in stay manual, but nobody gets lost anymore and there's no overbooking.",
+      "time": "One afternoon, 4-5 hours",
+      "cost": "€0 a month with free plans, plus API cents",
+      "skip": "Skip scanner check-in and the survey. With registration, capacity, and automatic confirmation you've already removed 60% of the secretarial work."
+    },
+    {
+      "id": "estandar",
+      "label": "Standard",
+      "what": "Everything in minimum plus the day-before reminder batch approved by the organizer (email and Telegram group alert), check-in scanning the QR against the sheet, and the next-day survey only to those who came.",
+      "time": "One week in spare time, about 15 hours",
+      "cost": "€10-40 a month: orchestrator and API",
+      "skip": "Skip AI survey analysis and the automatic summary: with the responses in the sheet you can already read them by hand for the first couple of events."
+    },
+    {
+      "id": "avanzado",
+      "label": "Advanced",
+      "what": "All of the above plus waitlist promotion when someone cancels, AI survey analysis, the generated management summary, and metrics compared across editions of the series.",
+      "time": "Two or three weeks part-time",
+      "cost": "€20-60 a month",
+      "skip": "Don't start here. Compared metrics need at least three events' worth of data to say anything that isn't noise."
+    }
+  ],
+  "brief": {
+    "id": "brief",
+    "name": "Define your event and its circuit before building anything",
+    "when": "First thing, with your next real event as the working case.",
+    "prompt": "Act as a seasoned event producer, the kind who thinks about the door line and not just the poster. We're going to build a registration, reminder, check-in, and survey circuit with AI and human review, using my next event as a real case.\n\nMy context:\n- Who organizes and for which community: [ORGANIZATION]\n- The next event: what, when, where, and capacity: [EVENT]\n- How people register today and how many get lost along the way: [REGISTRATION TODAY]\n- What happened at the last event: registrants, actual attendees, how the entrance went: [LAST EVENT]\n- Channels with the community: email, Telegram group, social media: [CHANNELS]\n- Who works the day of the event and with what devices at the door: [TEAM]\n- How often we organize: [FREQUENCY]\n- Budget and hours: [LIMITS]\n\nDo this, in this order:\n\n1. Give me back my event's full lifecycle in numbered phases, from announcement to management summary, as you understood it. Mark every assumption with WARNING.\n2. Ask me only the three questions that would most change the design. Stop and wait. I suspect one will be about no-shows at free events and another about what happens at the door if the tech fails.\n3. When I answer, tell me where I'm losing the most today: registrations that don't come in, unmanaged no-shows, the entrance line, or the silence afterward? Choose using my numbers.\n4. Tell me what does NOT get automated: the waitlist decision when there's selection, any mass message without someone approving the batch, and dealing with speakers and special guests.\n5. Propose the minimum scope for this specific next event and what gets left for the next edition. Events have a date: the scope gets trimmed to what will definitely arrive.\n6. Write success criteria with numbers: attendance percentage over registrants, minutes of line at the door, survey response percentage.\n\nDon't recommend ticketing platforms unless my case screams for them (if I charge admission, say so and stop there). If my event is so small this is overkill, tell me with the math.",
+    "fill": [
+      {
+        "slot": "[ORGANIZATION]",
+        "what": "Who you are and who you organize for",
+        "example": "Downtown Merchants Association, events for members and neighbors"
+      },
+      {
+        "slot": "[EVENT]",
+        "what": "The next real event, with date and capacity",
+        "example": "Talk on window display, Thursday the 24th at 19:00, assembly hall, 80 seats"
+      },
+      {
+        "slot": "[REGISTRATION TODAY]",
+        "what": "How people sign up and what gets lost",
+        "example": "A Google Form someone dumps by hand into a spreadsheet; duplicates slip through and there's no seat cap"
+      },
+      {
+        "slot": "[LAST EVENT]",
+        "what": "The numbers from the last one, unvarnished",
+        "example": "120 registered, about 70 came, entry was a printed list and 15 minutes of line"
+      },
+      {
+        "slot": "[CHANNELS]",
+        "what": "Where you talk to your community",
+        "example": "An 800-member email list and a Telegram group of 250"
+      },
+      {
+        "slot": "[TEAM]",
+        "what": "Who's at the door and with what",
+        "example": "Two volunteers with their phones"
+      },
+      {
+        "slot": "[FREQUENCY]",
+        "what": "How often you have an event",
+        "example": "One talk a month and an annual conference"
+      },
+      {
+        "slot": "[LIMITS]",
+        "what": "Euros and hours",
+        "example": "Under €30 a month and the evenings of the week before"
+      }
+    ],
+    "expect": "The lifecycle in phases with warnings, three questions, the main leak with numbers, what doesn't get automated, and a minimum scope that lands by the event date.",
+    "stuck": "If it designs a gorgeous system that would be ready two weeks after your event, remind it of the rule: \"the event is on [date]; tell me what we build for that date and what waits for the next edition.\" Events don't wait for systems."
+  },
+  "architecture": [
+    {
+      "layer": "1. Registration with capacity",
+      "what": "The registration form that writes to the sheet, checks the seats, and decides on the spot: confirmed seat or waitlist.",
+      "nocode": "A web form triggering the n8n Webhook; the workflow counts registrants against the event's capacity.",
+      "code": "An endpoint with a database count and capacity restriction.",
+      "why": "Capacity control at the moment of registration kills overbooking and sheets with 120 names for 80 chairs. And the waitlist is born ordered, not improvised."
+    },
+    {
+      "layer": "2. The QR ticket",
+      "what": "Every confirmed seat gets an email with its unique code and QR: it's their ticket and what the door will scan.",
+      "nocode": "A Code node generates the code and the QR's URL; the confirmation email carries it embedded.",
+      "code": "The same, with the QR generated on your own server if you'd rather not depend on an external image service.",
+      "why": "The QR turns check-in from \"find me on the list\" into a two-second beep. And the unique code later tells you who actually came, which is the metric that changes everything."
+    },
+    {
+      "layer": "3. Approved-batch reminders",
+      "what": "The night before, the system prepares the reminder for all confirmed attendees (email) and the group alert (Telegram). A person reviews the batch and approves it with a button.",
+      "nocode": "A workflow with a Schedule Trigger that builds the batch and sends it to the organizer's Telegram with buttons.",
+      "code": "A cron with a send queue that waits on approval.",
+      "why": "The day-before reminder is the number-one lever against no-shows at free events. And human approval avoids the classic failure: the batch going out with last month's date because nobody checked it."
+    },
+    {
+      "layer": "4. Check-in at the door",
+      "what": "Volunteers scan the QR with their phone; the system looks up the code in the sheet and marks attended with a timestamp. No line, no pen.",
+      "nocode": "A small check-in page or a second webhook-based workflow: the phone's scanner opens the QR's URL and the workflow marks the row.",
+      "code": "A static page with a browser QR reader calling the check-in webhook.",
+      "why": "Check-in logged in the moment feeds everything after: the survey only goes to those who came, and the summary reports real attendance, not registrants."
+    },
+    {
+      "layer": "5. Survey to those who came",
+      "what": "The next morning, the short survey (one score and two questions) goes out only to those who checked in.",
+      "nocode": "A scheduled workflow that filters attended and emails the survey form's link.",
+      "code": "The same, with the attendee's token in the link so you don't ask their name again.",
+      "why": "Short survey, next day, only to attendees: those three decisions multiply the response rate. Nobody answers the ten-question survey sent a week later."
+    },
+    {
+      "layer": "6. Analysis and management summary",
+      "what": "With the responses and the event's numbers, the AI groups what people say and drafts the summary: figures, repeated themes, three improvements. A person reviews it and sends it.",
+      "nocode": "The kit's analysis prompt with the responses pasted, and the summary prompt with the sheet's figures.",
+      "code": "A templated report generated when the event closes.",
+      "why": "The 48-hour summary, with data and direct quotes, is what turns \"it went fine\" into decisions for the next edition. And it reaches management while it still matters."
+    },
+    {
+      "layer": "7. Series memory",
+      "what": "Every event leaves its row of figures: registrants, attendance, average score, acquisition channel. Between editions, you compare them.",
+      "nocode": "A history tab with one row per event and comparison formulas.",
+      "code": "An events table with its metrics.",
+      "why": "The third edition gets organized by looking at the previous two: which day works, which channel brings people who actually show up, what capacity to ask for. Memory is what separates a series from a string of improvisations."
+    }
+  ],
+  "stack": [
+    {
+      "need": "Orchestrate the circuit",
+      "nocode": "n8n, self-hosted or cloud, with a public URL for the registration and check-in webhooks.",
+      "code": "A small service with two endpoints and a cron.",
+      "pick": "n8n: two webhooks, two scheduled workflows, and Gmail and Telegram nodes cover the whole thing. This kit is one of the ones n8n handles entirely without breaking a sweat."
+    },
+    {
+      "need": "The model that drafts and summarizes",
+      "nocode": "HTTP call to the Anthropic API with the key in n8n credentials.",
+      "code": "The official SDK.",
+      "pick": "A mid-size model for announcements and survey analysis (they need nuance), and none at all for the registration circuit: signing up and counting seats doesn't need AI, and what doesn't need AI doesn't get it."
+    },
+    {
+      "need": "Registrations and capacity",
+      "nocode": "Google Sheets: registrants, events, and history tabs.",
+      "code": "Postgres if volume or concurrency calls for it (hundreds of registrations in minutes).",
+      "pick": "Sheets. If you're opening registrations for a very popular event and expect a rush in the first minute, that's when you switch: database or platform, because a concurrent sheet suffers."
+    },
+    {
+      "need": "The QR",
+      "nocode": "A Code node that generates the unique code and builds a QR service URL for the email.",
+      "code": "A QR library on your own server, to avoid depending on a third party the day of the event.",
+      "pick": "The external service works to start. If the event matters, generate the QRs on your side or download them beforehand: the door can't depend on a third party being up at 6:55pm."
+    },
+    {
+      "need": "Notify and approve",
+      "nocode": "Gmail for confirmations, reminders, and the survey; Telegram for the community group and for the organizer's approvals.",
+      "code": "Transactional email if you go past a few hundred sends per event.",
+      "pick": "Email for individual things (ticket, reminder, survey) and Telegram for the collective one (the group alert). Not the other way around: a ticket via Telegram gets lost, and a group message via email is spam."
+    },
+    {
+      "need": "Check-in at the door",
+      "nocode": "The phone camera's QR reader opening each ticket's check-in URL.",
+      "code": "A page with an in-browser QR reader (the library is in the kit) hitting the webhook.",
+      "pick": "Start with the camera and the URL: zero install for volunteers. And always, always, the printed paper list in the bag as plan B."
+    }
+  ],
+  "data": [
+    {
+      "entity": "registrant",
+      "fields": [
+        [
+          "id",
+          "Unique registration identifier"
+        ],
+        [
+          "event_id",
+          "Which event they're registering for"
+        ],
+        [
+          "registration_date",
+          "When they signed up, in ISO. Orders the waitlist"
+        ],
+        [
+          "name",
+          "Their name"
+        ],
+        [
+          "email",
+          "Where they get their ticket and the survey"
+        ],
+        [
+          "channel",
+          "How they heard about it: email, telegram, poster, word_of_mouth, web"
+        ],
+        [
+          "code",
+          "The unique code for their ticket, carried by the QR"
+        ],
+        [
+          "status",
+          "confirmed, waitlisted, canceled, promoted"
+        ],
+        [
+          "attended",
+          "true/false, set by check-in"
+        ],
+        [
+          "checkin_time",
+          "What time they came in, if they did"
+        ]
+      ],
+      "note": "The code + attended pair is the kit's heart: the code identifies the ticket unambiguously, and attended splits the world in two: those who came (survey, thanks) and those who didn't (no survey; maybe a \"you missed it\" if the series calls for it). Channel is asked on the form with a dropdown: it's free marketing data."
+    },
+    {
+      "entity": "event",
+      "fields": [
+        [
+          "event_id",
+          "Event or edition identifier"
+        ],
+        [
+          "name",
+          "Its name"
+        ],
+        [
+          "date_time",
+          "When it is, in ISO"
+        ],
+        [
+          "location",
+          "Where, as it appears in communications"
+        ],
+        [
+          "capacity",
+          "Total seats"
+        ],
+        [
+          "overbooking",
+          "How many extra seats you accept counting on expected no-shows. 0 if you're not gambling"
+        ],
+        [
+          "status",
+          "open, closed, held, summarized"
+        ]
+      ],
+      "note": "Overbooking is the uncomfortable decision of free events: with a historic 35% no-show rate, accepting 15% extra fills the room. But it's an organizer's decision with their history in front of them, never a default value: start at 0 and adjust with your history tab's data."
+    },
+    {
+      "entity": "survey_response",
+      "fields": [
+        [
+          "event_id",
+          "Which event"
+        ],
+        [
+          "date",
+          "When they answered"
+        ],
+        [
+          "score",
+          "The rating, 0 to 10"
+        ],
+        [
+          "best_part",
+          "Free response: what would they highlight"
+        ],
+        [
+          "to_improve",
+          "Free response: what would they change"
+        ],
+        [
+          "would_return",
+          "yes/no/depends"
+        ]
+      ],
+      "note": "Three questions and a score: longer lowers the response rate. The two free-text ones are what the AI groups afterward; the score and would-return are what you compare between editions. Responses are anonymous by default: improving the event doesn't require knowing who said what."
+    }
+  ],
+  "phases": [
+    {
+      "id": "diseno",
+      "title": "Circuit design with the event on the calendar",
+      "goal": "Define the full circuit for the next real event: capacity, channels, messages, and what gets automated in this edition.",
+      "minutes": 180,
+      "deliverable": "The event's lifecycle designed, this edition's scope decided, and the sheet built.",
+      "done": [
+        "You have the last event's numbers: registrants, attendees, line",
+        "This edition's scope is decided with the date in front of you",
+        "The sheet has the registrants, events, and history tabs with their columns",
+        "The form asks the acquisition channel with a dropdown"
+      ],
+      "steps": [
+        {
+          "title": "Pull the numbers from the last event",
+          "minutes": 30,
+          "where": "The spreadsheet, the form, or the team's memory",
+          "action": "Note down from the last event: registrants, real attendees (even eyeballed from the room), minutes of line at the door, and whether there was a survey and how many answered. That's your baseline.",
+          "expect": "Four numbers, even if two are honest estimates. The no-show rate at free events usually stings: 30-50% is normal.",
+          "stuck": "If there's no past data at all, your first edition with this kit IS the baseline. Build it, measure, and comparison starts on the second one."
+        },
+        {
+          "title": "Run the brief with the date in front of you",
+          "minutes": 60,
+          "where": "Claude or ChatGPT",
+          "action": "Fill in the brief with your next real event and sit through the questions. Decide scope with the events rule: whatever won't definitely land by the date goes to the next edition.",
+          "promptId": "brief",
+          "expect": "The lifecycle in phases, the main leak, and this edition's scope in writing.",
+          "stuck": "If you're unsure about scope, here's the value order: registration with capacity and QR first, reminder second, check-in third, survey fourth, summary fifth. Cut wherever the date catches you."
+        },
+        {
+          "title": "Build the sheet and the form",
+          "minutes": 60,
+          "where": "Google Sheets and your web form",
+          "action": "Create the registrants, events, and history tabs with the data model's columns. Fill in the event's row with its capacity. On the form: name, email, and the \"how did you hear about us?\" dropdown. Paste the webhook URL once you import the workflow.",
+          "expect": "The sheet ready and a three-field form. More fields, fewer registrations: every extra field has to earn its place.",
+          "stuck": "Resist \"just in case\" fields (ID number, phone, company...). Ask only for what you'll actually use: minimization and conversion go hand in hand here."
+        },
+        {
+          "title": "Write the announcement",
+          "minutes": 30,
+          "where": "Claude, your email, and your Telegram group",
+          "action": "Using the announcement prompt, write the notice for email and the short version for the Telegram group. Review them, add your voice, and publish with the registration link.",
+          "promptId": "convocatoria",
+          "expect": "Two pieces: the email with the essentials up top (what, when, where, link) and the four-line Telegram message. Registrations coming in from day one.",
+          "stuck": "If the announcement comes out institutional and flat, give the prompt the angle: what concrete problem the talk solves for whoever comes. \"Talk on window display\" draws less than \"why your window display scares off people who already stopped.\""
+        }
+      ]
+    },
+    {
+      "id": "inscripciones",
+      "title": "Registration, capacity, and QR ticket",
+      "goal": "Get signing up to work on its own: seat or waitlist instantly, a QR ticket in the email, and a sheet that always adds up.",
+      "minutes": 240,
+      "deliverable": "Active workflow: form → capacity checked → QR confirmation or waitlist → organizer notified.",
+      "done": [
+        "A test registration gets its QR email in under a minute",
+        "The 81st registration for an 80-seat capacity lands on the waitlist with its honest email",
+        "Email duplicates get caught and don't eat a seat",
+        "The organizer gets the waitlist alert and knows what to do with it"
+      ],
+      "steps": [
+        {
+          "title": "Import the workflow and connect credentials",
+          "minutes": 45,
+          "where": "n8n",
+          "action": "Import the kit's workflow. Connect Google Sheets, Gmail, Telegram, and set the event's capacity in the Seat and QR code node. Paste the webhook URL into the form.",
+          "expect": "The eleven nodes with no red warnings and the form triggering the workflow.",
+          "stuck": "Test the webhook with curl before fighting with the form: if curl works and the form doesn't, the problem is the form, almost always the field names."
+        },
+        {
+          "title": "Test capacity at the limit",
+          "minutes": 45,
+          "where": "n8n and the sheet",
+          "action": "Set test capacity to 3 and send five registrations. The first three should confirm with QR; the fourth and fifth go to the waitlist with an email stating it clearly and their position.",
+          "expect": "The sheet with 3 confirmed and 2 waiting, and no email promising a seat that doesn't exist.",
+          "stuck": "If two simultaneous registrations squeeze into the last seat, don't obsess over it: for community events, the organizer resolves the tie by adding one more chair. Note it as a known limit in the sheet; the fine solution (locked database) belongs to the advanced scope."
+        },
+        {
+          "title": "Review the ticket email",
+          "minutes": 45,
+          "where": "Your inbox, on mobile",
+          "action": "Open the confirmation on your phone, which is where everyone will open it. The QR is big, the what-when-where is above it, and there's a line saying \"if you can't come, reply to this email\" that feeds the waitlist.",
+          "promptId": "mensajes-evento",
+          "expect": "A ticket you can show at the door without zooming, and that asks you to let them know if you're not coming.",
+          "stuck": "If the QR arrives as an external link you need connection to open, consider attaching the image: in a basement with no coverage, a QR embedded in a downloaded email works and the link doesn't."
+        },
+        {
+          "title": "Rehearse promotion from the waitlist",
+          "minutes": 45,
+          "where": "n8n and the sheet",
+          "action": "Simulate a cancellation: mark a confirmed registrant as canceled and run the promotion move (manual in this edition: the organizer changes the first waiter's status to promoted and the workflow sends them their QR). Time the move.",
+          "expect": "Full promotion in under two minutes: status change, QR email to the promoted person.",
+          "stuck": "Automatic promotion on cancellation is tempting, but in selective events or with couples who register together it breaks things: keep it manual until your community's pattern is clear."
+        },
+        {
+          "title": "Test the weird cases",
+          "minutes": 60,
+          "where": "n8n",
+          "action": "Run this kit's test cases: the duplicate, the email with a typo, the half-filled form, the first-day rush, and the cancellation that frees a seat. Document what the workflow does with each.",
+          "expect": "Every case ends in a coherent state and nobody gets two QRs or none.",
+          "stuck": "The duplicate (the same person clicking send twice) is by far the most common: the workflow looks up the email before granting a seat, and if it exists, resends the original QR instead of creating another row."
+        }
+      ]
+    },
+    {
+      "id": "eldia",
+      "title": "Reminders and check-in on the day",
+      "goal": "Get the approved reminder batch out the night before, and get the door down to one beep per person on the day, with a paper backup plan.",
+      "minutes": 240,
+      "deliverable": "Batch reminders with approval, a check-in page working on the door's phones, and a printed plan B.",
+      "done": [
+        "The reminder batch goes out after an organizer button click, not on its own",
+        "A scanned QR marks attended with the time in the sheet, on the spot",
+        "An invalid or repeated QR shows an alert on screen without drama at the door",
+        "The paper list is printed the evening before, just in case"
+      ],
+      "steps": [
+        {
+          "title": "Build the reminder batch",
+          "minutes": 60,
+          "where": "n8n, separate workflow with Schedule Trigger",
+          "action": "The night before at 10:00, the workflow prepares the reminder for confirmed attendees and the alert for the Telegram group, and presents the batch to the organizer with a button. Approving sends them.",
+          "promptId": "recordatorio-tanda",
+          "expect": "A batch reviewable in one minute and sends going out after the button click. The reminder asks, again, to let them know if they're not coming: every heads-up is a waitlist seat.",
+          "stuck": "If the event is Monday, the night before is Sunday: move the batch to Friday noon. A weekend reminder for a Monday event gets opened less, but Friday's gets remembered."
+        },
+        {
+          "title": "Build QR check-in",
+          "minutes": 75,
+          "where": "n8n, second workflow with webhook",
+          "action": "Each ticket's QR points to the check-in URL with its code. Build the workflow: the webhook receives the code, looks it up in the sheet, marks attended and time, and responds with a green screen showing the name (or red if it doesn't exist or already checked in). Volunteers only scan with the camera.",
+          "code": {
+            "lang": "javascript",
+            "file": "checkin-code-node.js",
+            "code": "// Nodo Code del flujo de check-in: valida el codigo contra las filas leidas de la hoja.\n// Entrada: los items de Google Sheets (inscritos del evento) + el codigo del webhook.\nconst codigo = ($('Webhook check-in').first().json.query.codigo || '').trim();\nconst filas = $input.all().map((i) => i.json);\nconst fila = filas.find((f) => String(f.codigo) === codigo);\n\nif (!codigo || !fila) {\n  return [{ json: { ok: false, motivo: 'codigo_no_encontrado', mensaje: 'Entrada no encontrada. Pasa por la mesa, lo miramos en la lista.' } }];\n}\nif (String(fila.estado) !== 'confirmado' && String(fila.estado) !== 'promovido') {\n  return [{ json: { ok: false, motivo: 'estado_' + fila.estado, mensaje: 'Esta entrada no está activa (' + fila.estado + '). Pasa por la mesa.' } }];\n}\nif (String(fila.asistio) === 'true') {\n  return [{ json: { ok: false, motivo: 'ya_dentro', mensaje: fila.nombre + ' ya hizo check-in a las ' + fila.hora_checkin + '. Si es un error, mesa.' } }];\n}\nreturn [{\n  json: {\n    ok: true,\n    id: fila.id,\n    nombre: fila.nombre,\n    asistio: true,\n    hora_checkin: new Date().toISOString(),\n    mensaje: 'Adelante, ' + fila.nombre + ' ✔',\n  },\n}];",
+            "note": "Two branches follow this node: the green one updates the row (attended, checkin_time) and returns the welcome screen; the red one only returns the desk message. A repeated QR doesn't block the door: it routes to the desk, which is what it's there for."
+          },
+          "expect": "You scan a test QR and within two seconds: green screen, row marked. A repeat shows red with the time of the first beep.",
+          "stuck": "Test check-in with the volunteers' actual phones and the venue's actual wifi the evening before, not the morning of the event. Half of all door disasters are a venue with no coverage, discovered at 6:50pm."
+        },
+        {
+          "title": "Prepare the door's plan B",
+          "minutes": 45,
+          "where": "The printer and five minutes with the volunteers",
+          "action": "The evening before, print the confirmed list sorted by name with their code. Rehearse the three cases with the volunteers: QR won't load (look up by name and mark on paper), person without a registration (organizer's call, not the volunteer's), and repeated QR (to the desk, no drama).",
+          "expect": "Two volunteers who know what to do in all three cases without calling you. The paper in the bag.",
+          "stuck": "Decide who gets to admit non-registered people BEFORE the event: if there are free seats from no-shows, the normal move is letting them in and noting them down; but that's the organizer's call, made ahead of time, not the volunteer's with a line staring at them."
+        },
+        {
+          "title": "Day D: run it and take notes",
+          "minutes": 60,
+          "where": "The event",
+          "action": "QR check-in, paper backup, and you jotting down two things for the series' memory: minutes of line at peak and any circuit incident.",
+          "expect": "The line down to seconds per person and the sheet marking attendance in real time. By the middle of the event you already know the no-show rate.",
+          "stuck": "If scanning fails in a chain (wifi down), switch to paper without fighting the tech in front of people: the event comes first. Diagnosis is for tomorrow; tonight, pen."
+        }
+      ]
+    },
+    {
+      "id": "despues",
+      "title": "Survey, analysis, and management summary",
+      "goal": "Close the loop within 48 hours: survey to those who came, responses grouped with AI, and the summary management reads in two minutes.",
+      "minutes": 210,
+      "deliverable": "Survey sent the next day, response analysis done, and the summary delivered to management with the history row filled in.",
+      "done": [
+        "The survey went out the next morning only to those who checked in",
+        "Free-text responses are grouped into themes with their quotes",
+        "The management summary went out in under 48 hours and fits on one page",
+        "The history row is filled in and compared to the previous edition"
+      ],
+      "steps": [
+        {
+          "title": "Launch the survey to attendees",
+          "minutes": 45,
+          "where": "n8n, scheduled workflow",
+          "action": "The next morning at 9:00, the workflow filters attended=true and sends the email with the survey link: a 0-10 score, what you'd highlight, what you'd improve, would you return. With sincere thanks up top.",
+          "promptId": "encuesta-posterior",
+          "expect": "The survey in inboxes before the coffee's ready and responses landing in the tab. 20 to 40% response is a good number with this format.",
+          "stuck": "Don't send the survey to no-shows \"in case they have opinions\": they have no opinion of the event and they'll skew the score. For no-shows, at most and only if the series calls for it, a \"you missed it, next one is [date]\" approved by the organizer."
+        },
+        {
+          "title": "Analyze responses with AI",
+          "minutes": 60,
+          "where": "Claude",
+          "action": "Three or four days later, paste the responses into the analysis prompt. Keep the grouped themes, the direct quotes, and the three actionable improvements.",
+          "promptId": "analizar-encuesta",
+          "expect": "Themes by frequency with their quotes, the score broken down, and three concrete improvements with estimated effort.",
+          "stuck": "With fewer than ten responses, don't group them: read them by hand and say so plainly in the summary (\"8 responses, take a minute to read, here they are\"). AI grouping four opinions manufactures patterns that don't exist."
+        },
+        {
+          "title": "Write and send the management summary",
+          "minutes": 60,
+          "where": "Claude and your email",
+          "action": "Using the summary prompt, build the page: event figures, score, survey themes, three improvements, and the concrete ask if there is one (budget, bigger room, do it again). Review it, make it yours, and send it within 48 hours.",
+          "promptId": "resumen-direccion",
+          "expect": "A page that reads in two minutes and ends in a requested decision, not in \"noted for the record.\"",
+          "stuck": "If the event went so-so, the summary says so with its numbers and what's changing: a summary that only counts successes loses credibility within two editions, and credibility is what funds the third one."
+        },
+        {
+          "title": "Close the series' memory",
+          "minutes": 45,
+          "where": "The history tab",
+          "action": "Fill in the event's row: registrants, attendees, no-show percentage, average score, survey response rate, top channel, minutes of line. Compare it to the previous edition and decide one single thing to change for next time.",
+          "expect": "The history growing and the next edition starting from a cold, deliberate decision, not from scratch.",
+          "stuck": "If no-shows stay high with reminders working, the next lever is controlled overbooking: with your historic percentage in front of you, decide how many extra seats to accept. It's your call with your data; the kit just puts them in front of you."
+        }
+      ]
+    }
+  ],
+  "prompts": [
+    {
+      "id": "convocatoria",
+      "name": "The announcement: email and Telegram alert",
+      "when": "When opening registration for each event.",
+      "prompt": "You write [ORGANIZATION]'s communications. Write the announcement for an event in two formats: the email to the list and the message for the Telegram group. A person will review it before anything gets sent.\n\nThe event, verified data (whatever's not here doesn't exist, and dates and times are written exactly like this):\n[EVENT DATA]\n\nThe angle: the concrete problem or interest this event solves for whoever comes: [ANGLE]. The announcement sells that angle, not the program.\n\nTone: [TONE]. We're a community, not a ministry: zero \"proceedings shall commence.\"\n\nFormat 1 — EMAIL:\n- Subject under 50 characters that names the benefit or the hook, not \"Talk Announcement.\"\n- First paragraph: the angle in two sentences.\n- Visual block with the essentials: what, when (including day of the week), where, how long, free or price.\n- One line on who this is especially useful for and one on what attendees will walk away with.\n- If there's a speaker: one line on why this person, what makes them credible, no three-paragraph bio.\n- The registration button or link with the seats line: [SEATS]. If capacity is limited, say the number: real scarcity draws people in; fake scarcity shows.\n- Short close with the community's signature.\n- Under 200 words total.\n\nFormat 2 — TELEGRAM:\n- Max 5 lines with a break between them: the angle's hook, what-when-where, seats, link.\n- One or two emoji max, ones that add something (📅 📍), not confetti.\n\nHard rules for both: no made-up data, no \"don't miss this,\" no shouted capitals, and the date always with day of the week (loose \"the 24th\" dates cause half the calendar confusion in this world).\n\nReturn both formats labeled and, below them, two alternative subject lines in case the first doesn't convince me.",
+      "fill": [
+        {
+          "slot": "[ORGANIZATION]",
+          "what": "Who you are",
+          "example": "the Downtown Merchants Association"
+        },
+        {
+          "slot": "[EVENT DATA]",
+          "what": "The closed event data",
+          "example": "Talk \"The Window Display That Stops People,\" Thursday October 24th, 19:00-20:30, Chamber assembly hall (12 Main St), free, 80 seats, speaker: Lucía Ferrer, window display designer for [known brand]"
+        },
+        {
+          "slot": "[ANGLE]",
+          "what": "The concrete problem attending solves. The field that changes the result the most",
+          "example": "people stop at your window and still don't come in: what you're doing wrong without knowing it"
+        },
+        {
+          "slot": "[TONE]",
+          "what": "How your community talks",
+          "example": "warm and trade-like, informal address"
+        },
+        {
+          "slot": "[SEATS]",
+          "what": "Capacity and whether it's limited",
+          "example": "80 seats, first come first served; then waitlist"
+        }
+      ],
+      "expect": "An email under 200 words with the angle up front and a five-line Telegram message, plus two alternative subject lines. Dates with day of the week, zero filler.",
+      "stuck": "If the subject comes out like \"Talk on Window Display — October 24th,\" the angle isn't worked out: go back to the [ANGLE] slot and write it as the question your audience is actually asking. The announcement is the angle; the rest is logistics."
+    },
+    {
+      "id": "mensajes-evento",
+      "name": "The series' messages: confirmation, waitlist, and promotion",
+      "when": "Once per series, to write the workflow's templates in your voice.",
+      "prompt": "You write [ORGANIZATION]'s automatic event messages. Write the registration circuit's templates. They go inside a workflow with variables in double curly braces: keep them exactly as given. The messages go out automatically, so they need to be perfect: nobody will review each individual send (the reminder batch does get approved separately, don't write that one now).\n\nFixed series data: [SERIES DATA]\nTone: [TONE]. Warm and clear; it's a community, not an airline.\n\nTemplate 1 — CONFIRMATION WITH TICKET: for {{nombre}}, confirms their seat for {{evento}} on {{fecha}} at {{hora}} at {{lugar}}. Present the QR as their ticket (\"show it at the door from your phone\"). Include: how early to arrive, and the highest-value line in the whole kit: if you can't come, reply to this email and your seat goes to someone on the waitlist. Frame it positively: letting us know is a favor to a specific other person.\n\nTemplate 2 — WAITLIST: for {{nombre}}, honest from the first line: capacity is full and they're at position {{posicion}} on the waitlist. Explain how it works: if a seat opens up, they'll automatically get their ticket and we'll let them know. No dramatic \"we're so sorry\": it's normal and it's handled well.\n\nTemplate 3 — PROMOTION FROM THE LIST: for {{nombre}}, the good news: a seat opened up and it's theirs. QR ticket inside, same event details, and a line asking for implicit confirmation: if they end up not being able to come, ask them to reply so the seat passes to the next person.\n\nTemplate 4 — DAY-BEFORE REMINDER (a person approves this one before it sends, write it the same way): tomorrow {{fecha}} at {{hora}} at {{lugar}}. Remind about the QR (\"your ticket is the confirmation email\") and repeat the line about letting us know if they're not coming. Short: nobody rereads a long reminder.\n\nHard rules: max 90 words per template, dates with day of the week, no data outside the fixed ones, and no template asks for new data (we already have everything we need).\n\nReturn all four labeled, ready to paste into the workflow.",
+      "fill": [
+        {
+          "slot": "[ORGANIZATION]",
+          "what": "Who you are",
+          "example": "the Downtown Merchants Association"
+        },
+        {
+          "slot": "[SERIES DATA]",
+          "what": "What stays the same across events",
+          "example": "Events are free, at the Chamber assembly hall, arriving 10 minutes early is recommended, contact email is eventos@asociacion.es"
+        },
+        {
+          "slot": "[TONE]",
+          "what": "How you talk",
+          "example": "warm, informal, grateful without gushing"
+        }
+      ],
+      "expect": "Four templates under 90 words with the variables intact, the \"let us know if you're not coming\" line in 1 and 4, and drama-free honesty in 2.",
+      "stuck": "If the waitlist template sounds like airline comfort talk (\"your seat matters to us\"), rewrite it with the useful information up front: position, how it works, the odds if you know them from history. People forgive not getting a seat; they don't forgive being left in the dark."
+    },
+    {
+      "id": "recordatorio-tanda",
+      "name": "The day-before reminder batch",
+      "when": "For the workflow that prepares sends the night before and presents them to the organizer with a button.",
+      "prompt": "You are [ORGANIZATION]'s events assistant. Prepare the day-before reminder batch for {{evento}} so the organizer can review it in one minute and approve it with a button. Your output goes to Telegram: keep it compact.\n\nThe data:\n- The event: [EVENT DATA]\n- Confirmed and promoted (name, email, status, registration date): [CONFIRMED]\n- The current waitlist with positions: [WAITLIST]\n- The series' approved reminder template: [TEMPLATE]\n\nBuild the batch like this:\n\n1. The summary up top: how many email reminders will go out, and the Telegram group alert (paste it below, ready to go: 3 lines, tomorrow + time + \"if you have a seat and can't come, let us know\").\n2. The compacted recipient list: not name by name if there are more than 20, but the count and the exceptions: emails that bounced on confirmation (they won't get anything: list them so the organizer decides whether to call), and anyone who registered in the last 24 hours (redundant reminder: suggest excluding them).\n3. Tomorrow's capacity status: confirmed over capacity, how many are waiting, and today's suggestion: if the series' historic no-show rate is [HISTORIC NO SHOW], say how many waitlist promotions could safely be made today, as a numbered suggestion for the organizer to decide on. You don't promote anyone: you propose.\n4. Tomorrow's operations line: remind the organizer to print the backup list and check the check-in phones today, not tomorrow.\n5. Close with the two button options: approve batch (everything goes out as is) or review (nothing goes out until they act).\n\nDon't write new reminders: use the series' template as is, just confirm its variables match the event data. If something doesn't match (the template says 19:00 and the event is at 18:30), do NOT build the batch: return the MISMATCHED DATA alert with the detail, because a batch with the wrong time is worse than none.",
+      "fill": [
+        {
+          "slot": "[ORGANIZATION]",
+          "what": "Who you are",
+          "example": "the Downtown Merchants Association"
+        },
+        {
+          "slot": "[EVENT DATA] [CONFIRMED] [WAITLIST]",
+          "what": "Workflow variables from the sheet",
+          "example": "In n8n: {{ JSON.stringify($json.evento) }}, {{ JSON.stringify($json.confirmados) }}, {{ JSON.stringify($json.espera) }}"
+        },
+        {
+          "slot": "[TEMPLATE]",
+          "what": "Your series' reminder template, from the messages prompt",
+          "example": "the approved template 4, pasted literally"
+        },
+        {
+          "slot": "[HISTORIC NO SHOW]",
+          "what": "Your historic no-show percentage, from the history tab",
+          "example": "35%"
+        }
+      ],
+      "expect": "The batch with summary, exceptions listed, the numbered promotion suggestion (a suggestion only), tomorrow's operations line, and the MISMATCHED DATA alert if something doesn't line up.",
+      "stuck": "If it promotes waitlist people on its own (\"I've added 5 promotions\"), remind it of its role: \"you propose the number; the organizer decides and executes the promotions.\" Overbooking is a decision with a name attached, not a script's default value."
+    },
+    {
+      "id": "encuesta-posterior",
+      "name": "The next-day survey and its email",
+      "when": "Once per series, to design the short survey and the email carrying it.",
+      "prompt": "You design [ORGANIZATION]'s post-event listening. Design the next-day survey and the email that accompanies it. It only goes to those who checked in: the workflow sends it at 9:00 the next morning.\n\nThe survey's real objective: [OBJECTIVE]. Anything that doesn't serve that objective, out.\n\nDesign the SURVEY with exactly these pieces and not one more:\n1. The score: \"From 0 to 10, how was [event name]?\"\n2. Positive open-ended: \"What would you highlight?\" — one help line with varied examples (the topic, the speaker, the vibe, the organization) so not everyone answers the same thing.\n3. Improvement open-ended: \"What would you change for next time?\" — with the permission line: \"be honest, we read this to improve, not to feel bad.\"\n4. \"Would you come to another one of our events?\" yes / no / depends on what.\n5. Optional and only if [OBJECTIVE] calls for it: ONE extra question max, with its justification for earning the spot.\n\nThe survey is anonymous and says so. No asking for name, email, or data we already have.\n\nWrite the EMAIL that carries it, max 70 words:\n- Short subject with the event's name (\"How was it yesterday at...?\" works; \"Satisfaction Survey\" doesn't).\n- First line: real thanks for coming, not templated.\n- The honest promise: two minutes, four questions, anonymous.\n- If a next date is already set ([NEXT]), mention it in one line at the end: the survey is also retention.\n- The link.\n\nHard rule for the whole set: two minutes max of real response time. If your design doesn't fit in two minutes, trim it until it does: every extra question lowers the response rate, and a short survey answered by 35% is worth more than a full one answered by 6%.\n\nReturn the numbered survey with its help texts and the labeled email.",
+      "fill": [
+        {
+          "slot": "[ORGANIZATION]",
+          "what": "Who you are",
+          "example": "the Downtown Merchants Association"
+        },
+        {
+          "slot": "[OBJECTIVE]",
+          "what": "What decision this survey will feed",
+          "example": "deciding next year's series topics and whether to repeat the speaker"
+        },
+        {
+          "slot": "[NEXT]",
+          "what": "The next date if it already exists, or blank",
+          "example": "next talk: Thursday November 21st, on store lighting"
+        }
+      ],
+      "expect": "A four-piece survey (five only with justification), anonymous and two minutes long, and a 70-word email with a human subject line.",
+      "stuck": "If it adds demographic questions \"to segment,\" cut them: in a small community, you already know the demographics and anonymity is worth more. The only segmentation you need, you already have: came or didn't come."
+    },
+    {
+      "id": "analizar-encuesta",
+      "name": "Group the responses and pull out the three improvements",
+      "when": "Three or four days after the event, with the survey responses in front of you.",
+      "prompt": "Act as an event experience analyst, honest and allergic to self-praise. I'll give you an event's survey responses and I want to know what people really say and what we do about it.\n\nThe event and its context: [EVENT AND CONTEXT]\nThe hard figures: [FIGURES] (registrants, attendees, responses received)\nThe responses (score, what would you highlight, what would you change, would you return):\n[RESPONSES]\n\nGive me, in this order:\n\n1. The score: average, distribution (how many 9-10, how many 0-6), and response percentage over attendees. With fewer than 10 responses or under 15% response rate, say so right at the top: \"weak sample, conclusions with caution,\" and temper everything that follows.\n2. The \"what would you highlight\" themes, grouped by frequency, each with the mention count and ONE representative direct quote (literal, in quotes, unedited).\n3. The \"what would you change\" themes, the same way. Don't soften here: if five people say the back couldn't hear, the theme is \"couldn't hear at the back,\" not \"acoustic considerations for improvement.\"\n4. The cross-cut that matters: do the low scorers mention something in common? What does \"would return: depends\" depend on?\n5. The three actionable improvements for next edition, ranked by impact over effort. Each: what, how much it costs to fix (nothing/little/money), and which response backs it up. Only three: a list of ten improvements is a list of zero improvements.\n6. A tension or contradiction if there is one (what some had too much of, others were missing): state it and suggest how to decide (usually, with the series' objective in front of you, not by voting).\n\nForbidden: inventing patterns from three responses, turning an isolated complaint into a trend, and softening specific criticism until it's useless. If the event went well and the responses are flat because people are simply happy, say that too: \"no strong improvement signal, the lever is bringing more people, not changing the event.\"",
+      "fill": [
+        {
+          "slot": "[EVENT AND CONTEXT]",
+          "what": "What event it was and anything that helps read the responses",
+          "example": "Thursday the 24th's window display talk; there were sound problems for the first 10 minutes"
+        },
+        {
+          "slot": "[FIGURES]",
+          "what": "The event's numbers",
+          "example": "94 registrants, 61 attendees, 23 responses"
+        },
+        {
+          "slot": "[RESPONSES]",
+          "what": "The responses pasted from the tab, as is",
+          "example": "8 | \"The speaker, super clear\" | \"Make it audible from the back\" | yes\n9 | \"Real examples from neighborhood shops\" | \"More Q&A time\" | yes"
+        }
+      ],
+      "expect": "The score with its distribution and a sample warning if warranted, themes with mentions and literal quotes, the crosscut of the dissatisfied, three improvements with effort, and the tension if there is one.",
+      "stuck": "If the three improvements come out generic (\"improve outreach\"), ask for the concrete move: \"for each improvement, tell me what the organizer would do Monday morning.\" An improvement with no Monday-morning move is a sentence, not an improvement."
+    },
+    {
+      "id": "resumen-direccion",
+      "name": "The one-page summary for management",
+      "when": "Within 48 hours of the event, once figures and survey analysis are done.",
+      "prompt": "You report on [ORGANIZATION]'s events to [MANAGEMENT]. Write the event summary in ONE page that reads in two minutes. I'll review and sign it myself: write it direct and without inflating anything, because my credibility at that table is next year's budget.\n\nThe data:\n- The event: [EVENT]\n- Figures: [FIGURES] (registrants, waitlist, attendees, % attendance, minutes of line, cost if any)\n- Comparison with the previous edition if it exists: [PREVIOUS]\n- What came out of the survey analysis: [ANALYSIS]\n- What I'm asking management for next time, if anything: [ASK]\n\nExact structure:\n\n1. HEADLINE: one sentence with the result (\"61 out of 94 registrants attended and an 8.2 score: the format works, the sound doesn't\"). The headline states the good AND the bad, if there is any.\n2. THE FIGURES: five table-style lines: registrants (and waitlist), attendees and %, average score and n of responses, top channel, cost per attendee if there was cost. Compared to the previous edition in parentheses when it exists.\n3. WHAT PEOPLE SAID: the two most-mentioned positive themes and the most-mentioned one to improve, each with a short direct quote. Quotes are the only thing management remembers: choose them well.\n4. WHAT WE'RE CHANGING: the three improvements for next edition, one line each, with who and when.\n5. THE ASK (only if there is one): what we're asking for, how much it costs, and which figure from this summary justifies it. One ask per summary: whichever matters most.\n\nRules: one page, not a comma of self-praise (\"great turnout\" forbidden: the numbers speak), the bad stated with its number and its plan, and not a single fact outside what I've given you. If a key figure is missing (cost, for example), leave it visibly as [PENDING: data], don't fill it in.\n\nReturn the summary ready to paste into an email, with a suggested subject line included.",
+      "fill": [
+        {
+          "slot": "[ORGANIZATION] [MANAGEMENT]",
+          "what": "Who organizes and who it's reported to",
+          "example": "the Merchants Association, to the board"
+        },
+        {
+          "slot": "[EVENT]",
+          "what": "Which event it was",
+          "example": "Talk \"The Window Display That Stops People,\" Thursday the 24th"
+        },
+        {
+          "slot": "[FIGURES]",
+          "what": "The sheet's numbers",
+          "example": "94 registrants + 11 waitlisted, 61 attendees (65%), max line 3 min, cost €180 (speaker + coffee)"
+        },
+        {
+          "slot": "[PREVIOUS]",
+          "what": "The previous edition's history row, or \"first edition\"",
+          "example": "May's edition: 78 registrants, 49 attendees (63%), score 7.4"
+        },
+        {
+          "slot": "[ANALYSIS]",
+          "what": "The output of the survey analysis prompt",
+          "example": "the grouped themes and the three improvements, pasted"
+        },
+        {
+          "slot": "[ASK]",
+          "what": "What you're requesting, or blank",
+          "example": "our own wireless microphone, about €120"
+        }
+      ],
+      "expect": "A page with an honest headline, compared figures, two well-chosen quotes, three changes with an owner, and a single ask justified with a figure from the summary itself.",
+      "stuck": "If the headline comes out triumphalist, ask for the counterpoint: \"rewrite the headline including the most uncomfortable fact from the event.\" The summary that admits the sound problem is the one that gets the microphone."
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Kit Events and community · from registration to QR ticket",
+      "what": "The kit's registration circuit. Someone signs up through the form, gets an on-screen acknowledgment, the workflow checks duplicates and capacity against the sheet, generates the unique code with its QR, and emails the ticket; if capacity is full, it logs them on the waitlist with their position and notifies the organizer. Day-before reminders, check-in, and the survey run in separate workflows built in phases 3 and 4; this is the core that feeds them.",
+      "needs": [
+        "An n8n account with a public URL for the webhook",
+        "A web form with name, email, and the channel dropdown",
+        "The Google Sheet with the registrants, events, and history tabs",
+        "Gmail (or the organization's email) to send tickets",
+        "A Telegram bot and the organizer's chat id"
+      ],
+      "fill": [
+        [
+          "YOUR_SHEET_ID",
+          "Your Google Sheet's identifier, between /d/ and /edit, in the Sheets nodes"
+        ],
+        [
+          "EVENT_ID and EVENT_CAPACITY",
+          "The event's identifier and its seats, in the Seat and QR code node"
+        ],
+        [
+          "ORGANIZER_CHAT_ID",
+          "The organizer's Telegram chat id, in the alert node"
+        ],
+        [
+          "EVENT_NAME, DATE, and LOCATION",
+          "The event details in the confirmation email"
+        ]
+      ],
+      "careful": [
+        "The QR confirmation goes out automatically because it's the acknowledgment of the registrant's own action, like a purchase receipt. What NEVER goes out on its own is mass sends: the reminder batch and any message to the group go through the organizer's button in their separate workflow",
+        "The capacity in the Seat and QR code node must match the event's row in the sheet: change them together or you'll have two truths",
+        "The QR uses an external image service: for an important event, download the QRs beforehand or generate them on your own server; the door can't depend on a third party at 6:55pm",
+        "Waitlist promotion is manual on purpose: the organizer decides and the workflow only sends. Don't automate it until you know your community's pattern",
+        "Test with a capacity of 3 and your own emails before opening real registration. The day you open, watch the first hour: that's when the rush hits, if there is one"
+      ],
+      "flow": {
+        "name": "Kit Eventos y comunidad · de la inscripción a la entrada con QR",
+        "nodes": [
+          {
+            "parameters": {
+              "httpMethod": "POST",
+              "path": "kit-eventos-comunidad-inscripcion",
+              "responseMode": "responseNode",
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-000000000001",
+            "name": "Inscripción al evento",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+              -1100,
+              300
+            ],
+            "webhookId": "f1900000-0000-4000-8000-000000000001"
+          },
+          {
+            "parameters": {
+              "mode": "manual",
+              "duplicateItem": false,
+              "assignments": {
+                "assignments": [
+                  {
+                    "id": "f1",
+                    "name": "id",
+                    "value": "={{ 'I-' + $execution.id }}",
+                    "type": "string"
+                  },
+                  {
+                    "id": "f2",
+                    "name": "id_evento",
+                    "value": "ID_EVENTO",
+                    "type": "string"
+                  },
+                  {
+                    "id": "f3",
+                    "name": "fecha_inscripcion",
+                    "value": "={{ $now.toISO() }}",
+                    "type": "string"
+                  },
+                  {
+                    "id": "f4",
+                    "name": "nombre",
+                    "value": "={{ $json.body.nombre || '' }}",
+                    "type": "string"
+                  },
+                  {
+                    "id": "f5",
+                    "name": "email",
+                    "value": "={{ ($json.body.email || '').toLowerCase().trim() }}",
+                    "type": "string"
+                  },
+                  {
+                    "id": "f6",
+                    "name": "canal",
+                    "value": "={{ $json.body.canal || 'web' }}",
+                    "type": "string"
+                  }
+                ]
+              },
+              "includeOtherFields": false,
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-000000000002",
+            "name": "Normalizar inscripción",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+              -880,
+              300
+            ]
+          },
+          {
+            "parameters": {
+              "respondWith": "json",
+              "responseBody": "={{ JSON.stringify({ ok: true, mensaje: 'Registration received. Check your email: within a minute you will get your confirmation with your ticket, or your position on the waitlist if capacity is full.' }) }}",
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-000000000003",
+            "name": "Acuse en pantalla",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+              -660,
+              300
+            ],
+            "notes": "Responds to the form instantly; the actual seat is decided in the following nodes and arrives by email. This way the form never hangs waiting on the sheet."
+          },
+          {
+            "parameters": {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c1",
+                    "leftValue": "={{ $json.nombre }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  },
+                  {
+                    "id": "c2",
+                    "leftValue": "={{ $json.email }}",
+                    "rightValue": "@",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "looseTypeValidation": true,
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-000000000004",
+            "name": "¿Formulario completo?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+              -440,
+              300
+            ]
+          },
+          {
+            "parameters": {
+              "operation": "read",
+              "documentId": {
+                "__rl": true,
+                "value": "ID_DE_TU_HOJA",
+                "mode": "id"
+              },
+              "sheetName": {
+                "__rl": true,
+                "value": "inscritos",
+                "mode": "name"
+              },
+              "filtersUI": {
+                "values": [
+                  {
+                    "lookupColumn": "id_evento",
+                    "lookupValue": "ID_EVENTO"
+                  }
+                ]
+              },
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-000000000005",
+            "name": "Leer inscritos",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+              -220,
+              200
+            ],
+            "credentials": {
+              "googleSheetsOAuth2Api": {
+                "id": "REEMPLAZAR",
+                "name": "Google Sheets"
+              }
+            }
+          },
+          {
+            "parameters": {
+              "jsCode": "// Cuenta plazas, detecta duplicados y genera el codigo unico con su QR.\nconst AFORO_EVENTO = 80; // ajusta al aforo real y a la fila del evento en la hoja\nconst insc = $('Normalizar inscripción').first().json;\nconst filas = $input.all().map((i) => i.json).filter((f) => f && f.email);\n\nconst duplicado = filas.find((f) => String(f.email).toLowerCase().trim() === insc.email);\nconst confirmados = filas.filter((f) => ['confirmado', 'promovido'].includes(String(f.estado))).length;\nconst enEspera = filas.filter((f) => String(f.estado) === 'lista_espera').length;\n\nlet codigo;\nif (duplicado) {\n  codigo = duplicado.codigo; // reenviamos la entrada original: nadie tiene dos\n} else {\n  const azar = Math.random().toString(36).slice(2, 8).toUpperCase();\n  codigo = insc.id_evento + '-' + azar;\n}\nconst qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(codigo);\n\nconst hayPlaza = duplicado ? ['confirmado', 'promovido'].includes(String(duplicado.estado)) : confirmados < AFORO_EVENTO;\n\nreturn [{\n  json: {\n    ...insc,\n    duplicado: Boolean(duplicado),\n    codigo,\n    qr_url,\n    plazas_ocupadas: confirmados,\n    aforo: AFORO_EVENTO,\n    posicion_espera: hayPlaza ? 0 : enEspera + 1,\n    hay_plaza: hayPlaza,\n    estado: hayPlaza ? 'confirmado' : 'lista_espera',\n    asistio: false,\n  },\n}];"
+            },
+            "id": "f1900000-0000-4000-8000-000000000006",
+            "name": "Plaza y código QR",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              0,
+              200
+            ],
+            "notes": "A duplicate doesn't eat a seat: their original ticket gets resent. The unique code is what the door will scan in the check-in workflow."
+          },
+          {
+            "parameters": {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c3",
+                    "leftValue": "={{ $json.hay_plaza }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "looseTypeValidation": true,
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-000000000007",
+            "name": "¿Hay plaza?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+              220,
+              200
+            ]
+          },
+          {
+            "parameters": {
+              "operation": "append",
+              "documentId": {
+                "__rl": true,
+                "value": "ID_DE_TU_HOJA",
+                "mode": "id"
+              },
+              "sheetName": {
+                "__rl": true,
+                "value": "inscritos",
+                "mode": "name"
+              },
+              "columns": {
+                "mappingMode": "defineBelow",
+                "matchingColumns": [
+                  "id"
+                ],
+                "value": {
+                  "id": "={{ $json.id }}",
+                  "id_evento": "={{ $json.id_evento }}",
+                  "fecha_inscripcion": "={{ $json.fecha_inscripcion }}",
+                  "nombre": "={{ $json.nombre }}",
+                  "email": "={{ $json.email }}",
+                  "canal": "={{ $json.canal }}",
+                  "codigo": "={{ $json.codigo }}",
+                  "estado": "confirmado",
+                  "asistio": "false"
+                }
+              },
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-000000000008",
+            "name": "Guardar inscrito",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+              440,
+              120
+            ],
+            "credentials": {
+              "googleSheetsOAuth2Api": {
+                "id": "REEMPLAZAR",
+                "name": "Google Sheets"
+              }
+            },
+            "notes": "If it's a duplicate, the original row already exists: in your fine-tuned version you can skip this append when duplicado is true; in the basic one, a weekly exact-duplicate cleanup works too."
+          },
+          {
+            "parameters": {
+              "sendTo": "={{ $json.email }}",
+              "subject": "=Tu entrada para NOMBRE_EVENTO",
+              "emailType": "html",
+              "message": "={{ '<p>Hi ' + $json.nombre + ',</p><p>Seat confirmed for <b>NOMBRE_EVENTO</b>: FECHA, at LUGAR.</p><p>This is your ticket. Show it at the door from your phone:</p><p><img src=\"' + $json.qr_url + '\" alt=\"Your ticket code: ' + $json.codigo + '\" width=\"300\" height=\"300\"/></p><p>Code: <b>' + $json.codigo + '</b></p><p>Arrive 10 minutes early if you can. And if you end up not being able to come, reply to this email: your seat will go to someone on the waitlist and you will make their day.</p><p>See you there.</p>' }}",
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-000000000009",
+            "name": "Enviar entrada con QR",
+            "type": "n8n-nodes-base.gmail",
+            "typeVersion": 2.1,
+            "position": [
+              660,
+              120
+            ],
+            "credentials": {
+              "gmailOAuth2": {
+                "id": "REEMPLAZAR",
+                "name": "Gmail organización"
+              }
+            },
+            "notes": "This is the acknowledgment of the registration itself: that's why it goes out without approval, like a receipt. Mass sends (reminders, group alerts) do go through the organizer's button, in their separate workflow."
+          },
+          {
+            "parameters": {
+              "operation": "append",
+              "documentId": {
+                "__rl": true,
+                "value": "ID_DE_TU_HOJA",
+                "mode": "id"
+              },
+              "sheetName": {
+                "__rl": true,
+                "value": "inscritos",
+                "mode": "name"
+              },
+              "columns": {
+                "mappingMode": "defineBelow",
+                "matchingColumns": [
+                  "id"
+                ],
+                "value": {
+                  "id": "={{ $json.id }}",
+                  "id_evento": "={{ $json.id_evento }}",
+                  "fecha_inscripcion": "={{ $json.fecha_inscripcion }}",
+                  "nombre": "={{ $json.nombre }}",
+                  "email": "={{ $json.email }}",
+                  "canal": "={{ $json.canal }}",
+                  "codigo": "={{ $json.codigo }}",
+                  "estado": "lista_espera",
+                  "asistio": "false"
+                }
+              },
+              "options": {}
+            },
+            "id": "f1900000-0000-4000-8000-00000000000a",
+            "name": "Apuntar en lista de espera",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+              440,
+              420
+            ],
+            "credentials": {
+              "googleSheetsOAuth2Api": {
+                "id": "REEMPLAZAR",
+                "name": "Google Sheets"
+              }
+            },
+            "notes": "Position comes from the registration_date order. Send the waitlist email yourself with the kit's template 2, or add a Gmail node here with it."
+          },
+          {
+            "parameters": {
+              "chatId": "CHAT_ID_ORGANIZADOR",
+              "text": "=📋 Event {{ $json.id_evento || 'ID_EVENTO' }}\n\n{{ $json.hay_plaza === false ? 'Waitlist +1: ' + $json.nombre + ' (position ' + $json.posicion_espera + '). Capacity: ' + $json.plazas_ocupadas + '/' + $json.aforo + '. If someone cancels, promote them from the sheet and the workflow will send their ticket.' : 'Incomplete registration or no valid email: ' + ($json.nombre || 'no name') + ' / ' + ($json.email || 'no email') + '. Check it in the sheet in case it deserves a manual email.' }}",
+              "additionalFields": {}
+            },
+            "id": "f1900000-0000-4000-8000-00000000000b",
+            "name": "Avisar al organizador",
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1.2,
+            "position": [
+              660,
+              420
+            ],
+            "credentials": {
+              "telegramApi": {
+                "id": "REEMPLAZAR",
+                "name": "Telegram Bot"
+              }
+            },
+            "notes": "The organizer learns about what needs a human decision: the growing waitlist and broken registrations. The sheet handles everything else."
+          }
+        ],
+        "connections": {
+          "Inscripción al evento": {
+            "main": [
+              [
+                {
+                  "node": "Normalizar inscripción",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Normalizar inscripción": {
+            "main": [
+              [
+                {
+                  "node": "Acuse en pantalla",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Acuse en pantalla": {
+            "main": [
+              [
+                {
+                  "node": "¿Formulario completo?",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "¿Formulario completo?": {
+            "main": [
+              [
+                {
+                  "node": "Leer inscritos",
+                  "type": "main",
+                  "index": 0
+                }
+              ],
+              [
+                {
+                  "node": "Avisar al organizador",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Leer inscritos": {
+            "main": [
+              [
+                {
+                  "node": "Plaza y código QR",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Plaza y código QR": {
+            "main": [
+              [
+                {
+                  "node": "¿Hay plaza?",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "¿Hay plaza?": {
+            "main": [
+              [
+                {
+                  "node": "Guardar inscrito",
+                  "type": "main",
+                  "index": 0
+                }
+              ],
+              [
+                {
+                  "node": "Apuntar en lista de espera",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Guardar inscrito": {
+            "main": [
+              [
+                {
+                  "node": "Enviar entrada con QR",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Apuntar en lista de espera": {
+            "main": [
+              [
+                {
+                  "node": "Avisar al organizador",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          }
+        },
+        "settings": {
+          "executionOrder": "v1"
+        },
+        "pinData": {}
+      }
+    }
+  ],
+  "testData": [
+    {
+      "name": "Normal registration",
+      "input": "Form: name Marta Ruiz, email marta@example.com, channel telegram.",
+      "expect": "On-screen acknowledgment, row in the sheet with confirmed status and its code, and the QR email in under a minute. The seat counter goes down by one."
+    },
+    {
+      "name": "Capacity full",
+      "input": "With test capacity at 3 and 3 confirmed, the fourth registration comes in.",
+      "expect": "Row with waitlisted status and position 1, alert to the organizer with capacity 3/3, and no email promising a seat. The fifth lands at position 2."
+    },
+    {
+      "name": "Duplicate",
+      "input": "The same person submits the form twice with the same email (different capitalization the second time).",
+      "expect": "Doesn't consume a second seat: the workflow detects the normalized email, reuses the original code, and resends the same ticket. One person, one QR."
+    },
+    {
+      "name": "Half-filled form",
+      "input": "Form with name but email \"marta.example.com\" (no @).",
+      "expect": "Fails validation: alert to the organizer as a broken registration to review by hand. No QR gets generated toward an email that doesn't exist."
+    },
+    {
+      "name": "Repeated check-in",
+      "input": "In the phase-3 check-in workflow, scan the same valid QR twice.",
+      "expect": "First scan: green screen and attended marked with time. Second: red screen with \"already checked in at X\" and routed to the desk, without blocking the line or erasing the first record."
+    },
+    {
+      "name": "Cancellation and promotion",
+      "input": "A confirmed registrant replies to the email saying they can't come; the organizer marks them canceled and promotes the first person on the waitlist.",
+      "expect": "The promoted person receives their QR ticket and their row moves to promoted. Waitlist position 2 becomes position 1. The whole move, under two minutes."
+    }
+  ],
+  "costs": [
+    {
+      "item": "Orchestrator (n8n)",
+      "free": "Self-hosted: €0 plus a small VPS (€5-8/month) with a public URL.",
+      "paid": "n8n Cloud by executions: a monthly hundred-person event barely registers on the base plan. CHECK THE OFFICIAL WEBSITE.",
+      "note": "This is one of the cheap kits: few workflows, few executions, zero urgency to scale."
+    },
+    {
+      "item": "Language model",
+      "free": "No useful free plan; billed by tokens.",
+      "paid": "Announcement, survey analysis, and summary: a handful of calls per event, cents. The registration circuit doesn't use AI. CHECK THE OFFICIAL WEBSITE for the price per million tokens.",
+      "note": "This is probably the lowest AI bill of the whole collection: the AI writes and summarizes, it doesn't process every registration."
+    },
+    {
+      "item": "Email",
+      "free": "A regular Gmail handles the dozens of emails for a small event.",
+      "paid": "With hundreds of attendees or several events a month, a transactional email service keeps you out of spam. CHECK THE OFFICIAL WEBSITE.",
+      "note": "Watch the spam folder during testing: a new sender blasting fifty identical emails with an image looks suspicious to any filter. Space the batches out."
+    },
+    {
+      "item": "QR and check-in",
+      "free": "The public QR service and phone cameras: €0.",
+      "paid": "Nothing mandatory. A ticketing platform only if you start charging admission. CHECK THE OFFICIAL WEBSITE for their fees if you get there.",
+      "note": "The paper plan B costs one printout and saves the event the day the wifi says no."
+    },
+    {
+      "item": "Person operating it",
+      "free": "Never zero.",
+      "paid": "Per event: the reminder batch button, waitlist promotions, the half hour on the summary. About 2 hours per event where it used to be 8-10 of secretarial work.",
+      "note": "This kit's real savings are measured in volunteer evenings: the scarcest currency any association has."
+    }
+  ],
+  "legal": [
+    "Registrants' name and email are personal data: GDPR and Spain's LOPDGDD apply to small associations and entities too. Log the processing (event registration management) in your record of processing activities, with its retention period.",
+    "Registering for an event isn't signing up for your newsletter: use the data to run that event (ticket, reminder, survey). For marketing communications or future announcements you need separate consent, with its own unchecked box on the form.",
+    "State on the form: who processes the data, for what, and a link to the privacy policy. A two-line info layer and the checkbox; cheap and mandatory.",
+    "Event photos and video: an image is personal data. Notify at registration and with visible signage that photos will be taken and why; offer a real opt-out (a sticker, a no-camera zone). For minors, always the guardian's consent.",
+    "If minors attend (family workshops, kids' activities), the responsible adult registers and the minor's data gets minimized to the extreme: name and little else.",
+    "The Telegram group alert is a message to a group that already chose to be there: fine. What's not fine is adding people to the group without them asking, or DMing members with promotions.",
+    "The survey is genuinely anonymous: no identifying fields, and it doesn't get cross-referenced with check-in to find out who said what. If you ever need a named survey, say so in the survey itself.",
+    "The real attendee list (check-in) doesn't get shared with sponsors or speakers without attendees' specific consent. \"The speaker wants the contacts\" is exactly the case that needs its own checkbox.",
+    "Retention period: once the event's cycle closes (summary included), contact data for anyone who didn't consent to further communications gets deleted. The history stays with aggregate figures, which aren't personal data.",
+    "This is practical guidance, not legal advice. For an association with free events, this is enough of a framework; if you charge admission or handle sensitive data, raise the level of advice."
+  ],
+  "risks": [
+    {
+      "risk": "Overbooking: more confirmed than chairs",
+      "sign": "People standing in the room or turned away at the door with a valid QR",
+      "fix": "Capacity control at registration, the node's capacity and the sheet's always changed together, and overbooking only as an explicit organizer decision with their no-show history in front of them. Never as a default value."
+    },
+    {
+      "risk": "The reminder batch goes out with wrong data",
+      "sign": "A hundred emails with the previous event's time",
+      "fix": "The organizer's button before every batch and the prompt's MISMATCHED DATA rule: if the template and the event don't match, the batch doesn't get built. A wrong mass send can't be unsent."
+    },
+    {
+      "risk": "Check-in dies at the door",
+      "sign": "QRs that won't load, wifi down, growing line, sweating volunteers",
+      "fix": "Testing with the real phones and the real wifi the evening before, a QR embedded in the email (works without the attendee's connection), and the printed paper list. Plan B isn't defeat: it's professionalism."
+    },
+    {
+      "risk": "Tickets end up in spam",
+      "sign": "\"I never got anything\" times twenty",
+      "fix": "Sender from your own domain, the \"check spam and promotions\" notice on the screen acknowledgment, spaced-out sends, and ticket resend one click away for the organizer. If volume grows, transactional email."
+    },
+    {
+      "risk": "The waitlist gets managed too late and released seats go to waste",
+      "sign": "30% no-shows and a waitlist that never got used",
+      "fix": "The \"let us know if you're not coming\" line in confirmation and reminder (generates timely cancellations), the Telegram alert on every waitlist addition, and the numbered promotion suggestion in the day-before batch."
+    },
+    {
+      "risk": "Nobody answers the survey",
+      "sign": "Rates under 10% edition after edition",
+      "fix": "The kit's three decisions: short (two minutes), the next day, and only to those who came. And the human subject line. If still nobody responds, ask five attendees in person on their way out: five conversations are worth a panel."
+    },
+    {
+      "risk": "The circuit depends on one single volunteer",
+      "sign": "\"That's Jorge's thing\" and Jorge moves to another city",
+      "fix": "The handoff sheet, credentials in the organization's shared manager (not personal accounts), and a rehearsed handover: another person runs a full event with the sheet. In associations, turnover isn't a risk: it's the calendar."
+    }
+  ],
+  "delivery": [
+    {
+      "name": "Event series map",
+      "what": "Before and after with the pilot edition's figures.",
+      "template": "[organization]'s events — [date]\nBefore: manual registration, [n] hours of secretarial work per event, [X]% no-show, [n]-min line, [n]% survey\nAfter: automatic circuit with approvals, [n] hours per event, no-show [X]%, [n]-min line, [n]% survey\nSeries success criterion: [number]"
+    },
+    {
+      "name": "Importable workflow",
+      "what": "The exported registration workflow JSON, with credentials stripped and gaps marked.",
+      "template": "Export from n8n with Download. Before delivering: search for any key, and review the ID_DE_TU_HOJA, ID_EVENTO, AFORO_EVENTO (in both the node and the sheet!), CHAT_ID_ORGANIZADOR placeholders and the event data in the ticket email."
+    },
+    {
+      "name": "Day-D kit",
+      "what": "Everything the door needs: check-in, plan B, and the three rehearsed cases.",
+      "template": "Day D — [event]\nCheck-in: scan the QR with the camera → green screen = go in; red = desk.\nPlan B: printed list by last name with codes (in [who]'s bag).\nCases: QR won't load → paper. Not registered → [organizer] decides, not the volunteer. Repeated QR → desk, no drama.\nWifi tested on [date, evening before] with [volunteers]'s phones."
+    },
+    {
+      "name": "Management summary",
+      "what": "The page of figures and decisions that goes out within 48 hours.",
+      "template": "Summary — [event], [date]\nHeadline: [result in one sentence, good and bad]\nFigures: [registrants (+waitlist)] · [attendees and %] · [score and n] · [top channel] · [cost/attendee]\nPeople said: \"[quote 1]\" · \"[quote 2]\" · to improve: \"[quote 3]\"\nChanges for next edition: [3 lines with owner]\nAsk: [one, with its figure]"
+    },
+    {
+      "name": "Handoff sheet",
+      "what": "The two pages for any future volunteer to run the series.",
+      "template": "1. What the circuit does, in four lines.\n2. How to open a new event: row in the sheet + capacity in the node + announcement.\n3. The day-before batch: when the button arrives and what to check before clicking it.\n4. Waitlist promotions: the two-minute move.\n5. Day D: the door kit.\n6. How to stop everything (Active switch) and the five typical failures with their fix.\n7. Where the credentials are (organization's manager) and who to call."
+    }
+  ],
+  "pricing": [
+    {
+      "tier": "Series diagnosis and design",
+      "what": "Full phase 1: last event's numbers, lifecycle design, first edition's scope, and the sheet built. No workflows yet.",
+      "price": "€300-600",
+      "note": "For small associations and entities, fit it to their reality: sometimes the right format is a half-day workshop where you build it together and it's already running by the end."
+    },
+    {
+      "tier": "Registration circuit",
+      "what": "Form, capacity, QR ticket, waitlist, and organizer alerts, tested with the kit's battery.",
+      "price": "€800-1,800",
+      "note": "This is the core and it's delivered running on a real client event, not a test one: the first edition with the system is part of the project."
+    },
+    {
+      "tier": "Full series",
+      "what": "All of the above plus approved-batch reminders, QR check-in and plan B, next-day survey, and management summary.",
+      "price": "€1,800-3,500",
+      "note": "Includes accompanying day D of the first edition. Being at that door is worth more than ten training sessions: door failures only show up at the door."
+    },
+    {
+      "tier": "Per-edition support",
+      "what": "For recurring series: opening the event, monitoring the circuit, the batch, the survey analysis, and the summary, edition after edition.",
+      "price": "€100-300 per event",
+      "note": "The per-event model fits entities with an irregular calendar better than a monthly fee. And it keeps you close to the data, which is where the series' improvements come from."
+    }
+  ],
+  "defend": [
+    {
+      "question": "What if the system sends a wrong mass email to the whole list?",
+      "answer": "It can't go out on its own: every mass send — reminders, group alerts — goes through a batch a person reviews and approves with a button, and the system itself refuses to build the batch if it detects the template and the event data don't match. The only thing that's automatic is individual and transactional: the ticket you get when you register, like a purchase receipt. That distinction is in the design, not in good intentions."
+    },
+    {
+      "question": "What happens at the door if the tech fails?",
+      "answer": "Plan B is printed: the confirmed list by last name with their codes gets printed the evening before, always, and the volunteers have rehearsed the three weird cases (QR won't load, unregistered person, repeated QR). Wifi and phones get tested the evening before. If everything fails, the event runs the way it did before the system: with paper and judgment. The difference is the paper now prints itself and is in order."
+    },
+    {
+      "question": "Do you comply with data protection with the registrations?",
+      "answer": "Yes, and it's one of the simplest GDPR cases when built in from the design: we ask for the minimum (name, email, how you heard about us), we inform on the form, the data is used to run that event, the newsletter has its own unchecked box, the survey is genuinely anonymous, and there's a deletion period once the cycle closes. And the attendee list doesn't get shared with sponsors or speakers: that would need a specific checkbox we don't currently ask for."
+    },
+    {
+      "question": "How much real work does this save volunteers?",
+      "answer": "Measured in the last edition: from about [X] hours of secretarial work per event (dumping registrations, answering emails, reminding by hand, taking attendance, chasing opinions) to about [Y]: the batch button, waitlist promotions, and the half hour on the summary. The entrance line went from [n] minutes to seconds per person. In an association, those freed-up evenings are the difference between volunteers who stick around and volunteers who burn out."
+    },
+    {
+      "question": "Why not just use Eventbrite or similar?",
+      "answer": "If we charged admission, that would be the right answer and I've said so from the start. For free community events, a platform gives you registration and little else: this circuit also gives you the approved reminder, check-in against your own sheet, the survey only to attendees, the management summary, and the history across editions. And your community's data stays with you, not on a third-party platform that changes its terms tomorrow."
+    },
+    {
+      "question": "What happens when the person who built it leaves?",
+      "answer": "It's planned for, because in an association turnover is the calendar: credentials live in the organization's manager, not personal accounts, the handoff sheet explains the whole cycle in two pages, and the handover is actually rehearsed: another person runs a whole event with the sheet before the system is considered delivered. Whatever they ask during the rehearsal gets added to the sheet, and the rehearsal repeats at the next turnover."
+    }
+  ],
+  "words": [
+    [
+      "capacity",
+      "The event's total seats. The circuit checks it on every registration: once it's full, the waitlist starts."
+    ],
+    [
+      "waitlist",
+      "Those who arrived after capacity filled up, ordered by registration date. Fed by the cancellations reminders provoke."
+    ],
+    [
+      "promotion",
+      "Moving someone from the waitlist to a confirmed seat when a slot opens up. The organizer decides; the workflow sends the ticket."
+    ],
+    [
+      "no-show",
+      "A registrant who neither comes nor cancels. Free events run 30-50%: the figure reminders and the \"let us know if you're not coming\" line attack."
+    ],
+    [
+      "overbooking",
+      "Accepting more registrations than chairs based on historic no-shows. An organizer's data-backed decision, never a default value."
+    ],
+    [
+      "check-in",
+      "Logging who actually comes in. With the QR, it's a two-second beep that also feeds the survey and the summary."
+    ],
+    [
+      "QR",
+      "The square barcode carrying each ticket's unique code. Scanned with any phone's camera."
+    ],
+    [
+      "batch",
+      "A mass send prepared and presented in full to a person for one-button approval. In this kit, nothing massive goes out without a batch."
+    ],
+    [
+      "response rate",
+      "What percentage of attendees answer the survey. Short, next day, and only to those who came: that's how it goes up."
+    ],
+    [
+      "history",
+      "The tab with one row of figures per event. The series' memory: the third edition gets organized by looking at the first two."
+    ]
+  ],
+  "tools": [
+    "n8n",
+    "telegram",
+    "gmail",
+    "sheets",
+    "claude",
+    "canva",
+    "make"
+  ],
+  "promptFamilies": [
+    "crear-proyecto",
+    "automatizar",
+    "crear-contenido",
+    "conectar-datos",
+    "probar-reparar",
+    "entregar-equipo-cliente",
+    "proyecto-institucional"
+  ],
+  "skillKeywords": [
+    "events",
+    "registration",
+    "qr",
+    "checkin",
+    "reminders",
+    "survey",
+    "capacity"
+  ],
+  "deliverables": [
+    "Event series map",
+    "Importable QR registration workflow",
+    "Day-D kit with plan B",
+    "Management summary"
+  ]
+}
