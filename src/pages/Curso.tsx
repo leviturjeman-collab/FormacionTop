@@ -221,13 +221,13 @@ export function CursoIndice() {
       <details className="st-curso-optional">
         <summary>
           <div>
-            <span className="st-kicker">Apoyo opcional</span>
-            <h2>Herramientas, prompts y automatizaciones</h2>
-            <p>Abre esto solo cuando necesites una herramienta concreta. No forma parte de la ruta principal.</p>
+            <span className="st-kicker">{locale === 'en' ? 'Optional support' : 'Apoyo opcional'}</span>
+            <h2>{locale === 'en' ? 'Tools, prompts and automations' : 'Herramientas, prompts y automatizaciones'}</h2>
+            <p>{locale === 'en' ? "Open this only when you need a specific tool. It's not part of the main path." : 'Abre esto solo cuando necesites una herramienta concreta. No forma parte de la ruta principal.'}</p>
           </div>
-          <span>{porHerramienta.length} fichas</span>
+          <span>{porHerramienta.length} {locale === 'en' ? 'pages' : 'fichas'}</span>
         </summary>
-        <section className="st-program-tools" aria-label="Herramientas disponibles">
+        <section className="st-program-tools" aria-label={locale === 'en' ? 'Available tools' : 'Herramientas disponibles'}>
           <div className="st-program-tools-grid">
             {porHerramienta.map(({ id, label, icon, count, totalCount, maxLessons, guidePrompts, automations, items }) => (
               <a
@@ -262,11 +262,11 @@ export function CursoIndice() {
       <details className="st-curso-optional">
         <summary>
           <div>
-            <span className="st-kicker">Especializaciones</span>
-            <h2>Rutas de herramienta ya escritas</h2>
-            <p>Son recorridos aparte. Úsalos cuando tu proyecto ya pida trabajar con esa herramienta.</p>
+            <span className="st-kicker">{locale === 'en' ? 'Specializations' : 'Especializaciones'}</span>
+            <h2>{locale === 'en' ? 'Ready-made tool paths' : 'Rutas de herramienta ya escritas'}</h2>
+            <p>{locale === 'en' ? "These are separate tracks. Use them once your project actually asks you to work with that tool." : 'Son recorridos aparte. Úsalos cuando tu proyecto ya pida trabajar con esa herramienta.'}</p>
           </div>
-          <span>{herramientasConRuta.length} rutas</span>
+          <span>{herramientasConRuta.length} {locale === 'en' ? 'paths' : 'rutas'}</span>
         </summary>
 
         {herramientasConRuta.map(({ id, label, items }) => (

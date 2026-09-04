@@ -662,7 +662,7 @@ const toolPages = TOOLS
   .filter((tool) => tool.count > 0 || tool.guide || conItinerario.has(tool.id))
   .sort((a, b) => b.count - a.count)
 
-const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles, institutionalKits)
+const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles, institutionalKits, LOCALE)
 for (const family of promptLibrary) enrichPrompts(family.prompts, family.title)
 
 /* --- Biblioteca: carpetas del vault -------------------------------- */
