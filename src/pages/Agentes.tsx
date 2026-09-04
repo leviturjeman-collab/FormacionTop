@@ -4,6 +4,8 @@ import {
   Download, KeyRound, ListChecks, MessageSquare, Shield, Terminal, Workflow,
 } from 'lucide-react'
 import { useCourse } from '../course'
+import { useLocale } from '../i18n'
+import type { Locale } from '../i18n'
 import { href } from '../router'
 import type { AgentPlatform, ReadyAgent } from '../types'
 import { BrandMark } from '../components/Brand'
@@ -16,17 +18,30 @@ import { BrandMark } from '../components/Brand'
  * o un agente por API con su código. El contenido vive en content/agentes/.
  */
 
-const PLATFORM_META: Record<AgentPlatform, { label: string; icon: JSX.Element; hint: string }> = {
-  'claude-code': { label: 'Claude Code', icon: <Terminal size={13} />, hint: 'Se instala como subagente en tu repositorio.' },
-  gpt: { label: 'GPT personalizado', icon: <MessageSquare size={13} />, hint: 'Se crea en ChatGPT con estas instrucciones.' },
-  n8n: { label: 'n8n', icon: <Workflow size={13} />, hint: 'Se importa como workflow y se conectan credenciales.' },
-  api: { label: 'API (código)', icon: <Cpu size={13} />, hint: 'Un script que ejecutas tú, con tu clave de API.' },
-}
+const PLATFORM_META = (locale: Locale): Record<AgentPlatform, { label: string; icon: JSX.Element; hint: string }> =>
+  locale === 'en'
+    ? {
+        'claude-code': { label: 'Claude Code', icon: <Terminal size={13} />, hint: 'Installed as a subagent in your repository.' },
+        gpt: { label: 'Custom GPT', icon: <MessageSquare size={13} />, hint: 'Created in ChatGPT with these instructions.' },
+        n8n: { label: 'n8n', icon: <Workflow size={13} />, hint: 'Imported as a workflow, then connect credentials.' },
+        api: { label: 'API (code)', icon: <Cpu size={13} />, hint: 'A script you run yourself, with your API key.' },
+      }
+    : {
+        'claude-code': { label: 'Claude Code', icon: <Terminal size={13} />, hint: 'Se instala como subagente en tu repositorio.' },
+        gpt: { label: 'GPT personalizado', icon: <MessageSquare size={13} />, hint: 'Se crea en ChatGPT con estas instrucciones.' },
+        n8n: { label: 'n8n', icon: <Workflow size={13} />, hint: 'Se importa como workflow y se conectan credenciales.' },
+        api: { label: 'API (código)', icon: <Cpu size={13} />, hint: 'Un script que ejecutas tú, con tu clave de API.' },
+      }
 
-const LEVEL_LABEL: Record<string, string> = { basico: 'Básico', intermedio: 'Intermedio', avanzado: 'Avanzado' }
+const LEVEL_LABEL = (locale: Locale): Record<string, string> =>
+  locale === 'en'
+    ? { basico: 'Basic', intermedio: 'Intermediate', avanzado: 'Advanced' }
+    : { basico: 'Básico', intermedio: 'Intermedio', avanzado: 'Avanzado' }
 
-function CopyButton({ text, label = 'Copiar', ghost }: { text: string; label?: string; ghost?: boolean }) {
+function CopyButton({ text, label, ghost }: { text: string; label?: string; ghost?: boolean }) {
+  const locale = useLocale()
   const [done, setDone] = useState(false)
+  const defaultLabel = locale === 'en' ? 'Copy' : 'Copiar'
   return (
     <button
       type="button"
@@ -37,14 +52,17 @@ function CopyButton({ text, label = 'Copiar', ghost }: { text: string; label?: s
         window.setTimeout(() => setDone(false), 1600)
       }}
     >
-      {done ? <Check size={12} /> : <Clipboard size={12} />} {done ? 'Copiado' : label}
+      {done ? <Check size={12} /> : <Clipboard size={12} />} {done ? (locale === 'en' ? 'Copied' : 'Copiado') : (label ?? defaultLabel)}
     </button>
   )
 }
 
 function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
   const course = useCourse()
-  const meta = PLATFORM_META[agent.platform] || PLATFORM_META.api
+  const locale = useLocale()
+  const platformMeta = PLATFORM_META(locale)
+  const levelLabel = LEVEL_LABEL(locale)
+  const meta = platformMeta[agent.platform] || platformMeta.api
   const tools = (agent.tools || [])
     .map((id) => course.toolPages.find((tool) => tool.id === id))
     .filter(Boolean)
@@ -63,7 +81,7 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
         <p>{agent.what}</p>
         <div className="st-agent-meta">
           <span className="st-pill">{meta.icon} {agent.platformLabel || meta.label}</span>
-          <span className="st-pill">{LEVEL_LABEL[agent.level] || agent.level}</span>
+          <span className="st-pill">{levelLabel[agent.level] || agent.level}</span>
           {tools.map((tool) => tool && (
             <a key={tool.id} className="st-pill" href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
               <BrandMark icon={tool.icon} size={12} /> {tool.label}
@@ -74,17 +92,17 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
 
       <div className="st-kit-columns">
         <section className="st-kit-block">
-          <div className="st-section-head"><div><span className="st-kicker"><Check size={11} /> Hace bien</span><h2>Capacidades</h2></div></div>
+          <div className="st-section-head"><div><span className="st-kicker"><Check size={11} /> {locale === 'en' ? 'Does well' : 'Hace bien'}</span><h2>{locale === 'en' ? 'Capabilities' : 'Capacidades'}</h2></div></div>
           <ul className="st-kit-list">{agent.capabilities.map((item) => <li key={item}>{item}</li>)}</ul>
         </section>
         <section className="st-kit-block st-kit-danger">
-          <div className="st-section-head"><div><span className="st-kicker"><Ban size={11} /> No hace</span><h2>Límites</h2></div></div>
+          <div className="st-section-head"><div><span className="st-kicker"><Ban size={11} /> {locale === 'en' ? 'Doesn’t do' : 'No hace'}</span><h2>{locale === 'en' ? 'Limits' : 'Límites'}</h2></div></div>
           <ul className="st-kit-list">{agent.limits.map((item) => <li key={item}>{item}</li>)}</ul>
         </section>
       </div>
 
       <section className="st-kit-block">
-        <div className="st-section-head"><div><span className="st-kicker">Para quién</span><h2>Cuándo compensa</h2></div></div>
+        <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Who for' : 'Para quién'}</span><h2>{locale === 'en' ? 'When it’s worth it' : 'Cuándo compensa'}</h2></div></div>
         <p className="st-kit-plain">{agent.forWho}</p>
         <p className="st-kit-nocode"><strong>{agent.platformLabel || meta.label}.</strong> {meta.hint}</p>
       </section>
@@ -92,8 +110,8 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
       {agent.files.map((file) => (
         <section key={file.name} className="st-kit-block">
           <div className="st-section-head">
-            <div><span className="st-kicker"><Download size={11} /> Listo para copiar</span><h2>{file.name}</h2></div>
-            <CopyButton text={file.content} label="Copiar todo" />
+            <div><span className="st-kicker"><Download size={11} /> {locale === 'en' ? 'Ready to copy' : 'Listo para copiar'}</span><h2>{file.name}</h2></div>
+            <CopyButton text={file.content} label={locale === 'en' ? 'Copy all' : 'Copiar todo'} />
           </div>
           <pre className="st-kit-pre st-agent-file"><code>{file.content}</code></pre>
         </section>
@@ -102,22 +120,23 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
       {agent.flow && (
         <section className="st-kit-block">
           <div className="st-section-head">
-            <div><span className="st-kicker"><Workflow size={11} /> Importable</span><h2>El flujo de n8n</h2></div>
-            <CopyButton text={JSON.stringify(agent.flow, null, 2)} label="Copiar el flujo" />
+            <div><span className="st-kicker"><Workflow size={11} /> {locale === 'en' ? 'Importable' : 'Importable'}</span><h2>{locale === 'en' ? 'The n8n flow' : 'El flujo de n8n'}</h2></div>
+            <CopyButton text={JSON.stringify(agent.flow, null, 2)} label={locale === 'en' ? 'Copy the flow' : 'Copiar el flujo'} />
           </div>
           <p className="st-kit-nocode">
-            <strong>Cómo se importa.</strong> En n8n: Workflows → Import from clipboard. Pega y acepta.
-            Los nodos salen en gris hasta que conectes las credenciales de abajo.
+            {locale === 'en'
+              ? <><strong>How to import it.</strong> In n8n: Workflows → Import from clipboard. Paste and confirm. The nodes appear grayed out until you connect the credentials below.</>
+              : <><strong>Cómo se importa.</strong> En n8n: Workflows → Import from clipboard. Pega y acepta. Los nodos salen en gris hasta que conectes las credenciales de abajo.</>}
           </p>
           <details className="st-kit-code">
-            <summary>Ver el JSON completo</summary>
+            <summary>{locale === 'en' ? 'View the full JSON' : 'Ver el JSON completo'}</summary>
             <pre><code>{JSON.stringify(agent.flow, null, 2)}</code></pre>
           </details>
         </section>
       )}
 
       <section className="st-kit-block">
-        <div className="st-section-head"><div><span className="st-kicker"><ListChecks size={11} /> Instalación</span><h2>Móntalo paso a paso</h2></div></div>
+        <div className="st-section-head"><div><span className="st-kicker"><ListChecks size={11} /> {locale === 'en' ? 'Installation' : 'Instalación'}</span><h2>{locale === 'en' ? 'Set it up step by step' : 'Móntalo paso a paso'}</h2></div></div>
         <ol className="st-kit-steps">
           {agent.setup.map((step, index) => (
             <li key={step.title}>
@@ -126,8 +145,8 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
                 <div><strong>{step.title}</strong></div>
               </div>
               <p>{step.action}</p>
-              <p className="st-kit-check"><Check size={12} /> <strong>Tienes que ver.</strong> {step.expect}</p>
-              {step.stuck && <p className="st-kit-stuck"><AlertTriangle size={12} /> <strong>Si se atasca.</strong> {step.stuck}</p>}
+              <p className="st-kit-check"><Check size={12} /> <strong>{locale === 'en' ? 'You should see.' : 'Tienes que ver.'}</strong> {step.expect}</p>
+              {step.stuck && <p className="st-kit-stuck"><AlertTriangle size={12} /> <strong>{locale === 'en' ? 'If it gets stuck.' : 'Si se atasca.'}</strong> {step.stuck}</p>}
             </li>
           ))}
         </ol>
@@ -135,10 +154,10 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
 
       {agent.credentials.length > 0 && (
         <section className="st-kit-block">
-          <div className="st-section-head"><div><span className="st-kicker"><KeyRound size={11} /> Credenciales</span><h2>Lo que tienes que crear antes</h2></div></div>
+          <div className="st-section-head"><div><span className="st-kicker"><KeyRound size={11} /> {locale === 'en' ? 'Credentials' : 'Credenciales'}</span><h2>{locale === 'en' ? 'What you need to create first' : 'Lo que tienes que crear antes'}</h2></div></div>
           <div className="st-kit-table-wrap">
             <table className="st-kit-table">
-              <thead><tr><th>Credencial</th><th>Dónde se crea</th><th>Cómo</th><th>Coste</th></tr></thead>
+              <thead><tr><th>{locale === 'en' ? 'Credential' : 'Credencial'}</th><th>{locale === 'en' ? 'Where it’s created' : 'Dónde se crea'}</th><th>{locale === 'en' ? 'How' : 'Cómo'}</th><th>{locale === 'en' ? 'Cost' : 'Coste'}</th></tr></thead>
               <tbody>
                 {agent.credentials.map((cred) => (
                   <tr key={cred.name}>
@@ -155,10 +174,10 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
       )}
 
       <section className="st-kit-block">
-        <div className="st-section-head"><div><span className="st-kicker">Antes de fiarte</span><h2>Pruébalo con estos casos</h2></div></div>
+        <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Before you trust it' : 'Antes de fiarte'}</span><h2>{locale === 'en' ? 'Test it with these cases' : 'Pruébalo con estos casos'}</h2></div></div>
         <div className="st-kit-table-wrap">
           <table className="st-kit-table">
-            <thead><tr><th>Caso</th><th>Qué le metes</th><th>Qué tiene que devolver</th></tr></thead>
+            <thead><tr><th>{locale === 'en' ? 'Case' : 'Caso'}</th><th>{locale === 'en' ? 'What you feed it' : 'Qué le metes'}</th><th>{locale === 'en' ? 'What it should return' : 'Qué tiene que devolver'}</th></tr></thead>
             <tbody>
               {agent.test.map((test) => (
                 <tr key={test.name}>
@@ -174,13 +193,13 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
 
       {(agent.examples?.length || 0) > 0 && (
         <section className="st-kit-block">
-          <div className="st-section-head"><div><span className="st-kicker">Ejemplos</span><h2>Cómo pedírselo</h2></div></div>
+          <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Examples' : 'Ejemplos'}</span><h2>{locale === 'en' ? 'How to ask it' : 'Cómo pedírselo'}</h2></div></div>
           <div className="st-kit-prompt-list">
             {agent.examples!.map((example) => (
               <article key={example.name} className="st-kit-prompt">
                 <header>
                   <div><strong>{example.name}</strong></div>
-                  <div className="st-kit-prompt-actions"><CopyButton text={example.prompt} label="Copiar" /></div>
+                  <div className="st-kit-prompt-actions"><CopyButton text={example.prompt} label={locale === 'en' ? 'Copy' : 'Copiar'} /></div>
                 </header>
                 <pre className="st-kit-pre">{example.prompt}</pre>
               </article>
@@ -191,14 +210,14 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
 
       {agent.risks.length > 0 && (
         <section className="st-kit-block st-kit-danger">
-          <div className="st-section-head"><div><span className="st-kicker"><Shield size={11} /> Riesgos</span><h2>Cuidado con esto</h2></div></div>
+          <div className="st-section-head"><div><span className="st-kicker"><Shield size={11} /> {locale === 'en' ? 'Risks' : 'Riesgos'}</span><h2>{locale === 'en' ? 'Watch out for this' : 'Cuidado con esto'}</h2></div></div>
           <ul className="st-kit-list">{agent.risks.map((item) => <li key={item}>{item}</li>)}</ul>
         </section>
       )}
 
       {relatedKits.length > 0 && (
         <section className="st-kit-block">
-          <div className="st-section-head"><div><span className="st-kicker">Encaja con</span><h2>Kits que usan este agente</h2></div></div>
+          <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Fits with' : 'Encaja con'}</span><h2>{locale === 'en' ? 'Kits that use this agent' : 'Kits que usan este agente'}</h2></div></div>
           <div className="st-kit-resource-list">
             {relatedKits.map((kit) => kit && (
               <a key={kit.id} href={href({ name: 'kits' })}>
@@ -214,12 +233,12 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
         {anterior ? (
           <a href={href({ name: 'agentes', agentId: anterior.id })}>
             <ArrowLeft size={14} />
-            <span><em>Anterior</em><b>{anterior.title}</b></span>
+            <span><em>{locale === 'en' ? 'Previous' : 'Anterior'}</em><b>{anterior.title}</b></span>
           </a>
         ) : <span />}
         {siguiente && (
           <a className="next" href={href({ name: 'agentes', agentId: siguiente.id })}>
-            <span><em>Siguiente</em><b>{siguiente.title}</b></span>
+            <span><em>{locale === 'en' ? 'Next' : 'Siguiente'}</em><b>{siguiente.title}</b></span>
             <ArrowRight size={14} />
           </a>
         )}
@@ -230,6 +249,9 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
 
 export default function Agentes({ agentId }: { agentId?: string }) {
   const course = useCourse()
+  const locale = useLocale()
+  const platformMeta = PLATFORM_META(locale)
+  const levelLabel = LEVEL_LABEL(locale)
   const agents = course.agents || []
   const [platform, setPlatform] = useState<AgentPlatform | 'todas'>('todas')
 
@@ -245,8 +267,12 @@ export default function Agentes({ agentId }: { agentId?: string }) {
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Los agentes se están preparando</h2>
-          <p>Añade archivos .json en <code>content/agentes/</code> y vuelve a generar el índice.</p>
+          <h2>{locale === 'en' ? 'Agents are being prepared' : 'Los agentes se están preparando'}</h2>
+          <p>
+            {locale === 'en'
+              ? <>Add .json files in <code>content/agentes/</code> and regenerate the index.</>
+              : <>Añade archivos .json en <code>content/agentes/</code> y vuelve a generar el índice.</>}
+          </p>
         </div>
       </div>
     )
@@ -259,39 +285,39 @@ export default function Agentes({ agentId }: { agentId?: string }) {
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker"><Bot size={12} /> Listos para instalar</span>
-        <h1>Agentes</h1>
+        <span className="st-kicker"><Bot size={12} /> {locale === 'en' ? 'Ready to install' : 'Listos para instalar'}</span>
+        <h1>{locale === 'en' ? 'Agents' : 'Agentes'}</h1>
         <p>
-          Cada agente de esta biblioteca es una configuración completa: el texto o el código exacto,
-          los pasos de instalación, las credenciales que necesita, una prueba para verificar que funciona
-          y sus límites. Copias, instalas, pruebas y lo tienes trabajando.
+          {locale === 'en'
+            ? 'Every agent in this library is a complete configuration: the exact text or code, the installation steps, the credentials it needs, a test to verify it works and its limits. You copy, install, test and have it working.'
+            : 'Cada agente de esta biblioteca es una configuración completa: el texto o el código exacto, los pasos de instalación, las credenciales que necesita, una prueba para verificar que funciona y sus límites. Copias, instalas, pruebas y lo tienes trabajando.'}
         </p>
       </div>
 
-      <div className="st-agent-filter" role="group" aria-label="Filtrar por plataforma">
+      <div className="st-agent-filter" role="group" aria-label={locale === 'en' ? 'Filter by platform' : 'Filtrar por plataforma'}>
         <button type="button" className={platform === 'todas' ? 'on' : ''} onClick={() => setPlatform('todas')}>
-          Todas · {agents.length}
+          {locale === 'en' ? 'All' : 'Todas'} · {agents.length}
         </button>
         {counts.map(({ id, count }) => (
           <button key={id} type="button" className={platform === id ? 'on' : ''} onClick={() => setPlatform(id)}>
-            {PLATFORM_META[id].icon} {PLATFORM_META[id].label} · {count}
+            {platformMeta[id].icon} {platformMeta[id].label} · {count}
           </button>
         ))}
       </div>
 
       <div className="st-agent-grid">
         {shown.map((item) => {
-          const meta = PLATFORM_META[item.platform] || PLATFORM_META.api
+          const meta = platformMeta[item.platform] || platformMeta.api
           return (
             <a key={item.id} className="st-agent-card" href={href({ name: 'agentes', agentId: item.id })}>
               <div className="st-agent-card-top">
                 <span className="st-pill">{meta.icon} {item.platformLabel || meta.label}</span>
-                <span className="st-pill">{LEVEL_LABEL[item.level] || item.level}</span>
+                <span className="st-pill">{levelLabel[item.level] || item.level}</span>
               </div>
               <strong>{item.title}</strong>
               <p>{item.what}</p>
               <span className="st-agent-card-foot">
-                {item.setup.length} pasos de instalación · {item.test.length} pruebas
+                {item.setup.length} {locale === 'en' ? 'installation steps' : 'pasos de instalación'} · {item.test.length} {locale === 'en' ? 'tests' : 'pruebas'}
                 <ArrowRight size={13} />
               </span>
             </a>

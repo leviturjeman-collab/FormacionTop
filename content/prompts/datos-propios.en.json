@@ -1,0 +1,128 @@
+{
+  "id": "datos-propios",
+  "title": "Have the AI work from YOUR documents",
+  "intro": "You have contracts, notes, minutes, quotes, or a three-hundred-page manual, and you want the AI to answer using that, not what it knows from the internet. This family is about putting your papers in a fixed place inside the app, asking them questions, and forcing the AI to tell you which page each fact came from. And what to do when a document is so long it doesn't fit in one sitting.",
+  "model": "Claude for long documents and for demanding exact citations, ChatGPT for everyday use and for PDFs with tables or invoices, and Gemini if your papers already live in Google Drive.",
+  "prompts": [
+    {
+      "name": "Inventory of what you've uploaded",
+      "when": "Right after creating the Project (the folder inside the app where you keep fixed files: called a Project in Claude and ChatGPT, a Gem in Gemini) and dragging the files in. Before you ask anything.",
+      "prompt": "Act as a meticulous archivist. I've just uploaded to this Project the files you have available. Before I ask you anything, I want to know exactly what you're working with.\n\nTask: go through ALL the available files and give me an inventory. Don't summarize the content yet: I want the map, not the trip.\n\nOutput format, one entry per file:\n- FILE NAME: exactly as it appears.\n- WHAT IT IS: one sentence, no jargon.\n- DATE: whatever appears inside the document. If there isn't one, write \"undated.\"\n- SIZE: how many pages or sections it has.\n- WHAT CAN BE ASKED HERE: three example questions this file could actually answer.\n- WHAT'S NOT HERE: two topics you'd expect to find in this file that aren't there.\n\nAfter the inventory, add two sections:\n1. OVERLAPS AND CONTRADICTIONS: which files cover the same ground, and whether they contradict each other.\n2. GAPS: what document I'm missing that you'd need to properly answer questions about [WHAT YOU'RE ABOUT TO ASK ABOUT].\n\nRules: if you can't open a file or can't read it fully, say so in its entry with the word UNREADABLE and explain how far you got. Don't invent the content of a file you can't read, and don't guess it from the file name. If two files look like the same thing in different versions, tell me and point out which is more recent.",
+      "fill": [
+        ["[WHAT YOU'RE ABOUT TO ASK ABOUT]", "The subject that brought you here, in a few words. Example: \"payment terms with suppliers\" or \"the requirements for the exam I'm applying for.\""]
+      ],
+      "expect": "One entry per file with its date and size, the list of files that overlap with each other, and a list of what you still need to upload. If something's flagged UNREADABLE, better to know now than two hours in.",
+      "next": "Re-upload whatever came back UNREADABLE in another format: a PDF that's actually a scanned photo can't be read, it needs to be converted to text first. Two warnings: Projects only exist on paid plans, around $20-23 a month on Claude or ChatGPT; and if you delete the Project, the uploaded files go with it, with no trash bin to recover them from."
+    },
+    {
+      "name": "The Project's fixed instructions",
+      "when": "Once, when you create the Project. This doesn't get pasted into the chat: it goes into the Project's instructions box, so it applies to every conversation you open inside it.",
+      "prompt": "You work exclusively from this Project's documents. The subject is [PROJECT SUBJECT]. I am [WHO YOU ARE AND WHAT YOU'RE USING THIS FOR].\n\nRules you can't skip:\n1. Every claim you make comes from the documents. If something isn't there, write literally NOT IN THE DOCUMENTS. Don't fill it in with what you know on your own.\n2. If you think you know the answer but it doesn't appear in the papers, you can say it, always preceded by the label OUTSIDE YOUR DOCUMENTS in capital letters, so I know it didn't come from my files.\n3. Every fact, figure, date, or proper name comes with its source in parentheses: file and page or section. If the document doesn't have numbered pages, cite the section title and the first five words of the paragraph.\n4. When two documents say different things, don't choose on your own: show me both versions with their source and tell me which is more recent.\n5. Reply in plain everyday English, casual tone, short sentences, no flourishes.\n6. If my question is ambiguous, ask me a single clarifying question before answering. One, not five.\n7. Don't give me legal, tax, or medical advice as if it were final: tell me what my documents say and remind me to check it with a professional.\n\nDefault format for every answer: first the short version, five lines max. Then the detail with citations. And at the end a line saying CONFIDENCE: high, medium, or low, explaining why in half a line.",
+      "fill": [
+        ["[PROJECT SUBJECT]", "What the papers are about. Example: \"the lease on my storefront and the repairs I'm owed.\""],
+        ["[WHO YOU ARE AND WHAT YOU'RE USING THIS FOR]", "Your role and your goal. Example: \"I'm the tenant, I don't have a lawyer, and I want to know which repairs are mine to handle before the meeting on the 12th.\""]
+      ],
+      "expect": "Nothing visible right away: this is configuration. From here on, every Project reply comes with citations, the OUTSIDE YOUR DOCUMENTS label when it applies, and its confidence line at the end.",
+      "next": "Open a new chat inside the Project and ask a question whose answer you already know. If it answers without citing anything, the instructions didn't save: go back to the box and check the text is still there."
+    },
+    {
+      "name": "Ask with the citation attached",
+      "when": "Every time you're going to use the answer to decide something, or to show it to someone else.",
+      "prompt": "I need an answer I can defend in front of someone, so I want it with the evidence attached.\n\nQuestion: [YOUR QUESTION]\n\nAnswer using only this Project's documents, in this exact format:\n\nSHORT ANSWER\nThree lines max. The version you'd tell someone in a hurry, no nuance.\n\nANSWER WITH EVIDENCE\nBreak the answer into individual claims, one per line. After each one, in brackets, the file and the page or section. And after that, in angle quotes, the document's literal sentence, 25 words max. Like this:\nThe payment term is sixty days [master-agreement.pdf, clause 7.2] «payment shall be made sixty days from invoice date».\n\nWHAT I COULDN'T CONFIRM\nEverything my question assumes that doesn't appear in any document. Write it here instead of guessing.\n\nCONTRADICTIONS\nIf two documents say different things about this, put them side by side with their dates.\n\nRules: don't mix in anything you know from outside my documents. If the question can't be answered with what's uploaded, the SHORT ANSWER has to start with \"Your documents can't answer this because...\" and that's the end of your job. I'd rather have a flat no than a nice-sounding answer that doesn't hold up.",
+      "fill": [
+        ["[YOUR QUESTION]", "The specific question, the more closed-ended the better. Example: \"how much notice do I have to give if I don't want to renew, and how does that notice need to be sent?\""]
+      ],
+      "expect": "A short answer up top and, below it, each claim with its file, its page, and the document's original sentence. Plus an honest list of what it couldn't find.",
+      "next": "Take two or three of those quoted sentences, open the file, and search for them with Ctrl+F. If they're there, the rest of the answer earns a vote of confidence. If one isn't there, stop trusting that whole answer."
+    },
+    {
+      "name": "Pull the data into a table",
+      "when": "When what you want isn't an explanation, it's the data: amounts, dates, deadlines, names, references.",
+      "prompt": "Act as the most obsessive intern in the world, copying data down by hand.\n\nFrom this Project's documents, extract [WHAT DATA YOU WANT] and put it in a table.\n\nColumns, in this order:\n1. Item.\n2. Exact value as it appears in the document. Don't round it, don't translate it, and don't change its currency.\n3. Date it corresponds to.\n4. Source file.\n5. Page or section.\n6. Literal sentence where you found it, in angle quotes.\n7. Confidence: HIGH if the value is written verbatim, MEDIUM if you had to interpret or add things up, LOW if you inferred it.\n\nUnder the table, three sections:\nQUESTIONABLE ROWS: repeat the MEDIUM or LOW confidence rows and explain in one sentence what you had to assume for each one.\nMISSING DATA: items you'd expect to see in this table that don't appear in any document. List them with the value NOT THERE.\nCALCULATIONS: if you added, subtracted, or worked out a percentage, write out the whole operation with the numbers, so I can redo it on a calculator.\n\nRules: don't fill in any cell with an approximate value without flagging it. If two documents give different values for the same item, create two rows and don't choose for me. If the table would go past thirty rows, stop at thirty and tell me how many are left.",
+      "fill": [
+        ["[WHAT DATA YOU WANT]", "The specific data, named item by item. Example: \"every amount I owe, with its due date and what it's for\" or \"every exam date and document submission deadline.\""]
+      ],
+      "expect": "A table where every number has the source file and page right next to it, plus a separate list of rows where it had to assume something.",
+      "next": "Only review the MEDIUM and LOW rows: that's where the errors are. Check the totals yourself with the calculator on your phone, because counting and adding is exactly what it's worst at."
+    },
+    {
+      "name": "Audit an answer sentence by sentence",
+      "when": "Right after an answer you liked a little too much, or before sending it to someone.",
+      "prompt": "Switch roles. You're no longer the one who wrote the previous answer: now you're an outside reviewer who gets paid to find flaws, and going easy costs you the job.\n\nTake your last answer and break it into claims, one per line. Classify each one:\n\nVERIFIED: it's literally in a Project document. Give the file, page, and the exact sentence.\nINFERRED: it isn't written anywhere, you built it by combining two or more parts. Say which parts you combined.\nOUTSIDE: it comes from what you know in general, not from my documents.\nFALSE: it contradicts what the documents say.\n\nAfter the list, write:\n1. VERDICT: what portion of the answer is VERIFIED, as an approximate percentage.\n2. THE RISKIEST PART: the three claims that, if false, would hurt me the most given I'm going to use this for [WHAT YOU'RE GOING TO USE THIS FOR].\n3. CORRECTED ANSWER: rewrite the whole answer keeping only what's VERIFIED, clearly marking what's INFERRED, and dropping the rest.\n\nImportant rule: don't defend what you wrote before. If you got it wrong, say so in one line and move on, no three-paragraph apology. If on review the original answer doesn't hold up, the rewrite can simply be: these documents don't have enough data.",
+      "fill": [
+        ["[WHAT YOU'RE GOING TO USE THIS FOR]", "The real decision behind this. Example: \"signing the renewal on Friday\" or \"filing a written complaint with the company.\""]
+      ],
+      "expect": "A list where you can see with your own eyes how much of the answer really came from your papers, and a corrected, shorter version, which is almost always the one to trust.",
+      "next": "Keep the CORRECTED ANSWER and throw away the previous one. If the verdict comes in under seventy percent verified, that's a sign you're missing documents to upload, not that the question was badly asked."
+    },
+    {
+      "name": "A chunking plan for a very long document",
+      "when": "When the file is too big: the AI complains about the size, forgets the beginning halfway through the conversation, or answers about the table of contents instead of the actual content.",
+      "prompt": "I have a document too long to work through in one sitting: [DOCUMENT NAME], about [NUMBER] pages. What I need to get out of it is [WHAT YOU NEED TO KNOW].\n\nDon't summarize it yet. First I want a work plan.\n\nDo this:\n1. Tell me how many parts it needs to be split into to get through the whole thing without missing anything, and where each part cuts off: by chapter, by section, or by page number. The cuts have to fall in logical spots, never mid-idea.\n2. For each part: a title, from where to where it runs, and in one sentence what it's likely to contain.\n3. Mark with a star the parts that probably have what I'm looking for, and with an X the ones I can almost certainly skip. Justify both in half a line.\n4. Give me the order to read them in, which doesn't have to be start to finish.\n5. Write me the exact message I should send you to work through each part, with a marked gap where I'll paste in the text. I want to be able to copy and paste it without thinking.\n\nIf you can't see the whole document and are only reading loose fragments, tell me now and tell me how far you get. I'd rather know that now than discover half the contract is missing later.",
+      "fill": [
+        ["[DOCUMENT NAME]", "The file name exactly as you uploaded it. Example: \"collective-agreement-2025.pdf.\""],
+        ["[NUMBER]", "The approximate page count, even if it's a guess. Example: \"310.\""],
+        ["[WHAT YOU NEED TO KNOW]", "The reason you're opening this brick of a document. Example: \"how many vacation days I'm entitled to and how to request them.\""]
+      ],
+      "expect": "A list of parts with their pages, flagged for whether they're worth reading, in a recommended order, and the message already written to tackle each one.",
+      "next": "Save that plan in a notes app and check off parts as you go. Start with the starred ones: two or three usually settles what you were looking for."
+    },
+    {
+      "name": "The entry for each chunk",
+      "when": "Once for each part of the plan above. It's always the same message, changing only the number and the text you paste at the end.",
+      "prompt": "This is part [PART NUMBER] of [TOTAL PARTS] of the document [DOCUMENT NAME]. Treat it on its own: don't try to guess what the parts you haven't seen yet say, and don't assume anything that isn't in this chunk.\n\nI'm still looking for: [WHAT YOU NEED TO KNOW].\n\nAlways give me back this same entry, in this order:\n\nWHAT THIS PART IS ABOUT: four lines max.\nWHAT'S USEFUL TO ME: only what relates to what I'm looking for. Each point with the literal sentence in angle quotes and its section or page. If there's nothing useful here, write \"nothing useful in this part\" and don't pad it out.\nFIGURES, DATES, AND NAMES: a clean list of every hard fact that appears, each with its reference.\nOBLIGATIONS AND CONDITIONS: everything that requires someone to do something. Who, what, and when.\nRED FLAGS: anything that would surprise me, cost me money, or tie my hands.\nLINKS TO: mentions of other sections or documents I'll need to check later.\nFOR MEMORY: five lines summarizing this part in a way that still makes sense once we're ten parts deep, without rereading it.\n\nAnd at the very end, a block titled ACCUMULATED SO FAR with the conclusions combining this part and all the previous ones, ten lines max.\n\nText of part [PART NUMBER]:\n[PASTE THE TEXT HERE]",
+      "fill": [
+        ["[PART NUMBER]", "Which one you're on. Example: \"3.\""],
+        ["[TOTAL PARTS]", "How many the chunking plan gave you. Example: \"8.\""],
+        ["[DOCUMENT NAME]", "The same file name every time, so it doesn't lose track. Example: \"collective-agreement-2025.pdf.\""],
+        ["[WHAT YOU NEED TO KNOW]", "Copy in exactly what you put in the chunking plan, without changing a word."],
+        ["[PASTE THE TEXT HERE]", "The text of that part, copied from the document. If the whole file is already uploaded to the Project, replace it with: \"work from pages 45 to 90 of the file.\""]
+      ],
+      "expect": "The same entry over and over, same structure, which lets you skim and compare parts at a glance. And a running total that keeps growing.",
+      "next": "Copy the ACCUMULATED SO FAR block and paste it at the start of the message for the next part. That's what keeps it from losing track of where you are as the conversation gets long."
+    },
+    {
+      "name": "Cross-checking two documents",
+      "when": "When you have two versions of the same thing: the old contract and the new one, two quotes, a regulation and its amendment.",
+      "prompt": "Compare [DOCUMENT A] with [DOCUMENT B]. Both are uploaded to this Project.\n\nI don't want two summaries back to back: I want the differences.\n\nFormat:\n1. DIFFERENCES TABLE. Columns: topic, what A says with its page, what B says with its page, who the change favors, and severity (high, medium, or low).\n2. WHAT DISAPPEARED: things that were in A and aren't in B anymore. This slips by unless you look for it on purpose, so look for it on purpose.\n3. WHAT'S NEW: things that are in B and weren't in A.\n4. SAME BUT WORDED DIFFERENTLY: sections that look changed but say the same thing underneath. Separate these from the noise so I don't waste time on them.\n5. THE FIVE THAT MATTER: of all the differences, the five that genuinely change something for [WHO YOU ARE IN THIS], ranked by what's at stake for me.\n6. QUESTIONS TO ASK: what you'd ask the other party before signing or agreeing.\n\nRules: always cite both versions with their literal sentence, A's and B's. If a section only shows up in one of the two, say so, instead of assuming the other says the same thing. And if you're not sure two sections are equivalent, flag it with a question mark instead of pairing them up loosely.",
+      "fill": [
+        ["[DOCUMENT A]", "The exact file name of the old or reference version. Example: \"renovation-quote-company1.pdf.\""],
+        ["[DOCUMENT B]", "The exact name of the other one. Example: \"renovation-quote-company2.pdf.\""],
+        ["[WHO YOU ARE IN THIS]", "Your position, because it changes which difference is serious. Example: \"I'm the one paying for the work and can't go over $20,000.\""]
+      ],
+      "expect": "A table with both versions side by side, the list of what disappeared (usually the interesting part), and five questions to ask before signing.",
+      "next": "Focus on the WHAT DISAPPEARED section and the five that matter. Everything else is context. If the comparison is going to decide a signature, have a professional check it before you put your name on anything."
+    },
+    {
+      "name": "Writing something outward using your data",
+      "when": "Once you've done the asking and it's time to write something that leaves your computer: an email, a proposal, a complaint, a summary for your boss.",
+      "prompt": "Using the information in this Project's documents, write [WHAT NEEDS TO BE WRITTEN] addressed to [WHO IT'S FOR].\n\nWhat I want to achieve: [GOAL].\nTone: [TONE].\nLength: [LENGTH].\n\nHow I want it:\nFirst the clean text, ready to copy and send. No brackets, no gaps, no lines like \"insert name here.\" If you're missing a detail to complete it, don't make it up: stop and ask me before writing anything.\n\nAfter the text, separated by a line, a section titled WHERE EACH THING CAME FROM. Repeat every fact, figure, or claim from the text there and say which file and page you pulled it from, with the original sentence in angle quotes. If a sentence doesn't come from any document and is just phrasing, mark it as WRITING. If it comes from what you know on your own, mark it as OUTSIDE YOUR DOCUMENTS and warn me that I'm taking a chance there.\n\nAnd finally, a section titled RISKS: which lines in this text could backfire on me if the other side reads them closely, and how to soften them without losing what I'm trying to achieve.\n\nBefore finishing, tell me in one line whether the text contains any personal or confidential data from my documents that maybe shouldn't leave this room.",
+      "fill": [
+        ["[WHAT NEEDS TO BE WRITTEN]", "The type of text. Example: \"an email demanding the return of my deposit.\""],
+        ["[WHO IT'S FOR]", "The recipient and their role. Example: \"the property manager, who hasn't replied to two messages.\""],
+        ["[GOAL]", "What you want to happen after they read it. Example: \"get a date in writing before the end of the month.\""],
+        ["[TONE]", "How you want to sound. Example: \"cordial but firm, no threats\" or \"formal, because this could end up in court.\""],
+        ["[LENGTH]", "How long. Example: \"short enough to fit on a phone screen, about 150 words.\""]
+      ],
+      "expect": "The text ready to send and, below it, the breakdown of which line came from which paper, plus a warning about lines that could cost you.",
+      "next": "Read the RISKS section before the text. And heed the warning about confidential data: sending an email is irreversible, and a figure copied from an internal document can't be taken back once it's out."
+    }
+  ],
+  "canDo": [
+    "Read a hundred pages at once and find in seconds the clause you'd been hunting for half an hour.",
+    "Pull loose data (amounts, deadlines, dates, names) and organize it into a table, saying which page each one came from.",
+    "Compare two versions of a document and point out what changed, including what was removed without notice.",
+    "Translate what your papers say into plain language for an email, a summary, or an explanation to someone who hasn't read them."
+  ],
+  "cantDo": [
+    "It can't guarantee the citation. It can hand you a page that doesn't exist or a sentence that sounds like your document but isn't written that way. That's why you check: open the file and search for the sentence with Ctrl+F.",
+    "It can't read a PDF that's actually a photo of a piece of paper. If you can't select the text with your mouse, the AI can't see it either. It needs to be converted to text before uploading.",
+    "It doesn't count or add well. If you ask for the total of a two-hundred-row column, it'll give you a number with total confidence and it can be wrong. Do the math with a calculator.",
+    "It doesn't remember yesterday's conversation even in the same Project. The files are still there, but what you talked about in another chat isn't in front of it: if something matters, paste it in again."
+  ],
+  "tips": [
+    "Use file names that say something: \"lease-2024-signed.pdf\" works much better than \"document(3).pdf.\" The AI uses that name to cite you, and you use it to know whether it's slipping something past you.",
+    "Always ask for the literal sentence in quotes, never the summary. You can't check a summary; a literal sentence you search for with Ctrl+F and know in five seconds whether it exists or was made up.",
+    "Before working seriously, ask it a question whose answer you already know. If it fails that one, don't trust the rest. It's the cheapest way to find out whether it's going to be any good."
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "id": "crear-web",
+  "title": "Have the AI build you a website from scratch",
+  "intro": "You describe the site you have in mind and get back finished code. You copy it, paste it into a file, and open it with a double-click: now you have a page running on your computer. All from the chat's text box, with nothing to install and no black command windows.",
+  "model": "Claude, because it handles long code files without cutting off mid-way and gives you the whole page back at once; ChatGPT does much the same and works fine for everyday use, and save Gemini for Google-related stuff and video.",
+  "prompts": [
+    {
+      "name": "The blueprint: getting the site out of your head",
+      "when": "The very first thing, before asking for a single line of code. Ten minutes here saves you twenty messages later.",
+      "prompt": "You're a web designer and developer with twenty years building sites for small businesses. I've never coded and don't plan to learn: I want to tell you what's in my head and have you turn it into a clear plan.\n\nHere's my idea: [DESCRIBE YOUR IDEA IN THREE OR FOUR SENTENCES]. It's aimed at [WHO IT'S AIMED AT]. What I want a visitor to do is [WHAT YOU WANT A VISITOR TO DO].\n\nBefore writing any code, ask me at most eight questions, all together in a single message and numbered, to understand the business, the tone, the sections I need, and what I don't. Only ask what would genuinely change the outcome; no textbook questions. If you can reasonably assume something, assume it, tell me, and flag that assumption with the word ASSUMED so I can correct it or let it stand.\n\nWhen I reply, give me back a document titled WEBSITE BLUEPRINT with: the goal in one sentence, who it's aimed at, the ordered list of sections top to bottom explaining what goes in each, the actual copy it'll carry (write it yourself, finished, no \"your text here\"), the color palette with plain names and their codes, and the typeface.\n\nWrite it all in plain everyday English with no jargon; if you have to use a technical word, translate it in parentheses the first time. Don't write any code yet.",
+      "fill": [
+        [
+          "[DESCRIBE YOUR IDEA IN THREE OR FOUR SENTENCES]",
+          "Tell it the way you'd tell a friend over coffee. Example: \"I'm a physical therapist, I work solo, I want a simple site explaining what I do, my prices, and letting people book appointments.\""
+        ],
+        [
+          "[WHO IT'S AIMED AT]",
+          "The specific people who'll visit. Example: \"People in my area, ages 35-70, who find me on Google after an injury and almost always come in from their phone.\""
+        ],
+        [
+          "[WHAT YOU WANT A VISITOR TO DO]",
+          "The one action you care about. Example: \"Call me or message me on WhatsApp to book an appointment.\" List three things and the site loses its punch: pick one."
+        ]
+      ],
+      "expect": "A batch of numbered questions, short and relevant to your case. Once you answer, a document with the site's sections in order and the copy already written.",
+      "next": "Read it fully and correct anything that doesn't fit, in your own words (\"drop the pricing section,\" \"make the tone warmer\"). Don't move on to code until you like the blueprint: changing it now costs one message; changing it later costs five."
+    },
+    {
+      "name": "Requesting the whole page in a single file",
+      "when": "Once the blueprint is approved. This is the message that hands you back a finished site.",
+      "prompt": "You're a web developer and you're going to write me the entire page. I don't know how to code: I'm going to copy and paste what you give me without touching anything.\n\nHere's the agreed plan: [PASTE THE BLUEPRINT HERE]. The project is called [BUSINESS OR PROJECT NAME] and the main color I want is [MAIN COLOR].\n\nFile rules, no exceptions:\n1. A single file with absolutely everything inside: structure, colors, and behavior all in one place. No separate files, nothing for me to download.\n2. Nothing loaded from the internet: no external fonts, no libraries, no third-party icons. The page has to look the same with the computer offline.\n3. For photos, for now, use color blocks or shapes drawn in the code itself, and next to each one leave a comment saying which photo of mine will go there.\n4. Before each section, put a comment in capital letters saying what starts there, e.g. START OF PRICING SECTION, so I can spot it at a glance.\n5. Write all the copy yourself, finished and believable. No filler, no \"Lorem ipsum.\"\n6. Make sure it looks good on both computer and phone.\n7. Give it to me in full, first line to last. Never write \"rest stays the same\" or summarize parts.\n\nIf it doesn't fit in a single reply, split it into numbered chunks, tell me to type CONTINUE, and pick up exactly where you left off, without repeating anything.\n\nAfter the code, summarize in three lines what I just received and what I'll see when I open it.",
+      "fill": [
+        [
+          "[PASTE THE BLUEPRINT HERE]",
+          "The WEBSITE BLUEPRINT document from the previous prompt, as-is, with your corrections already folded in. If you're in the same conversation, writing \"the blueprint we just finalized\" usually works."
+        ],
+        [
+          "[BUSINESS OR PROJECT NAME]",
+          "What it's called. Example: \"Marta Ruiz Physical Therapy.\""
+        ],
+        [
+          "[MAIN COLOR]",
+          "Describe it in words and it'll translate it for you. Example: \"dark forest green, with cream accents.\" If you have a color code from your logo, paste it in."
+        ]
+      ],
+      "expect": "A large code block with a copy button in the corner, and below it a short summary of what you'll see. If it's very long, it'll come in two or three parts.",
+      "next": "Don't read it or try to understand it: that's not the point. Copy it whole (if it came in parts, paste them one after another in the same file, in order) and move to the next prompt to save it and view it."
+    },
+    {
+      "name": "Saving the code and viewing it on your computer",
+      "when": "Right after getting the code, when you have a huge chunk of copied text and don't know where to put it.",
+      "prompt": "You just gave me the code for my website. Now switch roles: you're the most patient computer teacher in the world, and I've never created a file like this in my life. I have [WINDOWS OR MAC] and I don't want to install new programs or open any black command window.\n\nExplain it to me in numbered steps, with the exact names of the menus and buttons as they appear on my screen:\n1. Which program I already have installed to open a blank document to paste the code into.\n2. How I save it with the right name and which folder I should put it in, described as a path I can follow with the mouse.\n3. What I need to watch out for so it doesn't get saved as a plain text file, which I understand is the typical mistake, and how I check it saved correctly.\n4. How I open it to see it as a real webpage, not as a wall of letters.\n5. How I make a change later on: open it, edit it, save it, and look at it again.\n\nEnd with a section titled IF SOMETHING GOES WRONG with the three most common problems and their fix, starting with \"I see the code written out on screen instead of the page.\"\n\nAnd explicitly warn me about any step where I could lose or overwrite the file with no way to recover it.",
+      "fill": [
+        [
+          "[WINDOWS OR MAC]",
+          "Whichever you have. Example: \"Windows 11.\" If you don't know, write \"a regular Windows laptop, not sure which version\" and have it cover both."
+        ]
+      ],
+      "expect": "Step-by-step instructions with real button names, the exact name you should give the file, and a list of what to do if something fails.",
+      "next": "Follow the steps and open the file. You should be seeing your page in the browser. Warning: when you save over the file, the previous version disappears with no undo. Before every big change, make a copy and number it (site-01, site-02...)."
+    },
+    {
+      "name": "The bigger, bluer button: specific changes",
+      "when": "Once you can see the page in the browser and there are things you don't like.",
+      "prompt": "Continuing with the page you gave me. I have it open in the browser now and I want these changes, no more:\n\n[LIST OF CHANGES]\n\nWork like this:\n- Before touching anything, repeat back in your own words what you understood from each point, one line per point. If any point could be read two ways, go with the most likely one and tell me, but don't stop to ask.\n- Change only what I asked for. Everything else (text, colors, section order, spacing) stays exactly as it is.\n- Give me the complete file again, first line to last, so I can delete everything old and paste the new version without thinking. Don't give me loose snippets or explain where to fit them in: I wouldn't know how.\n- If any of my changes would break something (it overflows on mobile, the text becomes unreadable on that background, it covers a button), don't do it blindly: do the closest thing that actually works and explain in one line what you adjusted and why.\n- End with a short list titled WHAT I CHANGED, in plain language, so I can check each one against the screen.\n\nIf anything I asked for is unclear, say so plainly instead of guessing what I meant.",
+      "fill": [
+        [
+          "[LIST OF CHANGES]",
+          "One line per change, describing what you see and what you want, no jargon. Example: \"1. The button that says Book Appointment, make it bigger and dark blue, with rounded corners. 2. The title up top is huge, make it smaller. 3. There's too much space between the photo and the text below.\""
+        ]
+      ],
+      "expect": "First a recap of what it understood, then the complete file again, and at the end the list of changes in plain language.",
+      "next": "Save a copy of the previous file, delete all the content of the current one, paste in the new one, save, and refresh the page in the browser (F5). If something didn't come out right, point at which item on the list and continue in the same conversation."
+    },
+    {
+      "name": "Adding a section without breaking what already works",
+      "when": "When you already like the site but it's missing something: pricing, testimonials, FAQ, a map.",
+      "prompt": "Continuing with my page. I want to add a new section.\n\nWhich section: [WHICH SECTION YOU WANT TO ADD]. Where it goes: [WHERE IT GOES, BETWEEN WHAT AND WHAT]. What needs to be inside: [WHAT IT CONTAINS].\n\nInstructions:\n- Write the section's copy yourself, finished and believable for my case. No filler, no \"your content here.\"\n- Make the section look like it belongs with the rest: the same colors, the same typeface, the same sizes and the same spacing between blocks the page already uses. Don't introduce a new style that clashes.\n- If the page has a menu up top, add the matching entry and make clicking it smoothly scroll down to the section.\n- Mark the start and end of the new part with comments in capital letters, so I can remove it entirely if I end up not liking it.\n- Give me the complete file, first line to last, ready to paste at once. Don't give me just the new snippet.\n- At the end, tell me in two lines exactly where on the page I'll see it when I open it, and how it'll look on mobile.\n\nIf you're missing any detail to write it well, make a reasonable assumption, flag it with the word ASSUMED, and keep going instead of stopping.",
+      "fill": [
+        [
+          "[WHICH SECTION YOU WANT TO ADD]",
+          "The plain name of the section. Example: \"FAQ, with questions that expand when clicked.\""
+        ],
+        [
+          "[WHERE IT GOES, BETWEEN WHAT AND WHAT]",
+          "Place it by looking at your own page. Example: \"After pricing and right before the footer with the phone number.\""
+        ],
+        [
+          "[WHAT IT CONTAINS]",
+          "The real content, even if it's rough. Example: \"Six questions: whether a referral is needed, how long a session lasts, whether there's parking, whether I'm open Saturdays, whether I work with insurance, and what happens if I can't make it.\""
+        ]
+      ],
+      "expect": "The complete file with the new section built in, marked with comments, and the menu entry added if your site has a menu.",
+      "next": "Paste it in, save, and look. If the section stands out from the rest, say so plainly: \"the new section looks like it's from a different site, match the sizes and spacing to the rest.\""
+    },
+    {
+      "name": "Making it look good on mobile",
+      "when": "Before you show it to anyone. Most people will open it from their phone.",
+      "prompt": "Review my page thinking only about mobile. Here's the complete file: [PASTE ALL THE CODE HERE]\n\nFirst, tell me in plain language, no jargon, what will look bad on a phone screen: text too big or too small, buttons hard to tap with a finger, images overflowing the side, columns that should stack instead of sitting side by side, menus that don't fit. Rank them from most to least annoying.\n\nThen fix all of them and give me the complete file, first line to last. Important condition: on a computer the page has to keep looking exactly like it does now. Change only what affects small screens.\n\nKeep in mind that people visiting from mobile use their thumb and are in a hurry: buttons need to be comfortable to tap and the important stuff needs to be visible without much scrolling.\n\nFinally, explain how I can check the result myself without picking up my phone: how to narrow the browser window down to phone width and what I should see in each section when I do. Give it to me in numbered steps with the exact names of buttons or keys.",
+      "fill": [
+        [
+          "[PASTE ALL THE CODE HERE]",
+          "The whole text the AI gave you. Open your file in Notepad (or TextEdit on Mac), select all (Ctrl+A on Windows, Cmd+A on Mac), copy and paste. If you're still in the same conversation, writing \"use the file you gave me earlier\" usually works."
+        ]
+      ],
+      "expect": "A list of problems explained in plain language, the complete fixed file, and instructions to check it by narrowing the window.",
+      "next": "Paste the file, save it, and narrow the browser window until it's phone-width. Go through the whole page. If something still overflows, take a screenshot, paste it in, and tell it which section it's happening in."
+    },
+    {
+      "name": "A form whose messages actually reach you",
+      "when": "When you want people to message you from the site, not just call you.",
+      "prompt": "I want my page to have a contact form and for the messages to actually reach my inbox. Here's the complete file: [PASTE ALL THE CODE HERE] My email is [YOUR EMAIL] and I want to ask for these fields: [WHAT FIELDS YOU WANT].\n\nStart by explaining in four or five lines, no jargon, why a form simply dropped into a page doesn't send anything anywhere, and what's needed for it to reach my inbox.\n\nThen give me the two or three simplest ways to make that happen without installing anything or touching servers, compared in a table with these columns: what I need to do, monthly cost, how many free messages a month it allows, and its downside. Recommend one and say why in one sentence.\n\nThen give me the exact numbered steps, with button names as they appear on screen, to create an account with that service and get to the piece of information I need to copy.\n\nFinally, the complete file with the form already built in, marking with a capital-letter comment the one and only spot where I need to paste that piece of information.\n\nAlso warn me about what personal information should never be requested in a public form, and how to avoid my inbox filling up with junk mail.",
+      "fill": [
+        [
+          "[PASTE ALL THE CODE HERE]",
+          "The whole text the AI gave you. Open your file in Notepad (or TextEdit on Mac), select all (Ctrl+A on Windows, Cmd+A on Mac), copy and paste. If you're still in the same conversation, writing \"use the file you gave me earlier\" usually works."
+        ],
+        [
+          "[YOUR EMAIL]",
+          "The address you want messages sent to. Example: \"marta@martaruizpt.com\". If you'd rather not share it in chat, write \"MY EMAIL\" and swap it in yourself afterward."
+        ],
+        [
+          "[WHAT FIELDS YOU WANT]",
+          "The bare minimum: every extra field means fewer people fill it out. Example: \"name, phone, and a short message; nothing else.\""
+        ]
+      ],
+      "expect": "An explanation of why an external service is needed, a table comparing options with prices, the sign-up steps, and the complete file with the form ready to go.",
+      "next": "Create the account by following the steps, paste your piece of information into the marked spot, and try sending yourself a test message. If it doesn't arrive, check the spam folder before assuming it's broken. Almost all free plans handle 50-100 messages a month; going beyond that usually runs $8-20 a month."
+    },
+    {
+      "name": "Fixing something that looks off or isn't working",
+      "when": "When something has come out of place, a button doesn't respond, or the page shows blank.",
+      "prompt": "Something on my page isn't right and I don't know how to describe it technically, so I'll tell you what I see.\n\nWhat I see: [DESCRIBE WHAT YOU SEE, EXACTLY]. What I expected to see: [WHAT YOU EXPECTED]. It happens on: [COMPUTER, MOBILE, OR BOTH], using [BROWSER YOU USE]. I'm attaching a screenshot and here's the complete file: [PASTE ALL THE CODE HERE]\n\nDo this, in this order:\n1. Tell me in one or two sentences, in plain language, what the most likely cause is. Don't list five possible culprits: commit to the most likely one.\n2. Tell me whether it's a bug in the code, something I did while saving or pasting the file, or simply how it renders in that browser. Each gets fixed differently and I want to know which one I'm dealing with.\n3. Fix it and give me the complete file, first line to last, ready to paste at once.\n4. Tell me exactly what to look for on screen to know it's fixed, and where on the page to look.\n\nIf what I've given you isn't enough to be sure, ask me for what's missing before changing anything. I'd rather answer a question than have you guess and hand back a page worse than before.",
+      "fill": [
+        [
+          "[DESCRIBE WHAT YOU SEE, EXACTLY]",
+          "The way you'd describe it to someone over the phone. Example: \"The header photo shows up huge and covers the menu, and below it there's a giant white gap before the text.\""
+        ],
+        [
+          "[WHAT YOU EXPECTED]",
+          "Example: \"For the photo to only fill the top area, with the menu visible over it.\""
+        ],
+        [
+          "[COMPUTER, MOBILE, OR BOTH]",
+          "Where it happens. It's the most useful clue you can give: if it only happens on mobile, it's a different problem."
+        ],
+        [
+          "[BROWSER YOU USE]",
+          "Chrome, Safari, Edge, or Firefox. If you don't know, describe the icon you click to get online."
+        ],
+        [
+          "[PASTE ALL THE CODE HERE]",
+          "The whole text the AI gave you. Open your file in Notepad (or TextEdit on Mac), select all (Ctrl+A on Windows, Cmd+A on Mac), copy and paste. If you're still in the same conversation, writing \"use the file you gave me earlier\" usually works."
+        ]
+      ],
+      "expect": "A clear cause in one or two sentences, the complete corrected file, and a specific way to check it's fixed.",
+      "next": "Before pasting anything, save a copy of the file you currently have. If the fix makes things worse, that copy gets you back in ten seconds; without it, you can't."
+    },
+    {
+      "name": "Putting the site online with a real address",
+      "when": "When you already like the page on your computer and want to be able to send it over WhatsApp.",
+      "prompt": "I have my page finished as a file on my computer and I want it online, with an address I can send over WhatsApp. I don't know how to code, I don't want command windows, and I want to pay as little as possible. I'd like the address to include [NAME YOU WANT FOR THE ADDRESS].\n\nFirst, give me a table with the two or three simplest ways to publish a file like this, comparing: how hard it is for someone who's never done it, the monthly cost, whether it lets me just drag the file to upload, and what the free address I get would look like. Recommend one and say why in one sentence.\n\nThen the exact numbered steps, with button names as they appear on screen, from creating the account to seeing my page live on the internet. Also include what I need to do afterward, every time I change the file, to keep it updated.\n\nThen explain in two sentences what having your own domain means, how much it costs a year, where to buy one, and whether it's worth it for me now or I can wait.\n\nAnd close with a section titled WARNINGS: which steps can't be undone, what stops being private the moment I publish, and what costs might show up down the road.",
+      "fill": [
+        [
+          "[NAME YOU WANT FOR THE ADDRESS]",
+          "The words you want to appear in the address. Example: \"martaruizpt\". Shorter and easier to say over the phone is better."
+        ]
+      ],
+      "expect": "A comparison table with prices, the publishing steps with real button names, what a domain costs per year, and a list of warnings.",
+      "next": "Publish and open it from your phone using mobile data, not your home wifi: that way you confirm it's really online. Keep in mind publishing is a real change of state: from that moment on, anyone with the link can see it, and search engines may start showing it. Your own domain runs around $10-15 a year and is usually non-refundable."
+    }
+  ],
+  "canDo": [
+    "Write the entire page (structure, colors, copy, animations) as a single file you open with a double-click, working offline.",
+    "Rebuild that same file twenty times in a row with whatever changes you ask for, without getting tired or charging you extra.",
+    "Translate what you see (\"this feels cramped,\" \"the button doesn't stand out\") into the technical fix that solves it.",
+    "Explain, with real button names, how to save the file, view it, fix it, and publish it online."
+  ],
+  "cantDo": [
+    "It can't see your screen. If you don't paste a screenshot or describe it, it has no idea how the page turned out.",
+    "It can't set up card payments, password-protected accounts, or an order database on its own: that needs external services and, almost always, a monthly fee.",
+    "It doesn't remember your file if you open a new conversation. Every chat starts blank: you'll need to paste the code back in.",
+    "It doesn't create accounts or buy the domain for you. It gives you the steps, but the clicks and the payment are yours to do."
+  ],
+  "tips": [
+    "Always ask for the complete file, never \"just the part that changes.\" If it gives you a loose snippet you'd have to know where it fits, and that's exactly where things break.",
+    "Before pasting in any new version, save the previous one under a different name: site-01, site-02, site-03. Overwriting a file has no undo, and some change is bound to turn out worse than the last.",
+    "Take a screenshot and paste it into the chat. Describing \"that weird gap up top\" in words takes three messages; the screenshot solves it in one."
+  ]
+}

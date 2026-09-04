@@ -663,15 +663,15 @@ export default function Kits() {
             <div className="st-kit-panel">
               <section className="st-kit-block">
                 <div className="st-section-head">
-                  <div><span className="st-kicker">Stack combinado</span><h2>Herramientas que se complementan</h2></div>
-                  <span>{tools.length} piezas</span>
+                  <div><span className="st-kicker">{locale === 'en' ? 'Combined stack' : 'Stack combinado'}</span><h2>{locale === 'en' ? 'Tools that complement each other' : 'Herramientas que se complementan'}</h2></div>
+                  <span>{tools.length} {locale === 'en' ? 'pieces' : 'piezas'}</span>
                 </div>
                 <div className="st-kit-tools">
                   {tools.map((tool) => (
                     <a key={tool.id} href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
                       <BrandMark icon={tool.icon} size={20} />
                       <strong>{tool.label}</strong>
-                      <small>{tool.guide?.prompts?.length || 0} prompts · {tool.guide?.automations?.length || 0} flujos</small>
+                      <small>{tool.guide?.prompts?.length || 0} prompts · {tool.guide?.automations?.length || 0} {locale === 'en' ? 'flows' : 'flujos'}</small>
                     </a>
                   ))}
                 </div>
@@ -679,7 +679,7 @@ export default function Kits() {
 
               <div className="st-kit-columns">
                 <section>
-                  <div className="st-section-head"><div><span className="st-kicker">Prompts</span><h2>Para ampliar</h2></div></div>
+                  <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Prompts' : 'Prompts'}</span><h2>{locale === 'en' ? 'To expand' : 'Para ampliar'}</h2></div></div>
                   <div className="st-kit-resource-list">
                     {promptFamilies.slice(0, 20).map((family) => (
                       <a key={family.id} href={href({ name: 'prompts', familyId: family.id })}>
@@ -691,7 +691,7 @@ export default function Kits() {
                   </div>
                 </section>
                 <section>
-                  <div className="st-section-head"><div><span className="st-kicker">Automatizaciones</span><h2>Flujos candidatos</h2></div></div>
+                  <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Automations' : 'Automatizaciones'}</span><h2>{locale === 'en' ? 'Candidate flows' : 'Flujos candidatos'}</h2></div></div>
                   <div className="st-kit-resource-list">
                     {automations.slice(0, 20).map(({ tool, automation }: { tool: ToolPage; automation: ToolAutomation }) => (
                       <a key={`${tool.id}-${automation.name}`} href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
@@ -706,8 +706,8 @@ export default function Kits() {
 
               <section className="st-kit-block">
                 <div className="st-section-head">
-                  <div><span className="st-kicker">Skills y procesos</span><h2>Lecciones que lo sostienen</h2></div>
-                  <span>{skills.length} sugeridos</span>
+                  <div><span className="st-kicker">{locale === 'en' ? 'Skills and processes' : 'Skills y procesos'}</span><h2>{locale === 'en' ? 'Lessons that back this up' : 'Lecciones que lo sostienen'}</h2></div>
+                  <span>{skills.length} {locale === 'en' ? 'suggested' : 'sugeridos'}</span>
                 </div>
                 <div className="st-kit-skill-grid">
                   {skills.map((lesson) => (
@@ -725,11 +725,11 @@ export default function Kits() {
           <section className="st-kit-master">
             <Lightbulb size={15} />
             <div>
-              <strong>Cómo se usa este kit</strong>
+              <strong>{locale === 'en' ? 'How to use this kit' : 'Cómo se usa este kit'}</strong>
               <p>
-                Pasa el brief y contesta a lo que te pregunte. Elige alcance. Sigue las fases en orden y no te
-                saltes las comprobaciones: cada paso dice lo que tienes que ver en pantalla. Cada fase deja un
-                entregable, y esos entregables son el proyecto.
+                {locale === 'en'
+                  ? 'Run the brief and answer what it asks. Choose your scope. Follow the phases in order and don’t skip the checks: each step says what you should see on screen. Each phase leaves a deliverable, and those deliverables are the project.'
+                  : 'Pasa el brief y contesta a lo que te pregunte. Elige alcance. Sigue las fases en orden y no te saltes las comprobaciones: cada paso dice lo que tienes que ver en pantalla. Cada fase deja un entregable, y esos entregables son el proyecto.'}
               </p>
             </div>
             <Wrench size={15} />

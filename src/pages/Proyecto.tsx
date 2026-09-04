@@ -119,12 +119,12 @@ export default function Proyecto({ stageId }: { stageId: string }) {
       </ol>
 
       <section className="st-block st-block-comprobar">
-        <h3><CheckCircle2 size={15} /> Está bien hecho si</h3>
+        <h3><CheckCircle2 size={15} /> {locale === 'en' ? 'It is done right if' : 'Está bien hecho si'}</h3>
         <ul className="st-plain">{project.checks.map((item) => <li key={item}>{item}</li>)}</ul>
       </section>
 
       <section className="st-block st-block-ejemplo">
-        <h3><Rocket size={15} /> Cómo ampliarlo</h3>
+        <h3><Rocket size={15} /> {locale === 'en' ? 'How to extend it' : 'Cómo ampliarlo'}</h3>
         <ol className="st-example">
           {project.extend.map((item, index) => (
             <li key={item}><span>{index + 1}</span>{item}</li>
@@ -133,7 +133,7 @@ export default function Proyecto({ stageId }: { stageId: string }) {
       </section>
 
       <section className="st-block st-block-decisiones">
-        <h3>Te lo van a preguntar así</h3>
+        <h3>{locale === 'en' ? "This is how they'll ask you about it" : 'Te lo van a preguntar así'}</h3>
         <ul className="st-plain">{project.defend.map((item) => <li key={item}>{item}</li>)}</ul>
       </section>
     </div>
