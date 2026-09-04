@@ -1,0 +1,187 @@
+{
+  "id": "chatgpt-codex",
+  "title": "ChatGPT and Codex",
+  "subtitle": "You leave here with a working program you didn't write",
+  "minutes": 60,
+  "slides": [
+    {
+      "kind": "portada",
+      "title": "ChatGPT and Codex",
+      "text": "From talking to the machine to having it work alone in your files.",
+      "notes": "Introduce yourself in thirty seconds and get to the point. Ask by show of hands who's ever written a line of code: usually two or three out of thirty, and that relaxes the other twenty-seven. Tell them the hour's promise in one sentence: by the end they'll have a program of their own that works, and none of them will have typed it."
+    },
+    {
+      "kind": "idea",
+      "title": "Today you don't learn to program",
+      "text": "You learn to brief well and review better. It's a different trade, and now it pays.",
+      "notes": "Defuse the fear before it shows up: nobody's going to memorize commands or syntax. The new skill is describing precisely what you want and spotting when the machine slipped something past you. Compare it to hiring a renovation: you don't know how to lay tile, but you know when it's crooked."
+    },
+    {
+      "kind": "idea",
+      "title": "ChatGPT doesn't know anything: it predicts",
+      "text": "It calculates which word comes next. That's all. That's why it lies to you with the same straight face it uses when it's right.",
+      "notes": "This is the slide that prevents 80% of the course's disappointments. Stress it: there's no database of truths inside, there's a calculator of probable continuations. An example that works live: ask it in real time for the phone number of a specific shop in your neighborhood, and show the made-up number, correct area code and all."
+    },
+    {
+      "kind": "lista",
+      "title": "Five words and you're set",
+      "items": [
+        "Model: the brain. A huge file full of numbers.",
+        "Prompt: the brief. What you write to it.",
+        "Token: a chunk of a word. That's what you're billed by.",
+        "Agent: a model with hands. It touches your files.",
+        "Hallucination: making something up with a confident face."
+      ],
+      "notes": "Read them out loud and don't dwell: they'll all come back later with an example. The only one worth anchoring now is token, because it's the billing unit: a long word in English is two or three tokens. Ask if anyone's heard any of the five outside class; it's almost always hallucination, from the news."
+    },
+    {
+      "kind": "pregunta",
+      "title": "ChatGPT doesn't know the answer. What does it do?",
+      "items": [
+        "Warns you it doesn't know",
+        "Asks before continuing",
+        "Makes up something that sounds right",
+        "Searches the internet automatically"
+      ],
+      "notes": "Leave thirty seconds of silence and ask for hands on each option. The answer is c, and the nuance to land is that it isn't lying on purpose: its job is to sound right, not to be true. Use this to debunk d too: it only searches if the conversation has search turned on, and even then it makes up the summary of what it read."
+    },
+    {
+      "kind": "idea",
+      "title": "Codex is ChatGPT with hands",
+      "text": "ChatGPT hands you back text that you copy yourself. Codex opens your files, writes into them, and runs commands.",
+      "notes": "Mark the boundary with a gesture: chat on the left, agent on the right. The practical difference is who moves the hands, and therefore who can break something. Everything after this slide is about controlling those hands."
+    },
+    {
+      "kind": "lista",
+      "title": "Codex has two faces",
+      "items": [
+        "On the web: works on its own copy, takes minutes",
+        "In the terminal: works on your computer, instantly",
+        "The web proposes; you accept or throw it out",
+        "The terminal touches real files from second one",
+        "Start with the web: it's the forgiving one"
+      ],
+      "notes": "Terminal is the black window where you type commands instead of clicking buttons; translate it here because it'll come up ten more times. Stress the last point: the web version works on a copy, so a disaster there deletes nothing of yours. In the terminal there's no safety net except the one you set up yourself."
+    },
+    {
+      "kind": "pregunta",
+      "title": "Which of these briefs works?",
+      "items": [
+        "Fix this, it's not working",
+        "Make me an invoicing program",
+        "Read invoices.csv, sum the base column, apply 21%",
+        "Improve the code, please"
+      ],
+      "notes": "c, and you want them to say it before you do. Have someone explain what's missing from b: it doesn't say which file, which column, or what should come out. The lesson is that the three bad ones don't error out, they give you something plausible and wrong, which is much worse."
+    },
+    {
+      "kind": "lista",
+      "title": "A brief has five pieces",
+      "items": [
+        "Which file. Exact name and extension",
+        "What you want to come out. A number, a list, a file",
+        "Following what rule. VAT is 21%, not 16%",
+        "What it must not touch. Don't delete the original",
+        "How to check it's right. You say it beforehand"
+      ],
+      "notes": "This is the slide they'll write down. Tell them the third piece isn't a quirk: the model learned from projects from half the world and Mexico's 16% shows up unprompted. The fifth is the one nobody writes and the one that saves the most time: if you don't know how to check it, neither does the machine."
+    },
+    {
+      "kind": "codigo",
+      "title": "The brief, written the right way",
+      "code": "I have a file invoices.csv in this folder.\nIt has three columns: date, customer, base.\n\nWrite me a Python program that:\n- reads the file\n- sums the base column\n- applies 21 percent VAT\n- prints how many invoices there are and the total in euros\n\nDo not modify invoices.csv. Only read it.\nExplain each line as if I'd never programmed before.",
+      "notes": "Read it out loud in full and point out where each of the previous slide's five pieces is. Let them see there's no technical vocabulary at all: it's written in everyday language. The last line is a cheap and excellent trick, because it gets you back the code and a programming lesson in the same answer."
+    },
+    {
+      "kind": "codigo",
+      "title": "What it returns, line by line",
+      "code": "import csv\n\nVAT_RATE = 0.21\n\nwith open(\"invoices.csv\", encoding=\"utf-8\") as f:\n    rows = list(csv.DictReader(f))\n\ntotal = 0\nfor row in rows:\n    base = float(row[\"base\"])\n    total += base * (1 + VAT_RATE)\n\nprint(f\"{len(rows)} invoices\")\nprint(f\"Total with VAT: {total:.2f} EUR\")",
+      "notes": "Don't explain Python: explain where to look. Point at the 0.21 and say that's the one number that must be verified, because if it says 0.16 the program runs perfectly and gives you the wrong result. Also point out nowhere does it say delete or write: it only opens to read, which is what was asked."
+    },
+    {
+      "kind": "idea",
+      "title": "You sign it, not it",
+      "text": "If the total comes out wrong, you're the one facing the client. Check the numbers before the style.",
+      "notes": "This is the serious moment of the session, slow down. Expensive bugs never crash the program: they return a believable, slightly wrong figure, and you find out weeks later. Rule they leave with: take one row, do the math on your phone's calculator, and compare."
+    },
+    {
+      "kind": "codigo",
+      "title": "Codex in your terminal, three steps",
+      "code": "# 1. Install, once. You need Node.js already set up.\nnpm install -g @openai/codex\n\n# 2. Go into the work folder and start it up\ncd Documents/invoices\ncodex\n\n# 3. Now inside, you type in plain English:\n> read invoices.csv and tell me the total with 21% VAT",
+      "notes": "Do it live if you have a projector and network; if the network fails, this slide already covers it. Explain the hash mark marks a comment for humans and those lines don't get typed. Warn about step 2: the folder you launch from is the folder you're handing over, so never launch from the desktop or the whole Documents folder."
+    },
+    {
+      "kind": "pregunta",
+      "title": "Codex wants to delete 40 files. What do you do?",
+      "items": [
+        "Accept: it'll know what it's doing",
+        "Read the whole list and accept only if it checks out",
+        "Say no and ask why it wants to delete them",
+        "Close the terminal and run"
+      ],
+      "notes": "b is right and c is perfectly valid; a never is. Finish with the scary fact: what the terminal deletes doesn't go to the trash, it's gone, and there's no Ctrl+Z. Ask the room who's ever emptied a trash can without looking: same feeling, minus the trash can."
+    },
+    {
+      "kind": "lista",
+      "title": "What has no going back",
+      "items": [
+        "Deleting from the terminal: skips the trash",
+        "Overwriting the original with no backup. Gone for good",
+        "Uploading a password to the internet: stays in the history",
+        "Pasting customer data into the chat",
+        "Auto mode: doesn't ask before anything"
+      ],
+      "notes": "These five points are serious, not course bureaucracy. The third is the one most people step on: deleting the password tomorrow doesn't remove it from today's version, and there are programs scanning for that around the clock. The fifth is the most tempting once you've got the hang of it, so say clearly that auto mode gets turned on when working on a copy, never before."
+    },
+    {
+      "kind": "caso",
+      "title": "The case of the 1,200 invoices",
+      "text": "Four hours a month copying by hand. Six minutes and two tries.",
+      "items": [
+        "Before: 4 hours a month, and the odd typo",
+        "Codex took 6 minutes and failed the first try",
+        "It applied 16% VAT, not 21%",
+        "Caught when the total was checked against the bank statement",
+        "Extra cost: €0. Already paying the €23 for Plus"
+      ],
+      "notes": "Tell the case as what it is: it went well and it failed on the first try, both things. The point you want them to keep isn't the time saved, it's that the 16% mistake didn't error out anywhere, it produced a beautiful, false total. It got caught because there was a check planned ahead of time, which is the brief's fifth piece."
+    },
+    {
+      "kind": "lista",
+      "title": "What's free and what costs",
+      "items": [
+        "Free ChatGPT: plenty for asking and learning",
+        "Plus: about $23/month with tax",
+        "Codex comes included in Plus, with a usage cap",
+        "Installing Codex is free; using it on your own account is billed",
+        "Prices change every few months. Check before paying"
+      ],
+      "notes": "Be honest about the figures and the date: these are approximate prices and this moves. Stress that the free plan is enough for everything today, and Plus only makes sense once they hit the cap. Warn them the subscription renews itself every month until cancelled by hand, and nobody sends a warning the day before."
+    },
+    {
+      "kind": "lista",
+      "title": "Day-one mistakes",
+      "items": [
+        "Not saying the exact file name",
+        "Accepting 40 lines without checking the numbers",
+        "Never running the program",
+        "Changing the brief halfway and losing the thread",
+        "Working on the original instead of a copy"
+      ],
+      "notes": "Move through it fast, it's a recap, not new material. The third deserves ten seconds: some people pile up answers without testing any of them and end up with two hundred broken lines and not a clue where the bug is. Have each person say out loud which one they think they'll make."
+    },
+    {
+      "kind": "cierre",
+      "title": "What you're taking away and doing today",
+      "text": "A working program of yours and the habit of checking it.",
+      "items": [
+        "Grab a boring file of yours: a CSV, a list",
+        "Write the brief with all five pieces",
+        "Work on a copy. Always",
+        "Run it and verify one number with a calculator",
+        "Bring the bug you find to the next session"
+      ],
+      "notes": "Close on the idea that the bug they find is worth more than a program that works. Ask for the concrete commitment to do it this week, not someday. Leave three minutes for questions and collect the two or three that repeat, to open the next class with them."
+    }
+  ]
+}
