@@ -70,3 +70,7 @@ export async function unlockRemotePin(pin: string) {
   }>(response)
   return data
 }
+
+export function logoutRemoteSession() {
+  return fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined)
+}

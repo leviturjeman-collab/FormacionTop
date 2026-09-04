@@ -8,6 +8,7 @@ import {
   learnersPath,
   progressPath,
   readBody,
+  setSessionCookie,
   signSession,
   supabaseFetch,
 } from '../_supabase.js'
@@ -33,7 +34,9 @@ export default async function handler(req, res) {
     const pin = cleanPin(body.pin, 6)
 
     if (pin === adminPin()) {
-      json(res, 200, { ok: true, role: 'admin', sessionToken: signSession({ role: 'admin' }) })
+      const sessionToken = signSession({ role: 'admin' })
+      setSessionCookie(res, sessionToken)
+      json(res, 200, { ok: true, role: 'admin', sessionToken })
       return
     }
 
@@ -62,10 +65,13 @@ export default async function handler(req, res) {
 
     const progress = await supabaseFetch(progressPath(`?learner_id=eq.${encodeURIComponent(learner.id)}&select=state,updated_at&limit=1`))
 
+    const sessionToken = signSession({ role: 'learner', learnerId: learner.id })
+    setSessionCookie(res, sessionToken)
+
     json(res, 200, {
       ok: true,
       role: 'learner',
-      sessionToken: signSession({ role: 'learner', learnerId: learner.id }),
+      sessionToken,
       learner: learnerFromRow(learner),
       progress: progress[0]?.state || null,
     })

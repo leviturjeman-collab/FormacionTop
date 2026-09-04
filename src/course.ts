@@ -33,14 +33,31 @@ export interface LoadState {
   error: string | null
 }
 
-export function useCourseLoader(): LoadState {
+function canUseLocalCourseFallback() {
+  return ['localhost', '127.0.0.1'].includes(window.location.hostname)
+}
+
+async function fetchPrivateCourse() {
+  const response = await fetch(`${import.meta.env.BASE_URL}api/course`, { cache: 'no-cache' })
+  if (response.ok) return response
+  if (canUseLocalCourseFallback() && response.status === 404) {
+    return fetch(`${import.meta.env.BASE_URL}course.json`, { cache: 'no-cache' })
+  }
+  return response
+}
+
+export function useCourseLoader(enabled = true): LoadState {
   const [state, setState] = useState<LoadState>({ course: null, error: null })
 
   useEffect(() => {
+    if (!enabled) {
+      setState({ course: null, error: null })
+      return
+    }
     let cancelled = false
     // no-cache: el curso se regenera desde el vault con frecuencia y el
     // nombre del archivo no cambia, así que se revalida siempre.
-    fetch(`${import.meta.env.BASE_URL}course.json`, { cache: 'no-cache' })
+    fetchPrivateCourse()
       .then((response) => {
         if (!response.ok) throw new Error(`El servidor respondió ${response.status}`)
         return response.json()
@@ -54,7 +71,7 @@ export function useCourseLoader(): LoadState {
             course: null,
             error:
               `No se ha podido cargar el curso (${error.message}). ` +
-              'Genera el contenido con «npm run index» y comprueba que existe public/course.json.',
+              'Genera el contenido con «npm run index» y comprueba que la sesión por PIN sigue activa.',
           })
         }
       })

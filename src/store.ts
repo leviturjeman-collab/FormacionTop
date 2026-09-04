@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { LevelId } from './types'
-import { unlockRemotePin } from './learners-api'
+import { logoutRemoteSession, unlockRemotePin } from './learners-api'
 import { saveRemoteProgress } from './progress-api'
 
 /**
@@ -352,6 +352,7 @@ export const store = {
   },
 
   lockAdmin() {
+    logoutRemoteSession()
     forgetAdminSession()
     commit({ ...state, adminUnlocked: false, teacher: false })
   },
@@ -389,6 +390,7 @@ export const store = {
   },
 
   lockLearner() {
+    logoutRemoteSession()
     forgetAdminSession()
     commit({
       ...state,

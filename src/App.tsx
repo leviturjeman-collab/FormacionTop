@@ -535,8 +535,8 @@ function Shell() {
   )
 }
 
-export default function App() {
-  const { course, error } = useCourseLoader()
+function AuthenticatedAcademy() {
+  const { course, error } = useCourseLoader(true)
 
   if (error) {
     return (
@@ -550,6 +550,9 @@ export default function App() {
           <strong>No se ha podido cargar el curso</strong>
           <small>{error}</small>
         </div>
+        <button type="button" className="st-btn" onClick={() => store.lockLearner()}>
+          <LogOut size={14} /> Volver a entrar
+        </button>
         <pre>npm run index</pre>
       </div>
     )
@@ -581,4 +584,18 @@ export default function App() {
       <Shell />
     </CourseContext.Provider>
   )
+}
+
+export default function App() {
+  const student = useStudent()
+
+  if (!student.learnerUnlocked && !student.adminUnlocked) {
+    return (
+      <div className="student-app">
+        <StudentAccessGate />
+      </div>
+    )
+  }
+
+  return <AuthenticatedAcademy />
 }

@@ -76,10 +76,39 @@ export function verifySessionToken(token) {
   }
 }
 
+function cookieValue(req, name) {
+  const raw = req.headers.cookie || ''
+  const match = String(raw).split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`))
+  return match ? decodeURIComponent(match.slice(name.length + 1)) : ''
+}
+
+export function setSessionCookie(res, token) {
+  const maxAge = 60 * 60 * 24 * 30
+  res.setHeader(
+    'Set-Cookie',
+    `academy_session=${encodeURIComponent(token)}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`,
+  )
+}
+
+export function clearSessionCookie(res) {
+  res.setHeader('Set-Cookie', 'academy_session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax')
+}
+
 export function sessionFromRequest(req) {
   const header = req.headers.authorization || req.headers.Authorization || ''
-  const token = String(header).startsWith('Bearer ') ? String(header).slice(7) : req.headers['x-session-token']
+  const token = String(header).startsWith('Bearer ')
+    ? String(header).slice(7)
+    : req.headers['x-session-token'] || cookieValue(req, 'academy_session')
   return verifySessionToken(token)
+}
+
+export function ensurePrivateAccess(req, res) {
+  const session = sessionFromRequest(req)
+  if (session?.role === 'admin' || session?.learnerId) return session
+  const provided = cleanPin(req.headers['x-admin-pin'], 4)
+  if (safeEqualString(provided, adminPin())) return { role: 'admin' }
+  json(res, 401, { ok: false, error: 'Acceso privado. Entra con tu PIN.' })
+  return null
 }
 
 export function normalizeLearner(input) {
