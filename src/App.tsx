@@ -4,7 +4,7 @@ import type { CursoLesson } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
 import { store, useStudent } from './store'
-import { LOCALES, useLocale } from './i18n'
+import { LOCALES, useLocale, useT } from './i18n'
 import Inicio from './pages/Inicio'
 import MiProyecto from './pages/MiProyecto'
 import Leccion from './pages/Leccion'
@@ -24,10 +24,11 @@ import Guia from './pages/Guia'
 import { CursoIndice, CursoLeccion } from './pages/Curso'
 import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
 
-function LanguageSwitch() {
+function LanguageSwitch({ compact }: { compact?: boolean }) {
   const locale = useLocale()
+  const t = useT()
   return (
-    <div className="st-lang-switch" role="group" aria-label="Idioma">
+    <div className={compact ? 'st-lang-switch compact' : 'st-lang-switch'} role="group" aria-label={t('sidebar.idioma')}>
       <Globe size={12} />
       {LOCALES.map((item) => (
         <button
@@ -48,6 +49,7 @@ function LanguageSwitch() {
 function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClose: () => void }) {
   const course = useCourse()
   const student = useStudent()
+  const t = useT()
   const [query, setQuery] = useState('')
   const cursoBase = [...(course.curso || [])].filter((lesson) => !lesson.tool).sort((a, b) => a.number - b.number)
   const defaultCursoStage = cursoBase[0]?.stageId || course.stages[0]?.id || null
@@ -81,19 +83,24 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
     return lesson.tasks.length > 0 && marked.length >= lesson.tasks.length
   }
   const sessionLabel = student.adminUnlocked
-    ? student.teacher ? 'Modo profesor' : 'Modo alumno'
-    : 'Modo alumno'
+    ? student.teacher ? t('sidebar.modoProfesor') : t('sidebar.modoAlumno')
+    : t('sidebar.modoAlumno')
   const sessionDetail = student.adminUnlocked
-    ? 'Panel privado activo'
-    : student.learnerName ? `Perfil: ${student.learnerName}` : 'Perfil de alumno activo'
+    ? t('sidebar.panelPrivado')
+    : student.learnerName ? `${t('sidebar.perfil')}: ${student.learnerName}` : t('sidebar.perfilAlumnoActivo')
 
   return (
     <aside className={`st-sidebar${open ? ' open' : ''}`}>
       <a className="st-brand" href={href({ name: 'inicio' })} onClick={onClose}>
-        <span><GraduationCap size={17} /></span>
+        <span className="st-brand-mark" aria-hidden="true"><GraduationCap size={19} /></span>
         <div>
-          <strong>AI Professional Academy</strong>
-          <small>Formación aplicada</small>
+          <strong className="st-brand-name" aria-label="AI Professional Academy">
+            <span className="st-brand-word">AI</span>{' '}
+            <span className="st-brand-word">Professional</span>{' '}
+            <span className="st-brand-word">Academy</span>
+            <i className="st-brand-underline" aria-hidden="true" />
+          </strong>
+          <small>{t('sidebar.tagline')}</small>
         </div>
       </a>
 
@@ -112,57 +119,57 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar…"
-          aria-label="Buscar en el curso"
+          placeholder={t('sidebar.buscar')}
+          aria-label={t('sidebar.buscar')}
         />
         <kbd>Ctrl K</kbd>
       </form>
 
       <nav aria-label="Navegación principal">
         <a className={is('inicio') ? 'active' : ''} href={href({ name: 'inicio' })} onClick={onClose}>
-          <Home size={14} /> Inicio
+          <Home size={14} /> {t('nav.inicio')}
         </a>
         <a className={is('curso') ? 'active' : ''} href={href({ name: 'curso' })} onClick={onClose}>
-          <GraduationCap size={14} /> Programa
+          <GraduationCap size={14} /> {t('nav.programa')}
         </a>
         <a className={is('mi-proyecto') ? 'active' : ''} href={href({ name: 'mi-proyecto' })} onClick={onClose}>
-          <BookMarked size={14} /> Mi proyecto
+          <BookMarked size={14} /> {t('nav.miProyecto')}
         </a>
         <a className={is('prompts') ? 'active' : ''} href={href({ name: 'prompts' })} onClick={onClose}>
-          <Sparkles size={14} /> Prompts
+          <Sparkles size={14} /> {t('nav.prompts')}
         </a>
         <a className={is('skills') ? 'active' : ''} href={href({ name: 'skills' })} onClick={onClose}>
-          <BrainCircuit size={14} /> Skills
+          <BrainCircuit size={14} /> {t('nav.skills')}
         </a>
         <a className={is('kits') ? 'active' : ''} href={href({ name: 'kits' })} onClick={onClose}>
-          <Boxes size={14} /> Kits institucionales
+          <Boxes size={14} /> {t('nav.kits')}
         </a>
         <a className={is('agentes') ? 'active' : ''} href={href({ name: 'agentes' })} onClick={onClose}>
-          <Bot size={14} /> Agentes
+          <Bot size={14} /> {t('nav.agentes')}
         </a>
         {student.adminUnlocked && (
           <a className={is('admin') ? 'active' : ''} href={href({ name: 'admin' })} onClick={onClose}>
-            <KeyRound size={14} /> Súper admin
+            <KeyRound size={14} /> {t('nav.superAdmin')}
           </a>
         )}
         <a className={is('herramientas') || is('herramienta') ? 'active' : ''} href={href({ name: 'herramientas' })} onClick={onClose}>
-          <Puzzle size={14} /> Herramientas
+          <Puzzle size={14} /> {t('nav.herramientas')}
         </a>
         <a className={is('preguntas') ? 'active' : ''} href={href({ name: 'preguntas' })} onClick={onClose}>
-          <HelpCircle size={14} /> Preguntas
+          <HelpCircle size={14} /> {t('nav.preguntas')}
         </a>
         <a className={is('indice') ? 'active' : ''} href={href({ name: 'indice' })} onClick={onClose}>
-          <ListOrdered size={14} /> Diccionario
+          <ListOrdered size={14} /> {t('nav.diccionario')}
         </a>
         <a className={is('progreso') ? 'active' : ''} href={href({ name: 'progreso' })} onClick={onClose}>
-          <TrendingUp size={14} /> Progreso
+          <TrendingUp size={14} /> {t('nav.progreso')}
         </a>
         <a className={is('guia') ? 'active' : ''} href={href({ name: 'guia' })} onClick={onClose}>
-          <Compass size={14} /> Guías
+          <Compass size={14} /> {t('nav.guias')}
         </a>
       </nav>
 
-      <p className="st-side-title">Ruta principal</p>
+      <p className="st-side-title">{t('nav.rutaPrincipal')}</p>
       <div className="st-side-tree">
         {course.stages.map((stage) => {
           const isOpen = expanded === stage.id
@@ -177,7 +184,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
                 <i>{stage.number}</i>
                 <span>
                   <strong>{stage.title}</strong>
-                  <small>{stageLessons.length ? `${stageDone}/${stageLessons.length} lecciones` : 'Biblioteca de apoyo'}</small>
+                  <small>{stageLessons.length ? `${stageDone}/${stageLessons.length} ${t('sidebar.lecciones')}` : t('sidebar.bibliotecaApoyo')}</small>
                 </span>
                 <i>{isOpen ? '−' : '+'}</i>
               </button>
@@ -198,7 +205,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
                       </li>
                     ))
                   ) : (
-                    <li className="st-side-muted">Sin lecciones principales: usa esta área como biblioteca.</li>
+                    <li className="st-side-muted">{t('sidebar.sinLeccionesPrincipales')}</li>
                   )}
                   <li>
                     <a
@@ -206,7 +213,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
                       href={href({ name: 'area', stageId: stage.id, filters: {} })}
                       onClick={onClose}
                     >
-                      <span>Biblioteca del bloque</span>
+                      <span>{t('sidebar.bibliotecaBloque')}</span>
                       <b>{categories.length}</b>
                     </a>
                   </li>
@@ -219,7 +226,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
 
       <div className="st-session-panel">
         <div className="st-session-mode">
-          <span>{student.adminUnlocked ? 'Sesión privada' : 'Sesión activa'}</span>
+          <span>{student.adminUnlocked ? t('sidebar.sesionPrivada') : t('sidebar.sesionActiva')}</span>
           <strong>{sessionLabel}</strong>
           <small>{sessionDetail}</small>
         </div>
@@ -229,10 +236,10 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
             className={`st-session-button${student.teacher ? ' on' : ''}`}
             onClick={() => store.toggleTeacher()}
             aria-pressed={student.teacher}
-            title="Cambia entre vista de profesor y vista de alumno."
+            title={t('sidebar.cambiarVistaTitle')}
           >
             <Presentation size={12} />
-            {student.teacher ? 'Ver como alumno' : 'Ver como profesor'}
+            {student.teacher ? t('sidebar.verComoAlumno') : t('sidebar.verComoProfesor')}
           </button>
         )}
         <button
@@ -242,10 +249,10 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
             store.lockLearner()
             onClose()
           }}
-          title={student.adminUnlocked ? 'Salir del súper administrador' : 'Salir del perfil de alumno'}
+          title={student.adminUnlocked ? t('sidebar.salirAdminTitle') : t('sidebar.salirPerfilTitle')}
         >
           <LogOut size={12} />
-          {student.adminUnlocked ? 'Salir admin' : 'Salir perfil'}
+          {student.adminUnlocked ? t('sidebar.salirAdmin') : t('sidebar.salirPerfil')}
         </button>
       </div>
     </aside>
@@ -254,6 +261,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
 
 function StudentAccessGate() {
   const route = useRoute()
+  const t = useT()
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [checking, setChecking] = useState(false)
@@ -268,7 +276,7 @@ function StudentAccessGate() {
         if (cleanPin !== '5555' && route.name === 'admin') navigate({ name: 'inicio' })
         return
       }
-      setError('PIN no encontrado. Pide tu acceso al profesor.')
+      setError(t('access.pinNoEncontrado'))
       setPin('')
     } finally {
       setChecking(false)
@@ -279,14 +287,13 @@ function StudentAccessGate() {
     <div className="st-access-shell">
       <section className="st-access">
         <div className="st-access-copy">
-          <span className="st-kicker"><ShieldCheck size={12} /> Academia privada</span>
-          <h1>Entra con tu PIN</h1>
-          <p>Tu ruta se abre cuando validas el PIN que te ha dado el profesor.</p>
-          <LanguageSwitch />
+          <span className="st-kicker"><ShieldCheck size={12} /> {t('access.kicker')}</span>
+          <h1>{t('access.title')}</h1>
+          <p>{t('access.text')}</p>
 
-          <form className="st-pin-card" onSubmit={submit} aria-label="Acceso de alumno por PIN">
+          <form className="st-pin-card" onSubmit={submit} aria-label={t('access.aria')}>
             <label>
-              <span>PIN de alumno o administrador</span>
+              <span>{t('access.pinLabel')}</span>
               <div className="st-pin-input-wrap">
                 <KeyRound size={18} />
                 <input
@@ -308,7 +315,7 @@ function StudentAccessGate() {
             </div>
             {error && <p className="st-access-error">{error}</p>}
             <button type="submit" className="st-btn" disabled={!canSubmit}>
-              <Lock size={14} /> {checking ? 'Comprobando PIN' : 'Desbloquear formación'}
+              <Lock size={14} /> {checking ? t('access.checking') : t('access.submit')}
             </button>
           </form>
         </div>
@@ -319,20 +326,21 @@ function StudentAccessGate() {
 
 function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const course = useCourse()
+  const t = useT()
 
   const trail = useMemo(() => {
     switch (route.name) {
-      case 'inicio': return ['Inicio']
-      case 'mi-proyecto': return ['Mi proyecto']
-      case 'ruta': return ['Ruta']
+      case 'inicio': return [t('nav.inicio')]
+      case 'mi-proyecto': return [t('nav.miProyecto')]
+      case 'ruta': return [t('nav.rutaPrincipal')]
       case 'area': {
         const stage = course.stages.find((item) => item.id === route.stageId)
-        return ['Ruta', stage ? `${stage.number}. ${stage.title}` : route.stageId]
+        return [t('nav.rutaPrincipal'), stage ? `${stage.number}. ${stage.title}` : route.stageId]
       }
       case 'categoria': {
         const category = course.categories.find((item) => item.id === route.categoryId)
         const stage = category && course.stages.find((item) => item.id === category.stageId)
-        return ['Ruta', stage ? `${stage.number}. ${stage.title}` : '', category?.label || ''].filter(Boolean)
+        return [t('nav.rutaPrincipal'), stage ? `${stage.number}. ${stage.title}` : '', category?.label || ''].filter(Boolean)
       }
       case 'leccion': {
         const lesson = course.lessons.find((item) => item.slug === route.slug)
@@ -344,38 +352,42 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
         const folder = course.folders.find((item) => item.id === route.folderId)
         return ['Biblioteca', folder?.label || route.folderId]
       }
-      case 'herramientas': return ['Herramientas']
+      case 'herramientas': return [t('nav.herramientas')]
       case 'herramienta': {
         const tool = course.toolPages.find((item) => item.id === route.toolId)
-        return ['Herramientas', tool?.label || route.toolId]
+        return [t('nav.herramientas'), tool?.label || route.toolId]
       }
-      case 'preguntas': return ['Preguntas']
-      case 'indice': return ['Diccionario', route.letter?.toUpperCase() || ''].filter(Boolean)
-      case 'buscar': return ['Búsqueda', route.query ? `«${route.query}»` : ''].filter(Boolean)
-      case 'presentar': return ['Presentación']
-      case 'proyecto': return ['Proyecto final']
-      case 'deck': return ['Presentación']
-      case 'prompts': return ['Prompts']
-      case 'skills': return ['Skills']
-      case 'kits': return ['Kits institucionales']
-      case 'agentes': return ['Agentes']
-      case 'admin': return ['Súper administrador']
-      case 'guia': return ['Guías']
+      case 'preguntas': return [t('nav.preguntas')]
+      case 'indice': return [t('nav.diccionario'), route.letter?.toUpperCase() || ''].filter(Boolean)
+      case 'buscar': return [t('nav.busqueda'), route.query ? `«${route.query}»` : ''].filter(Boolean)
+      case 'presentar': return [t('nav.presentacion')]
+      case 'proyecto': return [t('nav.proyectoFinal')]
+      case 'deck': return [t('nav.presentacion')]
+      case 'prompts': return [t('nav.prompts')]
+      case 'skills': return [t('nav.skills')]
+      case 'kits': return [t('nav.kits')]
+      case 'agentes': {
+        if (!route.agentId) return [t('nav.agentes')]
+        const agent = (course.agents || []).find((item) => item.id === route.agentId)
+        return [t('nav.agentes'), agent?.title || route.agentId]
+      }
+      case 'admin': return [t('nav.superAdmin')]
+      case 'guia': return [t('nav.guias')]
       case 'curso': {
-        if (!route.lessonId) return ['Programa']
+        if (!route.lessonId) return [t('nav.programa')]
         const lesson = course.curso.find((item) => item.id === route.lessonId)
         const tool = lesson?.tool ? course.toolPages.find((item) => item.id === lesson.tool) : null
-        return ['Programa', tool?.label || 'Ruta principal', lesson?.title || route.lessonId]
+        return [t('nav.programa'), tool?.label || t('nav.rutaPrincipal'), lesson?.title || route.lessonId]
       }
-      case 'progreso': return ['Progreso']
+      case 'progreso': return [t('nav.progreso')]
       default: return ['Academia']
     }
-  }, [route, course])
+  }, [route, course, t])
 
   return (
     <header className="st-header">
       <div>
-        <button type="button" className="st-menu" onClick={onMenu} aria-label="Abrir menú">
+        <button type="button" className="st-menu" onClick={onMenu} aria-label={t('header.abrirMenu')}>
           <Menu size={15} />
         </button>
         {trail.map((part, index) => (
@@ -386,9 +398,10 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
         ))}
       </div>
       <div className="st-header-actions">
+        <LanguageSwitch compact />
         <a className="st-project-switch" href={href({ name: 'buscar', query: '', filters: {} })}>
           <BookOpen size={12} />
-          Ruta guiada · biblioteca de apoyo
+          {t('header.rutaGuiada')}
         </a>
       </div>
     </header>
@@ -428,7 +441,14 @@ function Shell() {
   const route = useRoute()
   const course = useCourse()
   const student = useStudent()
+  const locale = useLocale()
+  const t = useT()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    document.documentElement.lang = locale
+  }, [locale])
+
   const routeKey = useMemo(() => {
     switch (route.name) {
       case 'area': return `${route.name}:${route.stageId}`
@@ -554,12 +574,11 @@ function Shell() {
 
       <footer className="st-foot">
         <p>
-          Ruta principal, especializaciones y biblioteca de consulta ·
-          actualizado el {new Date(course.generatedAt).toLocaleDateString('es-ES')}
+          {t('footer.generadoDesde')} «{course.vaultName}» {t('footer.el')}{' '}
+          {new Date(course.generatedAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES')}
         </p>
         <p>
-          Los logos pertenecen a sus respectivos titulares y se usan para identificar la herramienta que se enseña.
-          Tu progreso se guarda en tu perfil y queda copia local en este navegador.
+          {t('footer.logos')} {t('footer.progreso')}
         </p>
       </footer>
     </div>
@@ -568,6 +587,7 @@ function Shell() {
 
 function AuthenticatedAcademy() {
   const student = useStudent()
+  const t = useT()
   const { course, error } = useCourseLoader(true, student.locale || 'es')
 
   if (error) {
@@ -579,11 +599,11 @@ function AuthenticatedAcademy() {
           <span className="st-loading-core"><X size={18} /></span>
         </div>
         <div className="st-loading-copy">
-          <strong>No se ha podido cargar el curso</strong>
+          <strong>{t('loading.noCargado')}</strong>
           <small>{error}</small>
         </div>
         <button type="button" className="st-btn" onClick={() => store.lockLearner()}>
-          <LogOut size={14} /> Volver a entrar
+          <LogOut size={14} /> {t('loading.volverAEntrar')}
         </button>
         <pre>npm run index</pre>
       </div>
@@ -599,8 +619,8 @@ function AuthenticatedAcademy() {
           <span className="st-loading-core">AI</span>
         </div>
         <div className="st-loading-copy">
-          <strong>Preparando la formación</strong>
-          <small>Organizando ruta, kits, prompts y automatizaciones</small>
+          <strong>{t('loading.preparando')}</strong>
+          <small>{t('loading.organizando')}</small>
         </div>
         <div className="st-loading-lines" aria-hidden="true">
           <span />
