@@ -375,63 +375,143 @@ const DISCOVERED_TOOL_META = {
   'wispr-flow': { label: 'Wispr Flow', url: 'wisprflow.ai', kind: 'voice', plain: 'Wispr Flow es una aplicación de dictado con IA: hablas de forma natural y convierte tu voz en texto claro dentro de otras apps. Sirve para escribir más rápido correos, prompts, notas, mensajes y borradores, pero no es una plataforma de automatización ni un generador de contenido autónomo.' },
 }
 
-function discoveredGuide(id, meta) {
-  const toolWord = meta.kind === 'video' ? 'créditos o minutos de generación' : meta.kind === 'automation' ? 'tareas o ejecuciones' : meta.kind === 'data' ? 'filas, registros o automatizaciones' : meta.kind === 'knowledge' ? 'documentos y consultas' : 'tokens, créditos o límites del plan'
+const DISCOVERED_TOOL_META_PLAIN_EN = {
+  'nano-banana': 'Nano Banana appears here as a standalone course tool for creating and editing images from instructions and reference images. In the current documentation it is treated as Gemini\'s image family/capability, including Gemini 2.5 Flash Image and later versions, so the course requires checking the exact model before quoting or delivering work. It takes a visual idea to controlled variants, but you must review composition, text, identity, rights, watermarks and consumption before publishing.',
+  'seedance-2-5': 'Seedance 2.5 appears here as a standalone generative video tool. It turns an idea, an image or a sequence of shots into video with motion, audio and continuity, but you must review credits, rights, identifiable people, shot-to-shot consistency, sound and commercial use before showing or publishing anything.',
+  base44: 'An app builder that turns a description into a working application with screens, data and logic. Good for prototypes and small products, but review what it has built before using it with real data.',
+  bolt: 'A web builder that works from the browser: you describe a page or app and it generates a first version you can see, edit and publish. Useful for fast prototypes, as long as you keep the code and review every change.',
+  replit: 'A browser-based coding environment with an agent that can build applications from a conversation. It gives you a fast route from idea to demo, but the version you deliver must be backed up in GitHub and tested outside the chat.',
+  framer: 'A visual editor for designing and publishing websites. Especially useful for brand pages, portfolios and marketing sites where visual control matters more than complex logic.',
+  canva: 'A visual editor for creating communication pieces, presentations, documents and short videos. Its value is producing coherent material without starting from a blank canvas.',
+  heygen: 'A video platform with AI avatars and assisted dubbing. It can turn a script into a piece presented by a digital person, but requires reviewing consent, pronunciation, tone and commercial use.',
+  descript: 'An audio and video editor that lets you edit a recording by working on its transcript. Useful for turning a long conversation into clips, subtitles or a corrected version.',
+  gamma: 'A tool for creating presentations, documents and pages from a written outline. It speeds up the first draft, but the judgment, data and final review are still yours.',
+  pipedream: 'An automation platform focused on connecting APIs and services with visual steps and optional code. Powerful for integrations that need more control than a simple connector.',
+  notebooklm: 'A space for conversing with documents you supply, with answers grounded in those sources. Useful for studying and synthesizing material, but always check the citation and the scope of the documents.',
+  airtable: 'A visual database that looks like a spreadsheet but supports relationships, views, permissions and automations. A good intermediate piece for projects that have outgrown a spreadsheet.',
+  notion: 'A space for organizing documents, lightweight databases, projects and knowledge. Works well as a workspace hub, as long as you define what information lives there and how it gets updated.',
+  'wispr-flow': 'Wispr Flow is an AI dictation app: you speak naturally and it turns your voice into clear text inside other apps. It helps you write emails, prompts, notes, messages and drafts faster, but it is not an automation platform or an autonomous content generator.',
+}
+
+function discoveredGuide(id, meta, locale = 'es') {
+  const isEn = locale === 'en'
+  const toolWord = isEn
+    ? (meta.kind === 'video' ? 'credits or generation minutes' : meta.kind === 'automation' ? 'tasks or executions' : meta.kind === 'data' ? 'rows, records or automations' : meta.kind === 'knowledge' ? 'documents and queries' : 'tokens, credits or plan limits')
+    : (meta.kind === 'video' ? 'créditos o minutos de generación' : meta.kind === 'automation' ? 'tareas o ejecuciones' : meta.kind === 'data' ? 'filas, registros o automatizaciones' : meta.kind === 'knowledge' ? 'documentos y consultas' : 'tokens, créditos o límites del plan')
+  if (!isEn) {
+    return {
+      tool: id,
+      plain: meta.plain,
+      account: {
+        url: meta.url,
+        free: `Empieza con el plan de prueba o gratuito si existe y comprueba dentro de ${meta.label} qué límites tiene antes de conectar datos reales. Los precios, créditos y nombres de planes cambian; la fecha de la última comprobación debe quedar anotada en el proyecto.`,
+        steps: [
+          [`Entra en ${meta.url}`, 'Usa la dirección oficial y comprueba que el dominio coincide antes de crear la cuenta.'],
+          ['Crea una cuenta de prueba', 'Utiliza una cuenta separada si todavía estás evaluando la herramienta.'],
+          ['Mira el panel de uso', `Localiza los créditos, límites o consumos que ${meta.label} muestra antes de crear nada.`],
+          ['Crea un espacio de prueba', 'Ponle un nombre que indique que contiene datos ficticios y no lo mezcles con producción.'],
+          ['Haz una prueba pequeña', 'Comprueba una sola entrada, revisa el resultado y apunta qué cambiarías.'],
+        ],
+        warning: 'No conectes datos de clientes ni permisos de producción hasta haber probado el flujo, revisado la política de privacidad y definido cómo detenerlo.',
+      },
+      first: [
+        `Mira dos ejemplos de ${meta.label} y escribe qué resultado producen, no solo qué aspecto tienen.`,
+        'Crea una prueba con datos inventados y un resultado concreto que puedas comparar.',
+        'Cambia una sola variable entre una prueba y la siguiente para saber qué ha mejorado.',
+        'Guarda una copia del resultado y de la instrucción que lo produjo.',
+        'Apunta qué parte harías manualmente si la herramienta dejara de estar disponible.',
+      ],
+      words: [
+        ['Entrada', 'La información que recibe la herramienta para poder trabajar.'],
+        ['Salida', 'El resultado que produce y que otra persona puede revisar.'],
+        ['Plantilla', 'Una estructura preparada que evita empezar siempre desde cero.'],
+        ['Historial', 'El registro de cambios, pruebas o ejecuciones anteriores.'],
+        ['Producción', 'La versión que toca datos o usuarios reales.'],
+        ['Límite', `La cantidad máxima de ${toolWord} que permite tu plan o tu cuenta.`],
+      ],
+      matters: [
+        'Definir el resultado antes de abrir la herramienta.',
+        'Conservar una copia exportable o reproducible del trabajo.',
+        'Probar con un caso normal, uno vacío, uno repetido y uno extremo.',
+        'Revisar permisos, privacidad, uso comercial y propiedad de los resultados.',
+      ],
+      ignore: [
+        'Las opciones avanzadas que no afectan a tu primera prueba.',
+        'Perseguir el diseño perfecto antes de comprobar que el resultado sirve.',
+        'Conectar cinco herramientas a la vez cuando todavía no sabes cuál falla.',
+      ],
+      daily: [
+        `Escribe primero qué debe existir al final y deja que ${meta.label} te ayude solo con los pasos que aporten algo.`,
+        'Usa nombres claros y guarda una versión antes de cada cambio importante.',
+        'Revisa el resultado con una lista fija, no con la impresión del momento.',
+        'Separa la cuenta de pruebas de la cuenta que contiene datos reales.',
+        `Mide el consumo de ${toolWord} antes de automatizar una tarea repetitiva.`,
+      ],
+      errors: [
+        ['El resultado parece correcto, pero no sirve para mi caso', 'La instrucción era demasiado general o no incluía un ejemplo real.', 'Escribe una entrada concreta, una salida esperada y dos casos que no deben pasar.'],
+        ['La herramienta ha cambiado algo que yo no quería', 'El encargo dejaba demasiado margen o no había una copia anterior.', 'Trabaja por cambios pequeños, revisa el diff o historial y acepta solo una modificación cada vez.'],
+        ['El proyecto funciona en la prueba y falla con datos reales', 'Los datos reales tienen vacíos, formatos raros o permisos distintos.', 'Prueba antes con casos incompletos, repetidos y extremos, y registra cómo recuperarte.'],
+      ],
+      prompts: [{ name: `Diseñar un trabajo profesional con ${meta.label}`, prompt: `Quiero usar ${meta.label} para resolver un problema real y necesito que me acompañes con criterio profesional. No quiero que me entregues una idea bonita pero imposible de mantener. Quiero que primero entiendas mi situación, que después me ayudes a decidir si esta herramienta es adecuada y que solo entonces me propongas una primera versión pequeña. Mi situación es: [DESCRIBE EL PROBLEMA, QUIÉN LO TIENE, QUÉ HACE HOY Y QUÉ RESULTADO QUIERE]. Trabaja en español natural, explicando cada palabra técnica la primera vez que aparezca. Empieza haciendo una sola pregunta cada vez y espera mi respuesta. Pregunta por la entrada real, la salida exacta, el volumen, los datos personales, los permisos, el presupuesto, quién mantendrá el trabajo y qué ocurrirá si la herramienta deja de funcionar. Cuando tengas suficiente información, resume el proyecto en una ficha con problema, usuarios, entrada, salida, pasos, límites y criterio de éxito. Después compárame tres caminos: hacerlo con ${meta.label}, hacerlo con una alternativa y hacerlo manualmente durante la primera versión. Para cada camino explica tiempo, coste, dependencia, facilidad de reparación y qué datos tendrían que salir de mi equipo. Recomienda uno solo y justifica la decisión. Si recomiendo ${meta.label}, diseña una prueba de diez minutos con datos ficticios. Indica exactamente qué tengo que preparar, qué botón o zona debo buscar, qué debería ver al terminar y qué señal demostraría que algo ha fallado. No conectes cuentas reales ni envíes mensajes todavía. Luego prepara un plan de cinco pasos: preparar, construir, probar, documentar y entregar. Cada paso debe tener un resultado observable y una forma de volver atrás. Añade una lista de casos difíciles: entrada vacía, dato duplicado, texto largo, permiso caducado, servicio caído y persona que se arrepiente. Para cada caso dime qué debería hacer el sistema y qué debería hacer yo. Termina con un checklist de producción y una explicación de cómo medir el consumo de tokens, créditos, tareas, ejecuciones o límites del plan de ${meta.label}. No inventes precios ni funciones que no puedas confirmar: marca lo que tenga que comprobar en la web oficial.`, }],
+      usage: { unit: toolWord, explanation: `En ${meta.label} no basta con mirar el precio del plan. Hay que saber qué unidad se descuenta en cada acción: ${toolWord}. Haz una prueba controlada, anota la lectura del panel antes y después y multiplica ese consumo por el volumen mensual. La cifra debe revisarse cuando cambie el plan o el modelo.`, examples: [`Una prueba con una sola entrada y datos ficticios.`, `El consumo antes y después de una repetición idéntica.`, `El coste aproximado de diez, cien y mil usos.`, 'Un límite mensual y una alerta antes de alcanzarlo.', 'La fecha en la que se comprobó la información.'] },
+    }
+  }
+  const plain = DISCOVERED_TOOL_META_PLAIN_EN[id] || meta.plain
   return {
     tool: id,
-    plain: meta.plain,
+    plain,
     account: {
       url: meta.url,
-      free: `Empieza con el plan de prueba o gratuito si existe y comprueba dentro de ${meta.label} qué límites tiene antes de conectar datos reales. Los precios, créditos y nombres de planes cambian; la fecha de la última comprobación debe quedar anotada en el proyecto.`,
+      free: `Start with the trial or free plan if one exists, and check inside ${meta.label} what limits it has before connecting real data. Prices, credits and plan names change; the date of the last check should be noted in the project.`,
       steps: [
-        [`Entra en ${meta.url}`, 'Usa la dirección oficial y comprueba que el dominio coincide antes de crear la cuenta.'],
-        ['Crea una cuenta de prueba', 'Utiliza una cuenta separada si todavía estás evaluando la herramienta.'],
-        ['Mira el panel de uso', `Localiza los créditos, límites o consumos que ${meta.label} muestra antes de crear nada.`],
-        ['Crea un espacio de prueba', 'Ponle un nombre que indique que contiene datos ficticios y no lo mezcles con producción.'],
-        ['Haz una prueba pequeña', 'Comprueba una sola entrada, revisa el resultado y apunta qué cambiarías.'],
+        [`Go to ${meta.url}`, 'Use the official address and check that the domain matches before creating an account.'],
+        ['Create a test account', 'Use a separate account if you are still evaluating the tool.'],
+        ['Check the usage panel', `Find the credits, limits or consumption that ${meta.label} shows before creating anything.`],
+        ['Create a test workspace', 'Name it so it is clear it holds fake data, and do not mix it with production.'],
+        ['Run a small test', 'Check a single entry, review the result and note what you would change.'],
       ],
-      warning: 'No conectes datos de clientes ni permisos de producción hasta haber probado el flujo, revisado la política de privacidad y definido cómo detenerlo.',
+      warning: 'Do not connect client data or production permissions until you have tested the flow, reviewed the privacy policy and defined how to stop it.',
     },
     first: [
-      `Mira dos ejemplos de ${meta.label} y escribe qué resultado producen, no solo qué aspecto tienen.`,
-      'Crea una prueba con datos inventados y un resultado concreto que puedas comparar.',
-      'Cambia una sola variable entre una prueba y la siguiente para saber qué ha mejorado.',
-      'Guarda una copia del resultado y de la instrucción que lo produjo.',
-      'Apunta qué parte harías manualmente si la herramienta dejara de estar disponible.',
+      `Look at two examples of ${meta.label} and write down what result they produce, not just what they look like.`,
+      'Run a test with made-up data and a concrete result you can compare.',
+      'Change a single variable between one test and the next to know what actually improved.',
+      'Save a copy of the result and of the instruction that produced it.',
+      'Note which part you would do by hand if the tool stopped being available.',
     ],
     words: [
-      ['Entrada', 'La información que recibe la herramienta para poder trabajar.'],
-      ['Salida', 'El resultado que produce y que otra persona puede revisar.'],
-      ['Plantilla', 'Una estructura preparada que evita empezar siempre desde cero.'],
-      ['Historial', 'El registro de cambios, pruebas o ejecuciones anteriores.'],
-      ['Producción', 'La versión que toca datos o usuarios reales.'],
-      ['Límite', `La cantidad máxima de ${toolWord} que permite tu plan o tu cuenta.`],
+      ['Input', 'The information the tool receives so it can work.'],
+      ['Output', 'The result it produces, which someone else can review.'],
+      ['Template', 'A ready-made structure that saves you from starting from zero every time.'],
+      ['History', 'The record of previous changes, tests or runs.'],
+      ['Production', 'The version that touches real data or real users.'],
+      ['Limit', `The maximum amount of ${toolWord} your plan or account allows.`],
     ],
     matters: [
-      'Definir el resultado antes de abrir la herramienta.',
-      'Conservar una copia exportable o reproducible del trabajo.',
-      'Probar con un caso normal, uno vacío, uno repetido y uno extremo.',
-      'Revisar permisos, privacidad, uso comercial y propiedad de los resultados.',
+      'Define the result before opening the tool.',
+      'Keep an exportable or reproducible copy of the work.',
+      'Test with a normal case, an empty one, a repeated one and an extreme one.',
+      'Review permissions, privacy, commercial use and ownership of the results.',
     ],
     ignore: [
-      'Las opciones avanzadas que no afectan a tu primera prueba.',
-      'Perseguir el diseño perfecto antes de comprobar que el resultado sirve.',
-      'Conectar cinco herramientas a la vez cuando todavía no sabes cuál falla.',
+      'Advanced options that do not affect your first test.',
+      'Chasing the perfect design before checking that the result actually works.',
+      'Connecting five tools at once when you do not yet know which one is failing.',
     ],
     daily: [
-      `Escribe primero qué debe existir al final y deja que ${meta.label} te ayude solo con los pasos que aporten algo.`,
-      'Usa nombres claros y guarda una versión antes de cada cambio importante.',
-      'Revisa el resultado con una lista fija, no con la impresión del momento.',
-      'Separa la cuenta de pruebas de la cuenta que contiene datos reales.',
-      `Mide el consumo de ${toolWord} antes de automatizar una tarea repetitiva.`,
+      `Write down first what needs to exist at the end, and let ${meta.label} help only with the steps that add value.`,
+      'Use clear names and save a version before every important change.',
+      'Review the result with a fixed checklist, not with your first impression.',
+      'Keep the test account separate from the account that holds real data.',
+      `Measure ${toolWord} consumption before automating a repetitive task.`,
     ],
     errors: [
-      ['El resultado parece correcto, pero no sirve para mi caso', 'La instrucción era demasiado general o no incluía un ejemplo real.', 'Escribe una entrada concreta, una salida esperada y dos casos que no deben pasar.'],
-      ['La herramienta ha cambiado algo que yo no quería', 'El encargo dejaba demasiado margen o no había una copia anterior.', 'Trabaja por cambios pequeños, revisa el diff o historial y acepta solo una modificación cada vez.'],
-      ['El proyecto funciona en la prueba y falla con datos reales', 'Los datos reales tienen vacíos, formatos raros o permisos distintos.', 'Prueba antes con casos incompletos, repetidos y extremos, y registra cómo recuperarte.'],
+      ['The result looks correct but does not fit my case', 'The instruction was too general or did not include a real example.', 'Write a concrete input, an expected output and two cases that must not happen.'],
+      ['The tool changed something I did not want changed', 'The brief left too much room, or there was no earlier copy.', 'Work in small changes, review the diff or history, and accept only one change at a time.'],
+      ['The project works in testing but fails with real data', 'Real data has blanks, odd formats or different permissions.', 'Test beforehand with incomplete, repeated and extreme cases, and record how to recover.'],
     ],
-    prompts: [{ name: `Diseñar un trabajo profesional con ${meta.label}`, prompt: `Quiero usar ${meta.label} para resolver un problema real y necesito que me acompañes con criterio profesional. No quiero que me entregues una idea bonita pero imposible de mantener. Quiero que primero entiendas mi situación, que después me ayudes a decidir si esta herramienta es adecuada y que solo entonces me propongas una primera versión pequeña. Mi situación es: [DESCRIBE EL PROBLEMA, QUIÉN LO TIENE, QUÉ HACE HOY Y QUÉ RESULTADO QUIERE]. Trabaja en español natural, explicando cada palabra técnica la primera vez que aparezca. Empieza haciendo una sola pregunta cada vez y espera mi respuesta. Pregunta por la entrada real, la salida exacta, el volumen, los datos personales, los permisos, el presupuesto, quién mantendrá el trabajo y qué ocurrirá si la herramienta deja de funcionar. Cuando tengas suficiente información, resume el proyecto en una ficha con problema, usuarios, entrada, salida, pasos, límites y criterio de éxito. Después compárame tres caminos: hacerlo con ${meta.label}, hacerlo con una alternativa y hacerlo manualmente durante la primera versión. Para cada camino explica tiempo, coste, dependencia, facilidad de reparación y qué datos tendrían que salir de mi equipo. Recomienda uno solo y justifica la decisión. Si recomiendo ${meta.label}, diseña una prueba de diez minutos con datos ficticios. Indica exactamente qué tengo que preparar, qué botón o zona debo buscar, qué debería ver al terminar y qué señal demostraría que algo ha fallado. No conectes cuentas reales ni envíes mensajes todavía. Luego prepara un plan de cinco pasos: preparar, construir, probar, documentar y entregar. Cada paso debe tener un resultado observable y una forma de volver atrás. Añade una lista de casos difíciles: entrada vacía, dato duplicado, texto largo, permiso caducado, servicio caído y persona que se arrepiente. Para cada caso dime qué debería hacer el sistema y qué debería hacer yo. Termina con un checklist de producción y una explicación de cómo medir el consumo de tokens, créditos, tareas, ejecuciones o límites del plan de ${meta.label}. No inventes precios ni funciones que no puedas confirmar: marca lo que tenga que comprobar en la web oficial.`, }],
-    usage: { unit: toolWord, explanation: `En ${meta.label} no basta con mirar el precio del plan. Hay que saber qué unidad se descuenta en cada acción: ${toolWord}. Haz una prueba controlada, anota la lectura del panel antes y después y multiplica ese consumo por el volumen mensual. La cifra debe revisarse cuando cambie el plan o el modelo.`, examples: [`Una prueba con una sola entrada y datos ficticios.`, `El consumo antes y después de una repetición idéntica.`, `El coste aproximado de diez, cien y mil usos.`, 'Un límite mensual y una alerta antes de alcanzarlo.', 'La fecha en la que se comprobó la información.'] },
+    prompts: [{ name: `Design a professional job with ${meta.label}`, prompt: `I want to use ${meta.label} to solve a real problem, and I need you to work with me with professional judgment. I don't want a nice-looking idea that's impossible to maintain. I want you to first understand my situation, then help me decide whether this tool is the right fit, and only then propose a small first version. My situation is: [DESCRIBE THE PROBLEM, WHO HAS IT, WHAT THEY DO TODAY AND WHAT RESULT THEY WANT]. Work in plain, natural English, explaining any technical word the first time it appears. Start by asking me a single question at a time and wait for my answer. Ask about the real input, the exact output, the volume, personal data, permissions, budget, who will maintain the work, and what happens if the tool stops working. Once you have enough information, summarize the project in a sheet with problem, users, input, output, steps, limits and success criteria. Then compare three paths for me: doing it with ${meta.label}, doing it with an alternative, and doing it manually for the first version. For each path, explain time, cost, dependency, ease of repair, and what data would have to leave my team. Recommend only one and justify the decision. If you recommend ${meta.label}, design a ten-minute test with fake data. Say exactly what I need to prepare, what button or area to look for, what I should see when it's done, and what would signal that something went wrong. Don't connect real accounts or send messages yet. Then prepare a five-step plan: prepare, build, test, document and deliver. Each step needs an observable result and a way to go back. Add a list of hard cases: empty input, duplicate data, long text, expired permission, service down, and a person who changes their mind. For each case tell me what the system should do and what I should do. Finish with a production checklist and an explanation of how to measure the consumption of tokens, credits, tasks, executions or plan limits of ${meta.label}. Don't make up prices or features you can't confirm: mark anything I need to check on the official website.`, }],
+    usage: { unit: toolWord, explanation: `With ${meta.label}, looking at the plan price is not enough. You need to know which unit gets deducted for each action: ${toolWord}. Run a controlled test, note the panel reading before and after, and multiply that consumption by your monthly volume. Revisit the figure whenever the plan or model changes.`, examples: [`A test with a single entry and fake data.`, `The consumption before and after an identical repetition.`, `The approximate cost of ten, one hundred and one thousand uses.`, 'A monthly limit and an alert before reaching it.', 'The date the information was last checked.'] },
   }
 }
 
@@ -482,6 +562,51 @@ const EXTRA_PROMPT_TASKS = [
   ['Crear documentación para mantenimiento', 'dejar instrucciones para arreglar o repetir el trabajo cuando tú no estés', 'Incluye responsable, credenciales, pruebas, errores frecuentes y recuperación.'],
   ['Auditar privacidad y permisos', 'revisar qué datos entran, quién los ve y qué permisos has concedido', 'Marca datos personales, secretos, retención, enlaces públicos y acciones irreversibles.'],
 ]
+
+const PROMPT_TASKS_EN = [
+  ['Define a real problem', 'turn a vague idea into a problem sheet with users, input, output and success criteria', "Don't build anything until you separate what you know from what you're assuming."],
+  ['Research and compare options', 'research alternatives and end up with a recommendation you can defend', 'Separate sources, facts, inferences and points you still need to check.'],
+  ['Analyze your own data', "analyze the data or documents I provide and find patterns without inventing values", "Flag empty fields, duplicates and data that doesn't support any conclusion."],
+  ['Extract data from documents', 'turn messy documents into a consistent table or record', "Keep the source reference and return blank when the data isn't there."],
+  ['Write a professional piece', "create text that's useful for a specific audience and with a defined voice", 'Before writing, fix the purpose, reader, tone, length and next action.'],
+  ['Review and improve a text', 'audit an existing text and propose changes you can justify', "Don't change the voice just because you feel like it: separate error, risk, lack of clarity and preference."],
+  ['Create an image', "design an image that serves a specific purpose in a project", 'Describe subject, framing, light, composition, visible text and what must stay out.'],
+  ['Edit a reference image', 'modify an image while keeping what must stay recognizable', 'List which pixels or elements can change and which must stay the same.'],
+  ['Plan a video', 'go from an idea to a script with shots, sound, pacing and deliverables', 'Every shot needs an intention, a duration and a way to review it.'],
+  ['Create a storyboard', 'sequence an audiovisual piece before spending credits or shooting', 'Return a table of shots and flag the transitions that are hard to generate.'],
+  ['Design a website', 'define a website that can be built, tested and published', "Prioritize the visitor's task, mobile, accessibility and real content."],
+  ['Design an application', 'turn a process into screens, states, data and rules', "Don't hide error states, permissions, empty data or how to undo a change."],
+  ['Make a code change', 'modify a codebase without breaking what already works', 'Ask first for context, affected files, existing tests and a minimal change.'],
+  ['Diagnose an error', 'find the cause of a failure and fix it with evidence', "Distinguish symptom, cause, hypothesis and test; don't propose five changes at once."],
+  ['Design an interface', "build a clear interface for someone who doesn't master the tool", 'Every control needs an action, a state, help text and a visible result.'],
+  ['Prepare data and structure', "design fields, relationships and rules so the data doesn't become unusable", 'Include an identifier, types, empty values, duplicates, permissions and export.'],
+  ['Automate a process', 'design a flow that starts with an event and ends with a checkable result', 'Include idempotency, human approval, retries, logging, a stop switch and cost.'],
+  ['Build an agent with limits', 'decide what a system can query or do and what a person must approve', 'Define allowed tools, data it cannot touch and what happens when in doubt.'],
+  ['Evaluate quality', 'create test cases and a way to compare versions', 'Include a normal, incomplete, repeated and extreme case, plus a threshold that blocks delivery.'],
+  ['Document and deliver', 'prepare a handover that someone else can use, review and maintain', 'Include installation, use, limits, cost, secrets, recovery and an owner.'],
+]
+
+const EXTRA_PROMPT_TASKS_EN = [
+  ['Choose a tool before starting', 'decide whether this tool fits or whether a simpler alternative is better', 'Compare real need, cost, permissions, maintenance and evidence before choosing.'],
+  ['Prepare a reusable brief', 'turn an idea into a short document you can reuse for new jobs', 'Include fixed context, decisions made, limits and approval criteria.'],
+  ['Create a review checklist', 'have a short list to approve or reject the output before using it', 'The checklist should catch visible errors, permissions, sensitive data, cost and incomplete output.'],
+  ['Turn an output into a template', 'turn a good result into a template someone else can repeat', 'Separate what is fixed from what is variable and leave clear blanks in brackets.'],
+  ['Design a test with fake data', 'rehearse the whole process without touching real data or publishing anything', 'Use a normal, incomplete, duplicate, extreme case and one that must stop.'],
+  ['Compare two versions', 'decide which version is better using observable criteria, not gut feeling', 'Define the criteria before looking at the results and keep both pieces of evidence.'],
+  ['Prepare a client demo', 'show the result without exposing secrets, real data or false promises', 'Include a script, the happy path, a controlled failure and known limits.'],
+  ['Cut cost without losing quality', 'identify what costs the most and how to reduce consumption without breaking the result', 'Separate volume, model, credits, retries, input size and repeated work.'],
+  ['Create maintenance documentation', "leave instructions to fix or repeat the work when you're not around", 'Include owner, credentials, tests, common errors and recovery.'],
+  ['Audit privacy and permissions', 'review what data comes in, who sees it and what permissions you have granted', 'Flag personal data, secrets, retention, public links and irreversible actions.'],
+]
+
+function localizeTask(task, locale) {
+  if (locale !== 'en' || !task) return task
+  let idx = PROMPT_TASKS.indexOf(task)
+  if (idx !== -1) return PROMPT_TASKS_EN[idx] || task
+  idx = EXTRA_PROMPT_TASKS.indexOf(task)
+  if (idx !== -1) return EXTRA_PROMPT_TASKS_EN[idx] || task
+  return task
+}
 
 const MAX_GENERATED_TOOL_PROMPTS = 25
 const NO_PROMPT_TOOLS = new Set(['wispr-flow'])
@@ -590,6 +715,20 @@ const PROFILE_DEFAULT = {
   ],
 }
 
+const PROFILE_DEFAULT_EN = {
+  intro: "This page doesn't stop at the product name: it shows you what's inside, what decision each piece solves, and how it fits into a complete project.",
+  units: 'tokens, credits, tasks or executions',
+  selection: 'choose the simplest option that covers your input, output, volume and need for review',
+  catalog: [
+    ['Input', 'what information it receives', 'prepare and validate the information before opening the tool', "don't use real data until you know its permissions"],
+    ['Output', 'what it delivers and how it is saved', 'define the result before you start', "don't accept a nice-looking output you can't verify"],
+    ['Templates', "reusable structures so you don't start from zero", "repeat a format you've already tested", "don't copy a template without understanding its dependencies"],
+    ['History', 'previous versions, runs or changes', 'compare one test against another and roll back', "don't clear the history while you're investigating a failure"],
+    ['Permissions', 'what it can read or change', 'connect only the minimum necessary', "don't grant full access for convenience"],
+    ['Export', 'how to get your work out if you switch providers', 'keep a copy before depending on the service', "don't confuse sharing a view with exporting the data"],
+  ],
+}
+
 const TOOL_PROFILES = {
   openai: {
     intro: 'Aquí se estudian ChatGPT y OpenAI como dos capas: la aplicación que usas en pantalla y los modelos y servicios que pueden ejecutar otros programas. El nombre visible y la disponibilidad cambian según el plan.',
@@ -686,6 +825,111 @@ const TOOL_PROFILES = {
   },
 }
 
+const TOOL_PROFILES_EN = {
+  openai: {
+    intro: 'Here ChatGPT and OpenAI are studied as two layers: the app you use on screen, and the models and services that other programs can run. The visible name and availability change depending on the plan.',
+    units: 'tokens, messages, files, image credits or audio minutes',
+    selection: 'ChatGPT: Instant to move fast, Thinking to reason, and Pro if the plan allows it; API: GPT-5.1, GPT-5 mini/nano, Codex, Image, Sora, realtime and deep-research. GPT-5.6 Sol, Luna and Pro may appear depending on the account; check the selector and the documentation',
+    catalog: [
+      ['Model selector', 'fast modes or Instant, Thinking and Pro; in the API, families like GPT-5.1, GPT-5 mini/nano, Codex, GPT Image, Sora, realtime and deep-research appear. GPT-5.6 Sol, Luna and Pro may appear depending on the account', 'switch models only when the task needs it, and compare quality, speed and cost', "don't pick the highest number without testing the result"],
+      ['Files and analysis', 'upload documents, spreadsheets or images to analyze them', 'extract, compare, calculate or review your own material', "don't upload secrets or personal data without checking permissions"],
+      ['Search and research', 'query the web and return sources when available', 'work with current information that needs references', "don't treat an answer without a source as a fact-check"],
+      ['Images', 'generate or edit images from instructions and references', 'create visual concepts, variants and campaign material', "don't publish without checking text, hands, trademarks and rights"],
+      ['Voice and realtime', 'talk or work with audio in compatible experiences', 'support prototypes, oral practice or assistants', "don't record or send audio without consent"],
+      ['Projects and GPTs', 'save instructions, files and a way of working', 'keep stable context for a repeated task', "don't confuse working memory with a reliable database"],
+      ['API and tools', 'have a program call models, search, files or functions', 'automate processes and return a structured output', "don't put API keys in the browser or in a repository"],
+      ['Codex and code', 'use models to read, change and test code', 'work in small changes with tests and review', "don't accept a full rewrite without a backup and a diff"],
+    ],
+  },
+  claude: {
+    intro: 'Claude is best understood by separating the model that answers from the work surfaces around it: Projects, Artifacts, files, vision, web, Workbench, API and Claude Code. Not everything appears on every plan.',
+    units: 'input and output tokens, files, messages and plan limits',
+    selection: 'Claude Opus 4.1 for architecture and demanding analysis, Claude Sonnet 4 for day-to-day building and reviewing, and Claude Haiku for classification and quick tasks; names and limits can change, so check the visible selector and the official documentation',
+    catalog: [
+      ['Opus', 'Claude Opus 4.1: the highest-capacity family for hard problems and complex projects', 'architecture, deep analysis and decisions with many constraints', "don't use it to classify thousands of simple entries if another model is enough"],
+      ['Sonnet', 'Claude Sonnet 4: the balanced option for building, writing and reviewing', 'most of the course work and prototypes', "don't assume it replaces a real test"],
+      ['Haiku', 'the fast, low-cost family for short tasks; check the current number in the selector', 'classification, extraction and repetitive drafts', "don't delegate an architecture decision to it without review"],
+      ['Projects', 'a space with persistent instructions and documents', "keep a project's context across conversations", "don't use it as the only place to store a deliverable version"],
+      ['Artifacts', 'a panel for viewing and touching generated deliverables', 'websites, components, documents and visible prototypes', "don't publish without reviewing data, permissions and dependencies"],
+      ['Vision and files', 'read images and documents alongside the conversation', 'review screenshots, contracts, designs or tables', "don't invent a page when the document doesn't contain it"],
+      ['Workbench and API', 'test instructions and connect Claude with programs', 'compare versions and prepare integrations', "don't copy a key into the frontend or a repository"],
+      ['Claude Code', 'work on a repository from a terminal', 'real changes with tests, diffs and version control', "don't give it access without a backup and a working branch"],
+    ],
+  },
+  'nano-banana': {
+    intro: "Nano Banana is the course's practical generative-image page: creating and editing images with instructions, references and institutional control. Inside Gemini it can appear under different model names, so the first decision is to note down the exact model and date. It focuses on visual identity, composition, text, variants, review, watermarking and rights, instead of burying it inside Gemini's general page.",
+    units: 'generations, edits, resolution, credits and plan limits',
+    selection: 'generation mode for a brand-new image, edit mode to preserve a reference, composition mode to control subject and camera, visible text for posters, and controlled variants for comparing changes without losing the approved version',
+    catalog: [
+      ['Text to image', 'create an image from a written description', 'concepts, campaigns, backgrounds and new scenes', "don't expect perfect small text without reviewing it"],
+      ['Reference image', 'use an image to preserve a subject, product or style', 'variants of a piece that already exists', "don't use an image without permission or without checking its license"],
+      ['Localized edit', 'change only one area and keep the rest', 'clean up backgrounds, swap objects or fix a composition', "don't ask for five incompatible changes in a single instruction"],
+      ['Consistency', 'keep features, clothing, product or palette across images', 'series, catalogs and recurring characters', "don't rely on a vague phrase for exact identity"],
+      ['Composition and camera', 'control framing, scale, lens, light and depth', 'create images ready for a specific piece', "don't confuse style with framing instructions"],
+      ['Visible text', 'ask for labels, posters, covers or tags', 'mockups and pieces where the text is part of the scene', 'if the text matters, check every character and prepare a backup'],
+      ['Variants and selection', 'generate comparable options and choose with criteria', 'explore without losing an approved version', "don't burn credits without naming and saving the tests"],
+      ['Export and rights', 'get the final file and document its origin', 'deliver a piece with a clear size and format', "don't publish without checking trademarks, faces and commercial use"],
+    ],
+  },
+  'seedance-2-5': {
+    intro: 'Seedance 2.5 is a generative video tool that should be learned like an editing bench: brief, shot, motion, duration, continuity, audio, review and export. This page avoids treating video as magic; every generation has a cost, a discard rate and an approval criterion.',
+    units: 'credits, seconds generated, resolution, audio, variants and plan limits',
+    selection: "start with a short shot and a visual reference when one exists; use text-to-video only to explore, image-to-video when you need visual continuity, and sequence/storyboard when the result has several connected shots",
+    catalog: [
+      ['Text to video', 'create a shot from a written description', "test a quick visual idea or a shot that doesn't exist yet", "don't use it for a final campaign without references or tests"],
+      ['Image to video', 'animate an image while keeping the starting subject, style and framing', 'product, portrait, venue, graphic piece or approved scene', "don't expect perfect continuity if the base image is poorly composed"],
+      ['Storyboard', 'sequence several shots before generating', 'ads, training pieces, reels, demos and institutional videos', "don't generate shot by shot without knowing how they'll be joined later"],
+      ['Camera movement', 'define dolly, zoom, turn, pan or a static shot', 'give the video intention and avoid random motion', "don't mix three strong movements in five seconds"],
+      ['Audio and pacing', 'plan voice, music, silence, cuts and speed', 'when the video needs to explain or sell something', "don't leave the audio for last if it drives the duration"],
+      ['Visual continuity', 'keep character, object, color, light and direction across shots', 'series, brand, product and campaigns', "don't change the visual reference on every generation"],
+      ['Artifact review', 'spot deformations, hands, text, logos, flicker and odd changes', 'before showing a client or publishing', "don't approve a video on general impression without watching it frame by frame"],
+      ['Export and rights', 'save version, format, allowed use, source and cost', 'deliver a professional piece', "don't publish identifiable people, trademarks or client material without permission"],
+    ],
+  },
+  n8n: {
+    intro: "n8n is the course's main automation lab: every flow has a trigger, data, decisions, actions, logging and a way to stop. The academy teaches you to build it and to fix it, not just to connect boxes.",
+    units: 'executions, server time, API calls, service tasks and model tokens',
+    selection: 'Webhook or event to start, Edit Fields to tidy data, IF or Switch to decide, HTTP Request for APIs, and human approval before irreversible actions',
+    catalog: [
+      ['Trigger', 'the event that starts the workflow', 'a form, webhook, schedule, email or app change', "don't use polling if the service can notify you via webhook"],
+      ['Edit Fields', 'select, rename and prepare fields', 'normalize data before comparing or sending it', "don't pass the whole object when you only need three fields"],
+      ['IF and Switch', 'split paths based on conditions', 'filter inputs, priorities or states', "don't hide a critical rule inside an unreadable expression"],
+      ['HTTP Request', "call an API even when there's no dedicated node", 'connect services and test endpoints', "don't store keys in plain text or ignore error codes"],
+      ['AI models', 'interpret text, images or documents inside the flow', "classify cases a fixed rule can't resolve", "don't bring in AI where a stable condition is enough"],
+      ['Data and memory', 'store state, identifiers and results', 'avoid duplicates and continue processes', "don't rely on a row's position as an identifier"],
+      ['Human approval', 'pause the flow so someone can confirm', 'sending, publishing, charging or deleting', "don't automate an irreversible action without a brake"],
+      ['Errors and executions', 'see what happened and recover a flow', 'retries, alerts, traceability and maintenance', "don't mark a workflow as ready without testing a failure"],
+    ],
+  },
+  base44: {
+    intro: 'Base44 turns a specification into an application with screens, data and behavior. The learning is in writing the spec, reviewing what it generates, testing states and keeping an exit route.',
+    selection: 'start with the minimal version that has one visible input and one visible output, and add data, users and automations only after testing the flow',
+    catalog: [
+      ['Specification', 'describe screens, data and rules', 'turn an idea into a first testable version', "don't ask for a whole app with a vague sentence"],
+      ['Screens', 'places where the user sees and changes information', 'design the main flow', "don't hide errors or empty states"],
+      ['Data', 'fields and records that support the app', 'store information that needs to reappear', "don't store sensitive data without clear permissions"],
+      ['Logic', 'rules that change what happens', 'validate, filter and calculate', "don't accept rules without test cases"],
+      ['Users', 'identity, access and permissions', 'separate what each person can see', "don't use a single account for everything"],
+      ['Integrations', 'connections to external services', 'email, payments, AI or automations', "don't connect production before testing"],
+      ['Publishing', 'make a version accessible to others', 'show a demo or deliver the product', "don't publish without reviewing test data"],
+      ['Export', 'save code, data and documentation', 'keep control if you switch tools', "don't confuse a URL with a copy of the project"],
+    ],
+  },
+  'wispr-flow': {
+    intro: "Wispr Flow isn't learned like an automation: it's learned like a new way of writing. This page focuses on installation, the dictation button, post-editing, personal vocabulary, privacy, languages and when it's better to go back to the keyboard.",
+    units: 'minutes dictated, words generated, plan limits and connected devices',
+    selection: 'use it when the bottleneck is typing, or turning a spoken idea into text; avoid it for sensitive content, meetings without consent, or tasks that need exact formatting on the first try',
+    catalog: [
+      ['Dictation in any app', 'turn speech into text right inside the field you were already typing in', 'emails, Slack, WhatsApp, ChatGPT, documents and quick notes', "don't treat it like a chatbot: it doesn't decide for you, it writes an improved version of what you say"],
+      ['Speak button or shortcut', 'start and stop listening whenever you decide', 'capture ideas without switching windows', "don't leave the microphone open during private conversations"],
+      ['Automatic cleanup', 'remove filler words, punctuate and tidy spoken sentences', 'turn a spoken explanation into presentable text', "don't accept proper names, figures or technical terms without checking them"],
+      ['Personal vocabulary', 'learn names, jargon and words you use often', 'work with clients, brands, products or technical terms', "don't feed it sensitive data just to train convenience"],
+      ['Languages and code-switching', 'dictate in many languages and switch depending on context', 'bilingual teams, students and creators who speak faster than they type', "don't assume every language gets punctuated equally well"],
+      ['Privacy and permissions', 'manage microphone access, voice data and text handling', 'before using it with clients, students or calls', "don't record or transcribe people without legal basis or explicit consent"],
+    ],
+  },
+}
+
 const TASK_AUTOMATIONS = [
   ['Clasificar entradas y registrar el resultado', 'cuando llega un formulario, correo o mensaje', 'intermedia'],
   ['Enviar un aviso solo cuando requiere atención', 'cuando una condición de prioridad se cumple', 'basica'],
@@ -715,15 +959,56 @@ const TASK_AUTOMATIONS = [
   ['Rotar secretos y comprobar credenciales', 'según calendario o aviso de caducidad', 'profesional'],
 ]
 
+const TASK_AUTOMATIONS_EN = [
+  ['Classify incoming items and log the result', 'when a form, email or message arrives', 'intermedia'],
+  ['Send an alert only when it needs attention', 'when a priority condition is met', 'basica'],
+  ['Create a daily summary with sources', "at a fixed time with the day's items", 'intermedia'],
+  ['Detect duplicates before creating a record', 'when an item arrives with a repeated identifier', 'intermedia'],
+  ['Ask for approval before sending or publishing', 'when an action changes data or goes external', 'avanzada'],
+  ['Retry a call and alert if it keeps failing', 'when an API returns a temporary error', 'avanzada'],
+  ['Turn a file into a structured record', 'when a new document appears in a folder', 'intermedia'],
+  ['Create follow-up tasks and deadlines', 'when a sale, meeting or request is completed', 'basica'],
+  ['Sync two systems without overwriting changes', 'when a record is created or updated', 'avanzada'],
+  ['Log an audit trail for every run', 'every time the flow processes a case', 'profesional'],
+  ['Stop and alert when a required field is missing', 'when an input is incomplete', 'basica'],
+  ['Prepare a weekly consumption report', 'at the end of each work period', 'profesional'],
+  ['Create a draft and leave it for human review', 'when a request arrives that needs a reply but not automatic sending', 'intermedia'],
+  ['Move attachments into an organized folder', 'when an email or form arrives with files', 'basica'],
+  ['Extract invoices and flag exceptions', 'when a new invoice appears in a folder or inbox', 'avanzada'],
+  ['Update a CRM from a conversation', 'when a call, meeting or chat with a client ends', 'intermedia'],
+  ['Create a support ticket with priority', 'when an issue arrives by email, form or chat', 'intermedia'],
+  ["Escalate a case if there's no response", 'when a task has gone too many hours without progress', 'basica'],
+  ['Publish content only after approval', 'when a piece has been reviewed by a person', 'avanzada'],
+  ['Generate content variants and pick the best one', 'when a base campaign idea gets approved', 'intermedia'],
+  ['Monitor a website or API and open an incident', 'every few minutes, or when a monitor detects downtime', 'avanzada'],
+  ['Clean and normalize a database', 'when a CSV, sheet or external export is imported', 'intermedia'],
+  ['Send personalized onboarding', 'when a new user, client or student is created', 'basica'],
+  ['Prepare a meeting with context', 'before a calendar event', 'intermedia'],
+  ['Close out the day with pending items and blockers', 'at the end of the workday', 'basica'],
+  ['Rotate secrets and check credentials', 'on a schedule or expiration notice', 'profesional'],
+]
+
+function localizeAutomation(item, locale) {
+  if (locale !== 'en' || !item) return item
+  const idx = TASK_AUTOMATIONS.indexOf(item)
+  return idx !== -1 ? (TASK_AUTOMATIONS_EN[idx] || item) : item
+}
+
 function wordCount(text) { return String(text).trim().split(/\s+/).filter(Boolean).length }
 
-function enrichToolPrompts(prompts, tool, profile) {
+function enrichToolPrompts(prompts, tool, profile, locale = 'es') {
+  const isEn = locale === 'en'
   for (const item of prompts || []) {
     if (!item?.prompt || wordCount(item.prompt) >= 500) continue
-    const sections = [
+    const sections = isEn ? [
+      `\n\n## Before using it in ${tool.label}\nWork with my specific case and don't fill gaps with imagination. If a decision that changes the result is missing, ask me a short question before continuing. Translate any technical word the first time it appears, and clearly separate what you know, what you're assuming, and what I need to check in the real tool.`,
+      `\n\n## Minimum test\nBefore touching real data, design a test with fake data. Include a normal case, an incomplete one, a duplicate and an extreme one. For each case tell me what input to prepare, what output I should see, where to check it inside ${tool.label}, and what to do if it doesn't match.`,
+      `\n\n## Security, cost and limits\nSay which data I shouldn't paste in, which permissions are needed, which actions would be irreversible, and how I would stop the work if it goes wrong. Explain how to measure consumption related to ${profile.units || "the tool's plan"}, and mark as CHECK ON THE OFFICIAL WEBSITE any price, limit or feature name that may have changed.`,
+      `\n\n## Reusable deliverable\nFinish with a short sheet to save in my project: goal, input, expected output, steps inside ${tool.label}, approval criteria, possible errors, evidence to keep, and a next action under thirty minutes. If ${tool.label} isn't the right tool for my case, say so clearly and recommend the minimal alternative.`,
+    ] : [
       `\n\n## Antes de usarlo en ${tool.label}\nTrabaja con mi caso concreto y no rellenes huecos con imaginación. Si falta una decisión que cambia el resultado, hazme una pregunta corta antes de continuar. Traduce cualquier palabra técnica la primera vez que aparezca y separa claramente lo que sabes, lo que estás suponiendo y lo que debo comprobar en la herramienta real.`,
       `\n\n## Prueba mínima\nAntes de tocar datos reales, diseña una prueba con datos ficticios. Incluye un caso normal, uno incompleto, uno duplicado y uno extremo. Para cada caso dime qué entrada preparo, qué salida debería ver, dónde la compruebo dentro de ${tool.label} y qué hago si no coincide.`,
-      `\n\n## Seguridad, coste y límites\nIndica qué datos no debo pegar, qué permisos son necesarios, qué acciones serían irreversibles y cómo detenería el trabajo si sale mal. Explica cómo medir el consumo relacionado con ${profile.units || 'el plan de la herramienta'} y marca como COMPROBAR EN LA WEB OFICIAL cualquier precio, límite o nombre de función que pueda haber cambiado.`,
+      `\n\n## Seguridad, coste y límites\nIndica qué datos no debo pegar, qué permisos son necesarios, qué acciones serían irreversibles y cómo detendría el trabajo si sale mal. Explica cómo medir el consumo relacionado con ${profile.units || 'el plan de la herramienta'} y marca como COMPROBAR EN LA WEB OFICIAL cualquier precio, límite o nombre de función que pueda haber cambiado.`,
       `\n\n## Entrega reutilizable\nTermina con una ficha breve para guardar en mi proyecto: objetivo, entrada, salida esperada, pasos dentro de ${tool.label}, criterio de aprobación, errores posibles, evidencia que debo conservar y siguiente acción de menos de treinta minutos. Si ${tool.label} no es la herramienta adecuada para mi caso, dilo claro y recomienda la alternativa mínima.`,
     ]
     for (const section of sections) {
@@ -731,25 +1016,43 @@ function enrichToolPrompts(prompts, tool, profile) {
       item.prompt += section
     }
     if (wordCount(item.prompt) < 450) {
-      item.prompt += `\n\nAñade un ejemplo completo con datos ficticios, escrito como si yo fuera a hacerlo ahora mismo. El ejemplo debe incluir una entrada concreta, la salida exacta que debería aparecer, el punto donde debo revisarla, una decisión que no tomarías todavía y una señal clara para parar antes de gastar dinero, publicar, enviar o conectar datos reales.`
+      item.prompt += isEn
+        ? `\n\nAdd a full example with fake data, written as if I were about to do it right now. The example should include a concrete input, the exact output that should appear, the point where I should review it, a decision you wouldn't make yet, and a clear signal to stop before spending money, publishing, sending or connecting real data.`
+        : `\n\nAñade un ejemplo completo con datos ficticios, escrito como si yo fuera a hacerlo ahora mismo. El ejemplo debe incluir una entrada concreta, la salida exacta que debería aparecer, el punto donde debo revisarla, una decisión que no tomarías todavía y una señal clara para parar antes de gastar dinero, publicar, enviar o conectar datos reales.`
     }
   }
   return prompts
 }
 
-function profileFor(id) {
-  if (TOOL_PROFILES[id]) return TOOL_PROFILES[id]
+function profileFor(id, locale = 'es') {
+  const isEn = locale === 'en'
+  const profiles = isEn ? TOOL_PROFILES_EN : TOOL_PROFILES
+  if (profiles[id]) return profiles[id]
+  if (isEn) {
+    const kind = id.includes('video') || ['higgsfield', 'runway', 'heygen', 'descript', 'seedance-2-5'].includes(id) ? 'video' : id.includes('code') || ['python', 'node', 'typescript', 'react', 'vscode', 'cursor', 'codex'].includes(id) ? 'code' : id.includes('automation') || ['zapier', 'make', 'pipedream', 'n8n'].includes(id) ? 'automation' : id.includes('data') || ['airtable', 'supabase', 'postgres', 'sheets'].includes(id) ? 'data' : 'content and product'
+    return { ...PROFILE_DEFAULT_EN, intro: `At ${id}, the work involves ${kind}. This guide separates the internal pieces, the right moment to use them, and the automations that connect the result to the rest of the project.`, selection: `pick the ${kind} feature that produces the smallest visible result, and leave the connections for after you've tested it`, catalog: PROFILE_DEFAULT_EN.catalog.map(([group, name, useWhen, avoidWhen]) => [group, `${name} inside ${id}`, useWhen, avoidWhen]) }
+  }
   const kind = id.includes('video') || ['higgsfield', 'runway', 'heygen', 'descript', 'seedance-2-5'].includes(id) ? 'vídeo' : id.includes('code') || ['python', 'node', 'typescript', 'react', 'vscode', 'cursor', 'codex'].includes(id) ? 'código' : id.includes('automation') || ['zapier', 'make', 'pipedream', 'n8n'].includes(id) ? 'automatización' : id.includes('data') || ['airtable', 'supabase', 'postgres', 'sheets'].includes(id) ? 'datos' : 'contenido y producto'
   return { ...PROFILE_DEFAULT, intro: `En ${id} se trabaja con ${kind}. Esta guía separa las piezas internas, el momento adecuado para usarlas y las automatizaciones que conectan el resultado con el resto del proyecto.`, selection: `elige la función de ${kind} que produzca el resultado visible más pequeño y deja las conexiones para después de probar`, catalog: PROFILE_DEFAULT.catalog.map(([group, name, useWhen, avoidWhen]) => [group, `${name} dentro de ${id}`, useWhen, avoidWhen]) }
 }
 
-function baseGuideFor(tool) {
-  const meta = DISCOVERED_TOOL_META[tool.id] || { label: tool.label, url: `${tool.id}.com`, kind: 'tool', plain: `${tool.label} es una herramienta que puede formar parte de un proyecto de aprendizaje y trabajo.` }
-  return discoveredGuide(tool.id, meta)
+function baseGuideFor(tool, locale = 'es') {
+  const meta = DISCOVERED_TOOL_META[tool.id] || { label: tool.label, url: `${tool.id}.com`, kind: 'tool', plain: locale === 'en' ? `${tool.label} is a tool that can be part of a learning and work project.` : `${tool.label} es una herramienta que puede formar parte de un proyecto de aprendizaje y trabajo.` }
+  return discoveredGuide(tool.id, meta, locale)
 }
 
-function promptFor(tool, profile, task, index) {
-  const [name, outcome, rule] = task
+function promptFor(tool, profile, task, index, locale = 'es') {
+  const [name, outcome, rule] = locale === 'en' ? localizeTask(task, locale) : task
+  if (locale === 'en') {
+    const model = profile.selection.length > 180 ? `${profile.selection.split(';')[0]}; check availability.` : profile.selection
+    const inside = profile.catalog.slice(0, 3).map(([group, what]) => `${group}: ${what}`).join('; ')
+    let prompt = `Act as an expert in ${tool.label} guiding someone starting from zero. This job is about: ${name.toLowerCase()}. I want ${outcome}. Don't give me a generic answer or a list of undecided possibilities: work with my actual case and flag what you can't know.\n\nHere is my context. Project: [NAME]. What I do or the problem I have: [DESCRIPTION]. Who will use it: [PERSON]. What information comes in: [INPUT]. What must exist when it's done: [OUTPUT]. Approximate volume: [NUMBER OF CASES]. Budget and time available: [LIMITS]. Tools I already have: [LIST]. Sensitive data or permissions involved: [DATA AND PERMISSIONS].\n\nStart by asking me only the first question that would actually change the solution. Wait for my answer before continuing. If a technical word is essential, translate it into plain English the first time it appears. Don't fill gaps with a silent assumption. ${rule}\n\nOnce you have enough information, first analyze whether ${tool.label} is the right tool. Explain what part of the work it solves and what part it doesn't. Inside ${tool.label}, consider these pieces: ${inside}. Then choose the function, model, mode or workspace you would use. Use this selection criterion: ${model}. If there are two reasonable options, compare quality, speed, cost, privacy, ability to review and ease of rolling back to an earlier version. Don't choose an option just because it's the most powerful.\n\nReturn the work in this order. One: a problem sheet with goal, user, input, output and success criteria. Two: a preparation plan with the files, data, permissions and decisions I need to gather. Three: concrete instructions inside ${tool.label}, saying exactly which screen, button, field, node or file to open and what value to enter. Four: the expected result and signs that something has gone wrong. Five: a manual alternative or one with another tool, and the reason you're discarding or recommending it.\n\nDesign a test before using real data. The test needs a normal case, an incomplete case, a duplicate and an extreme case. For each one tell me the exact input, the output I should see, where to check it and what decision to make if it doesn't match. If the result can generate an image, video, text, code, record, message or execution, tell me how to save the approved version and how to roll back.\n\nInclude a security section: data I shouldn't paste in, minimum permissions, irreversible actions, human approval and how to stop the process. Include a consumption section too: what unit can be deducted in ${tool.label}, how to measure it before and after a test, how to estimate ten, one hundred and one thousand uses, and what data needs to be checked on the official website because it may have changed.\n\nFinish with a deliverable someone else could repeat: version name, files or links to keep, usage instructions, known limits, possible errors, an owner and a next step under thirty minutes. Don't say it's production-ready until the test has a result and evidence. This is job number ${index + 1} in my work library and it must be written in natural English.`
+    const details = `\n\nSpecific detail for ${tool.label}: separate the decision about ${name.toLowerCase()} from the work that follows. Write the visible name of each function, what field goes in, what field comes out, and how a doubtful case gets reviewed. If it's not available, mark CHECK AVAILABILITY and offer an alternative.`
+    prompt += details
+    if (wordCount(prompt) > 600) prompt = prompt.replace(details, '')
+    if (wordCount(prompt) < 450) prompt += `\n\nBefore finishing, look at the specific case again and add an example filled in with fake data, a decision you wouldn't make yet, and the question a responsible person would need to answer before sharing the result.`
+    return prompt
+  }
   const model = profile.selection.length > 180 ? `${profile.selection.split(';')[0]}; comprueba disponibilidad.` : profile.selection
   const inside = profile.catalog.slice(0, 3).map(([group, what]) => `${group}: ${what}`).join('; ')
   let prompt = `Actúa como una persona experta en ${tool.label} que acompaña a alguien que empieza desde cero. Este encargo trata de: ${name.toLowerCase()}. Quiero ${outcome}. No me des una respuesta genérica ni una lista de posibilidades sin decidir: trabaja con mi caso y señala lo que no puedas saber.\n\nMi contexto es el siguiente. Proyecto: [NOMBRE]. Qué hago o qué problema tengo: [DESCRIPCIÓN]. Quién lo utilizará: [PERSONA]. Qué información entra: [ENTRADA]. Qué debe existir al terminar: [SALIDA]. Volumen aproximado: [NÚMERO DE CASOS]. Presupuesto y tiempo disponible: [LÍMITES]. Herramientas que ya tengo: [LISTA]. Datos sensibles o permisos implicados: [DATOS Y PERMISOS].\n\nEmpieza haciéndome solo la primera pregunta que realmente cambie la solución. Espera mi respuesta antes de continuar. Si una palabra técnica es imprescindible, tradúcela al español sencillo la primera vez. No rellenes huecos con una suposición silenciosa. ${rule}\n\nCuando tengas la información suficiente, analiza primero si ${tool.label} es la herramienta adecuada. Explica qué parte del trabajo resuelve y qué parte no. Dentro de ${tool.label}, considera estas piezas: ${inside}. Después elige la función, modelo, modo o espacio de trabajo que usarías. Usa este criterio de selección: ${model}. Si hay dos opciones razonables, compara calidad, velocidad, coste, privacidad, posibilidad de revisar y facilidad de recuperar una versión anterior. No elijas una opción solo por ser la más potente.\n\nDevuelve el trabajo en este orden. Uno: ficha del problema con objetivo, usuario, entrada, salida y criterio de éxito. Dos: plan de preparación con los archivos, datos, permisos y decisiones que tengo que reunir. Tres: instrucciones concretas dentro de ${tool.label}, indicando qué pantalla, botón, campo, nodo o archivo debo abrir y qué valor debo poner. Cuatro: resultado esperado y señales de que algo ha fallado. Cinco: una alternativa manual o con otra herramienta y el motivo por el que la descartas o la recomiendas.\n\nDiseña una prueba antes de usar datos reales. La prueba debe tener un caso normal, un caso incompleto, un duplicado y un caso extremo. Para cada uno dime la entrada exacta, la salida que debería ver, dónde comprobarla y qué decisión tomar si no coincide. Si el resultado puede generar una imagen, vídeo, texto, código, registro, mensaje o ejecución, dime cómo guardo la versión aprobada y cómo vuelvo atrás.\n\nIncluye una sección de seguridad: datos que no debo pegar, permisos mínimos, acciones irreversibles, aprobación humana y forma de detener el proceso. Incluye también una sección de consumo: qué unidad puede descontarse en ${tool.label}, cómo medirla antes y después de una prueba, cómo estimar diez, cien y mil usos y qué dato debe comprobarse en la web oficial porque puede cambiar.\n\nTermina con una entrega que otra persona pueda repetir: nombre de la versión, archivos o enlaces que debe conservar, instrucciones de uso, límites conocidos, errores posibles, responsable y siguiente paso de menos de treinta minutos. No digas que está listo para producción hasta que la prueba tenga resultado y evidencia. Este es el encargo número ${index + 1} de mi biblioteca de trabajo y debe quedar escrito en español natural.`
@@ -779,20 +1082,25 @@ const TOOL_PROMPT_TASKS = {
   'wispr-flow': [],
 }
 
-function generatedPromptsFor(tool, profile) {
+function generatedPromptsFor(tool, profile, locale = 'es') {
+  const isEn = locale === 'en'
   const wanted = TOOL_PROMPT_TASKS[tool.id] || DEFAULT_PROMPT_TASKS
   const tasks = wanted
     .map((name) => PROMPT_TASKS.find((task) => task[0] === name))
     .filter(Boolean)
-  return tasks.map((task, index) => ({
-    name: `${task[0]} con ${tool.label}`,
-    prompt: promptFor(tool, profile, task, index),
-    when: `Úsalo cuando quieras ${task[1]}.`,
-    model: profile.selection,
-  }))
+  return tasks.map((task, index) => {
+    const localized = localizeTask(task, locale)
+    return {
+      name: isEn ? `${localized[0]} with ${tool.label}` : `${task[0]} con ${tool.label}`,
+      prompt: promptFor(tool, profile, task, index, locale),
+      when: isEn ? `Use it when you want to ${localized[1]}.` : `Úsalo cuando quieras ${task[1]}.`,
+      model: profile.selection,
+    }
+  })
 }
 
-function ensureMinimumToolPrompts(guide, tool, profile) {
+function ensureMinimumToolPrompts(guide, tool, profile, locale = 'es') {
+  const isEn = locale === 'en'
   if (NO_PROMPT_TOOLS.has(tool.id)) return guide.prompts || []
   const prompts = Array.isArray(guide.prompts) ? guide.prompts : []
   const used = new Set(prompts.map((item) => String(item?.name || '').trim().toLowerCase()).filter(Boolean))
@@ -805,12 +1113,13 @@ function ensureMinimumToolPrompts(guide, tool, profile) {
 
   for (const task of candidates) {
     if (prompts.length >= MAX_GENERATED_TOOL_PROMPTS) break
-    const name = `${task[0]} con ${tool.label}`
+    const localized = localizeTask(task, locale)
+    const name = isEn ? `${localized[0]} with ${tool.label}` : `${task[0]} con ${tool.label}`
     if (used.has(name.toLowerCase())) continue
     prompts.push({
       name,
-      prompt: promptFor(tool, profile, task, index),
-      when: `Úsalo cuando quieras ${task[1]}.`,
+      prompt: promptFor(tool, profile, task, index, locale),
+      when: isEn ? `Use it when you want to ${localized[1]}.` : `Úsalo cuando quieras ${task[1]}.`,
       model: profile.selection,
     })
     used.add(name.toLowerCase())
@@ -820,7 +1129,34 @@ function ensureMinimumToolPrompts(guide, tool, profile) {
   return prompts
 }
 
-function automationFor(tool, profile, blueprint, index) {
+function automationFor(tool, profile, blueprint, index, locale = 'es') {
+  if (locale === 'en') {
+    const localized = localizeAutomation(blueprint, locale)
+    const [name, trigger, difficulty] = localized
+    const platform = tool.id === 'n8n' ? 'n8n · importable workflow and manual test' : `n8n connected to ${tool.label}`
+    return {
+      name: `${name} in ${tool.label}`,
+      goal: `Use ${tool.label} inside a flow that can be observed, stopped and repaired.`,
+      difficulty,
+      platform,
+      trigger: `${trigger}. Define the unique identifier before activating the flow.`,
+      steps: [
+        `Receive the input and save a test record with date, source and unique identifier.`,
+        `Validate the required fields; if one is missing, stop the case and alert without running the final action.`,
+        `Prepare the data for ${tool.label}: field names, format, size and plan limits.`,
+        `Run the ${tool.label} operation in a test account or workspace.`,
+        'Check the output against an observable condition and save the link, id or full response.',
+        'Send the alert or create the final record only after the check passes.',
+        'Log success, error, consumption, duration and owner in an audit table.',
+        'Enable an error path with limited retries and a human alert; never retry indefinitely.',
+      ],
+      code: tool.id === 'n8n' ? `// n8n Code node: avoids duplicates and leaves an auditable output\nconst item = $json;\nconst id = item.id || item.email || item.externalId;\nif (!id) throw new Error('Missing unique identifier');\nreturn [{ json: { ...item, workflowKey: String(id), receivedAt: new Date().toISOString(), needsReview: Boolean(item.needsReview) } }];` : undefined,
+      test: `Run ${name.toLowerCase()} with a normal case, an incomplete one, a repeated one and an extreme one. Check that ${tool.label} receives only the necessary fields, that a duplicate does not create a second output, and that the error shows up in the history.`,
+      failure: `If ${tool.label} changes its format, runs out of credit or returns an error, keep the input, do not repeat the irreversible action, and alert with the case's identifier. Check credentials, limits, data and the service's response first.`,
+      credentials: `A ${tool.label} test account, a credential with minimum permissions, an n8n account and an audit table or log. Never store the key inside the code or in a public repository.`,
+      index,
+    }
+  }
   const [name, trigger, difficulty] = blueprint
   const platform = tool.id === 'n8n' ? 'n8n · workflow importable y prueba manual' : `n8n conectado con ${tool.label}`
   return {
@@ -847,13 +1183,22 @@ function automationFor(tool, profile, blueprint, index) {
   }
 }
 
-export function completeToolGuide(existing, tool) {
-  const guide = existing || baseGuideFor(tool)
-  const profile = profileFor(tool.id)
-  guide.catalog = { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: 'Pieza interna', name: group, what, useWhen, avoidWhen, model })) }
-  if (!Array.isArray(guide.prompts)) guide.prompts = generatedPromptsFor(tool, profile)
-  guide.prompts = ensureMinimumToolPrompts(guide, tool, profile)
-  guide.prompts = enrichToolPrompts(guide.prompts, tool, profile)
+export function completeToolGuide(existing, tool, locale = 'es') {
+  const isEn = locale === 'en'
+  const meta = DISCOVERED_TOOL_META[tool.id]
+  let guide
+  if (existing) {
+    guide = (isEn && meta && existing === TOOL_GUIDES[tool.id])
+      ? { ...existing, ...discoveredGuide(tool.id, meta, 'en') }
+      : existing
+  } else {
+    guide = baseGuideFor(tool, locale)
+  }
+  const profile = profileFor(tool.id, locale)
+  guide.catalog = { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: isEn ? 'Internal piece' : 'Pieza interna', name: group, what, useWhen, avoidWhen, model })) }
+  if (!Array.isArray(guide.prompts)) guide.prompts = generatedPromptsFor(tool, profile, locale)
+  guide.prompts = ensureMinimumToolPrompts(guide, tool, profile, locale)
+  guide.prompts = enrichToolPrompts(guide.prompts, tool, profile, locale)
   // Las automatizaciones van donde tienen sentido, no en todas por plantilla:
   // las plataformas llevan el recetario general (son recetas de plataforma),
   // las conectables llevan las suyas reales, y el resto no lleva la seccion.
@@ -861,7 +1206,7 @@ export function completeToolGuide(existing, tool) {
   if (Array.isArray(guide.automations)) {
     guide.automations = guide.automations.slice(0, MAX_TOOL_AUTOMATIONS)
   } else if (AUTOMATION_PLATFORMS.has(tool.id)) {
-    guide.automations = TASK_AUTOMATIONS.slice(0, MAX_TOOL_AUTOMATIONS).map((item, index) => automationFor(tool, profile, item, index))
+    guide.automations = TASK_AUTOMATIONS.slice(0, MAX_TOOL_AUTOMATIONS).map((item, index) => automationFor(tool, profile, item, index, locale))
   } else if (REAL_AUTOMATIONS[tool.id]) {
     guide.automations = REAL_AUTOMATIONS[tool.id].slice(0, MAX_TOOL_AUTOMATIONS)
   } else {
