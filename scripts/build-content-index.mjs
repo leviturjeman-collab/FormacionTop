@@ -26,7 +26,7 @@ import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
 import { buildCategories, buildGlossaryIndex, categoryKeyFor, sectionFor, SECTIONS } from './lib/categories.mjs'
 import { buildInstitutionalPromptLibrary } from './lib/institutional-prompts.mjs'
-import { STAGE_EN, KIND_EN, SECTION_EN, translateFolderLabel } from './lib/i18n-taxonomy.mjs'
+import { STAGE_EN, KIND_EN, SECTION_EN, LEVEL_META_EN, translateFolderLabel } from './lib/i18n-taxonomy.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const projectDir = path.resolve(scriptDir, '..')
@@ -206,18 +206,27 @@ registerRecipes(extraRecipes)
  * o poner datos reales en una prueba. La ampliación se hace en build para que
  * las fuentes editoriales sigan siendo legibles y fáciles de revisar. */
 const promptWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
-const qualitySections = (context) => [
-  `\n\n## Antes de empezar\nTrabaja con este contexto: ${context}. No rellenes huecos con imaginación. Si falta un dato que cambie la decisión, hazme una pregunta concreta y espera la respuesta. Si hay varias interpretaciones posibles, enuméralas y dime qué dato separa una de otra. Distingue siempre entre lo que te he contado, lo que estás deduciendo y lo que todavía hay que comprobar. No uses una palabra técnica sin traducirla primero.`,
-  `\n\n## Criterio de calidad\nNo me entregues una respuesta que solo suene bien. Convierte cada recomendación en una acción que pueda realizar, una salida que pueda observar y una condición que me permita decir si ha funcionado. Señala qué queda fuera de esta versión. Si recomiendas una herramienta, explica por qué encaja con la entrada, la salida, el volumen, el presupuesto y la persona que tendrá que mantenerla. Compara al menos una alternativa más sencilla y la opción de no automatizar todavía.`,
-  `\n\n## Prueba antes de usarlo\nDiseña una prueba con datos ficticios y cuatro casos: uno normal, uno incompleto, uno duplicado y uno extremo. Explica qué debería aparecer después de cada paso y en qué pantalla o registro lo compruebo. Si algo falla, dime cómo distinguir si el problema está en la entrada, en la instrucción, en un permiso, en un límite o en la herramienta de destino. No me digas que vuelva a intentarlo sin explicar qué variable debo cambiar.`,
-  `\n\n## Seguridad y coste\nMarca con claridad cada acción irreversible: enviar un mensaje, publicar, borrar, cobrar, compartir datos o consumir crédito. Propón una forma de probarla sin afectar a nadie y un punto en el que una persona tenga que aprobarla. Explica cómo se mide el consumo de tokens, créditos, tareas, ejecuciones o almacenamiento, qué dato debo anotar antes y después y cómo calculo el coste mensual. Si el precio o una función puede haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL en vez de inventar una cifra.`,
-  `\n\n## Entrega y continuidad\nTermina con una ficha breve que otra persona pueda entender sin haber visto esta conversación: objetivo, entradas, salida, pasos, herramientas, permisos, casos que no cubre, prueba realizada, resultado, coste aproximado y cómo detenerlo. Añade qué archivo, captura, enlace o registro debo guardar como evidencia. Incluye una siguiente acción pequeña que pueda completar en menos de treinta minutos y una señal clara de que ya es momento de pasar al siguiente paso.`,
-]
+const qualitySections = (context) => LOCALE === 'en'
+  ? [
+      `\n\n## Before you start\nWork with this context: ${context}. Do not fill gaps by guessing. If one missing detail changes the decision, ask one specific question and wait for the answer. If there are several possible meanings, list them and say what detail separates one from another. Always distinguish between what I told you, what you infer and what still needs checking. Explain every technical word in plain language first.`,
+      `\n\n## Quality rule\nDo not give me an answer that only sounds good. Turn each recommendation into an action I can take, an output I can see and a condition that tells me whether it worked. Say what is outside this version. If you recommend a tool, explain why it fits the input, output, volume, budget and the person who will maintain it. Compare at least one simpler alternative and the option of not automating yet.`,
+      `\n\n## Test before using it\nDesign a test with fake data and four cases: normal, incomplete, duplicated and extreme. Explain what should appear after each step and where I check it. If something fails, tell me how to know whether the problem is in the input, the instruction, a permission, a limit or the destination tool. Do not tell me to try again without saying what variable I should change.`,
+      `\n\n## Security and cost\nClearly mark every irreversible action: sending a message, publishing, deleting, charging, sharing data or spending credit. Propose a way to test it without affecting anyone and a point where a human must approve it. Explain how token, credit, task, execution or storage usage is measured, what number I should record before and after, and how to estimate monthly cost. If a price or feature may have changed, write CHECK THE OFFICIAL WEBSITE instead of inventing a number.`,
+      `\n\n## Delivery and continuity\nFinish with a short sheet another person can understand without seeing this conversation: goal, inputs, output, steps, tools, permissions, cases it does not cover, test performed, result, approximate cost and how to stop it. Add what file, screenshot, link or log should be kept as evidence. Include one small next action that can be completed in under thirty minutes and a clear signal that it is time to move to the next step.`,
+    ]
+  : [
+      `\n\n## Antes de empezar\nTrabaja con este contexto: ${context}. No rellenes huecos con imaginación. Si falta un dato que cambie la decisión, hazme una pregunta concreta y espera la respuesta. Si hay varias interpretaciones posibles, enuméralas y dime qué dato separa una de otra. Distingue siempre entre lo que te he contado, lo que estás deduciendo y lo que todavía hay que comprobar. No uses una palabra técnica sin traducirla primero.`,
+      `\n\n## Criterio de calidad\nNo me entregues una respuesta que solo suene bien. Convierte cada recomendación en una acción que pueda realizar, una salida que pueda observar y una condición que me permita decir si ha funcionado. Señala qué queda fuera de esta versión. Si recomiendas una herramienta, explica por qué encaja con la entrada, la salida, el volumen, el presupuesto y la persona que tendrá que mantenerla. Compara al menos una alternativa más sencilla y la opción de no automatizar todavía.`,
+      `\n\n## Prueba antes de usarlo\nDiseña una prueba con datos ficticios y cuatro casos: uno normal, uno incompleto, uno duplicado y uno extremo. Explica qué debería aparecer después de cada paso y en qué pantalla o registro lo compruebo. Si algo falla, dime cómo distinguir si el problema está en la entrada, en la instrucción, en un permiso, en un límite o en la herramienta de destino. No me digas que vuelva a intentarlo sin explicar qué variable debo cambiar.`,
+      `\n\n## Seguridad y coste\nMarca con claridad cada acción irreversible: enviar un mensaje, publicar, borrar, cobrar, compartir datos o consumir crédito. Propón una forma de probarla sin afectar a nadie y un punto en el que una persona tenga que aprobarla. Explica cómo se mide el consumo de tokens, créditos, tareas, ejecuciones o almacenamiento, qué dato debo anotar antes y después y cómo calculo el coste mensual. Si el precio o una función puede haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL en vez de inventar una cifra.`,
+      `\n\n## Entrega y continuidad\nTermina con una ficha breve que otra persona pueda entender sin haber visto esta conversación: objetivo, entradas, salida, pasos, herramientas, permisos, casos que no cubre, prueba realizada, resultado, coste aproximado y cómo detenerlo. Añade qué archivo, captura, enlace o registro debo guardar como evidencia. Incluye una siguiente acción pequeña que pueda completar en menos de treinta minutos y una señal clara de que ya es momento de pasar al siguiente paso.`,
+    ]
 
 function enrichPrompts(items, context) {
   for (const item of items || []) {
     if (!item?.prompt || promptWords(item.prompt) >= 520) continue
-    for (const section of qualitySections(`${context} · ${item.name || 'este encargo'}`)) {
+    const itemContext = `${context} · ${item.name || (LOCALE === 'en' ? 'this task' : 'este encargo')}`
+    for (const section of qualitySections(itemContext)) {
       if (promptWords(item.prompt) >= 520) break
       item.prompt += section
     }
@@ -706,7 +715,7 @@ for (const file of allFiles) {
 const course = {
   generatedAt: new Date().toISOString(),
   vaultName: path.basename(vaultDir),
-  levels: LEVELS.map((id) => ({ id, ...LEVEL_META[id] })),
+  levels: LEVELS.map((id) => ({ id, ...(LOCALE === 'en' ? LEVEL_META_EN[id] : LEVEL_META[id]) })),
   locale: LOCALE,
   kinds: localizedKinds,
   sections: localizedSections,

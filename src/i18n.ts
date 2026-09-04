@@ -64,6 +64,13 @@ const DICT = {
     'footer.logos': 'Los logos pertenecen a sus respectivos titulares y se usan para identificar la herramienta que se enseña.',
     'footer.progreso': 'Tu progreso se guarda solo en este navegador.',
     'loading.noCargado': 'No se ha podido cargar el curso',
+    'loading.entrarOtraVez': 'Entrar de nuevo',
+    'loading.generar': 'Genera el contenido con «npm run index» y comprueba que existe public/course.json.',
+    'admin.controlLocal': 'Control local',
+    'admin.titulo': 'Súper administrador',
+    'admin.descripcion': 'Panel para preparar alumnos, PINs, objetivo y herramientas recomendadas. Esta primera versión vive en tu navegador: sirve para organizar, no como autenticación real de servidor.',
+    'admin.avisoTitulo': 'Importante antes de usarlo con alumnos reales',
+    'admin.avisoTexto': 'Un PIN guardado en una web estática no protege datos por sí solo. Para acceso real hacen falta backend, base de datos, sesiones, permisos y registro de auditoría.',
   },
   en: {
     'nav.inicio': 'Home',
@@ -112,6 +119,13 @@ const DICT = {
     'footer.logos': 'Logos belong to their respective owners and are used to identify the tool being taught.',
     'footer.progreso': 'Your progress is saved only in this browser.',
     'loading.noCargado': "Couldn't load the course",
+    'loading.entrarOtraVez': 'Enter again',
+    'loading.generar': 'Generate the content with "npm run index" and check that public/course.json exists.',
+    'admin.controlLocal': 'Local control',
+    'admin.titulo': 'Super administrator',
+    'admin.descripcion': 'Panel for preparing students, PINs, goals, and recommended tools. This first version lives in your browser: it is for organization, not real server authentication.',
+    'admin.avisoTitulo': 'Important before using it with real students',
+    'admin.avisoTexto': 'A PIN stored in a static website does not protect data by itself. Real access needs a backend, database, sessions, permissions, and an audit log.',
   },
 } as const
 

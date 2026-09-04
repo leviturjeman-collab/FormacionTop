@@ -102,6 +102,24 @@ export const SECTION_EN = {
   general: { label: 'General', hint: 'Topic material' },
 }
 
+export const LEVEL_META_EN = {
+  basico: {
+    label: 'Basic',
+    promise: 'Understand what it is and why it matters',
+    audience: 'You have never used it. You leave able to explain it in your own words.',
+  },
+  intermedio: {
+    label: 'Intermediate',
+    promise: 'Do it yourself, step by step',
+    audience: 'You already know what it is. You leave after doing it once from start to finish.',
+  },
+  avanzado: {
+    label: 'Advanced',
+    promise: 'Decide, break and defend',
+    audience: 'You have already done it. You leave knowing when not to use it and what fails at scale.',
+  },
+}
+
 const FOLDER_LABEL_EN = {
   'Empieza aqui': 'Start here',
   'Investigacion oficial': 'Official research',

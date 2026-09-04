@@ -19,6 +19,7 @@ import { Bars, Chat, Checklist, FileTree, Flashcards } from '../components/Visua
 import { ToolStrip } from '../components/Brand'
 import TeacherPanel from '../components/TeacherPanel'
 import Piece from '../components/Piece'
+import { useLocale } from '../i18n'
 
 function AssetCode({ asset }: { asset: LessonAsset }) {
   const [copied, setCopied] = useState(false)
@@ -52,6 +53,7 @@ function AssetCode({ asset }: { asset: LessonAsset }) {
 
 export default function Leccion({ slug, level }: { slug: string; level?: LevelId }) {
   const course = useCourse()
+  const locale = useLocale()
   const { bySlug, stageById } = useIndexes()
   const student = useStudent()
   const progress = useLessonProgress(slug)
@@ -144,7 +146,11 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         <div>
           <ListChecks size={15} />
           <strong>{esFicha ? '2. Usa lo necesario' : '2. Haz práctica'}</strong>
-          <small>{esFicha ? 'Copia el archivo, dato o idea que necesites y vuelve a tu tarea.' : 'Lee el ejemplo, sigue los pasos y marca OK cuando lo hayas visto.'}</small>
+          <small>
+            {esFicha
+              ? (locale === 'en' ? 'Copy the file, data or idea you need and go back to your task.' : 'Copia el archivo, dato o idea que necesites y vuelve a tu tarea.')
+              : (locale === 'en' ? 'Read the example, follow the steps and tap OK when you have seen it.' : 'Lee el ejemplo, sigue los pasos y marca OK cuando lo hayas visto.')}
+          </small>
         </div>
         <div>
           <Wrench size={15} />
@@ -277,7 +283,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                       disabled={hecha}
                     >
                       <CheckCircle2 size={14} />
-                      {hecha ? 'Hecho' : 'OK, hecho'}
+                      {hecha ? (locale === 'en' ? 'Done' : 'Hecho') : (locale === 'en' ? 'OK, done' : 'OK, hecho')}
                     </button>
                   </div>
                 </details>

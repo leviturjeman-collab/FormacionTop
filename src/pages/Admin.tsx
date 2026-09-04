@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, Clipboard, KeyRound, Plus, Trash2 } from 'lucide-react'
 import { useCourse } from '../course'
-import { useLocale } from '../i18n'
+import { useLocale, useT } from '../i18n'
 
 const KEY = 'academia.admin.alumnos.v1'
 
@@ -34,6 +34,7 @@ function generatePin() {
 export default function Admin() {
   const course = useCourse()
   const locale = useLocale()
+  const t = useT()
   const [pins, setPins] = useState<LearnerPin[]>(() => readPins())
   const [draft, setDraft] = useState(EMPTY)
   const [copied, setCopied] = useState<string | null>(null)
@@ -83,19 +84,18 @@ export default function Admin() {
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker"><KeyRound size={12} /> Control local</span>
-        <h1>Súper administrador</h1>
+        <span className="st-kicker"><KeyRound size={12} /> {t('admin.controlLocal')}</span>
+        <h1>{t('admin.titulo')}</h1>
         <p>
-          Panel para preparar alumnos, PINs, objetivo y herramientas recomendadas. Esta primera versión vive en tu navegador:
-          sirve para organizar, no como autenticación real de servidor.
+          {t('admin.descripcion')}
         </p>
       </div>
 
       <section className="st-admin-warning">
         <KeyRound size={15} />
         <div>
-          <strong>Importante antes de usarlo con alumnos reales</strong>
-          <p>Un PIN guardado en una web estática no protege datos por sí solo. Para acceso real hacen falta backend, base de datos, sesiones, permisos y registro de auditoría.</p>
+          <strong>{t('admin.avisoTitulo')}</strong>
+          <p>{t('admin.avisoTexto')}</p>
         </div>
       </section>
 

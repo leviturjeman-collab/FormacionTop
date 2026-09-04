@@ -43,7 +43,7 @@ export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
     // nombre del archivo no cambia, así que se revalida siempre.
     fetch(`${import.meta.env.BASE_URL}${file}`, { cache: 'no-cache' })
       .then((response) => {
-        if (!response.ok) throw new Error(`El servidor respondió ${response.status}`)
+        if (!response.ok) throw new Error(locale === 'en' ? `The server responded ${response.status}` : `El servidor respondió ${response.status}`)
         return response.json()
       })
       .then((data: CourseData) => {
@@ -60,7 +60,7 @@ export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
             })
             .catch(() => {
               if (!cancelled) {
-                setState({ course: null, error: `No se ha podido cargar el curso (${error.message}).` })
+                setState({ course: null, error: locale === 'en' ? `The course could not be loaded (${error.message}).` : `No se ha podido cargar el curso (${error.message}).` })
               }
             })
           return
@@ -68,9 +68,7 @@ export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
         if (!cancelled) {
           setState({
             course: null,
-            error:
-              `No se ha podido cargar el curso (${error.message}). ` +
-              'Genera el contenido con «npm run index» y comprueba que existe public/course.json.',
+            error: `No se ha podido cargar el curso (${error.message}). Genera el contenido con «npm run index» y comprueba que existe public/course.json.`,
           })
         }
       })

@@ -52,6 +52,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
   const course = useCourse()
   const student = useStudent()
   const t = useT()
+  const locale = useLocale()
   const [query, setQuery] = useState('')
   const cursoBase = [...(course.curso || [])].filter((lesson) => !lesson.tool).sort((a, b) => a.number - b.number)
   const defaultCursoStage = cursoBase[0]?.stageId || course.stages[0]?.id || null
@@ -123,7 +124,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         <kbd>Ctrl K</kbd>
       </form>
 
-      <nav aria-label="Navegación principal">
+      <nav aria-label={locale === 'en' ? 'Main navigation' : 'Navegación principal'}>
         <a className={is('inicio') ? 'active' : ''} href={href({ name: 'inicio' })} onClick={onClose}>
           <Home size={14} /> {t('nav.inicio')}
         </a>
@@ -225,7 +226,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
           <strong>{mainDone}/{cursoBase.length}</strong>
         </div>
         <i><b style={{ width: `${percent}%` }} /></i>
-        <div className="st-level-pick" role="group" aria-label="Nivel por defecto">
+        <div className="st-level-pick" role="group" aria-label={locale === 'en' ? 'Default level' : 'Nivel por defecto'}>
           {course.levels.map((meta) => (
             <button
               key={meta.id}
@@ -247,6 +248,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const course = useCourse()
   const { teacher } = useStudent()
   const t = useT()
+  const locale = useLocale()
 
   const trail = useMemo(() => {
     switch (route.name) {
@@ -265,12 +267,12 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'leccion': {
         const lesson = course.lessons.find((item) => item.slug === route.slug)
         const category = lesson && course.categories.find((item) => item.id === lesson.categoryId)
-        return [category?.label || 'Lección', lesson?.title || route.slug]
+        return [category?.label || (locale === 'en' ? 'Lesson' : 'Lección'), lesson?.title || route.slug]
       }
-      case 'biblioteca': return ['Biblioteca']
+      case 'biblioteca': return [locale === 'en' ? 'Library' : 'Biblioteca']
       case 'carpeta': {
         const folder = course.folders.find((item) => item.id === route.folderId)
-        return ['Biblioteca', folder?.label || route.folderId]
+        return [locale === 'en' ? 'Library' : 'Biblioteca', folder?.label || route.folderId]
       }
       case 'herramientas': return [t('nav.herramientas')]
       case 'herramienta': {
@@ -279,10 +281,10 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       }
       case 'preguntas': return [t('nav.preguntas')]
       case 'indice': return [t('nav.diccionario'), route.letter?.toUpperCase() || ''].filter(Boolean)
-      case 'buscar': return ['Búsqueda', route.query ? `«${route.query}»` : ''].filter(Boolean)
-      case 'presentar': return ['Presentación']
-      case 'proyecto': return ['Proyecto final']
-      case 'deck': return ['Presentación']
+      case 'buscar': return [locale === 'en' ? 'Search' : 'Búsqueda', route.query ? `«${route.query}»` : ''].filter(Boolean)
+      case 'presentar': return [locale === 'en' ? 'Presentation' : 'Presentación']
+      case 'proyecto': return [locale === 'en' ? 'Final project' : 'Proyecto final']
+      case 'deck': return [locale === 'en' ? 'Presentation' : 'Presentación']
       case 'prompts': return [t('nav.prompts')]
       case 'kits': return [t('nav.kits')]
       case 'agentes': {
@@ -299,14 +301,14 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
         return [t('nav.programa'), tool?.label || t('nav.rutaPrincipal'), lesson?.title || route.lessonId]
       }
       case 'progreso': return [t('nav.progreso')]
-      default: return ['Academia']
+      default: return [locale === 'en' ? 'Academy' : 'Academia']
     }
   }, [route, course, t])
 
   return (
     <header className="st-header">
       <div>
-        <button type="button" className="st-menu" onClick={onMenu} aria-label="Abrir menú">
+        <button type="button" className="st-menu" onClick={onMenu} aria-label={locale === 'en' ? 'Open menu' : 'Abrir menú'}>
           <Menu size={15} />
         </button>
         {trail.map((part, index) => (
@@ -327,7 +329,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
           className={`st-project-switch${teacher ? ' on' : ''}`}
           onClick={() => store.toggleTeacher()}
           aria-pressed={teacher}
-          title="Muestra el guion de clase y el acceso a presentar. El alumno no lo ve."
+          title={locale === 'en' ? 'Shows the class script and presentation access. Students do not see it.' : 'Muestra el guion de clase y el acceso a presentar. El alumno no lo ve.'}
         >
           <Presentation size={12} />
           {teacher ? t('sidebar.modoProfesor') : t('sidebar.modoAlumno')}
@@ -519,7 +521,9 @@ export default function App() {
         <span><X size={18} /></span>
         <strong>{t('loading.noCargado')}</strong>
         <small>{error}</small>
-        <pre>npm run index</pre>
+        <button type="button" className="st-btn" onClick={() => window.location.reload()}>
+          {t('loading.entrarOtraVez')}
+        </button>
       </div>
     )
   }
