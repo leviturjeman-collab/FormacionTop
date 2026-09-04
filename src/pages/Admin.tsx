@@ -6,7 +6,7 @@ import {
   ADMIN_LEARNERS_EVENT,
   ADMIN_LEARNERS_KEY,
   generateLearnerPin,
-  getAdminPinForSession,
+  getAdminAuthForSession,
   readAdminLearners,
   store,
   type LearnerStatus,
@@ -14,7 +14,7 @@ import {
   useStudent,
   writeAdminLearners,
 } from '../store'
-import { deleteRemoteLearner, fetchRemoteLearners, saveRemoteLearners } from '../learners-api'
+import { deleteRemoteLearner, fetchRemoteLearners, saveRemoteLearners, unlockRemotePin } from '../learners-api'
 
 type AdminTab = 'estado' | 'crear' | 'alumnos' | 'pendiente'
 
@@ -70,10 +70,19 @@ export default function Admin() {
 function AdminAccess() {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
+  const [checking, setChecking] = useState(false)
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (store.unlockAdmin(pin)) return
+    setChecking(true)
+    try {
+      const result = await unlockRemotePin(pin)
+      if (result.role === 'admin' && store.unlockAdmin(pin, result.sessionToken)) return
+    } catch {
+      if (store.unlockAdmin(pin)) return
+    } finally {
+      setChecking(false)
+    }
     setError('PIN incorrecto.')
     setPin('')
   }
@@ -103,8 +112,8 @@ function AdminAccess() {
             />
           </label>
           {error && <p className="st-admin-field-error">{error}</p>}
-          <button type="submit" className="st-btn" disabled={pin.length !== 4}>
-            <KeyRound size={13} /> Entrar
+          <button type="submit" className="st-btn" disabled={pin.length !== 4 || checking}>
+            <KeyRound size={13} /> {checking ? 'Comprobando' : 'Entrar'}
           </button>
         </form>
       </section>
@@ -124,8 +133,8 @@ function AdminPanel() {
   const importInputRef = useRef<HTMLInputElement>(null)
 
   async function syncWithSupabase() {
-    const adminPin = getAdminPinForSession()
-    if (!adminPin) {
+    const adminAuth = getAdminAuthForSession()
+    if (!adminAuth) {
       setNotice('Entra de nuevo con el PIN 5555 para sincronizar Supabase.')
       return
     }
@@ -133,14 +142,14 @@ function AdminPanel() {
     setSyncing(true)
     try {
       const localLearners = readAdminLearners()
-      const remoteLearners = await fetchRemoteLearners(adminPin)
+      const remoteLearners = await fetchRemoteLearners(adminAuth)
       const merged = writeAdminLearners(mergeLearners(remoteLearners, localLearners))
       setPins(merged)
       setDraft((current) => ({ ...current, pin: generateLearnerPin(merged) }))
 
       if (merged.length) {
-        await saveRemoteLearners(adminPin, merged)
-        const refreshed = await fetchRemoteLearners(adminPin)
+        await saveRemoteLearners(adminAuth, merged)
+        const refreshed = await fetchRemoteLearners(adminAuth)
         const synced = writeAdminLearners(mergeLearners(refreshed, merged))
         setPins(synced)
         setDraft((current) => ({ ...current, pin: generateLearnerPin(synced) }))
@@ -230,13 +239,13 @@ function AdminPanel() {
     const next = [learner, ...pins]
     const saved = savePins(next)
     setDraft(emptyDraft(saved))
-    const adminPin = getAdminPinForSession()
-    if (!adminPin) {
+    const adminAuth = getAdminAuthForSession()
+    if (!adminAuth) {
       setNotice('Alumno guardado localmente. Entra de nuevo con 5555 para sincronizarlo con Supabase.')
       return
     }
     try {
-      const remote = await saveRemoteLearners(adminPin, [learner])
+      const remote = await saveRemoteLearners(adminAuth, [learner])
       const merged = savePins(mergeLearners(remote, saved))
       setDraft(emptyDraft(merged))
       setNotice('Alumno guardado en Supabase. Ese PIN ya funciona en la entrada normal.')
@@ -262,10 +271,10 @@ function AdminPanel() {
       return { ...item, status, updatedAt: new Date().toISOString() }
     }))
     const updated = saved.find((item) => item.id === id)
-    const adminPin = getAdminPinForSession()
-    if (!updated || !adminPin) return
+    const adminAuth = getAdminAuthForSession()
+    if (!updated || !adminAuth) return
     try {
-      const remote = await saveRemoteLearners(adminPin, [updated])
+      const remote = await saveRemoteLearners(adminAuth, [updated])
       savePins(mergeLearners(remote, saved))
       setNotice('Estado sincronizado con Supabase.')
     } catch {
@@ -277,13 +286,13 @@ function AdminPanel() {
     if (!window.confirm(`Borrar a ${item.name} y su PIN ${item.pin}?`)) return
     const saved = savePins(pins.filter((pin) => pin.id !== item.id))
     setDraft((current) => ({ ...current, pin: generateLearnerPin(saved) }))
-    const adminPin = getAdminPinForSession()
-    if (!adminPin) {
+    const adminAuth = getAdminAuthForSession()
+    if (!adminAuth) {
       setNotice('Alumno borrado localmente. Entra de nuevo con 5555 para sincronizar Supabase.')
       return
     }
     try {
-      await deleteRemoteLearner(adminPin, item.id)
+      await deleteRemoteLearner(adminAuth, item.id)
       setNotice('Alumno borrado tambien en Supabase.')
     } catch {
       setNotice('Alumno borrado localmente, pero Supabase no confirmo el borrado.')
@@ -327,9 +336,9 @@ function AdminPanel() {
         })
         const saved = savePins(merged)
         setDraft(emptyDraft(saved))
-        const adminPin = getAdminPinForSession()
-        if (adminPin) {
-          saveRemoteLearners(adminPin, saved)
+        const adminAuth = getAdminAuthForSession()
+        if (adminAuth) {
+          saveRemoteLearners(adminAuth, saved)
             .then((remote) => {
               const synced = savePins(mergeLearners(remote, saved))
               setDraft(emptyDraft(synced))

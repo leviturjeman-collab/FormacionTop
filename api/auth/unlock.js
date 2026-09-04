@@ -1,5 +1,6 @@
 import {
   adminPin,
+  checkUnlockRateLimit,
   cleanPin,
   hashPin,
   json,
@@ -23,6 +24,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (!checkUnlockRateLimit(req)) {
+      json(res, 429, { ok: false, error: 'Demasiados intentos seguidos. Espera un minuto y vuelve a probar.' })
+      return
+    }
+
     const body = await readBody(req)
     const pin = cleanPin(body.pin, 6)
 
@@ -38,7 +44,7 @@ export default async function handler(req, res) {
 
     const pinHash = hashPin(pin)
     const rows = await supabaseFetch(
-      learnersPath(`?select=id,name,email,pin,level,goal,tools,notes,status,created_at,updated_at&or=(pin.eq.${pin},pin_hash.eq.${pinHash})&limit=1`),
+      learnersPath(`?select=id,name,email,level,goal,tools,notes,status,created_at,updated_at&or=(pin.eq.${pin},pin_hash.eq.${pinHash})&limit=1`),
     )
     const learner = rows[0]
     if (!learner) {

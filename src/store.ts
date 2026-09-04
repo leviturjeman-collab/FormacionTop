@@ -4,8 +4,8 @@ import { unlockRemotePin } from './learners-api'
 import { saveRemoteProgress } from './progress-api'
 
 /**
- * Estado del alumno. Vive solo en su navegador: no hay servidor,
- * no hay cuentas y nada sale de la máquina.
+ * Estado del alumno. Se guarda en el navegador y, cuando hay sesión válida,
+ * también en Supabase mediante endpoints server-side.
  */
 
 const KEY = 'academia.progreso.v1'
@@ -13,6 +13,7 @@ export const ADMIN_LEARNERS_KEY = 'academia.admin.alumnos.v1'
 export const ADMIN_LEARNERS_BACKUP_KEY = 'academia.admin.alumnos.backup.v1'
 export const ADMIN_LEARNERS_EVENT = 'academia:admin-learners-updated'
 const ADMIN_PIN_SESSION_KEY = 'academia.admin.pin.session.v1'
+const ADMIN_TOKEN_SESSION_KEY = 'academia.admin.token.session.v1'
 
 export interface LessonProgress {
   /** Niveles marcados como completados. */
@@ -69,6 +70,7 @@ export interface SavedPrompt {
 
 const ADMIN_PIN = '5555'
 let sessionAdminPin = ''
+let sessionAdminToken = ''
 const EMPTY: StudentState = {
   name: '',
   learnerUnlocked: false,
@@ -123,19 +125,23 @@ function storageSet(key: string, value: string) {
   }
 }
 
-function rememberAdminPin(pin: string) {
+function rememberAdminSession(pin: string, token = '') {
   sessionAdminPin = pin
+  sessionAdminToken = token
   try {
     sessionStorage.setItem(ADMIN_PIN_SESSION_KEY, pin)
+    if (token) sessionStorage.setItem(ADMIN_TOKEN_SESSION_KEY, token)
   } catch {
     /* Si sessionStorage esta bloqueado, se mantiene en memoria durante la pestana actual. */
   }
 }
 
-function forgetAdminPin() {
+function forgetAdminSession() {
   sessionAdminPin = ''
+  sessionAdminToken = ''
   try {
     sessionStorage.removeItem(ADMIN_PIN_SESSION_KEY)
+    sessionStorage.removeItem(ADMIN_TOKEN_SESSION_KEY)
   } catch {
     /* Nada que limpiar si el almacenamiento de sesion esta bloqueado. */
   }
@@ -214,15 +220,6 @@ export function writeAdminLearners(items: StoredLearnerDraft[]): StoredLearner[]
   return learners
 }
 
-function upsertLocalLearner(learner: StoredLearner) {
-  const current = readAdminLearners()
-  const index = current.findIndex((item) => item.id === learner.id || item.email === learner.email || item.pin === learner.pin)
-  const next = index >= 0
-    ? current.map((item, itemIndex) => itemIndex === index ? { ...item, ...learner } : item)
-    : [learner, ...current]
-  writeAdminLearners(next)
-}
-
 function mergeRemoteProgress(progress: Record<string, unknown> | null | undefined): Partial<StudentState> {
   if (!progress || typeof progress !== 'object') return {}
   return progress as Partial<StudentState>
@@ -250,6 +247,17 @@ function commitLearnerSession(
 
 export function getAdminPinForSession() {
   return sessionAdminPin || readRememberedAdminPin() || (state.adminUnlocked ? ADMIN_PIN : '')
+}
+
+export function getAdminAuthForSession() {
+  try {
+    const token = sessionAdminToken || sessionStorage.getItem(ADMIN_TOKEN_SESSION_KEY) || ''
+    if (token) return { type: 'token' as const, value: token }
+  } catch {
+    if (sessionAdminToken) return { type: 'token' as const, value: sessionAdminToken }
+  }
+  const pin = getAdminPinForSession()
+  return pin ? { type: 'pin' as const, value: pin } : null
 }
 
 function read(): StudentState {
@@ -327,9 +335,9 @@ export const store = {
     commit({ ...state, teacher: !state.teacher })
   },
 
-  unlockAdmin(pin: string) {
+  unlockAdmin(pin: string, sessionToken = '') {
     if (pin.trim() !== ADMIN_PIN) return false
-    rememberAdminPin(pin.trim())
+    rememberAdminSession(pin.trim(), sessionToken)
     commit({
       ...state,
       learnerUnlocked: true,
@@ -344,7 +352,7 @@ export const store = {
   },
 
   lockAdmin() {
-    forgetAdminPin()
+    forgetAdminSession()
     commit({ ...state, adminUnlocked: false, teacher: false })
   },
 
@@ -367,12 +375,10 @@ export const store = {
 
   async unlockLearnerOnline(pin: string) {
     const clean = pin.replace(/\D/g, '').trim()
-    if (clean === ADMIN_PIN) return this.unlockAdmin(clean)
     try {
       const result = await unlockRemotePin(clean)
-      if (result.role === 'admin') return this.unlockAdmin(clean)
+      if (result.role === 'admin') return this.unlockAdmin(clean, result.sessionToken)
       if (result.learner) {
-        upsertLocalLearner(result.learner)
         commitLearnerSession(result.learner, result.sessionToken, result.progress)
         return true
       }
@@ -383,7 +389,7 @@ export const store = {
   },
 
   lockLearner() {
-    forgetAdminPin()
+    forgetAdminSession()
     commit({
       ...state,
       learnerUnlocked: false,

@@ -528,7 +528,7 @@ function Shell() {
         </p>
         <p>
           Los logos pertenecen a sus respectivos titulares y se usan para identificar la herramienta que se enseña.
-          Tu progreso se guarda solo en este navegador.
+          Tu progreso se guarda en tu perfil y queda copia local en este navegador.
         </p>
       </footer>
     </div>

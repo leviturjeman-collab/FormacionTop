@@ -1,6 +1,9 @@
 import crypto from 'node:crypto'
 
 const LEARNERS_TABLE = 'learners'
+const WINDOW_MS = 60 * 1000
+const MAX_UNLOCK_ATTEMPTS = 12
+const unlockAttempts = new Map()
 
 export function cleanPin(value, length = 6) {
   return String(value || '').replace(/\D/g, '').slice(0, length)
@@ -17,6 +20,32 @@ export function hashPin(pin) {
 
 function sessionSecret() {
   return process.env.SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'local-dev'
+}
+
+function safeEqualString(left, right) {
+  const a = Buffer.from(String(left || ''))
+  const b = Buffer.from(String(right || ''))
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(a, b)
+}
+
+function clientIp(req) {
+  const forwarded = req.headers['x-forwarded-for']
+  return String(Array.isArray(forwarded) ? forwarded[0] : forwarded || req.socket?.remoteAddress || 'unknown')
+    .split(',')[0]
+    .trim()
+}
+
+export function checkUnlockRateLimit(req) {
+  const key = clientIp(req)
+  const now = Date.now()
+  const current = unlockAttempts.get(key)
+  if (!current || current.resetAt <= now) {
+    unlockAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS })
+    return true
+  }
+  current.count += 1
+  return current.count <= MAX_UNLOCK_ATTEMPTS
 }
 
 function base64url(value) {
@@ -93,6 +122,8 @@ export function learnerFromRow(row) {
 export function json(res, status, payload) {
   res.statusCode = status
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-store')
+  res.setHeader('X-Content-Type-Options', 'nosniff')
   res.end(JSON.stringify(payload))
 }
 
@@ -107,8 +138,11 @@ export async function readBody(req) {
 }
 
 export function ensureAdmin(req, res) {
+  const session = sessionFromRequest(req)
+  if (session?.role === 'admin') return true
+
   const provided = cleanPin(req.headers['x-admin-pin'], 4)
-  if (provided !== adminPin()) {
+  if (!safeEqualString(provided, adminPin())) {
     json(res, 401, { ok: false, error: 'Admin PIN incorrecto.' })
     return false
   }
