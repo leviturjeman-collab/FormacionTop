@@ -3,6 +3,7 @@ import { ArrowRight, ChevronDown, HelpCircle, Search } from 'lucide-react'
 import { useCourse } from '../course'
 import { href } from '../router'
 import type { FaqItem } from '../types'
+import { useLocale } from '../i18n'
 
 /**
  * Preguntas frecuentes.
@@ -19,6 +20,7 @@ function normaliza(texto: string) {
 
 function Pregunta({ item }: { item: FaqItem }) {
   const [abierta, setAbierta] = useState(false)
+  const locale = useLocale()
   return (
     <article className={abierta ? 'st-faq-item on' : 'st-faq-item'}>
       <button type="button" onClick={() => setAbierta((v) => !v)} aria-expanded={abierta}>
@@ -33,7 +35,7 @@ function Pregunta({ item }: { item: FaqItem }) {
           <p>{item.a}</p>
           {item.ruta && (
             <a href={item.ruta}>
-              Ver la lección que lo explica <ArrowRight size={12} />
+              {locale === 'en' ? 'See the lesson that explains it' : 'Ver la lección que lo explica'} <ArrowRight size={12} />
             </a>
           )}
         </div>
@@ -44,6 +46,7 @@ function Pregunta({ item }: { item: FaqItem }) {
 
 export default function Preguntas() {
   const course = useCourse()
+  const locale = useLocale()
   const grupos = course.preguntas || []
   const [busqueda, setBusqueda] = useState('')
 
@@ -71,9 +74,13 @@ export default function Preguntas() {
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Todavía no hay preguntas</h2>
+          <h2>{locale === 'en' ? 'There are no questions yet' : 'Todavía no hay preguntas'}</h2>
           <p>
-            Añade archivos .json en <code>content/preguntas/</code> y vuelve a generar el índice.
+            {locale === 'en' ? (
+              <>Add .json files in <code>content/preguntas/</code> and rebuild the index.</>
+            ) : (
+              <>Añade archivos .json en <code>content/preguntas/</code> y vuelve a generar el índice.</>
+            )}
           </p>
         </div>
       </div>
@@ -84,12 +91,17 @@ export default function Preguntas() {
     <div className="st-page">
       <div className="st-page-title">
         <span className="st-kicker">
-          <HelpCircle size={12} /> Dudas normales
+          <HelpCircle size={12} /> {locale === 'en' ? 'Common doubts' : 'Dudas normales'}
         </span>
-        <h1>Preguntas</h1>
+        <h1>{locale === 'en' ? 'Questions' : 'Preguntas'}</h1>
         <p>
-          {total} preguntas que hace todo el mundo, contestadas sin rodeos. Si la tuya no está, búscala
-          por una palabra suelta: «dinero», «gratis», «terminal», «publicar», «duplicados».
+          {locale === 'en' ? (
+            <>{total} questions everyone asks, answered straight up. If yours isn't here, search
+            for a single word: "money", "free", "terminal", "publish", "duplicates".</>
+          ) : (
+            <>{total} preguntas que hace todo el mundo, contestadas sin rodeos. Si la tuya no está, búscala
+            por una palabra suelta: «dinero», «gratis», «terminal», «publicar», «duplicados».</>
+          )}
         </p>
       </div>
 
@@ -98,12 +110,12 @@ export default function Preguntas() {
         <input
           value={busqueda}
           onChange={(event) => setBusqueda(event.target.value)}
-          placeholder="Escribe una palabra: coste, tarjeta, .txt, dominio, RGPD..."
-          aria-label="Buscar en las preguntas"
+          placeholder={locale === 'en' ? 'Type a word: cost, card, .txt, domain, GDPR...' : 'Escribe una palabra: coste, tarjeta, .txt, dominio, RGPD...'}
+          aria-label={locale === 'en' ? 'Search the questions' : 'Buscar en las preguntas'}
         />
         {busqueda && (
           <button type="button" onClick={() => setBusqueda('')}>
-            Quitar
+            {locale === 'en' ? 'Clear' : 'Quitar'}
           </button>
         )}
       </label>
@@ -111,8 +123,8 @@ export default function Preguntas() {
       {busqueda && (
         <p className="st-faq-recuento">
           {encontradas === 0
-            ? 'Ninguna pregunta con esa palabra. Prueba con una más corta.'
-            : `${encontradas} de ${total} preguntas hablan de eso.`}
+            ? (locale === 'en' ? 'No question with that word. Try a shorter one.' : 'Ninguna pregunta con esa palabra. Prueba con una más corta.')
+            : (locale === 'en' ? `${encontradas} of ${total} questions mention that.` : `${encontradas} de ${total} preguntas hablan de eso.`)}
         </p>
       )}
 
@@ -123,7 +135,7 @@ export default function Preguntas() {
               <span className="st-kicker">{grupo.titulo}</span>
               <h2>{grupo.intro}</h2>
             </div>
-            <span>{grupo.preguntas.length} preguntas</span>
+            <span>{grupo.preguntas.length} {locale === 'en' ? 'questions' : 'preguntas'}</span>
           </div>
           <div className="st-faq-lista">
             {grupo.preguntas.map((item) => (
@@ -136,14 +148,20 @@ export default function Preguntas() {
       <section className="st-faq-cierre">
         <HelpCircle size={16} />
         <div>
-          <strong>¿Y si tu duda no está aquí?</strong>
+          <strong>{locale === 'en' ? "What if your question isn't here?" : '¿Y si tu duda no está aquí?'}</strong>
           <p>
-            Casi todas las dudas se contestan solas siguiendo la lección que toca. Si te has atascado en un
-            paso concreto, vuelve a esa lección y mira el apartado «si se atasca»: está escrito para el fallo
-            típico de ese paso.
+            {locale === 'en' ? (
+              <>Almost every doubt answers itself by following the right lesson. If you're stuck on a
+              specific step, go back to that lesson and check the "if it gets stuck" section: it's written for
+              the typical failure of that step.</>
+            ) : (
+              <>Casi todas las dudas se contestan solas siguiendo la lección que toca. Si te has atascado en un
+              paso concreto, vuelve a esa lección y mira el apartado «si se atasca»: está escrito para el fallo
+              típico de ese paso.</>
+            )}
           </p>
           <a className="st-btn" href={href({ name: 'curso' })}>
-            Ir al programa <ArrowRight size={12} />
+            {locale === 'en' ? 'Go to the program' : 'Ir al programa'} <ArrowRight size={12} />
           </a>
         </div>
       </section>

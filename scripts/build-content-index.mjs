@@ -26,11 +26,21 @@ import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
 import { buildCategories, buildGlossaryIndex, categoryKeyFor, sectionFor, SECTIONS } from './lib/categories.mjs'
 import { buildInstitutionalPromptLibrary } from './lib/institutional-prompts.mjs'
+import { STAGE_EN, KIND_EN, SECTION_EN, translateFolderLabel } from './lib/i18n-taxonomy.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const projectDir = path.resolve(scriptDir, '..')
 const publicDir = path.join(projectDir, 'public')
 const generatedDir = path.join(publicDir, 'generated')
+
+/*
+ * Idioma de este build. 'es' (por defecto) escribe public/course.json desde
+ * el contenido original. 'en' escribe public/course.en.json: usa el archivo
+ * <nombre>.en.json cuando existe junto al original, y si no existe se queda
+ * con el español antes que dejar un hueco vacío en la app.
+ */
+const LOCALE = process.env.LOCALE === 'en' ? 'en' : 'es'
+const outputFile = LOCALE === 'en' ? 'course.en.json' : 'course.json'
 
 /*
  * Carpetas que no forman parte del curso: infraestructura, documentación
@@ -148,11 +158,17 @@ async function loadContent(folder) {
   const dir = path.join(projectDir, 'content', folder)
   if (!(await exists(dir))) return []
   const out = []
-  for (const name of (await fs.readdir(dir)).filter((file) => file.endsWith('.json'))) {
+  const names = (await fs.readdir(dir)).filter((file) => file.endsWith('.json') && !file.endsWith('.en.json'))
+  for (const name of names) {
+    // En build en inglés, si existe "nombre.en.json" se usa esa traducción;
+    // si no existe todavía, se sirve el español antes que dejar un hueco.
+    const target = LOCALE === 'en' && (await exists(path.join(dir, name.replace(/\.json$/, '.en.json'))))
+      ? name.replace(/\.json$/, '.en.json')
+      : name
     try {
-      out.push(JSON.parse(await fs.readFile(path.join(dir, name), 'utf8')))
+      out.push(JSON.parse(await fs.readFile(path.join(dir, target), 'utf8')))
     } catch (error) {
-      console.warn(`  aviso: ${folder}/${name} no es JSON válido (${error.message}). Se ignora.`)
+      console.warn(`  aviso: ${folder}/${target} no es JSON válido (${error.message}). Se ignora.`)
     }
   }
   return out
@@ -656,10 +672,22 @@ const folders = [...new Set(lessons.map((lesson) => lesson.folder))]
   .map((folder) => ({
     id: slugify(folder),
     folder,
-    label: folderLabel(folder),
+    label: LOCALE === 'en' ? translateFolderLabel(folderLabel(folder)) : folderLabel(folder),
     count: lessons.filter((lesson) => lesson.folder === folder).length,
     lessonSlugs: lessons.filter((lesson) => lesson.folder === folder).map((lesson) => lesson.slug),
   }))
+
+/* --- Traducción de la taxonomía fija (solo texto de código) --------- */
+
+const localizedStages = LOCALE === 'en'
+  ? stages.map((stage) => ({ ...stage, ...(STAGE_EN[stage.id] || {}) }))
+  : stages
+const localizedKinds = LOCALE === 'en'
+  ? Object.fromEntries(Object.entries(KINDS).map(([id, value]) => [id, { ...value, ...(KIND_EN[id] || {}) }]))
+  : KINDS
+const localizedSections = SECTIONS.map(({ id, label, hint }) =>
+  LOCALE === 'en' && SECTION_EN[id] ? { id, ...SECTION_EN[id] } : { id, label, hint },
+)
 
 /* --- Workflows importables ----------------------------------------- */
 
@@ -679,8 +707,9 @@ const course = {
   generatedAt: new Date().toISOString(),
   vaultName: path.basename(vaultDir),
   levels: LEVELS.map((id) => ({ id, ...LEVEL_META[id] })),
-  kinds: KINDS,
-  sections: SECTIONS.map(({ id, label, hint }) => ({ id, label, hint })),
+  locale: LOCALE,
+  kinds: localizedKinds,
+  sections: localizedSections,
   tools: TOOLS.map(({ id, label, icon }) => ({ id, label, icon })),
   stats: {
     lessons: lessons.filter((lesson) => lesson.format === 'leccion').length,
@@ -707,7 +736,7 @@ const course = {
     ),
     interactivePieces: lessons.reduce((sum, lesson) => sum + lesson.interactive.length, 0),
   },
-  stages,
+  stages: localizedStages,
   categories,
   projects: areaProjects,
   decks: deckFiles,
@@ -723,7 +752,7 @@ const course = {
   lessons,
 }
 
-await fs.writeFile(path.join(publicDir, 'course.json'), JSON.stringify(course), 'utf8')
+await fs.writeFile(path.join(publicDir, outputFile), JSON.stringify(course), 'utf8')
 
 console.log(
   `Curso generado: ${lessons.length} lecciones x 3 niveles en ${categories.length} categorias.

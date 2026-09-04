@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Ban, Check, CheckCircle2, Circle, Clock, Copy, H
 import type { Guide } from '../types'
 import { useCourse } from '../course'
 import { href } from '../router'
+import { useLocale } from '../i18n'
 
 /**
  * Guía fundamental.
@@ -13,6 +14,7 @@ import { href } from '../router'
  */
 function TaskPrompt({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
+  const locale = useLocale()
   return (
     <div className="st-task-prompt">
       <button
@@ -28,7 +30,7 @@ function TaskPrompt({ text }: { text: string }) {
         }}
       >
         {copied ? <Check size={12} /> : <Copy size={12} />}
-        {copied ? 'Copiado' : 'Copiar y pegarlo en la IA'}
+        {copied ? (locale === 'en' ? 'Copied' : 'Copiado') : (locale === 'en' ? 'Copy and paste it into the AI' : 'Copiar y pegarlo en la IA')}
       </button>
       <pre>{text}</pre>
     </div>
@@ -37,6 +39,7 @@ function TaskPrompt({ text }: { text: string }) {
 
 export default function Guia({ guideId }: { guideId?: string }) {
   const course = useCourse()
+  const locale = useLocale()
   const guias = course.guides || []
   const [done, setDone] = useState<number[]>([])
 
@@ -48,8 +51,8 @@ export default function Guia({ guideId }: { guideId?: string }) {
       return (
         <div className="st-page">
           <div className="st-empty">
-            <h2>Las guías se están escribiendo</h2>
-            <p>Vuelve en un momento.</p>
+            <h2>{locale === 'en' ? 'The guides are being written' : 'Las guías se están escribiendo'}</h2>
+            <p>{locale === 'en' ? 'Check back in a moment.' : 'Vuelve en un momento.'}</p>
           </div>
         </div>
       )
@@ -57,11 +60,12 @@ export default function Guia({ guideId }: { guideId?: string }) {
     return (
       <div className="st-page">
         <div className="st-page-title">
-          <span className="st-kicker">Empieza por aquí</span>
-          <h1>Guías fundamentales</h1>
+          <span className="st-kicker">{locale === 'en' ? 'Start here' : 'Empieza por aquí'}</span>
+          <h1>{locale === 'en' ? 'Fundamental guides' : 'Guías fundamentales'}</h1>
           <p>
-            Lo que hay que entender antes de nada, explicado desde cero y sin dar por sabido nada.
-            Cada guía termina con tareas concretas que haces tú.
+            {locale === 'en'
+              ? 'What you need to understand before anything else, explained from scratch with nothing taken for granted. Each guide ends with concrete tasks you do yourself.'
+              : 'Lo que hay que entender antes de nada, explicado desde cero y sin dar por sabido nada. Cada guía termina con tareas concretas que haces tú.'}
           </p>
         </div>
         <div className="st-cat-grid">
@@ -69,7 +73,7 @@ export default function Guia({ guideId }: { guideId?: string }) {
             <a key={item.id} className="st-cat-card" href={href({ name: 'guia', guideId: item.id })}>
               <small>{item.kicker}</small>
               <strong>{item.title}</strong>
-              <span>{item.tasks.length} tareas · {item.minutes} min</span>
+              <span>{item.tasks.length} {locale === 'en' ? 'tasks' : 'tareas'} · {item.minutes} min</span>
             </a>
           ))}
         </div>
@@ -94,9 +98,9 @@ export default function Guia({ guideId }: { guideId?: string }) {
         <p className="st-lesson-hook">{guia.intro}</p>
         <div className="st-lesson-meta">
           <span><Clock size={11} /> {guia.minutes} min</span>
-          <span>{guia.tasks.length} tareas</span>
-          {puesto >= 0 && <span>Guía {puesto + 1} de {todas.length}</span>}
-          <a className="st-volver" href={href({ name: 'guia' })}><List size={11} /> Todas las guías</a>
+          <span>{guia.tasks.length} {locale === 'en' ? 'tasks' : 'tareas'}</span>
+          {puesto >= 0 && <span>{locale === 'en' ? `Guide ${puesto + 1} of ${todas.length}` : `Guía ${puesto + 1} de ${todas.length}`}</span>}
+          <a className="st-volver" href={href({ name: 'guia' })}><List size={11} /> {locale === 'en' ? 'All guides' : 'Todas las guías'}</a>
         </div>
       </header>
 
@@ -105,7 +109,7 @@ export default function Guia({ guideId }: { guideId?: string }) {
           <details key={index} className="st-block st-block-seccion" open={index === 0}>
             <summary>
               <span><Lightbulb size={15} /><strong>{part.title}</strong></span>
-              <span className="st-block-summary-meta"><i>Abrir</i></span>
+              <span className="st-block-summary-meta"><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
             </summary>
             <div className="st-block-body">
               <p className="st-part-text">{part.text}</p>
@@ -120,8 +124,8 @@ export default function Guia({ guideId }: { guideId?: string }) {
       {guia.words?.length > 0 && (
         <details className="st-block st-block-palabras">
           <summary>
-            <span><Languages size={15} /><strong>Las palabras que vas a leer, en cristiano</strong></span>
-            <span className="st-block-summary-meta"><b>{guia.words.length}</b><i>Abrir</i></span>
+            <span><Languages size={15} /><strong>{locale === 'en' ? 'The words you\'ll come across, in plain terms' : 'Las palabras que vas a leer, en cristiano'}</strong></span>
+            <span className="st-block-summary-meta"><b>{guia.words.length}</b><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
           </summary>
           <div className="st-block-body">
             <dl className="st-words">
@@ -136,11 +140,11 @@ export default function Guia({ guideId }: { guideId?: string }) {
       <section className="st-tasks">
         <div className="st-tasks-head">
           <div>
-            <span className="st-kicker">Tu turno</span>
-            <h2>Hazlo paso a paso</h2>
+            <span className="st-kicker">{locale === 'en' ? 'Your turn' : 'Tu turno'}</span>
+            <h2>{locale === 'en' ? 'Do it step by step' : 'Hazlo paso a paso'}</h2>
           </div>
           <span className="st-piece-badge" data-full={percent === 100 ? 'true' : undefined}>
-            {done.length}/{guia.tasks.length} tareas
+            {done.length}/{guia.tasks.length} {locale === 'en' ? 'tasks' : 'tareas'}
           </span>
         </div>
         <div className="st-checkbar"><span style={{ width: `${percent}%` }} /></div>
@@ -168,15 +172,15 @@ export default function Guia({ guideId }: { guideId?: string }) {
                 </div>
 
                 <details className="st-task-detail" open={index === 0 || hecha}>
-                  <summary>Ver instrucciones, prompt y evidencia</summary>
+                  <summary>{locale === 'en' ? 'View instructions, prompt and evidence' : 'Ver instrucciones, prompt y evidencia'}</summary>
                   <div>
                     <p className="st-task-action">{task.action}</p>
                     {task.prompt && <TaskPrompt text={task.prompt} />}
-                    <p className="st-task-expected"><b>Tienes que ver:</b> {task.expect}</p>
+                    <p className="st-task-expected"><b>{locale === 'en' ? 'You should see:' : 'Tienes que ver:'}</b> {task.expect}</p>
                     {task.stuck && (
                       <p className="st-task-stuck">
                         <HelpCircle size={12} />
-                        <span><b>Si no te sale:</b> {task.stuck}</span>
+                        <span><b>{locale === 'en' ? "If it doesn't work:" : 'Si no te sale:'}</b> {task.stuck}</span>
                       </p>
                     )}
                   </div>
@@ -189,17 +193,17 @@ export default function Guia({ guideId }: { guideId?: string }) {
 
       <details className="st-block st-block-importa">
         <summary>
-          <span><Check size={15} /><strong>Atajos y cosas que importan</strong></span>
-          <span className="st-block-summary-meta"><b>{guia.canDo.length + guia.cantDo.length}</b><i>Abrir</i></span>
+          <span><Check size={15} /><strong>{locale === 'en' ? 'Shortcuts and things that matter' : 'Atajos y cosas que importan'}</strong></span>
+          <span className="st-block-summary-meta"><b>{guia.canDo.length + guia.cantDo.length}</b><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
         </summary>
         <div className="st-block-body">
           <div className="st-matters">
             <div className="st-matters-yes">
-              <strong><Check size={11} /> Esto sí puedes hacerlo</strong>
+              <strong><Check size={11} /> {locale === 'en' ? 'This you can do' : 'Esto sí puedes hacerlo'}</strong>
               <ul>{guia.canDo.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
             <div className="st-matters-no">
-              <strong><Ban size={11} /> Esto todavía no</strong>
+              <strong><Ban size={11} /> {locale === 'en' ? 'Not yet' : 'Esto todavía no'}</strong>
               <ul>{guia.cantDo.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
           </div>
@@ -210,12 +214,12 @@ export default function Guia({ guideId }: { guideId?: string }) {
         {anterior ? (
           <a href={href({ name: 'guia', guideId: anterior.id })}>
             <ArrowLeft size={14} />
-            <span><em>Anterior</em><b>{anterior.title}</b></span>
+            <span><em>{locale === 'en' ? 'Previous' : 'Anterior'}</em><b>{anterior.title}</b></span>
           </a>
         ) : <span />}
         {siguiente && (
           <a className="next" href={href({ name: 'guia', guideId: siguiente.id })}>
-            <span><em>Siguiente</em><b>{siguiente.title}</b></span>
+            <span><em>{locale === 'en' ? 'Next' : 'Siguiente'}</em><b>{siguiente.title}</b></span>
             <ArrowRight size={14} />
           </a>
         )}

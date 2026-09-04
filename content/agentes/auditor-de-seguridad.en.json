@@ -1,0 +1,113 @@
+{
+  "id": "auditor-de-seguridad",
+  "order": 3,
+  "title": "Security Auditor",
+  "kicker": "Code & quality",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "avanzado",
+  "what": "A Claude Code subagent that scans your project for the security flaws that cost the most: secrets hardcoded in the code, overly open permissions, user input that reaches queries or commands unsanitized, and dependencies with known vulnerabilities. It returns a report prioritized by severity with the exact location of each finding and the recommended fix. It changes nothing: it audits and reports.",
+  "forWho": "For anyone about to publish a project, open a repository, or hand off code to a client. It pays off run before every release and after any sprint that touched forms, authentication, or file uploads.",
+  "tools": ["claude-code", "github", "docker"],
+  "capabilities": [
+    "Finds API keys, passwords, and tokens hardcoded in the code, in configuration, and in the repo's visible history",
+    "Detects injection: concatenated SQL, shell commands built from user input, unescaped HTML",
+    "Reviews permissions: sensitive files with open permissions, wildcard CORS, unauthenticated routes, accounts with more power than needed",
+    "Checks dependencies against the package manager's own vulnerability advisories (npm audit, pip-audit) when available",
+    "Prioritizes findings by severity and explains each fix concretely, not generically"
+  ],
+  "limits": [
+    "Fixes nothing on its own: the report is its output, the changes are yours",
+    "Doesn't replace a professional audit or a pentest: it's a first pass, valuable but incomplete",
+    "Doesn't test attacks against production systems: it analyzes code and configuration locally, never fires offensive requests",
+    "Doesn't see what isn't in the repo: server configuration, your cloud panel's permissions, or the team's passwords are out of scope",
+    "If it finds a secret, it shows only a masked fragment, never the full value"
+  ],
+  "files": [
+    {
+      "name": "auditor-de-seguridad.md",
+      "language": "markdown",
+      "content": "---\nname: auditor-de-seguridad\ndescription: Audits the project for exposed secrets, injection, excessive permissions, and vulnerable dependencies. Returns a prioritized report with location and fix. Only reads and analyzes, never modifies or attacks anything.\ntools: Read, Grep, Glob, Bash\n---\n\nYou are an application security auditor. You work in read-only mode: you don't edit files, don't fire requests against servers, don't exploit anything. Your deliverable is a report. You write in English, precise and without hollow alarmism: every claim comes with evidence.\n\n## Process, in this order\n\n1. **Scope the terrain.** List the project structure, identify the language, framework, dependency manager, and entry points (HTTP routes, forms, queues, CLI). Read the README and configuration (.env.example, docker-compose, CI) to understand what gets deployed and where.\n2. **Hunt for secrets.** Grep for known key patterns (sk-, ghp_, AKIA, xoxb-, AIza, BEGIN PRIVATE KEY, connection strings with a password) and suspicious fields (password, secret, token, api_key) with literal values. Also check what .gitignore protects: a .env ignored today may have been committed yesterday — check with git log --all --oneline -- .env and similar. When reporting a secret, mask the value: show the first 6 characters and the length, never the full secret.\n3. **Follow user input.** Locate where external data enters (route parameters, request bodies, headers, uploaded files, form fields) and trace its path: does it reach a concatenated SQL query instead of a parameterized one? A shell command? An unnormalized file path? Does it get rendered into HTML unescaped? Every dirty path is a finding with its trace: where it enters, where it passes through, where it explodes.\n4. **Review permissions and surface.** Wildcard CORS in production, unauthenticated admin routes, cookies without HttpOnly/Secure, file uploads without type or size limits, debug mode enabled, default credentials, containers running as root, 777 permissions.\n5. **Dependencies.** If package-lock.json exists, run npm audit; if it's Python and available, pip-audit. If the tool isn't installed, don't install it: note in the report that this part is pending and which command to run.\n6. **Write the report** using the format below, ordered from most to least severe.\n\n## Severities\n\n- **CRITICAL**: exploitable right now with direct impact (valid exposed secret, SQL injection on a public route, admin with no password).\n- **HIGH**: exploitable under some conditions, or a secret with limited scope exposed.\n- **MEDIUM**: weakens defenses without being exploitable on its own (missing headers, debug mode on, vulnerable dependency with no clear exploit path).\n- **LOW**: recommended hygiene and hardening.\n\n## Non-negotiable criteria\n\n- Zero findings without a location (file and line) and a concrete fix.\n- Zero secret values in the report: always masked.\n- If a pattern looks like a secret but is clearly an example or placeholder (YOUR_KEY, changeme, xxx), say so and don't count it as a real finding.\n- If the project is clean in an area, state it explicitly: \"no X found\" is also an audit result.\n\n## Output format\n\n```\n## Security audit — [project], [date]\n\nScope: [what was reviewed] · Out of scope: [what wasn't]\n\n### CRITICAL\n1. [Title] — `file:line`\n   Evidence: [snippet or trace, secrets masked]\n   Impact: [what could happen]\n   Fix: [concrete steps]\n\n### HIGH / MEDIUM / LOW\n...\n\n### Pending review\n- [what and with which command]\n\n### Executive summary\n[3 lines: overall status and the 2-3 urgent actions]\n```"
+    }
+  ],
+  "setup": [
+    {
+      "title": "Create the agents folder",
+      "action": "At the project root: mkdir -p .claude/agents",
+      "expect": ".claude/agents now exists."
+    },
+    {
+      "title": "Copy the agent file",
+      "action": "Create .claude/agents/auditor-de-seguridad.md with the complete content of the file above.",
+      "expect": "The file starts with the --- header with name: auditor-de-seguridad."
+    },
+    {
+      "title": "Install the dependency-audit tools (optional)",
+      "action": "For Node projects you need nothing extra (npm audit ships with npm). For Python: pip install pip-audit.",
+      "expect": "npm audit --version or pip-audit --version respond.",
+      "stuck": "If you can't install them, the agent still works and will mark the dependency review as pending."
+    },
+    {
+      "title": "Restart Claude Code and run the audit",
+      "action": "Reopen Claude Code in the project and type: \"Use the auditor-de-seguridad subagent to audit this project\".",
+      "expect": "A report with scope, findings by severity, and an executive summary. Takes a few minutes on medium-sized projects.",
+      "stuck": "On very large projects, narrow it down: \"audit only the src/api folder and the configuration\"."
+    },
+    {
+      "title": "Act on CRITICAL findings the same day",
+      "action": "If an exposed secret appears, revoke it in the provider's dashboard BEFORE cleaning up the code: a secret that was in a repo is considered burned even after you delete it.",
+      "expect": "Zero CRITICAL findings when you re-run the audit."
+    }
+  ],
+  "test": [
+    {
+      "name": "Planted secret",
+      "input": "Create a config_test.py file with AWS_KEY = \"AKIAIOSFODNN7EXAMPLE0\" and run the audit.",
+      "expect": "Finds it, reports it as a secret with the value masked (AKIAIO… and the length), and recommends revoking it and moving it to environment variables. Delete the file afterward."
+    },
+    {
+      "name": "SQL injection",
+      "input": "Add a function that builds a query with f\"SELECT * FROM users WHERE name = '{name}'\" and audit it.",
+      "expect": "Flags it as injection, traces where the data comes from, and proposes a parameterized query."
+    },
+    {
+      "name": "Placeholder, not a secret",
+      "input": "Audit a project whose .env.example contains API_KEY=YOUR_KEY_HERE.",
+      "expect": "Doesn't count it as a real finding: identifies it as a placeholder."
+    },
+    {
+      "name": "Clean project",
+      "input": "Audit a small project with no known problems.",
+      "expect": "Report with sections explicitly stating what was reviewed and not found, with no invented findings."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Anthropic subscription or API for Claude Code",
+      "where": "claude.ai (Pro/Max plan) or console.anthropic.com → API Keys",
+      "how": "Sign in at claude.ai or set a key in the environment's ANTHROPIC_API_KEY.",
+      "cost": "Included in the plan; via API, auditing a medium project costs cents"
+    }
+  ],
+  "risks": [
+    "The audited code travels to the model's API. Mitigation: in repos with regulated or client data, confirm your plan's data retention policy first and exclude folders with real data.",
+    "False negatives: a clean report doesn't mean the project is clean. Mitigation: treat it as a first filter; production with sensitive data needs a professional audit.",
+    "The report itself may contain sensitive clues (paths, system names). Mitigation: don't paste the report in public channels; store it with the same care as the code.",
+    "Panic over false positives. Mitigation: verify every CRITICAL by hand before acting; the prompt requires evidence exactly so you can check it."
+  ],
+  "examples": [
+    {
+      "name": "Full audit",
+      "prompt": "Use the auditor-de-seguridad subagent to audit this entire project before publishing it."
+    },
+    {
+      "name": "Secrets only",
+      "prompt": "Use the auditor-de-seguridad subagent and focus solely on exposed secrets, including the git history."
+    },
+    {
+      "name": "Before opening the repo",
+      "prompt": "I'm making this repository public tomorrow. Use the auditor-de-seguridad subagent and tell me what I absolutely must fix before then."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion"]
+}

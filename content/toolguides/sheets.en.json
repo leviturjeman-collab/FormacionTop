@@ -1,0 +1,293 @@
+{
+  "id": "sheets",
+  "tool": "googlesheets",
+  "plain": "This is Google's spreadsheet tool: a table that opens in the browser and saves itself. For automated processes we use it like an office filing cabinet: each row is a record and each column is one piece of data on that record. A program can add rows there without you having anything open, and you can view them from your phone a minute later. It's where you store data while you don't yet need something more serious.",
+  "account": {
+    "url": "sheets.google.com",
+    "free": "Free with a regular Gmail account: unlimited spreadsheets within the 15 GB you share with your email and Drive. Connecting it to an automated process is also free, Google doesn't charge per call. If you want email with your own domain, Google Workspace costs about €7 per person per month, but you don't need that for this course.",
+    "steps": [
+      [
+        "Create the spreadsheet",
+        "Type sheets.new in your browser bar and hit Enter. An empty spreadsheet appears instantly. Name it in the top left, where it says \"Untitled spreadsheet\". If you don't, you'll have fifteen identical ones within a month."
+      ],
+      [
+        "Write the headers in row 1",
+        "One word per column: date, email, amount, status. No accents and no spaces will save you trouble later. That first row is what the automated process reads to know where each piece of data goes, so don't move it afterward."
+      ],
+      [
+        "Create a project at console.cloud.google.com",
+        "This is Google's control panel for people connecting programs. Top left there's a dropdown with the project name: click it and choose \"New project\". Give it a name like automations. It takes a few seconds to create."
+      ],
+      [
+        "Enable the two entry points",
+        "In the search bar at the top type \"Google Sheets API\" and click \"Enable\". Repeat with \"Google Drive API\", which is needed so it can find and list your spreadsheets. Skip this and everything else fails."
+      ],
+      [
+        "Create the service account",
+        "Side menu → \"IAM & Admin\" → \"Service Accounts\" → \"Create Service Account\". Give it a name, e.g. n8n-bot. When it's done you'll see a strange-looking email: n8n-bot@automations-471203.iam.gserviceaccount.com. Copy it, you'll need it in the last step."
+      ],
+      [
+        "Download the key",
+        "Open that account → \"Keys\" tab → \"Add key\" → \"Create new key\" → JSON format. A file downloads to your Downloads folder. It downloads ONCE only: there's no way to download it again, if you lose it you'll have to create another key."
+      ],
+      [
+        "Share the spreadsheet with that email",
+        "Go back to the spreadsheet, blue \"Share\" button top right, paste the service account's email, and give it \"Editor\" permission. Uncheck \"Notify people\": it's not a person, nobody's reading it. Skip this step and the connection always fails, and the error won't tell you that's the reason."
+      ]
+    ],
+    "warning": "The file you download is that service account's password, written in plain text you can read by opening it with Notepad. Whoever has it can write to your spreadsheets without asking your permission. Don't upload it to GitHub, don't email it, don't leave it sitting in Downloads: paste its content into n8n and delete the file. If it leaks, go into Google Cloud and delete that key from the \"Keys\" tab; deleting the file from your disk doesn't revoke it."
+  },
+  "first": [
+    "Copy the spreadsheet's identifier: the long chunk of letters and numbers in the web address, between /d/ and /edit. That's the real name the automated process uses to find it.",
+    "In n8n click the \"+\", search for \"Google Sheets\" and add the node.",
+    "In \"Credential to connect with\" choose \"Service Account\", paste the service account's email and the entire content of the downloaded file into \"Private Key\". Paste it as-is, line breaks included.",
+    "Choose the \"Append Row\" operation, select your spreadsheet and the tab, and click \"Test step\". If a new row appears in the spreadsheet, it's connected.",
+    "Switch it to \"Append or Update Row\" and set the email column as \"Column to match on\": that way it updates the record if that email is already there, instead of duplicating it."
+  ],
+  "words": [
+    [
+      "API",
+      "The door through which one program enters another without a person clicking anything. Google Sheets has its own, and it has to be opened by hand once."
+    ],
+    [
+      "Service account",
+      "A user that isn't a person: it has no password and doesn't log in through the normal sign-in screen. It exists so a program can act on its own behalf. It has its own email, and the spreadsheet has to be shared with it just like you'd share it with a coworker."
+    ],
+    [
+      "JSON key",
+      "The file you download when you create that account. It's its password, saved as text organized in name-and-value pairs that anyone can read if they open it."
+    ],
+    [
+      "Spreadsheet ID",
+      "The long chunk of letters and numbers in the web address, between /d/ and /edit. It's that spreadsheet's license plate: two spreadsheets with the same name have different plates."
+    ],
+    [
+      "Range",
+      "The way of saying \"from this cell to that one\". A1:D50 is the first four columns of the first fifty rows."
+    ],
+    [
+      "Append",
+      "Add to the end. Writes a new row below the last existing one, without touching anything already there."
+    ],
+    [
+      "Quota",
+      "The number of times you can knock on the door per minute. Google allows about 60 per minute per user. Exceed it and it stops answering for a while, returning a \"too many requests\" notice."
+    ],
+    [
+      "Polling",
+      "Asking every so often \"has anything changed?\" instead of being notified when it happens. It's what n8n does with spreadsheets: it checks at least once a minute, it doesn't find out instantly."
+    ]
+  ],
+  "matters": [
+    "Sharing the spreadsheet with the service account's email. It's the step everyone skips, and the error that shows up (403, \"you don't have permission\") mentions neither the spreadsheet nor the email, so you spend half an afternoon reviewing the credential, which was fine all along.",
+    "Writing in bulk, not row by row. With about 60 requests a minute, a loop that inserts 500 rows one at a time cuts off halfway and leaves your spreadsheet incomplete, with no idea where it stopped.",
+    "The \"Delete Row\" and \"Clear\" operations really delete and don't ask twice. A spreadsheet has no row recycle bin: the only thing you have left is \"File → Version history\", which restores the whole spreadsheet as it was some time ago and wipes out anything good that's come in since.",
+    "Two processes writing at the same time step on each other. A spreadsheet doesn't know how to queue: if two workflows add a row in the same second, one can overwrite the other and you won't notice. If that can never happen in your case, it's no longer a spreadsheet job, it's a real database job."
+  ],
+  "ignore": [
+    "Fancy formulas, colors, and conditional formatting. If an automated process fills the spreadsheet, it's not a report someone is going to study carefully.",
+    "Google Apps Script. It's another way to automate, by writing code inside the spreadsheet itself, and you don't need it while you're building your workflows externally.",
+    "Google Cloud's fine-grained roles and permissions. To write to a spreadsheet you've shared with the service account, you don't need to give it any role: the file's \"Share\" button is enough."
+  ],
+  "questions": [
+    {
+      "prompt": "You've built the workflow, saved the credential without complaints, and clicking \"Test step\" shows: The caller does not have permission (403). What's missing?",
+      "options": [
+        {
+          "text": "Sharing the spreadsheet with the service account's email, with Editor permission",
+          "correct": true,
+          "why": "Correct. The credential only proves who you are; it doesn't grant access to anything. To Google that email is just another user, and a spreadsheet nobody has shared with it doesn't exist as far as it's concerned. The nuance matters: with Reader permission it could read, but writing would fail again."
+        },
+        {
+          "text": "Re-download the key, it must have expired",
+          "correct": false,
+          "why": "It's the first thing everyone thinks, because the error sounds like a credential issue. But service account keys don't expire on their own, and if the key were wrong the error would be an identity one (401), not a permission one (403). That number is the clue."
+        },
+        {
+          "text": "Set the spreadsheet to \"anyone with the link\"",
+          "correct": false,
+          "why": "It seems plausible because sometimes it looks like it works: in read mode, the public link lets you through. It breaks in two places. One, the public link in read-only mode doesn't allow writing, which is exactly what your workflow does. Two, if you switch it to edit mode to fix it, you've just left your data wide open to anyone on the internet."
+        }
+      ],
+      "explain": "A credential says who you are. A permission says what you can touch. They're two different things and both need doing."
+    },
+    {
+      "prompt": "You have 800 contacts and build a loop that adds each one as a row. Around row 60 the workflow stops with \"Quota exceeded\". What do you do?",
+      "options": [
+        {
+          "text": "Send all 800 rows in a single append operation, instead of 800 separate calls",
+          "correct": true,
+          "why": "Right. The Google Sheets node accepts all the rows at once: one request instead of eight hundred. The limit is counted in requests, not rows, so the problem doesn't just get delayed, it disappears."
+        },
+        {
+          "text": "Add a one-second wait between rows",
+          "correct": false,
+          "why": "It sounds reasonable because it would in fact eventually finish, and that's why a lot of people stop there. But you spend thirteen minutes on something that takes two seconds, and during those thirteen minutes any other workflow of yours that touches Sheets shares the same quota and falls over too."
+        },
+        {
+          "text": "Ask Google to raise your limit",
+          "correct": false,
+          "why": "You can request it, and for genuinely large volumes that's the right move, which is why it's not a silly idea. It just doesn't fit here: you'd be asking for permission to do eight hundred times something that's done once. Google will ask why you need it, and you won't have an answer."
+        }
+      ],
+      "explain": "The limit counts how many times you knock on the door, not how much you're carrying. Knock once with a lot, not a thousand times with a little."
+    }
+  ],
+  "shortcuts": [
+    [
+      "The spreadsheet identifier, in the browser address",
+      "Open your spreadsheet and look at the top bar: docs.google.com/spreadsheets/d/1AbC...XyZ/edit. That long chunk between /d/ and /edit is the identifier, and it's what any automation will ask you for. Copy it carefully: one character short and the error you get won't say 'you're missing a letter', it'll say 'not found'."
+    ],
+    [
+      "The exact tab name, at the bottom",
+      "Automations don't look for 'the first tab': they look for a tab with a specific name. If yours is called 'Sheet 1' with a space and the automation looks for 'Sheet1', it fails. Rename it to something short, lowercase, with no spaces or accents (e.g. orders) and use that name everywhere."
+    ],
+    [
+      "Ctrl+Shift+V — paste without formatting",
+      "Pastes just the text, no colors, fonts, or formulas from wherever it came from. When you paste data straight from a website you drag in invisible junk that later breaks searches. This shortcut should be the default."
+    ],
+    [
+      "Frozen row 1: 'View' → 'Freeze' → '1 row'",
+      "Pins the headers at the top so they don't scroll away as you go down. It also lets many automations assume row 1 is the column names: keeping it frozen is also a signal to you that this row isn't to be touched."
+    ],
+    [
+      "Ctrl+Shift+Down arrow — see where your data actually ends",
+      "Takes you to the last row with content. Useful for finding the most common problem in automated spreadsheets: rows with a stray blank space written way down below, and to the computer that spreadsheet has 4,000 rows even though you only see 30."
+    ],
+    [
+      "Format → Number → Plain text, for phone numbers and codes",
+      "Google converts anything that looks like a number to it. A phone number starting with 0 loses the zero, a code like 1-2 turns into a date. Select those columns and mark them as text BEFORE data goes in, not after."
+    ],
+    [
+      "'Share' button (top right)",
+      "Where you grant the automation access. Creating the service account isn't enough: you have to share the spreadsheet with its email (the one ending in .iam.gserviceaccount.com) and give it 'Editor' permission. If you only give it 'Viewer', it'll be able to read but not write, and the error you see won't make that clear."
+    ],
+    [
+      "'File' → 'Version history' → 'See version history'",
+      "The real undo, with names and times. When an automation fills your spreadsheet with junk at three in the morning, this is where you restore the earlier state in two clicks. Look at it once now, calmly, so you know where it is the day you need it."
+    ],
+    [
+      "'Data' → 'Data validation'",
+      "Forces a column to accept only certain values (e.g.: new, in_progress, closed). It's the cheap way to stop someone typing 'New', 'NEW', and 'new ' and then having your filters not match."
+    ],
+    [
+      "'Extensions' → 'Apps Script'",
+      "Where Google lets you write code inside the spreadsheet. You don't need it to get started, and we mention it for the opposite reason: if a tutorial tells you to paste code here that you don't understand, don't. That code can read and send everything in your Drive."
+    ]
+  ],
+  "daily": [
+    "A row is a record and a column is a piece of data. As soon as a spreadsheet has headers in two places, summary rows in the middle, or merged cells, it stops being useful for automation. To view it yourself, dress up a separate spreadsheet; the one the bot uses stays ugly and tidy.",
+    "Row 1 headers in lowercase, no spaces or accents. Write date, name, email, amount, status. That's how the data will be named inside the automation, and every accent or space you put there is a failure waiting for you down the line.",
+    "Never reorder or rename columns in a spreadsheet that's already automated. The automation looks up the column by name or by position. If you insert one in the middle, everything gets shuffled without an error: it simply starts writing the amount where the email should go.",
+    "Add rows at the end, never insert in the middle. Automations write to the first free row. If you insert rows above, data gets overwritten. Leave sorting for a view or for a separate read-only sheet.",
+    "Share the spreadsheet with the service account's email and give it Editor permission. It's the step forgotten 90% of the time. The symptom is a 'not found' or 'no permission' error even though the spreadsheet is right there.",
+    "A spreadsheet is not a database. It handles a few thousand rows fine; past that it drags, and with several automations writing at once they step on each other. When you get there, it's time to move the data to Supabase or Postgres, and that's a good sign: it means the thing is working.",
+    "Before touching anything, look at the version history. It's your safety net. And before letting a write automation loose, make a copy of the spreadsheet ('File → Make a copy') and test it against the copy."
+  ],
+  "templates": [
+    {
+      "name": "The record sheet that can handle any automation",
+      "what": "This is the minimum structure of a spreadsheet meant to be written by a bot and read by a person: an identifier, a date, the data, the status, and a notes column where the bot logs what it did. Works for leads, orders, incidents, invoices, or anything that comes in from outside and needs handling.",
+      "how": "1) Create a new spreadsheet at sheets.google.com. 2) Rename the bottom tab to 'log'. 3) Paste the first row below into cell A1 (with Ctrl+Shift+V, unformatted). 4) Freeze row 1 from 'View' → 'Freeze'. 5) Mark the phone column as 'Plain text'. 6) Share the spreadsheet with your service account's email, with Editor permission. 7) Copy the identifier from the address bar and save it: it's what the automation will ask you for.",
+      "fill": [
+        [
+          "id",
+          "A number that never repeats. The automation sets it, not you. It's used to know if a row has already been processed"
+        ],
+        [
+          "created_date",
+          "When it came in. YYYY-MM-DD format so it sorts correctly regardless of whether the sheet is set to Spanish or English"
+        ],
+        [
+          "status",
+          "Only three possible values: new, in_progress, closed. Add data validation so nobody makes up another one"
+        ],
+        [
+          "processed_at",
+          "The timestamp the bot leaves once it has done its job on that row. If it's blank, it hasn't been touched"
+        ],
+        [
+          "bot_note",
+          "Whatever the automation wants to tell you: what it did, or why it couldn't. This is where you look when something seems off"
+        ]
+      ],
+      "code": "# ── Row 1 of the tab named  log  ─────────────────────────\n# Paste this into A1. No accents, no spaces, everything lowercase.\n\nid\tcreated_date\tname\temail\tphone\tsource\tstatus\tprocessed_at\tbot_note\n\n# ── Example of two filled-in rows ────────────────────────\n\n1\t2026-08-25\tMarta Ruiz\tmarta@example.com\t600111222\tweb_form\tnew\t\t\n2\t2026-08-25\tLuis Prat\tluis@example.com\t600333444\temail\tclosed\t2026-08-25 10:14\tReply sent\n\n# ── House rules ───────────────────────────────────────────\n# 1. Row 1 is never touched.\n# 2. No columns inserted in the middle: they're added to the right.\n# 3. The phone column is set to Plain text.\n# 4. No merged cells, no total rows, and no colors meant to\n#    convey meaning: the bot doesn't see colors."
+    },
+    {
+      "name": "The three formulas that solve 90% of what you'll need",
+      "what": "You don't need to know formulas to automate, but these three save you from building extra steps in n8n or Zapier: counting how many records are in each status, looking up a value from another sheet, and cleaning up text coming in from outside with extra spaces. Write them once and they stay.",
+      "how": "1) Open a new tab and call it 'summary'; leave the data tab clean. 2) Paste these formulas, swapping 'log' for the name of your data tab. 3) Watch the separator: if your spreadsheet is in Spanish, it may need semicolons instead of commas. If you get an error, swap all commas for semicolons. 4) If a formula returns #N/A, it's not broken: it just found nothing.",
+      "fill": [
+        [
+          "COUNTIF",
+          "Counts how many rows have a specific value. For the 'how many are pending' dashboard"
+        ],
+        [
+          "VLOOKUP",
+          "Looks up a value in another sheet and pulls a piece of data from that row. The classic for cross-referencing two lists"
+        ],
+        [
+          "TRIM",
+          "Removes extra spaces at the start and end. Text coming from forms is almost always dirty"
+        ],
+        [
+          "UNIQUE / FILTER",
+          "List without duplicates and filter. With these two you can build a whole dashboard without touching the original data"
+        ]
+      ],
+      "code": "# ── Count by status ───────────────────────────────────────\n=COUNTIF(log!G:G, \"new\")\n=COUNTIF(log!G:G, \"in_progress\")\n=COUNTIF(log!G:G, \"closed\")\n\n# ── Look up the name from the email ──────────────────────\n# Looks up the email in cell A2 in column D of log\n# and returns whatever is in the 3rd column from there on.\n=IFERROR(VLOOKUP(A2, log!D:F, 3, FALSE), \"not found\")\n\n# ── Clean text coming from a form ────────────────────────\n=TRIM(LOWER(B2))\n\n# ── Dashboard: pending items, without touching the data ──\n=FILTER(log!A:I, log!G:G=\"new\")\n\n# ── List of sources without duplicates ───────────────────\n=UNIQUE(log!F2:F)\n\n# If any formula gives you an error, try swapping the , for ;\n# (or vice versa): it depends on your spreadsheet's language."
+    }
+  ],
+  "errors": [
+    [
+      "Requested entity was not found · 404",
+      "The automation can't find the spreadsheet. Two causes, and the second is the real one nine times out of ten. One: the identifier is copied wrong; it must be the chunk between /d/ and /edit, not the whole address. Two: the spreadsheet exists but you haven't shared it with the service account's email. To the bot, a spreadsheet it can't see is a spreadsheet that doesn't exist. Open 'Share', paste that long email ending in .iam.gserviceaccount.com, and give it 'Editor'."
+    ],
+    [
+      "The caller does not have permission · 403",
+      "It can see it but can't write. You gave it 'Viewer' permission instead of 'Editor'. Go to 'Share', find the service account's email in the list, and change it to Editor. If the file is on a company shared drive, there may also be a policy blocking access for external accounts: that needs to be lifted by whoever manages the Workspace."
+    ],
+    [
+      "Unable to parse range: Sheet 1!A:F",
+      "The tab name doesn't match. Look at exactly how it's spelled at the bottom: uppercase, spaces, and accents matter. If it has a space, many tools require it wrapped in single quotes ('Sheet 1'!A:F). The calm solution is to rename the tab to something with no spaces or accents and use that name everywhere."
+    ],
+    [
+      "Rows get added at the end even though the spreadsheet looks empty",
+      "There are rows with invisible content further down: a space, a leftover from an old paste, a formula returning empty text. Check with Ctrl+Shift+Down arrow: it'll take you to the last 'occupied' row. Select from there up to where your real data ends, right-click, and 'Delete rows'. Just hitting Delete on the content isn't enough."
+    ],
+    [
+      "Phone numbers lose the leading zero and reference codes turn into dates",
+      "Google only interprets what looks like a number or a date. A 08 becomes 8, and a 1-2 turns into February 1st, without warning. Fix it before data comes in: select the column, 'Format' → 'Number' → 'Plain text'. If it's already happened, the original data can't be recovered from the cell: check the version history."
+    ],
+    [
+      "Quota exceeded / Rate limit · 429",
+      "You're asking Google for too many things in a row. Happens when an automation writes row by row in a two-hundred-loop. The fix isn't to wait: it's to write in bulk. Batch the rows and use the 'append' operation with all of them at once, or add a one-second wait between loops. The free limits are generous if you're not calling them one at a time."
+    ],
+    [
+      "The automation reads the old row or skips the new one",
+      "Almost always you're using 'the last row' as a reference while someone has the spreadsheet open and writing at the same time. Use a status column and a processed_at one: the bot looks for rows with status 'new' and processed_at empty, does its job, and marks them. That way order doesn't matter, and if something fails halfway, nothing gets lost or duplicated."
+    ],
+    [
+      "The spreadsheet is very slow and takes ages to open",
+      "Usually one of three things: you've dragged a formula down to row 50,000, you have conditional formatting applied to entire columns, or you've been accumulating rows for years. Clean up the formulas down to where the real data ends, remove conditional formatting from whole columns, and if you're past a few thousand rows, start moving history to another sheet. If this keeps happening, the spreadsheet has become too small for the job: time for a database."
+    ]
+  ],
+  "prompts": [
+    {
+      "name": "Design the spreadsheet before automating anything",
+      "prompt": "Act as the technical person helping me out. I don't know how to code and I want to build a Google Sheets spreadsheet that an automation will fill and read, and I want to get it right the first time because I know changing the columns later breaks everything. Before giving me anything, ask me up to four questions to understand where the data comes from, who's going to look at it, and what needs to happen with each record. Then give me the following, in this order. One: the exact header row to paste into A1, lowercase, no spaces or accents, and explain in one line what each column stores and where the value will come from. Two: which columns need to be in 'Plain text' format and why, thinking especially about phone numbers, codes, and reference numbers. Three: which columns the bot needs to know which rows it has already handled, so that if the automation fails halfway records don't get duplicated or lost. Four: what exact values the status column can have, and how I set up data validation so nobody types anything else. Five: what I should NEVER do in this spreadsheet once it's automated, as a short, blunt list. Six: tell me at how many rows this spreadsheet will become too small for me and what I should use instead. What I want to track is: [DESCRIBE THE RECORDS: LEADS, ORDERS, ISSUES...]. The data comes from: [FORM / EMAIL / OTHER APP]."
+    },
+    {
+      "name": "Fix an inherited spreadsheet that's a mess",
+      "prompt": "I have a spreadsheet that's been used by hand for years and now I want to automate it. I'll paste the column headers below along with three sample rows. I don't know how to code: tell me what's wrong and what to do, step by step, no theory. Answer me like this. One: tell me which things about this spreadsheet will stop an automation from working with it (merged cells, headers spread across several rows, columns with accents or spaces, total rows in the middle, colors that mean something, two kinds of data in the same column) and rank them by severity. Two: for each problem, tell me exactly how to fix it and whether that might break something someone is currently using. Three: propose the new column structure and tell me how to go from the current one to the new one without losing history; if the sensible move is to freeze the old spreadsheet and start a clean one, say so clearly. Four: tell me what to do with the messy data already in there (extra spaces, mixed uppercase, dates written three different ways) and give me the exact formula to clean them. Five: warn me if there's any personal data here that shouldn't be in a shared spreadsheet. Before starting, tell me what backup I need to make and how. My headers and sample rows are: [PASTE HERE]."
+    },
+    {
+      "name": "Build the dashboard without touching the data",
+      "prompt": "I have a Google Sheets spreadsheet an automation fills in, and I want a second tab that tells me at a glance how things are going, without touching a single cell in the data tab, because touching it breaks the bot. I don't know formulas: give them to me ready to paste and tell me which cell each goes in. Do it like this. One: propose which four or five numbers are worth checking every day in my specific case, and rule out the ones that look nice but don't help decide anything. Two: give me the exact formula for each, with the cell it goes in, and warn me if I need to swap commas for semicolons depending on my spreadsheet's language. Three: give me a 'pending' table that fills itself with rows that are still open, sorted by age, so I can work from there. Four: tell me how to make records that have gone more than X days untouched auto-highlight in red, explaining where to click to set that rule. Five: tell me what NOT to put on this dashboard so it doesn't get slow. My data tab is called [NAME] and its columns are: [PASTE THE HEADERS]."
+    },
+    {
+      "name": "Decide whether to stay on a spreadsheet or move to a real database",
+      "prompt": "I'm using a Google Sheets spreadsheet as if it were the database for [DESCRIBE THE PROCESS] and I don't know if I'm pushing it too far. I want an honest diagnosis, not a tech salesperson. Answer me like this. One: ask me what you need about how many rows I have, how many things write to it at once, how many people open it, and what data it stores. Two: tell me clearly whether my case holds up fine on a spreadsheet, whether it's on the edge, or whether I'm already having problems from this without knowing it, and what concrete signals you're basing that on. Three: if it holds up, tell me the three things I should fix so it holds up for another year, and don't propose migrating anything. Four: if it doesn't hold up, tell me what I should move to and why that option and not another, how much it would cost per month, how much work moving it is, and what breaks on moving day. Five: tell me if there's personal data here that legally shouldn't be in a spreadsheet shared by link, because that changes how urgent everything above is. Six: if the honest answer is 'leave it as it is', tell me plainly. My situation is: [HOW MANY ROWS, HOW MANY PEOPLE, WHAT AUTOMATIONS WRITE TO IT]."
+    }
+  ]
+}

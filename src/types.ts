@@ -837,6 +837,8 @@ export interface FaqGroup {
 export interface Course {
   generatedAt: string
   vaultName: string
+  /** Idioma de este curso generado: 'es' o 'en'. */
+  locale?: 'es' | 'en'
   levels: LevelMeta[]
   kinds: Record<string, { label: string; hint: string }>
   sections: SectionMeta[]

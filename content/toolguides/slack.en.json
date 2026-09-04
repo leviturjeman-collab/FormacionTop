@@ -1,0 +1,293 @@
+{
+  "id": "slack",
+  "tool": "slack",
+  "plain": "Slack is the workplace chat app. Instead of one huge group where everything gets mixed together, you have separate rooms by topic: one for orders, one for invoices, one for coffee-break chat. Think of an office with several tables, and you sit at the one you're interested in. What makes it different for us is that it also has a mailbox your automated processes can drop messages into on their own, without anyone typing them by hand.",
+  "account": {
+    "url": "slack.com",
+    "free": "Yes, there's a free plan and it's more than enough for this: unlimited people, all the channels you want, and automated alerts work without paying a cent. Two limits you'll notice: you can only read messages from the last 90 days (older ones aren't deleted, but stay hidden until you pay) and you can connect a maximum of 10 external apps; your automated alert counts as one of those ten. The paid plan (Pro) runs about $7-9 per person per month, cheaper if you pay for the whole year at once.",
+    "steps": [
+      [
+        "Create your account",
+        "Go to slack.com and click the purple button top right, TRY FOR FREE. Enter your email, you'll get a 6-digit code, and type it in. No password needed at first: Slack lets you in with the code."
+      ],
+      [
+        "Set up the workspace",
+        "You'll see Create a workspace. A workspace is your team's home: all the channels and all the people live inside it. Give it your business's real name, e.g. Ruiz Bakery. Slack creates a single channel called #general for you."
+      ],
+      [
+        "Create a channel just for alerts",
+        "In the left column, next to the word Channels, there's a +. Click Create a channel and name it #invoice-alerts or #order-alerts. Make it a separate channel, not #general: that way anyone who doesn't want the alerts can leave that channel and keep reading everything else."
+      ],
+      [
+        "Create the app",
+        "Now go to api.slack.com/apps, which is Slack's backstage area for programs. Click Create New App and choose From scratch (no template). It asks for two things: a name, e.g. Invoice Bot, and which workspace it lives in. Click Create App."
+      ],
+      [
+        "Turn on the inbox",
+        "In the left menu click Incoming Webhooks. You'll see a gray toggle that says Activate Incoming Webhooks. Flip it to On. Until you turn it on, the rest of the screen stays empty."
+      ],
+      [
+        "Choose the channel and copy the address",
+        "Scroll to the bottom and click Add New Webhook to Workspace. A dropdown appears with the list of channels: choose #invoice-alerts and click Allow. Go back and now you'll see a very long address starting with https://hooks.slack.com/services/. On its right is the Copy button. That address is the only thing your automation needs."
+      ],
+      [
+        "Send the test message",
+        "Right below, Slack shows you a ready-to-copy example (Sample curl request). If you're using an automation tool, paste the address into the Slack or HTTP step and send any text. It should show up in #invoice-alerts within two seconds. If it doesn't show up, it's almost always that you copied the address only halfway."
+      ]
+    ],
+    "warning": "The address you just copied is a password disguised as a link. Anyone who has it can post in your channel, under your bot's name, without asking anyone's permission. Don't paste it into a WhatsApp chat, a shared document, or a screenshot. And be careful: it can't be changed. If it leaks, the only way out is to delete that incoming webhook and create another one, and that deletion is immediate and irreversible: everything using the old address stops posting at that exact instant."
+  },
+  "first": [
+    "Create a dedicated channel for the bot's alerts, e.g. #invoice-alerts, and don't let anyone chat inside it.",
+    "Send a test message from your automation and check with your own eyes that it arrives in the right channel.",
+    "Rewrite that message thinking of someone glancing at their phone standing up: the first line has to say what happened and what needs to be done.",
+    "Invite only the two or three people who can actually act on that alert, not the whole team.",
+    "While testing, open the channel, click its name at the top, Notifications, and set it to Mentions only, so you don't blow up your phone with your own tests."
+  ],
+  "words": [
+    [
+      "Workspace",
+      "Your team's entire home in Slack. All the rooms and all the people live inside it. If you work in two different places, you'll have two separate homes that can't see each other."
+    ],
+    [
+      "Channel",
+      "A conversation room with a topic. Written with a hash in front, like #invoice-alerts. You can join and leave a room whenever you want without losing the rest."
+    ],
+    [
+      "App",
+      "A program you introduce to Slack so it has permission to do something, usually post messages. Although it sounds like a mobile app, here it's just an entry with a name and some permissions."
+    ],
+    [
+      "Incoming webhook",
+      "A secret internet address Slack gives you that works like a mailbox: whoever knows it can drop a message into a specific channel. It doesn't read anything, only write, and always to that one channel."
+    ],
+    [
+      "JSON",
+      "The orderly way one program passes data to another. It's text inside braces with label-and-value pairs. For what you'll be doing, a single pair is usually enough: text and the message you want to appear."
+    ],
+    [
+      "Thread",
+      "The replies that hang off a specific message instead of adding new standalone lines. Opened by clicking Reply in thread. Automated alerts don't use this by default: each alert lands as a standalone message."
+    ],
+    [
+      "Rate limit",
+      "The cap on messages per second Slack accepts per mailbox: one per second. If your automation tries to fire off 300 alerts at once, Slack starts rejecting them and you lose them."
+    ]
+  ],
+  "matters": [
+    "A channel dedicated only to automated alerts. If you send alerts to #general, your coworkers end up muting #general, and human messages get lost along with it. Picking the wrong channel doesn't just hurt one channel, it kills two.",
+    "The threshold: only alert about things that require someone to act. If the bot sends 60 messages a day saying Order processed successfully, within a week it's muted, and the day it sends Payment rejected nobody reads it. Hard rule: if reading it won't make anyone lift a finger, don't send it.",
+    "The first line. On a phone you see about two and a half lines. Invoice for €4,812 from Vega Supplies has been pending approval for 3 days is understood at a glance; Process completed successfully forces you to open Slack, tap it, and go looking. The second kind gets ignored by the third time.",
+    "The webhook address is a secret that never expires and never renews itself. If it ends up in a forwarded email or a screenshot, anyone can post fake alerts wearing your bot's face: Transfer authorized, proceed. And your team will believe it, because they've been believing it for months."
+  ],
+  "ignore": [
+    "Huddles, video calls, and Slack canvases. That's the meetings side of the product and has nothing to do with what you're building; you'll discover them the day you need them.",
+    "Block Kit, the message builder with buttons, columns, and colors. A well-written plain text message works just as well for months, and the builder will eat an entire afternoon to gain you one colored border.",
+    "The directory with hundreds of apps (Drive, Zoom, Jira, and friends). Install one when someone on your team asks for it for a specific reason, not out of curiosity: the free plan only fits ten."
+  ],
+  "questions": [
+    {
+      "prompt": "You set up the alert a week ago pointing at #general. The bot sends about 60 messages a day of the type Order 8842 processed successfully. Today a coworker tells you she's muted #general because she couldn't stand her phone anymore, and you see two others have muted it too.",
+      "options": [
+        {
+          "text": "You create an #order-alerts channel, generate a new webhook pointing at that channel, change the address in the automation, and also adjust it to only write when an order fails or exceeds €500.",
+          "correct": true,
+          "why": "Correct, because it fixes both problems at once, and there are two: the wrong place and the volume. The nuance almost everyone misses is the second one: if you drag the 60 daily messages over to the new channel, the new channel will be muted within two weeks and you'll have repeated the mistake under a different name. And yes, you need a new webhook: each webhook is born tied to its channel."
+        },
+        {
+          "text": "You go into the app's screen and change the webhook's destination channel from #general to #order-alerts.",
+          "correct": false,
+          "why": "It's believable because on that screen you see the channel's name written right next to the address, so it looks like an editable field. It isn't: there's no button to change it, the channel is decided at the moment the webhook is created and stays that way forever. And even if that button existed, you'd still be sending 60 messages a day, which is what actually burned the channel in the first place."
+        },
+        {
+          "text": "You leave everything as it is but add @channel to every message, to make sure people finally read it.",
+          "correct": false,
+          "why": "It's the instinctive reaction when you notice you're being ignored: turn up the volume. The problem is that @channel pings every phone in the channel, even at 11:40 pm on a Saturday. A message nobody cares about doesn't become important by sounding louder: what you get is being muted faster, or an admin kicking your bot out of the channel."
+        }
+      ],
+      "explain": "An alert nobody is going to act on isn't an alert: it's noise with permission to make sound."
+    },
+    {
+      "prompt": "To help Marta finish setting up the automation, you sent her the webhook address over the work WhatsApp group, which has fourteen people and two vendors in it. Two days later a message you didn't write appears in #invoice-alerts: Transfer to vendor authorized, proceed.",
+      "options": [
+        {
+          "text": "You go into api.slack.com/apps, delete that webhook, create a new one, and paste the new address into the automation.",
+          "correct": true,
+          "why": "Correct, because with this kind of webhook the address IS the credential: there's no password behind it to change. Deleting it cuts off access instantly, for the intruder and for you. The important nuance: between the deletion and the moment you paste in the new address, your automation posts nothing, so do it with the automation tool already open, and not on a Friday at eight."
+        },
+        {
+          "text": "You change the password on your Slack account and log out on all devices.",
+          "correct": false,
+          "why": "It sounds like the textbook response to any leak, and as general hygiene it's not a bad idea. But the webhook doesn't hang off your account or your session: it's an independent address that works from any computer in the world as long as it exists. You can change your password ten times and the fake messages will keep coming in exactly the same."
+        },
+        {
+          "text": "You turn #invoice-alerts into a private channel and remove everyone who isn't on the team.",
+          "correct": false,
+          "why": "It looks like you're closing the door, and for people that's true. But the webhook doesn't come in through the door: it comes in through the pipe you yourself installed on that channel, and that pipe keeps working even if the channel is private. You'd see exactly the same fake messages, just with fewer witnesses to warn you."
+        }
+      ],
+      "explain": "A webhook's address doesn't get changed: it gets thrown away and a new one gets made."
+    }
+  ],
+  "shortcuts": [
+    [
+      "The webhook address (Incoming Webhook)",
+      "A long address starting with https://hooks.slack.com/services/... that points to ONE specific channel. Whoever has that address can write to that channel, no password, nothing else. Treat it like a key: don't paste it into a chat, don't upload it anywhere, and if it leaks, delete it and generate another from the same screen where you created it."
+    ],
+    [
+      "Ctrl+K — jump to a channel or a person",
+      "Slack's search box. Type three letters of the channel name and hit Enter. With twenty channels open it stops being a luxury. Ctrl+Shift+K does the same for direct messages."
+    ],
+    [
+      "/invite @app-name",
+      "The command you type INSIDE the channel to bring your bot in. It's the step that always gets forgotten: an app can be installed in the workspace and still not be able to write to that specific channel because nobody invited it. The error you'll see if it's missing is 'not_in_channel'."
+    ],
+    [
+      "Threads (reply in thread, not in the channel)",
+      "Hovering over a message shows a speech-bubble icon: 'Reply in thread'. Everything related stays hanging off that message instead of flooding the channel. For a bot reporting progress on something long, it's the difference between a readable channel and one people mute."
+    ],
+    [
+      "@here and @channel",
+      "@here notifies only people currently online; @channel notifies everyone, even on a Sunday. Rule for automations: neither one by default. Only use @here for alerts where someone needs to act within the next hour, and @channel practically never. People mute channels that abuse this, and after that your alerts don't exist."
+    ],
+    [
+      "Block Kit Builder (app.slack.com/block-kit-builder)",
+      "A Slack page where you build the message on the left and see it rendered on the right, live. It's for not having to guess: paste the JSON the AI gave you, see how it looks, fix it, then bring it over to your automation. It's the single biggest time-saver on this whole list."
+    ],
+    [
+      "Slack's text formatting (which isn't normal Markdown)",
+      "Bold with *a single asterisk* on each side, italics with _underscores_, strikethrough with ~tildes~, code with `backticks`. Markdown's double asterisks do NOT work: you'll get literal asterisks in the text. Links go like this: <https://example.com|link text>."
+    ],
+    [
+      "'Add apps to this channel' in the channel menu",
+      "The mouse-driven equivalent of /invite: channel name at the top → 'Integrations' → 'Add apps'. Useful when someone on your team has to do it and you don't want to explain slash commands."
+    ],
+    [
+      "A message's ts (timestamp)",
+      "Every message has an identifier that looks like a decimal number, e.g. 1724580000.123456. It's what Slack gives you back when you post, and what you need to save if you later want to reply in that thread, edit the message, or add a reaction. Store it in the same row where you save the rest of the case."
+    ],
+    [
+      "Preferences → Notifications → 'Set per channel'",
+      "So the bot's alert channel doesn't ring your phone at three in the morning while the urgent one does. It's how a noisy channel stays useful instead of ending up muted altogether."
+    ]
+  ],
+  "daily": [
+    "A channel just for the bot's alerts, separate from where people talk. As soon as you mix them, either people lose the conversation among the alerts, or the alerts get lost among the conversation. Name it with a clear prefix: #invoice-alerts, #lead-alerts.",
+    "Invite the app to the channel, not just install it. Installed in the workspace ≠ present in that channel. Type /invite @your-app inside the channel. It's cause number one of 'the automation says it sent the message but nothing shows up'.",
+    "The message's first line has to say everything. It's the only thing visible in the phone notification and in the channel list. 'Invoice 2043 rejected: missing tax ID' works; 'New system notification' is useless.",
+    "Never put personal or secret data in a channel. A Slack channel is read by everyone in it, today and two years from now, and it's searchable. Send the ID and a link to where the data lives, not the data itself. And never, ever a key, not even a test one.",
+    "One alert, one message; the detail goes in the thread. If your automation has ten steps, post one with the headline and hang the rest off it in the thread. The channel stays readable and whoever wants detail can expand it.",
+    "Buttons only if they actually do something. Slack lets you add buttons (Approve / Reject) and they look great in a demo, but they need something listening for the response. If you don't have that built, use a link to where the real action happens: a button that doesn't respond destroys trust in the whole system.",
+    "Mute success alerts and let only failure ones ring. A bot that says 'all good' a hundred times a day teaches people to ignore it, and the day it says 'this failed' nobody will see it. Publish successes in a daily summary and failures the moment they happen."
+  ],
+  "templates": [
+    {
+      "name": "The alert message that reads on the phone",
+      "what": "This is the structure of a Slack message built with blocks (Block Kit): a headline that reads in the notification, the data in two columns, and a button leading to where the action happens. Works for a new lead, a problem invoice, a process error, or anything that needs a person to look at something.",
+      "how": "1) Go to app.slack.com/block-kit-builder. 2) Delete whatever's there and paste the block below. 3) On the right you'll see it rendered exactly as it will appear. 4) Swap in your own text. 5) Copy it and paste it into your automation, in the 'Blocks' field of the Slack node (in n8n you have to enable the block-message option). 6) Replace the fixed values with the data coming from the previous step. 7) ALWAYS leave the 'text' field filled in: it's what shows in the phone notification and in email alerts.",
+      "fill": [
+        [
+          "text",
+          "The plain-text fallback. It's what appears in the phone notification. If left empty, the notification arrives blank"
+        ],
+        [
+          "header",
+          "The headline. Short, with the fact that matters. Eight words max"
+        ],
+        [
+          "fields",
+          "The data in two columns. Ten max, and in practice four to six is plenty"
+        ],
+        [
+          "url",
+          "The address the button leads to. If you don't have anything listening for buttons, use a link, never a mute button"
+        ],
+        [
+          "context",
+          "The fine print at the bottom: where the alert comes from and what time. Used to know which automation is talking to you"
+        ]
+      ],
+      "code": "{\n  \"text\": \"Invoice 2043 rejected: missing tax ID\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": { \"type\": \"plain_text\", \"text\": \"Invoice rejected\" }\n    },\n    {\n      \"type\": \"section\",\n      \"fields\": [\n        { \"type\": \"mrkdwn\", \"text\": \"*Number:*\\n2043\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Customer:*\\nRuiz Workshops S.L.\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Amount:*\\n€1,240.00\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Reason:*\\nMissing tax ID\" }\n      ]\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"Open invoice\" },\n          \"url\": \"https://your-system.example.com/invoices/2043\",\n          \"style\": \"primary\"\n        }\n      ]\n    },\n    {\n      \"type\": \"context\",\n      \"elements\": [\n        { \"type\": \"mrkdwn\", \"text\": \"Automation _invoices_ · 08/25 10:14\" }\n      ]\n    }\n  ]\n}"
+    },
+    {
+      "name": "The failure alert written so it can actually be fixed",
+      "what": "When an automation breaks at three in the morning, the message it leaves behind decides whether the problem gets fixed in five minutes or two hours. This format includes the only things you need: what broke, which specific case it was, the error verbatim, and what's supposed to happen next.",
+      "how": "1) Build it in the Block Kit Builder just like the previous one. 2) Put it on the error branch of your automation (in n8n, the 'Error Trigger'; in Zapier, the failure notification). 3) Publish it in a channel separate from normal alerts: #failure-alerts. 4) That channel SHOULD trigger phone notifications; the normal alerts one shouldn't. 5) Don't use @channel here either: whoever has to fix it will already have that channel notifications-on.",
+      "fill": [
+        [
+          "Which process",
+          "The automation's exact name, as it's called in n8n or Zapier. Without this you have to go hunting for it"
+        ],
+        [
+          "Which case",
+          "The identifier of the specific record, order, or email that was being processed when it broke"
+        ],
+        [
+          "The error",
+          "Copied verbatim, not summarized. Between backticks so it shows in gray and doesn't lose formatting"
+        ],
+        [
+          "What to do",
+          "The concrete instruction for whoever reads it at 8 in the morning. Careful: if the answer is 'retry it', say so"
+        ],
+        [
+          "Link",
+          "To the specific run that failed, not to the tool's home page"
+        ]
+      ],
+      "code": "{\n  \"text\": \"FAILURE in invoices automation (case 2043)\",\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \":red_circle: *Failed in:* `incoming-invoices`\\n*Case:* 2043 · Ruiz Workshops S.L.\\n*Time:* 08/25 03:12\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Error:*\\n```ETIMEDOUT: the invoicing API did not respond within 30s```\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*What to do:* the case has NOT been processed and remains in `new` status. It can be relaunched without duplicating anything.\"\n      }\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"View failed run\" },\n          \"url\": \"https://your-n8n.example.com/workflow/12/executions/9981\"\n        }\n      ]\n    }\n  ]\n}"
+    }
+  ],
+  "errors": [
+    [
+      "channel_not_found",
+      "Slack can't find that channel. Three causes, in order of frequency. One: you wrote the name with the hash in front, but some tools want just the name, or vice versa. Two: it's a private channel and your app isn't in it; private channels always require an invite. Three: you used the name instead of the ID (that C09ABCDEF-style code shown in 'View channel details', at the bottom). When in doubt, use the ID: it doesn't change even if you rename the channel."
+    ],
+    [
+      "not_in_channel",
+      "The channel exists, the app exists, but the app isn't in it. Go into the channel and type /invite @your-app-name. It's the most common error of all, and the easiest to fix. Watch out when renaming channels: the app stays in it, but if someone accidentally removed it, this is the error you'll see."
+    ],
+    [
+      "invalid_auth · token_revoked · account_inactive",
+      "The token your automation identifies itself with is no longer valid: it was revoked, the app was uninstalled, or someone regenerated it. Don't try to fix it by rewriting it: go to api.slack.com/apps, open your app, go to 'OAuth & Permissions', copy the token again (it starts with xoxb-), and paste it into the credential. If you'd saved it in a chat or an email, take this chance to delete it from there."
+    ],
+    [
+      "missing_scope · needed: chat:write",
+      "The app is missing a specific permission. The message tells you which one in the word 'needed'. Go to api.slack.com/apps → your app → 'OAuth & Permissions' → 'Bot Token Scopes' → 'Add an OAuth Scope', add the one requested, and then REINSTALL the app in the workspace (a yellow button appears at the top). Without reinstalling, the new permission doesn't take effect: that's the step people forget."
+    ],
+    [
+      "no_text · invalid_blocks",
+      "You sent a block message without the fallback 'text' field, or the blocks' JSON has a formatting error. Two things. One: always fill in 'text', even when using blocks; it's what shows in the phone notification. Two: paste your JSON into app.slack.com/block-kit-builder, which flags the exact error in red much better than the API's message."
+    ],
+    [
+      "The webhook returns 404 · no_service",
+      "The webhook address no longer exists: the app was deleted, or someone regenerated it. Webhooks can't be 'fixed', they're generated anew: go into your app's settings, 'Incoming Webhooks', create a new one pointing at the channel, and replace the entire address in your automation. Take the chance to check where you had the old one stored."
+    ],
+    [
+      "ratelimited · 429",
+      "You're posting too fast. Slack allows roughly one message per second per channel, and cuts you off if you exceed it. Happens when an automation loops through a hundred rows posting one at a time. The fix isn't to wait longer: it's to post ONE message with all hundred lines inside, or one message with a summary and detail in the thread. Besides not failing, it also reads much better."
+    ],
+    [
+      "Messages come out with literal asterisks instead of bold",
+      "You're using normal Markdown, with double asterisks. Slack uses its own: bold with *a single asterisk*, italics with _underscores_, and links as <https://address|text>. If an AI is writing the text, tell it explicitly in the prompt: 'Slack's mrkdwn format, not Markdown', because by default it will give you Markdown."
+    ]
+  ],
+  "prompts": [
+    {
+      "name": "Design the alerts before building them",
+      "prompt": "Act as the technical person helping me out. I'm going to build an automation that sends Slack alerts, and I want to nail down the alerts BEFORE building anything, because I've seen teams mute entire channels because of an annoying bot. I don't know how to code. First ask me whatever questions you need about what process this is, who reads the channel, and what that person is supposed to do when they see the alert. Then give me the following. One: the list of events that DESERVE a message and, separately and explicitly, the list of ones that don't, even if I feel like including them; justify each exclusion. Two: for each alert that stays, write me the exact first line as it will appear in the phone notification, and check that it's understandable without opening anything. Three: tell me which alerts should go out instantly and which should be grouped into a daily summary, and what time that summary should make sense to fire at. Four: tell me how many channels I need and what to name them, separating normal alerts from failures. Five: tell me in which of these alerts using @here is justified, and if the answer is 'none of them', say so. Six: warn me about which of the data I want to send should NOT be written into a Slack channel because it's personal or secret, and what to put there instead. My process is: [DESCRIBE IT]. Whoever reads the channel is: [WHO AND WHAT THEY CAN DO]."
+    },
+    {
+      "name": "Turn an ugly message into a readable one",
+      "prompt": "My automation sends Slack a message that's a brick of text and nobody reads it. I'll paste it below exactly as it comes out. I want you to turn it into a well-built message, and I need the JSON ready to paste. Do it like this. One: tell me in two sentences what's wrong with the current message, from the point of view of someone glancing at it on their phone in the street. Two: give me the complete Block Kit JSON, with the fallback 'text' field filled in (which I know gets forgotten) and with the information organized: headline, four to six data points in columns, and a link or button at the end. Three: use Slack's text formatting, not normal Markdown: bold with a single asterisk, links with the less-than-sign-and-pipe syntax. Four: tell me which fields I need to swap the fixed text for data coming from my automation, pointing them out one by one. Five: tell me exactly what the phone notification will look like, written out literally, so I can judge if it's understandable. Six: if anything I'm sending shouldn't be in a Slack channel, tell me. My current message is: [PASTE IT]. The data I have available at that point is: [LIST OF FIELDS]."
+    },
+    {
+      "name": "Figure out why the message isn't arriving",
+      "prompt": "My automation says it sent the message to Slack, but nothing shows up in the channel. I don't know how to code and I don't want theory: walk me through a diagnosis, one question at a time, starting with the most likely and easiest to check. Before proposing any changes, ask me for what you need to see: the exact response Slack returns (which can include a misleading 'ok: true'), the name or ID of the channel I'm using, whether the channel is public or private, and whether the app shows up in the channel's member list. Once you have the data, tell me: one, what the cause is and how you figured it out; two, the solution in steps with concrete clicks, without assuming I know where every Slack settings screen is; three, how I verify it's now working, with a test that takes less than a minute; four, what I should set up so next time I can detect it myself. If at any point the cause turns out to be a permission that needs adding, explicitly remind me that the app needs reinstalling afterward, because I know that gets forgotten. My situation is: [DESCRIBE IT]."
+    },
+    {
+      "name": "Review whether a Slack channel has become a problem",
+      "prompt": "I have a Slack channel where several automations post and I think it's gotten out of hand. I want an honest, no-frills review. I'll paste a full day's worth of messages from that channel below. Answer me like this. One: count how many messages there are, how many required someone to do something, and how many were informational noise, and give me the percentage. Two: tell me which messages could have been grouped into one or into a daily summary. Three: flag any message containing personal data, amounts with people's full names, keys, tokens, or internal addresses, and tell me what should be done with that history. Four: tell me which of these alerts are useless because nobody can act on them, even if someone thought they were a good idea. Five: propose the final list of alerts that should remain, with which channel, what notification priority, and what first line. Six: tell me if there's some failure that should be alerting and currently ISN'T, in other words, what's breaking silently right now. A day's worth of messages is: [PASTE THEM]."
+    }
+  ]
+}

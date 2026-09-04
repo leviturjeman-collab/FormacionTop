@@ -10,6 +10,7 @@ import { store, useLessonProgress, useStudent } from '../store'
 import { BrandMark } from '../components/Brand'
 import Notebook from '../components/Notebook'
 import Piece from '../components/Piece'
+import { useLocale } from '../i18n'
 
 /**
  * El programa curado: lecciones escritas a mano, en orden.
@@ -20,6 +21,7 @@ import Piece from '../components/Piece'
 
 function Prompt({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
+  const locale = useLocale()
   return (
     <div className="st-task-prompt">
       <button
@@ -35,7 +37,9 @@ function Prompt({ text }: { text: string }) {
         }}
       >
         {copied ? <Check size={12} /> : <Copy size={12} />}
-        {copied ? 'Copiado' : 'Copiar y pegarlo en la IA'}
+        {copied
+          ? (locale === 'en' ? 'Copied' : 'Copiado')
+          : (locale === 'en' ? 'Copy and paste it into the AI' : 'Copiar y pegarlo en la IA')}
       </button>
       <pre>{text}</pre>
     </div>
@@ -51,14 +55,15 @@ const countText = (count: number, singular: string, plural: string) => `${count}
 export function CursoIndice() {
   const course = useCourse()
   const student = useStudent()
+  const locale = useLocale()
   const lecciones = [...(course.curso || [])].sort((a, b) => a.number - b.number)
 
   if (!lecciones.length) {
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>El curso se está escribiendo</h2>
-          <p>Las lecciones se están preparando. Vuelve en un rato.</p>
+          <h2>{locale === 'en' ? 'The course is being written' : 'El curso se está escribiendo'}</h2>
+          <p>{locale === 'en' ? 'Lessons are being prepared. Check back soon.' : 'Las lecciones se están preparando. Vuelve en un rato.'}</p>
         </div>
       </div>
     )
@@ -110,72 +115,82 @@ export function CursoIndice() {
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker">El curso</span>
-        <h1>Programa significa ruta principal</h1>
+        <span className="st-kicker">{locale === 'en' ? 'The course' : 'El curso'}</span>
+        <h1>{locale === 'en' ? 'Program means the main path' : 'Programa significa ruta principal'}</h1>
         <p>
-          Aquí no tienes que estudiar todo lo que existe en la web. Programa es la ruta principal: {sueltas.length}
-          lecciones para aprender el método. Las herramientas, prompts y automatizaciones son apoyo para cuando una
-          lección o tu proyecto te pidan usarlas.
+          {locale === 'en' ? (
+            <>You don't have to study everything that exists on the web. Programa is the main path: {sueltas.length} lessons
+            to learn the method. Tools, prompts and automations are support for when a lesson or your project ask you to use them.</>
+          ) : (
+            <>Aquí no tienes que estudiar todo lo que existe en la web. Programa es la ruta principal: {sueltas.length}
+            lecciones para aprender el método. Las herramientas, prompts y automatizaciones son apoyo para cuando una
+            lección o tu proyecto te pidan usarlas.</>
+          )}
         </p>
       </div>
 
       <section className="st-program-now">
         <div>
-          <span className="st-kicker">Qué hago ahora</span>
-          <h2>{siguienteBase ? `Siguiente: ${siguienteBase.title}` : 'Empieza por la primera lección'}</h2>
+          <span className="st-kicker">{locale === 'en' ? 'What to do now' : 'Qué hago ahora'}</span>
+          <h2>{siguienteBase ? (locale === 'en' ? `Next: ${siguienteBase.title}` : `Siguiente: ${siguienteBase.title}`) : (locale === 'en' ? 'Start with the first lesson' : 'Empieza por la primera lección')}</h2>
           <p>
-            Abre una lección, lee solo los bloques que necesites, haz las tareas marcables y vuelve al programa.
-            Si una herramienta te interesa, entra en su ficha desde la zona opcional.
+            {locale === 'en'
+              ? 'Open a lesson, read only the blocks you need, do the checkable tasks and come back to the program. If a tool interests you, open its page from the optional section.'
+              : 'Abre una lección, lee solo los bloques que necesites, haz las tareas marcables y vuelve al programa. Si una herramienta te interesa, entra en su ficha desde la zona opcional.'}
           </p>
         </div>
         <a className="st-btn" href={href({ name: 'curso', lessonId: siguienteBase?.id || sueltas[0]?.id || '' })}>
-          Ir a la lección
+          {locale === 'en' ? 'Go to the lesson' : 'Ir a la lección'}
           <ArrowRight size={13} />
         </a>
       </section>
 
       <section className="st-course-scope">
         <div>
-          <span>1. Ruta principal</span>
-          <strong>{hechas}/{sueltas.length} hechas</strong>
-          <small>Lo único que conviene seguir en orden.</small>
+          <span>{locale === 'en' ? '1. Main path' : '1. Ruta principal'}</span>
+          <strong>{hechas}/{sueltas.length} {locale === 'en' ? 'done' : 'hechas'}</strong>
+          <small>{locale === 'en' ? 'The only thing worth following in order.' : 'Lo único que conviene seguir en orden.'}</small>
         </div>
         <div>
-          <span>2. Herramientas</span>
-          <strong>{porHerramienta.length} fichas</strong>
-          <small>Entras solo cuando una lección o proyecto menciona una herramienta.</small>
+          <span>{locale === 'en' ? '2. Tools' : '2. Herramientas'}</span>
+          <strong>{porHerramienta.length} {locale === 'en' ? 'pages' : 'fichas'}</strong>
+          <small>{locale === 'en' ? 'Come in only when a lesson or project mentions a tool.' : 'Entras solo cuando una lección o proyecto menciona una herramienta.'}</small>
         </div>
         <div>
-          <span>3. Extras</span>
-          <strong>Prompts y flujos</strong>
-          <small>No son deberes: son plantillas para copiar cuando ya sabes qué quieres hacer.</small>
+          <span>{locale === 'en' ? '3. Extras' : '3. Extras'}</span>
+          <strong>{locale === 'en' ? 'Prompts and flows' : 'Prompts y flujos'}</strong>
+          <small>{locale === 'en' ? "They're not homework: they're templates to copy once you already know what you want to do." : 'No son deberes: son plantillas para copiar cuando ya sabes qué quieres hacer.'}</small>
         </div>
       </section>
 
       <section className="st-program-guide">
-        <div><span>1</span><strong>Lee</strong><small>Primero entiende la idea con ejemplos sencillos.</small></div>
-        <div><span>2</span><strong>Haz</strong><small>Después completa las tareas que se pueden marcar.</small></div>
-        <div><span>3</span><strong>Guarda</strong><small>Apunta la evidencia para no perder el resultado.</small></div>
-        <div><span>4</span><strong>Sigue</strong><small>Vuelve aquí y abre la siguiente lección.</small></div>
+        <div><span>1</span><strong>{locale === 'en' ? 'Read' : 'Lee'}</strong><small>{locale === 'en' ? 'First understand the idea with simple examples.' : 'Primero entiende la idea con ejemplos sencillos.'}</small></div>
+        <div><span>2</span><strong>{locale === 'en' ? 'Do' : 'Haz'}</strong><small>{locale === 'en' ? 'Then complete the tasks you can check off.' : 'Después completa las tareas que se pueden marcar.'}</small></div>
+        <div><span>3</span><strong>{locale === 'en' ? 'Save' : 'Guarda'}</strong><small>{locale === 'en' ? 'Note the evidence so you don’t lose the result.' : 'Apunta la evidencia para no perder el resultado.'}</small></div>
+        <div><span>4</span><strong>{locale === 'en' ? 'Continue' : 'Sigue'}</strong><small>{locale === 'en' ? 'Come back here and open the next lesson.' : 'Vuelve aquí y abre la siguiente lección.'}</small></div>
       </section>
 
       <section className="st-curso-divider">
-        <span className="st-kicker">Ruta principal</span>
-        <h2>Abre un bloque y sigue sus lecciones</h2>
-        <p>Los bloques están plegados para que no parezca una biblioteca infinita. Abre el bloque actual y avanza de arriba abajo.</p>
+        <span className="st-kicker">{locale === 'en' ? 'Main path' : 'Ruta principal'}</span>
+        <h2>{locale === 'en' ? 'Open a block and follow its lessons' : 'Abre un bloque y sigue sus lecciones'}</h2>
+        <p>{locale === 'en' ? "Blocks are collapsed so this doesn't look like an endless library. Open the current block and work through it top to bottom." : 'Los bloques están plegados para que no parezca una biblioteca infinita. Abre el bloque actual y avanza de arriba abajo.'}</p>
       </section>
       {porArea.map(({ stage, items }) => (
         <details key={stage.id} className="st-curso-area" open={stage.id === etapaActual}>
           <summary className="st-curso-area-head">
             <div>
-              <span className="st-kicker">Bloque {stage.number} · {stage.tagline}</span>
+              <span className="st-kicker">{locale === 'en' ? 'Block' : 'Bloque'} {stage.number} · {stage.tagline}</span>
               <h2>{stage.title}</h2>
-              <p>{items.length} lecciones de este bloque.</p>
+              <p>{items.length} {locale === 'en' ? 'lessons in this block.' : 'lecciones de este bloque.'}</p>
             </div>
             <span>
               {items.length > 1
-                ? `Lecciones ${String(items[0].number).padStart(2, '0')} a ${String(items[items.length - 1].number).padStart(2, '0')}`
-                : `Lección ${String(items[0].number).padStart(2, '0')}`}
+                ? (locale === 'en'
+                    ? `Lessons ${String(items[0].number).padStart(2, '0')} to ${String(items[items.length - 1].number).padStart(2, '0')}`
+                    : `Lecciones ${String(items[0].number).padStart(2, '0')} a ${String(items[items.length - 1].number).padStart(2, '0')}`)
+                : (locale === 'en'
+                    ? `Lesson ${String(items[0].number).padStart(2, '0')}`
+                    : `Lección ${String(items[0].number).padStart(2, '0')}`)}
             </span>
           </summary>
 
@@ -185,14 +200,14 @@ export function CursoIndice() {
               return (
               <li key={item.id} className={done ? 'done' : ''}>
                 <a href={href({ name: 'curso', lessonId: item.id })}>
-                  <span className="st-curso-num" aria-label={`Lección ${item.number} de ${sueltas.length}`}>
+                  <span className="st-curso-num" aria-label={locale === 'en' ? `Lesson ${item.number} of ${sueltas.length}` : `Lección ${item.number} de ${sueltas.length}`}>
                     {String(item.number).padStart(2, '0')}
                   </span>
                   <div>
                     <strong>{item.title}</strong>
                     <p>{item.promise}</p>
                   </div>
-                  <span className="st-curso-state">{done ? 'Hecha' : 'Pendiente'}</span>
+                  <span className="st-curso-state">{done ? (locale === 'en' ? 'Done' : 'Hecha') : (locale === 'en' ? 'Pending' : 'Pendiente')}</span>
                   <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
                   <ArrowRight size={14} />
                 </a>

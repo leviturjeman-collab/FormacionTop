@@ -1,0 +1,282 @@
+{
+  "id": "agente-alertas-operativas",
+  "order": 11,
+  "title": "Operational Alerts Agent",
+  "kicker": "Automation",
+  "platform": "n8n",
+  "platformLabel": "n8n",
+  "level": "basico",
+  "what": "An n8n workflow that acts as a watchdog: every hour it checks the status of a service or an API in your business (your website, your ordering system, a count of pending cases), compares what it sees against thresholds you define, and if anything falls outside the norm, it sends you a Telegram alert with the exact reason. If everything is fine, it stays quiet. It turns \"is everything still working?\" into a channel that only speaks up when there's something to look at.",
+  "forWho": "For whoever is responsible for keeping something running (a website, an order queue, an inbox with an SLA) and today finds out about problems when a customer calls. It pays for itself from the first scare it saves you: setting it up takes about an hour.",
+  "tools": ["n8n", "telegram", "python"],
+  "capabilities": [
+    "Checks your service's status URL every hour (or at whatever pace you configure)",
+    "Evaluates thresholds you write in a code node: status other than ok, more than N pending cases, whatever you define",
+    "Sends a Telegram alert only when there's an incident, with the specific reason and the time of the check",
+    "Stays silent when everything is fine: zero noise, every alert means something",
+    "Logs every check in n8n's execution history, so you can reconstruct when a problem started"
+  ],
+  "limits": [
+    "Fixes nothing: it just warns. Intervening on the monitored system is a human job",
+    "Doesn't replace professional monitoring with on-call rotations and escalation: it's the first step, good enough for small businesses",
+    "Doesn't detect what the checked URL doesn't report: if your status API lies, the watchdog lies with it",
+    "If n8n itself is down, there's no watchdog: for critical services, add a second, external watchdog"
+  ],
+  "flow": {
+    "name": "Operational Alerts Agent (hourly monitoring)",
+    "nodes": [
+      {
+        "name": "Flow note",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-380, -220],
+        "parameters": {
+          "content": "## Hourly watchdog with Telegram alert\nSchedule → check your service → evaluate thresholds → if there's an incident, Telegram; if not, silence.\n\nBefore activating: 1) replace the URL in the \"Check service\" node with your API or status page, 2) adjust the thresholds in \"Evaluate thresholds\", 3) Telegram bot credential and your chat_id.\n\nThis workflow only warns: it never touches the monitored system.",
+          "height": 300,
+          "width": 340
+        }
+      },
+      {
+        "name": "Every hour",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "Check service",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [220, 0],
+        "parameters": {
+          "method": "GET",
+          "url": "https://REPLACE-your-service.example/api/status",
+          "options": {
+            "timeout": 15000
+          }
+        }
+      },
+      {
+        "name": "Evaluate thresholds",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [440, 0],
+        "parameters": {
+          "jsCode": "// DEFINE what counts as an incident HERE. Adapt these rules to your service.\n// $json is the response from your status API.\nconst data = $json || {};\nconst problems = [];\n\n// Rule 1: the status field must equal 'ok'.\nif (data.status && data.status !== 'ok') {\n  problems.push('The service reports status \"' + data.status + '\"');\n}\n\n// Rule 2: too many pending cases (change the 20 threshold to yours).\nconst pending = Number(data.pending || 0);\nif (pending > 20) {\n  problems.push('There are ' + pending + ' pending cases (threshold: 20)');\n}\n\n// Rule 3 (example, delete or adapt): empty response = suspicious.\nif (Object.keys(data).length === 0) {\n  problems.push('The status API returned an empty response');\n}\n\nreturn [ { json: {\n  alert: problems.length > 0,\n  reason: problems.join(' · ') || 'no incidents',\n  checkedAt: new Date().toISOString()\n} } ];"
+        }
+      },
+      {
+        "name": "Is there an incident?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [660, 0],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cond-alerta",
+                "leftValue": "={{ $json.alert }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      },
+      {
+        "name": "Telegram alert",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [880, -100],
+        "parameters": {
+          "chatId": "REPLACE_CHAT_ID",
+          "text": "=🚨 Operational alert\nReason: {{ $json.reason }}\nChecked: {{ $json.checkedAt }}\n\nOpen n8n and look at the execution before acting: full detail is in the \"Check service\" node.",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "REPLACE",
+            "name": "Telegram bot (alerts)"
+          }
+        }
+      },
+      {
+        "name": "No incidents",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [880, 120],
+        "parameters": {}
+      }
+    ],
+    "connections": {
+      "Every hour": {
+        "main": [
+          [
+            {
+              "node": "Check service",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check service": {
+        "main": [
+          [
+            {
+              "node": "Evaluate thresholds",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Evaluate thresholds": {
+        "main": [
+          [
+            {
+              "node": "Is there an incident?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is there an incident?": {
+        "main": [
+          [
+            {
+              "node": "Telegram alert",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No incidents",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "sample-thresholds.md",
+      "language": "markdown",
+      "content": "# Threshold ideas for the \"Evaluate thresholds\" node\n\nThe code node is yours: every `if` you add is a monitoring rule. Patterns that work well:\n\n## Live website\nIf you're monitoring a regular page (not an API), in the \"Check service\" node add, under Options → Response → \"Include Response Headers and Status\", and check:\n```js\nconst code = Number($json.statusCode || 0);\nif (code !== 200) {\n  problems.push('The site responded with code ' + code);\n}\n```\n\n## Growing queue\n```js\nconst queued = Number(data.queued || 0);\nif (queued > 50) {\n  problems.push('Job queue at ' + queued + ' (threshold: 50)');\n}\n```\n\n## Stale data (the system stopped updating)\n```js\nconst last = new Date(data.last_updated || 0).getTime();\nconst hours = (Date.now() - last) / 3600000;\nif (hours > 2) {\n  problems.push('No updates for ' + hours.toFixed(1) + ' hours');\n}\n```\n\n## Tips\n- Start with ONE threshold and tighten it once it's gone a week without false alarms.\n- Every alert should state the value and the threshold: \"there are 34 (threshold: 20)\" lets you decide from your phone.\n- If a threshold fires every day and nobody acts, either the threshold is wrong or the action is missing: fix one of the two."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Import the workflow",
+      "action": "In n8n: Workflows → Add workflow → ⋯ → Import from file, and paste the JSON from the flow field.",
+      "expect": "6 nodes and a note: trigger, check, evaluation, IF, and the two outputs."
+    },
+    {
+      "title": "Point the watchdog at your service",
+      "action": "Open \"Check service\" and change the URL to your API or status page. If you don't have one, start by monitoring your own public website.",
+      "expect": "Running the node alone (Execute step), you see your service's real response.",
+      "stuck": "If your API requires a key, configure Authentication → Generic Credential Type → Header Auth and store the key in a credential, not in the URL."
+    },
+    {
+      "title": "Define your thresholds",
+      "action": "Open \"Evaluate thresholds\" and adapt the ifs to the actual fields your service returns (check the output of the previous step). Delete any sample rules that don't apply.",
+      "expect": "Running the node you see alert: true or false with a coherent reason.",
+      "stuck": "This page's sample-thresholds.md file has ready-to-copy patterns."
+    },
+    {
+      "title": "Connect Telegram",
+      "action": "Create the bot with @BotFather (/newbot), save the token as a Telegram credential in n8n, send a first message to your bot, and put your chat_id in the \"Telegram alert\" node.",
+      "expect": "Running the Telegram node manually, you get a test message.",
+      "stuck": "Without that first message from you to the bot, Telegram won't let it write to you: it's their antispam rule."
+    },
+    {
+      "title": "Force a test alert",
+      "action": "Temporarily lower a threshold to a value you know will be exceeded (e.g. pending > 0) and run the whole workflow with Test workflow.",
+      "expect": "Alert on Telegram with the reason and time. Set the threshold back to its real value afterward.",
+      "stuck": "If it doesn't arrive, open the execution: if the IF sent the item down the false branch, your test condition wasn't really met."
+    },
+    {
+      "title": "Activate and tune the pace",
+      "action": "Set the workflow to Active. If your service is delicate, lower the interval in \"Every hour\" (reasonable minimum: 5-10 minutes); if it's low-risk, raise it to 2-4 hours.",
+      "expect": "The execution history shows periodic checks and Telegram only rings for incidents."
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal test",
+      "input": "Run Test workflow with the service working and real thresholds.",
+      "expect": "A green execution ending in \"No incidents\". No Telegram message."
+    },
+    {
+      "name": "Simulated incident",
+      "input": "Temporarily change the URL to one that doesn't exist (e.g. add /down) and run it.",
+      "expect": "The workflow detects the failure (empty response or error) and the alert arrives with the reason. Restore the URL."
+    },
+    {
+      "name": "Threshold exceeded",
+      "input": "Lower the pending threshold to 0 and run with real data.",
+      "expect": "Alert with the real value and threshold: \"There are N pending cases (threshold: 0)\"."
+    },
+    {
+      "name": "Silence when it should be silent",
+      "input": "Leave it active for a full day with no incidents.",
+      "expect": "Hourly executions in the history and zero messages: the channel only speaks when there's something to say."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Telegram bot",
+      "where": "Telegram → @BotFather → /newbot",
+      "how": "Copy the token into an n8n Telegram credential; get your chat_id (e.g. with @userinfobot) and paste it into the alert node.",
+      "cost": "free"
+    },
+    {
+      "name": "Your monitored API's key (only if required)",
+      "where": "The dashboard of the service you're monitoring",
+      "how": "Store it as an n8n Header Auth credential on the \"Check service\" node; never in the URL or in code.",
+      "cost": "depends on the service; monitoring your own website is free"
+    }
+  ],
+  "risks": [
+    "False alarms that train the team to ignore the channel. Mitigation: realistic thresholds, and a fixed rule: every alert is either acted on or the threshold gets adjusted; ignoring it isn't an option.",
+    "False sense of security: the watchdog only sees what the URL reports. Mitigation: check once a month that the status API reflects reality (take down a test service and confirm it triggers).",
+    "Watchdog down without anyone knowing (n8n stopped). Mitigation: check the execution history every Monday; for anything critical, add a second, free external uptime check.",
+    "Exposing an API key in the URL. Mitigation: keys always go in n8n credentials; if one ended up in a shared URL, revoke it."
+  ],
+  "examples": [
+    {
+      "name": "Monitor your website",
+      "prompt": "Change the URL to https://yourcompany.com, enable the status code inclusion in Options, and use the \"live website\" threshold from the sample file."
+    },
+    {
+      "name": "Second recipient",
+      "prompt": "Duplicate the \"Telegram alert\" node, set your on-call colleague's chat_id, and connect it to the true branch of the IF as well."
+    }
+  ],
+  "kits": ["crm-reporting-institucional"]
+}

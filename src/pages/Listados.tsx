@@ -4,6 +4,7 @@ import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from
 import { useCourse, useIndexes } from '../course'
 import { href, type Route } from '../router'
 import { useStudent } from '../store'
+import { useLocale } from '../i18n'
 import Filters, { applyFilters } from '../components/Filters'
 import LessonList from '../components/LessonList'
 import { BrandMark } from '../components/Brand'
@@ -31,15 +32,17 @@ function useDoneSet() {
 export function Ruta() {
   const course = useCourse()
   const student = useStudent()
+  const locale = useLocale()
 
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker">Itinerario</span>
-        <h1>La ruta completa</h1>
+        <span className="st-kicker">{locale === 'en' ? 'Itinerary' : 'Itinerario'}</span>
+        <h1>{locale === 'en' ? 'The full path' : 'La ruta completa'}</h1>
         <p>
-          Diez áreas en el orden en que se aprende, divididas en {course.stats.categories} categorías.
-          Cada lección existe en tres niveles y puedes cambiar de nivel dentro de la propia lección.
+          {locale === 'en'
+            ? <>Ten areas in the order you learn them, split into {course.stats.categories} categories. Every lesson exists at three levels, and you can switch levels within the lesson itself.</>
+            : <>Diez áreas en el orden en que se aprende, divididas en {course.stats.categories} categorías. Cada lección existe en tres niveles y puedes cambiar de nivel dentro de la propia lección.</>}
         </p>
       </div>
 
@@ -54,7 +57,7 @@ export function Ruta() {
                 <span>{stage.number}</span>
                 <div>
                   <strong>{stage.title}</strong>
-                  <small>{stage.tagline} · {stage.categoryIds.length} categorías · {stage.lessonSlugs.length} lecciones</small>
+                  <small>{stage.tagline} · {stage.categoryIds.length} {locale === 'en' ? 'categories' : 'categorías'} · {stage.lessonSlugs.length} {locale === 'en' ? 'lessons' : 'lecciones'}</small>
                 </div>
                 <i><b style={{ width: `${percent}%` }} /></i>
                 <b>{percent}%</b>
@@ -77,6 +80,7 @@ export function Area({ stageId, route }: { stageId: string; route: Route }) {
   const student = useStudent()
   const doneSlugs = useDoneSet()
   const level: LevelId = student.preferredLevel || 'basico'
+  const locale = useLocale()
 
   const stage = stageById.get(stageId)
   const progress = useProgressOf(stage?.lessonSlugs || [])
@@ -85,8 +89,8 @@ export function Area({ stageId, route }: { stageId: string; route: Route }) {
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Esa área no existe</h2>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
+          <h2>{locale === 'en' ? "That area doesn't exist" : 'Esa área no existe'}</h2>
+          <a className="st-btn" href={href({ name: 'ruta' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
         </div>
       </div>
     )
@@ -106,12 +110,12 @@ export function Area({ stageId, route }: { stageId: string; route: Route }) {
           <span className="st-kicker">{stage.tagline}</span>
           <h1>{stage.title}</h1>
           <p>{stage.description}</p>
-          <p><strong>Meta del área:</strong> {stage.milestone}</p>
+          <p><strong>{locale === 'en' ? 'Area goal:' : 'Meta del área:'}</strong> {stage.milestone}</p>
         </div>
         <div className="st-area-stats">
-          <div><strong>{categories.length}</strong><small>categorías</small></div>
-          <div><strong>{stage.lessonSlugs.length}</strong><small>lecciones</small></div>
-          <div><strong>{progress.percent}%</strong><small>completado</small></div>
+          <div><strong>{categories.length}</strong><small>{locale === 'en' ? 'categories' : 'categorías'}</small></div>
+          <div><strong>{stage.lessonSlugs.length}</strong><small>{locale === 'en' ? 'lessons' : 'lecciones'}</small></div>
+          <div><strong>{progress.percent}%</strong><small>{locale === 'en' ? 'complete' : 'completado'}</small></div>
         </div>
       </header>
 
@@ -119,7 +123,7 @@ export function Area({ stageId, route }: { stageId: string; route: Route }) {
         const project = (course.projects || []).find((item) => item.stageId === stage.id)
         return project ? (
           <a className="st-project-cta" href={href({ name: 'proyecto', stageId: stage.id })}>
-            <span className="st-kicker">Proyecto final del área · {project.time}</span>
+            <span className="st-kicker">{locale === 'en' ? 'Final area project' : 'Proyecto final del área'} · {project.time}</span>
             <strong>{project.title}</strong>
             <em>{project.pitch}</em>
           </a>
@@ -127,17 +131,17 @@ export function Area({ stageId, route }: { stageId: string; route: Route }) {
       })()}
 
       <div className="st-section-head">
-        <h2>Categorías de esta área</h2>
-        <span>{categories.length} grupos</span>
+        <h2>{locale === 'en' ? 'Categories in this area' : 'Categorías de esta área'}</h2>
+        <span>{categories.length} {locale === 'en' ? 'groups' : 'grupos'}</span>
       </div>
       <CategoryGrid categoryIds={categories.map((category) => category.id)} />
 
       <div className="st-section-head">
-        <h2>Todas las lecciones del área</h2>
-        <span>{shown.length} de {all.length}</span>
+        <h2>{locale === 'en' ? 'All lessons in the area' : 'Todas las lecciones del área'}</h2>
+        <span>{shown.length} {locale === 'en' ? 'of' : 'de'} {all.length}</span>
       </div>
       <Filters route={route} lessons={all} hide={['stage']} />
-      {filtering && <p className="st-result-count">Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</p>}
+      {filtering && <p className="st-result-count">{locale === 'en' ? <>Showing <strong>{shown.length}</strong> of {all.length} lessons.</> : <>Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</>}</p>}
       <LessonList lessons={shown} level={level} />
     </div>
   )
@@ -150,11 +154,12 @@ export function Area({ stageId, route }: { stageId: string; route: Route }) {
 export function CategoryGrid({ categoryIds }: { categoryIds: string[] }) {
   const course = useCourse()
   const student = useStudent()
+  const locale = useLocale()
   const categories = categoryIds
     .map((id) => course.categories.find((category) => category.id === id))
     .filter(Boolean) as typeof course.categories
 
-  if (!categories.length) return <p className="st-empty">Esta área no tiene categorías propias.</p>
+  if (!categories.length) return <p className="st-empty">{locale === 'en' ? 'This area has no categories of its own.' : 'Esta área no tiene categorías propias.'}</p>
 
   return (
     <div className="st-cat-grid">
@@ -166,7 +171,7 @@ export function CategoryGrid({ categoryIds }: { categoryIds: string[] }) {
           <a key={category.id} className="st-cat-card" href={href({ name: 'categoria', categoryId: category.id, filters: {} })}>
             {category.parentLabel && <small>{category.parentLabel}</small>}
             <strong>{category.label}</strong>
-            <span>{category.count} {category.count === 1 ? 'lección' : 'lecciones'} · {Math.round(category.minutes / 60)} h</span>
+            <span>{category.count} {locale === 'en' ? (category.count === 1 ? 'lesson' : 'lessons') : (category.count === 1 ? 'lección' : 'lecciones')} · {Math.round(category.minutes / 60)} h</span>
             <div>
               <i><b style={{ width: `${percent}%` }} /></i>
               <span>{percent}%</span>
@@ -188,6 +193,7 @@ export function Categoria({ categoryId, route }: { categoryId: string; route: Ro
   const student = useStudent()
   const doneSlugs = useDoneSet()
   const level: LevelId = student.preferredLevel || 'basico'
+  const locale = useLocale()
 
   const category = course.categories.find((item) => item.id === categoryId)
   const progress = useProgressOf(category?.lessonSlugs || [])
@@ -196,8 +202,8 @@ export function Categoria({ categoryId, route }: { categoryId: string; route: Ro
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Esa categoría no existe</h2>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
+          <h2>{locale === 'en' ? "That category doesn't exist" : 'Esa categoría no existe'}</h2>
+          <a className="st-btn" href={href({ name: 'ruta' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
         </div>
       </div>
     )
@@ -218,20 +224,20 @@ export function Categoria({ categoryId, route }: { categoryId: string; route: Ro
           <p><code>{category.key}</code></p>
           {stage && (
             <p>
-              Pertenece al área{' '}
-              <a href={href({ name: 'area', stageId: stage.id, filters: {} })}>{stage.number}. {stage.title}</a>.
+              {locale === 'en' ? 'Part of the ' : 'Pertenece al área'}{' '}
+              <a href={href({ name: 'area', stageId: stage.id, filters: {} })}>{stage.number}. {stage.title}</a>{locale === 'en' ? ' area' : ''}.
             </p>
           )}
         </div>
         <div className="st-area-stats">
-          <div><strong>{category.count}</strong><small>lecciones</small></div>
-          <div><strong>{Math.round(category.minutes / 60)} h</strong><small>nivel medio</small></div>
-          <div><strong>{progress.percent}%</strong><small>completado</small></div>
+          <div><strong>{category.count}</strong><small>{locale === 'en' ? 'lessons' : 'lecciones'}</small></div>
+          <div><strong>{Math.round(category.minutes / 60)} h</strong><small>{locale === 'en' ? 'average level' : 'nivel medio'}</small></div>
+          <div><strong>{progress.percent}%</strong><small>{locale === 'en' ? 'complete' : 'completado'}</small></div>
         </div>
       </header>
 
       <Filters route={route} lessons={all} hide={['stage']} />
-      <p className="st-result-count">Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</p>
+      <p className="st-result-count">{locale === 'en' ? <>Showing <strong>{shown.length}</strong> of {all.length} lessons.</> : <>Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</>}</p>
       <LessonList lessons={shown} level={level} showCategory={false} />
     </div>
   )
@@ -243,24 +249,26 @@ export function Categoria({ categoryId, route }: { categoryId: string; route: Ro
 
 export function Biblioteca() {
   const course = useCourse()
+  const locale = useLocale()
 
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker">Consulta</span>
-        <h1>Biblioteca</h1>
+        <span className="st-kicker">{locale === 'en' ? 'Reference' : 'Consulta'}</span>
+        <h1>{locale === 'en' ? 'Library' : 'Biblioteca'}</h1>
         <p>
-          Las {course.folders.length} carpetas de tu vault, tal y como las tienes organizadas. La ruta es para
-          aprender en orden; esto es para encontrar algo concreto cuando ya sabes qué buscas.
+          {locale === 'en'
+            ? <>The {course.folders.length} folders of your vault, organized exactly as you have them. The path is for learning in order; this is for finding something specific once you already know what you're looking for.</>
+            : <>Las {course.folders.length} carpetas de tu vault, tal y como las tienes organizadas. La ruta es para aprender en orden; esto es para encontrar algo concreto cuando ya sabes qué buscas.</>}
         </p>
       </div>
 
       <div className="st-cat-grid">
         {course.folders.map((folder) => (
           <a key={folder.id} className="st-cat-card" href={href({ name: 'carpeta', folderId: folder.id, filters: {} })}>
-            <small>Carpeta</small>
+            <small>{locale === 'en' ? 'Folder' : 'Carpeta'}</small>
             <strong>{folder.label}</strong>
-            <span>{folder.count} {folder.count === 1 ? 'lección' : 'lecciones'}</span>
+            <span>{folder.count} {locale === 'en' ? (folder.count === 1 ? 'lesson' : 'lessons') : (folder.count === 1 ? 'lección' : 'lecciones')}</span>
           </a>
         ))}
       </div>
@@ -274,14 +282,15 @@ export function Carpeta({ folderId, route }: { folderId: string; route: Route })
   const student = useStudent()
   const doneSlugs = useDoneSet()
   const level: LevelId = student.preferredLevel || 'basico'
+  const locale = useLocale()
 
   const folder = course.folders.find((item) => item.id === folderId)
   if (!folder) {
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Esa carpeta no existe</h2>
-          <a className="st-btn" href={href({ name: 'biblioteca' })}>Volver a la biblioteca</a>
+          <h2>{locale === 'en' ? "That folder doesn't exist" : 'Esa carpeta no existe'}</h2>
+          <a className="st-btn" href={href({ name: 'biblioteca' })}>{locale === 'en' ? 'Back to the library' : 'Volver a la biblioteca'}</a>
         </div>
       </div>
     )
@@ -294,13 +303,13 @@ export function Carpeta({ folderId, route }: { folderId: string; route: Route })
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker">Biblioteca</span>
+        <span className="st-kicker">{locale === 'en' ? 'Library' : 'Biblioteca'}</span>
         <h1>{folder.label}</h1>
-        <p><code>{folder.folder}</code> · {folder.count} {folder.count === 1 ? 'lección' : 'lecciones'}</p>
+        <p><code>{folder.folder}</code> · {folder.count} {locale === 'en' ? (folder.count === 1 ? 'lesson' : 'lessons') : (folder.count === 1 ? 'lección' : 'lecciones')}</p>
       </div>
 
       <Filters route={route} lessons={all} />
-      <p className="st-result-count">Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</p>
+      <p className="st-result-count">{locale === 'en' ? <>Showing <strong>{shown.length}</strong> of {all.length} lessons.</> : <>Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</>}</p>
       <LessonList lessons={shown} level={level} />
     </div>
   )
@@ -312,15 +321,17 @@ export function Carpeta({ folderId, route }: { folderId: string; route: Route })
 
 export function Herramientas() {
   const course = useCourse()
+  const locale = useLocale()
 
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker">Por herramienta</span>
-        <h1>Herramientas del curso</h1>
+        <span className="st-kicker">{locale === 'en' ? 'By tool' : 'Por herramienta'}</span>
+        <h1>{locale === 'en' ? 'Course tools' : 'Herramientas del curso'}</h1>
         <p>
-          Todo lo que la academia enseña sobre cada herramienta, reunido en un sitio. Útil cuando la pregunta
-          no es «¿por dónde sigo?» sino «¿qué sabe este curso sobre n8n?».
+          {locale === 'en'
+            ? 'Everything the academy teaches about each tool, gathered in one place. Useful when the question isn\'t "what comes next?" but "what does this course know about n8n?".'
+            : 'Todo lo que la academia enseña sobre cada herramienta, reunido en un sitio. Útil cuando la pregunta no es «¿por dónde sigo?» sino «¿qué sabe este curso sobre n8n?».'}
         </p>
       </div>
 
@@ -336,17 +347,24 @@ export function Herramientas() {
                 <strong>{tool.label}</strong>
                 {tool.guide ? (
                   <span>
-                    {[
-                      tool.count ? `${tool.count} lecciones` : '',
-                      promptCount ? `${promptCount} prompts` : '',
-                      automationCount ? `${automationCount} automatizaciones` : '',
-                      tool.count || promptCount || automationCount ? 'guía completa' : 'guía manual',
-                    ].filter(Boolean).join(' · ')}
+                    {locale === 'en'
+                      ? [
+                          tool.count ? `${tool.count} lessons` : '',
+                          promptCount ? `${promptCount} prompts` : '',
+                          automationCount ? `${automationCount} automations` : '',
+                          tool.count || promptCount || automationCount ? 'full guide' : 'manual guide',
+                        ].filter(Boolean).join(' · ')
+                      : [
+                          tool.count ? `${tool.count} lecciones` : '',
+                          promptCount ? `${promptCount} prompts` : '',
+                          automationCount ? `${automationCount} automatizaciones` : '',
+                          tool.count || promptCount || automationCount ? 'guía completa' : 'guía manual',
+                        ].filter(Boolean).join(' · ')}
                   </span>
                 ) : escritas > 0 ? (
-                  <span className="st-tool-itinerary">Itinerario · {escritas} lecciones</span>
+                  <span className="st-tool-itinerary">{locale === 'en' ? 'Itinerary' : 'Itinerario'} · {escritas} {locale === 'en' ? 'lessons' : 'lecciones'}</span>
                 ) : (
-                  <span>{tool.count} lecciones seleccionadas</span>
+                  <span>{tool.count} {locale === 'en' ? 'lessons selected' : 'lecciones seleccionadas'}</span>
                 )}
               </div>
             </a>
@@ -363,14 +381,15 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const student = useStudent()
   const doneSlugs = useDoneSet()
   const level: LevelId = student.preferredLevel || 'basico'
+  const locale = useLocale()
 
   const tool = course.toolPages.find((item) => item.id === toolId)
   if (!tool) {
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Esa herramienta no está en el curso</h2>
-          <a className="st-btn" href={href({ name: 'herramientas' })}>Ver todas</a>
+          <h2>{locale === 'en' ? "That tool isn't in the course" : 'Esa herramienta no está en el curso'}</h2>
+          <a className="st-btn" href={href({ name: 'herramientas' })}>{locale === 'en' ? 'See all' : 'Ver todas'}</a>
         </div>
       </div>
     )
@@ -387,23 +406,25 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const toolMapItems = [
     {
       id: 'guia-herramienta',
-      title: 'Guía rápida',
-      detail: 'Qué es, para qué sirve y qué no debes tocar todavía.',
+      title: locale === 'en' ? 'Quick guide' : 'Guía rápida',
+      detail: locale === 'en' ? "What it is, what it's for, and what not to touch yet." : 'Qué es, para qué sirve y qué no debes tocar todavía.',
     },
     ...(all.length ? [{
       id: 'lecciones-herramienta',
-      title: 'Lecciones',
-      detail: `${tool.count} seleccionadas${hiddenCount ? ` de ${totalAvailable}` : ''}`,
+      title: locale === 'en' ? 'Lessons' : 'Lecciones',
+      detail: locale === 'en'
+        ? `${tool.count} selected${hiddenCount ? ` of ${totalAvailable}` : ''}`
+        : `${tool.count} seleccionadas${hiddenCount ? ` de ${totalAvailable}` : ''}`,
     }] : []),
     ...(promptCount ? [{
       id: 'prompts-herramienta',
       title: 'Prompts',
-      detail: `${promptCount} listos para copiar`,
+      detail: locale === 'en' ? `${promptCount} ready to copy` : `${promptCount} listos para copiar`,
     }] : []),
     ...(automationCount ? [{
       id: 'automatizaciones',
-      title: 'Automatizaciones',
-      detail: `${automationCount} flujos explicados`,
+      title: locale === 'en' ? 'Automations' : 'Automatizaciones',
+      detail: locale === 'en' ? `${automationCount} explained flows` : `${automationCount} flujos explicados`,
     }] : []),
   ]
   const jumpTo = (id: string) => {
@@ -415,31 +436,37 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
       <header className="st-area-head">
         <span><BrandMark icon={tool.icon} size={40} /></span>
         <div>
-          <span className="st-kicker">Herramienta</span>
+          <span className="st-kicker">{locale === 'en' ? 'Tool' : 'Herramienta'}</span>
           <h1>{tool.label}</h1>
           <p>
-            {tool.count
-              ? `Lo esencial de ${tool.label}, curado en un máximo de ${tool.maxLessons || 25} lecciones de consulta.`
-              : `${tool.label} funciona como herramienta manual de consulta: primero entiendes qué hace y después la usas solo cuando te ayuda en tu trabajo real.`}
-            {hiddenCount ? ` Hay ${hiddenCount} menciones internas más, pero no se muestran aquí para no crear una lista interminable.` : ''}
+            {locale === 'en'
+              ? (tool.count
+                  ? `The essentials of ${tool.label}, curated into up to ${tool.maxLessons || 25} reference lessons.`
+                  : `${tool.label} works as a manual reference tool: first you understand what it does, then you use it only when it helps your real work.`)
+              : (tool.count
+                  ? `Lo esencial de ${tool.label}, curado en un máximo de ${tool.maxLessons || 25} lecciones de consulta.`
+                  : `${tool.label} funciona como herramienta manual de consulta: primero entiendes qué hace y después la usas solo cuando te ayuda en tu trabajo real.`)}
+            {hiddenCount ? (locale === 'en'
+              ? ` There are ${hiddenCount} more internal mentions, but they aren't shown here to avoid an endless list.`
+              : ` Hay ${hiddenCount} menciones internas más, pero no se muestran aquí para no crear una lista interminable.`) : ''}
           </p>
         </div>
         <div className="st-area-stats">
           {tool.count ? (
             <>
-              <div><strong>{tool.count}</strong><small>seleccionadas</small></div>
-              <div><strong>{progress.percent}%</strong><small>completado</small></div>
+              <div><strong>{tool.count}</strong><small>{locale === 'en' ? 'selected' : 'seleccionadas'}</small></div>
+              <div><strong>{progress.percent}%</strong><small>{locale === 'en' ? 'complete' : 'completado'}</small></div>
             </>
           ) : (
             <>
-              <div><strong>Manual</strong><small>uso guiado</small></div>
-              <div><strong>{automationCount}</strong><small>automatizaciones</small></div>
+              <div><strong>{locale === 'en' ? 'Manual' : 'Manual'}</strong><small>{locale === 'en' ? 'guided use' : 'uso guiado'}</small></div>
+              <div><strong>{automationCount}</strong><small>{locale === 'en' ? 'automations' : 'automatizaciones'}</small></div>
             </>
           )}
         </div>
       </header>
 
-      <section className="st-tool-map" aria-label={`Mapa de ${tool.label}`}>
+      <section className="st-tool-map" aria-label={locale === 'en' ? `Map of ${tool.label}` : `Mapa de ${tool.label}`}>
         {toolMapItems.map((item, index) => (
           <button key={item.id} type="button" onClick={() => jumpTo(item.id)}>
             <span>{index + 1}</span>
@@ -453,11 +480,11 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
         <section id="guia-herramienta" className="st-tool-guide">
           <div className="st-section-head">
             <div>
-              <span className="st-kicker">Empieza aquí</span>
-              <h2>Primero entiende la herramienta</h2>
+              <span className="st-kicker">{locale === 'en' ? 'Start here' : 'Empieza aquí'}</span>
+              <h2>{locale === 'en' ? 'Understand the tool first' : 'Primero entiende la herramienta'}</h2>
             </div>
           </div>
-          <Blocks blocks={guideBlocks(tool.guide, tool.label)} />
+          <Blocks blocks={guideBlocks(tool.guide, tool.label, locale)} />
         </section>
       )}
 
@@ -465,13 +492,15 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
         <section id="lecciones-herramienta" className="st-tool-lessons">
           <div className="st-section-head">
             <div>
-              <span className="st-kicker">Lecciones dentro de {tool.label}</span>
-              <h2>Estudia solo estas piezas</h2>
+              <span className="st-kicker">{locale === 'en' ? `Lessons inside ${tool.label}` : `Lecciones dentro de ${tool.label}`}</span>
+              <h2>{locale === 'en' ? 'Study only these pieces' : 'Estudia solo estas piezas'}</h2>
               <p className="st-tool-inside-intro">
-                No son otra ruta obligatoria. Son las lecciones seleccionadas para entender {tool.label} cuando tu proyecto la necesite.
+                {locale === 'en'
+                  ? <>These aren't another mandatory path. They're the lessons selected to help you understand {tool.label} whenever your project needs it.</>
+                  : <>No son otra ruta obligatoria. Son las lecciones seleccionadas para entender {tool.label} cuando tu proyecto la necesite.</>}
               </p>
             </div>
-            <span>{shown.length} de {all.length}{hiddenCount ? ` · ${hiddenCount} guardadas fuera` : ''}</span>
+            <span>{shown.length} {locale === 'en' ? 'of' : 'de'} {all.length}{hiddenCount ? (locale === 'en' ? ` · ${hiddenCount} saved outside` : ` · ${hiddenCount} guardadas fuera`) : ''}</span>
           </div>
           <Filters route={route} lessons={all} hide={['tool']} />
           <LessonList lessons={shown} level={level} />

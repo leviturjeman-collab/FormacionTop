@@ -1,0 +1,466 @@
+{
+  "id": "n8n-05",
+  "tool": "n8n",
+  "slot": 5,
+  "number": 205,
+  "stageId": "automatizacion",
+  "title": "The screen from the inside: canvas, nodes, and executions",
+  "promise": "You'll be able to move around n8n without hunting: where you add a box, where you see what goes in and out of it, and where you investigate any \"it didn't work.\" By the end you'll have run a two-box flow and actually read its data.",
+  "minutes": 20,
+  "why": "Ana builds her first flow in an afternoon and it works. The next day it stops working and she spends two hours changing things at random: rewriting the filter, deleting a box, putting it back, changing the credential. She eventually fixes it without knowing what she fixed. The problem wasn't the flow. The problem was not knowing there's a screen that tells you exactly what went in and out of each box on each run. With that screen, the diagnosis would have taken two minutes.",
+  "theory": [
+    {
+      "title": "Three zones, and one that's the important one",
+      "text": "The screen has three zones. In the center is the canvas, where you draw. On the right is the node panel, which is the box search bar. And then there's the executions list: the history of every time the flow has run. Almost everyone lives in the first two and discovers the third when something fails. It should be the other way around: the executions list is where you really learn, because it's the only one that shows you real data instead of configuration.",
+      "analogy": "The canvas is the blueprint of the plumbing; the executions are the log of what happened every time the tap was turned on.",
+      "visual": {
+        "kind": "screenmap",
+        "title": "The five zones you're going to use",
+        "caption": "Click each one. The rest of the interface can wait months.",
+        "areas": [
+          {
+            "name": "Top bar",
+            "place": "top",
+            "what": "Flow name, save button, and the activate switch. Save and activate are DIFFERENT things: save keeps your changes, activate makes the flow run on its own.",
+            "tip": "A saved and tested flow that isn't activated does absolutely nothing, and doesn't warn you. It's oversight number one."
+          },
+          {
+            "name": "Canvas",
+            "place": "center",
+            "what": "Where you drag boxes and connect them with arrows. Each box does one thing; the arrows say in what order and with what data.",
+            "tip": "You move it by dragging the background and zoom with the scroll wheel. If you get lost, there's a button to fit everything on screen."
+          },
+          {
+            "name": "Node panel",
+            "place": "right",
+            "what": "The box search bar. You type an app name (Gmail, Sheets) or what you want to do (filter, wait) and the options come up.",
+            "tip": "There are over a thousand. You're going to use six or seven. Don't get into exploring them: search for what you need and get out."
+          },
+          {
+            "name": "Executions",
+            "place": "left",
+            "what": "The history: every time the flow has started, with its date and status (successful, errored, filtered out). Each line opens up.",
+            "tip": "This is the diagnostic screen. Before touching anything when something fails, come here first."
+          },
+          {
+            "name": "Box panel",
+            "place": "bottom",
+            "what": "When you open a box, three columns: what comes IN on the left, the settings in the middle, and what comes OUT on the right.",
+            "tip": "Those three columns are all of n8n. If you learn to read them, you don't need tutorials anymore."
+          }
+        ]
+      }
+    },
+    {
+      "title": "A box's three columns: in, configure, out",
+      "text": "When you open any box you'll always see the same thing: on the left the data arriving from the previous step, in the center what you configure, and on the right what it returns. Learning n8n means learning a habit: you run it, you check the right-hand column, and you confirm it brings what you expected. Only then do you build the next box. Whoever builds six boxes in a row without checking those columns ends up with a flow where they can't find the failures.",
+      "example": "You open the Gmail node, run it, and on the right the whole email shows up: sender, subject, body, attachments. Now you know the exact field names you'll be able to use in the next box.",
+      "visual": {
+        "kind": "canvas",
+        "title": "A box from the inside",
+        "caption": "The three columns, explained. Click each one.",
+        "nodes": [
+          {
+            "kind": "Left column",
+            "label": "What comes in",
+            "note": "from the previous step",
+            "role": "trigger",
+            "does": "The data that arrives from the box before, as-is. If this column is empty, the box can't do anything, and the problem is UPSTREAM, not here.",
+            "input": "The output of the previous box.",
+            "output": "Nothing: it's just for looking at.",
+            "breaks": "If you expected four items and see one, the earlier filter is cutting too much."
+          },
+          {
+            "kind": "Middle column",
+            "label": "What you configure",
+            "note": "your settings",
+            "role": "filter",
+            "does": "The fields you fill in: which sheet, which channel, which condition. This is where you use expressions, short formulas, to grab data from the left column.",
+            "input": "What you type.",
+            "output": "The configuration saved with the flow.",
+            "breaks": "A field name typed by hand instead of picked from the list: if the field's name changes, it silently stops working."
+          },
+          {
+            "kind": "Right column",
+            "label": "What comes out",
+            "note": "the real result",
+            "role": "action",
+            "does": "What the box returns after running. It's what the next box is going to receive, and it's the column you have to check ALWAYS before building the next step.",
+            "input": "The result of running it.",
+            "output": "The data that travels to the next step.",
+            "breaks": "If it's empty but the box shows green, the box worked and found nothing. Green doesn't mean there's data."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Green doesn't mean it worked",
+      "text": "When you run it, boxes turn green if there was no error. But a box can turn green and have done nothing: a filter that cuts everything, a search that finds nothing, an empty list. Green says \"it didn't blow up,\" not \"it did what you wanted.\" That's why the real check is never the color: it's the number of items coming out, which shows up right on the arrow between boxes.",
+      "analogy": "Like an email's \"sent\" status: it confirms it went out, not that it reached the right person.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "Four runs, all green",
+        "caption": "Look at the number coming out of each step. Only one of the four actually did its job.",
+        "steps": [
+          {
+            "label": "All good",
+            "does": "The filter lets through what it should",
+            "in": 6,
+            "out": 4,
+            "why": "Six go in, four come out. That's expected and the flow continues with those four."
+          },
+          {
+            "label": "The filter cuts everything",
+            "does": "The condition is never met",
+            "in": 6,
+            "out": 0,
+            "why": "Green, no errors, and nothing happened. It's usually comparing with \"is exactly equal to\" when the text has an extra space or a different capital letter."
+          },
+          {
+            "label": "The search finds nothing",
+            "does": "Looks up a client that doesn't exist",
+            "in": 1,
+            "out": 0,
+            "why": "The box worked perfectly: it searched and there was nothing. Green. If the next step assumes something exists, it'll blow up there and you'll look for the bug in the wrong place."
+          },
+          {
+            "label": "Too many come through",
+            "does": "A list you weren't expecting",
+            "in": 1,
+            "out": 47,
+            "why": "One goes in and forty-seven come out: the box returned an entire list. If the next one sends a message, you just sent forty-seven messages."
+          }
+        ]
+      }
+    },
+    {
+      "title": "The executions list is where you diagnose",
+      "text": "Every time the flow starts, a line gets added to the history, with the time and status. When you open it, you see the flow exactly as it ran THAT time, with the real data from that moment in each box. It's not a simulation or a text log: it's the flow frozen in place. When someone tells you \"this failed yesterday at three,\" you open that execution and see exactly what arrived and which box things went wrong in.",
+      "example": "Ana could have opened the failed execution, seen that the spreadsheet node received an email with no amount in it, and understood in two minutes what cost her two hours.",
+      "visual": {
+        "kind": "timeline",
+        "title": "An open execution, step by step",
+        "caption": "What you see when you open a line from the history. Notice where it goes wrong.",
+        "note": "The times are from a real execution: almost all the time is spent waiting on outside services, not computing.",
+        "steps": [
+          {
+            "label": "Email arrives",
+            "ms": 40,
+            "risk": "low",
+            "detail": "The trigger picks up the whole message: sender, subject, body, and attachments."
+          },
+          {
+            "label": "Filter: is it from a client?",
+            "ms": 15,
+            "risk": "low",
+            "detail": "Checks the sender and the subject. Passes.",
+            "fails": "If you compare with \"exact match,\" one extra space cuts it and the flow ends here, in green."
+          },
+          {
+            "label": "Extract the amount",
+            "ms": 25,
+            "risk": "medium",
+            "detail": "Looks for the figure in the email body.",
+            "fails": "If the client wrote \"sounds good\" with no figure, this returns empty and does NOT throw an error."
+          },
+          {
+            "label": "Create the row",
+            "ms": 820,
+            "risk": "medium",
+            "detail": "Writes to the Google Sheet. Almost a second: that's network, not computation.",
+            "fails": "If the amount came in empty, it creates the row with the gap. Green, with an incomplete piece of data inside."
+          },
+          {
+            "label": "Create the folder",
+            "ms": 1140,
+            "risk": "medium",
+            "detail": "Creates the folder in Drive with the client's name.",
+            "fails": "If one already existed from another quote, it creates a second one with the same name."
+          },
+          {
+            "label": "Notify the site manager",
+            "ms": 610,
+            "risk": "high",
+            "detail": "Sends the message. It's the last step, and the one that hurts most if it fails.",
+            "fails": "If it blows up here, the row and the folder are ALREADY created. The work is half-done and nobody knows it."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Save, run, and activate are three different things",
+      "text": "Save keeps your changes to the drawing. Run launches it once, right now, with test data, and it's what you do a hundred times while you're building. Activate is the switch that makes it run on its own from now on, without you. People mix them up constantly, and the result is always the same. The student considers the flow finished, but the flow does nothing because nobody flipped the switch.",
+      "example": "Try it yourself: save a flow, close it, open it. It's still there. Run it: a new line appears in the history. Activate it and trigger the real case: another line appears, this time without you having done anything.",
+      "visual": {
+        "kind": "beforeafter",
+        "title": "Saved isn't activated",
+        "caption": "Both flows are finished. Only one works.",
+        "beforeLabel": "Saved and tested",
+        "afterLabel": "Saved, tested, and ACTIVATED",
+        "rows": [
+          {
+            "before": "The drawing is preserved when you close it",
+            "after": "The drawing is preserved when you close it"
+          },
+          {
+            "before": "It runs when you press the button",
+            "after": "It runs when the trigger fires"
+          },
+          {
+            "before": "The history only has your tests",
+            "after": "The history captures the real cases"
+          },
+          {
+            "before": "With the browser closed, nothing happens",
+            "after": "With the browser closed, it keeps working"
+          },
+          {
+            "before": "You think it's running, and it isn't",
+            "after": "It's really running"
+          }
+        ],
+        "gain": "The switch is top right. After flipping it, trigger the real case once and check in the history that it fired on its own."
+      }
+    },
+    {
+      "title": "What you can ignore for months",
+      "text": "n8n shows you many things you don't need yet: custom environment variables, community templates, shared credentials, projects, execution settings, tags, node notes. All of that exists for good reasons and none of them apply to you right now. The list of what actually matters is short and fits in one hand: add a box, connect, run, check the right-hand column, open an execution from the history.",
+      "analogy": "A car has forty buttons. You learn to drive with three."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Open n8n and locate the five zones",
+      "where": "In n8n, with a new flow open",
+      "action": "Without touching anything, point on screen with your finger: the top bar, the canvas, the node panel, the executions list, and where the box panel will show up. It sounds silly and it's what keeps you from getting lost in the next lesson.",
+      "expect": "You can say out loud what each zone is without looking at this lesson.",
+      "stuck": "If you can't find the executions list, look in the side menu or at the top: depending on the version it's in one spot or another, but it's always called Executions."
+    },
+    {
+      "title": "Create the simplest possible flow",
+      "where": "On the canvas",
+      "action": "Click the button to add the first step and choose the manual trigger (\"Trigger manually\"). It's the only trigger that isn't watching anything: it starts when you press the button. It's the one you'll use for learning.",
+      "expect": "A box on the canvas with the manual trigger's name.",
+      "stuck": "If you can't find it, type \"manual\" in the node search bar."
+    },
+    {
+      "title": "Add a box that fabricates fake data",
+      "where": "By clicking the + to the right of the first box",
+      "action": "Search for \"Edit Fields\" (it also shows up as \"Set\"). It's the box for creating or changing data by hand, and it's perfect for practicing because it doesn't touch any outside service. Inside, add two fields: one called name with the value Marta, and another called amount with the value 1240.",
+      "expect": "Two boxes connected by an arrow.",
+      "stuck": "If the box asks you to choose a mode, leave the default one. What matters right now is that it returns something."
+    },
+    {
+      "title": "Run it and look at the right-hand column",
+      "where": "Run button, then open the second box",
+      "action": "Click to run the flow. Both boxes turn green. Now open the second box and look at the right-hand column: there are your two fields with their values. That column is what the next box would receive.",
+      "expect": "On the right you see name: Marta and amount: 1240.",
+      "stuck": "If the right column is empty, either you haven't run it or the box isn't returning anything. Click run again."
+    },
+    {
+      "title": "Switch to the JSON view and compare",
+      "where": "In that same right column, there's a view selector (Table / JSON)",
+      "action": "Click JSON. You'll see the same data in the format it really travels in: braces, names in quotes, and values. You don't need to know how to write it, but you do need to recognize it, because it's what you'll see when you connect real services.",
+      "expect": "The same data in two formats. You understand that the table is just a nicer way of showing the JSON.",
+      "stuck": "If you don't see the selector, look for the words Table, JSON, or Schema somewhere in that column."
+    },
+    {
+      "title": "Fabricate two items instead of one",
+      "where": "In the Edit Fields box",
+      "action": "Look for the option to run once per item, or add a second item if your version allows it. If you can't figure out how, that's fine: look at the arrow between the two boxes instead. A number shows up there, and that number is how many items travel over that arrow. It's the piece of data you'll be checking most throughout the whole course.",
+      "expect": "You locate the item count on the arrow between boxes.",
+      "stuck": "That number is small and sits above the line. If you don't see it, run the flow: it appears after running."
+    },
+    {
+      "title": "Break the flow on purpose",
+      "where": "In the second box",
+      "action": "Delete the first field's name and leave it empty, or type something invalid. Run it. Watch what happens: it might throw a red error, or it might stay green and return something odd. Both teach you something, and the second one teaches you more.",
+      "expect": "You can tell apart a box that blows up from a box that works and returns garbage.",
+      "stuck": "If you can't manage to break it, don't push it: in lesson 35 you break things for real, with method."
+    },
+    {
+      "title": "Open the executions list and count",
+      "where": "In the executions section",
+      "action": "There are all the times you've run it in this session, with the time and status. Open the last one: you'll see the flow exactly as it ran, with that moment's data. Click the boxes inside that view and check that you can read what went in and what came out.",
+      "expect": "A list with several lines and one of them open, with real data inside.",
+      "stuck": "If the list is empty, manual executions aren't being saved in your configuration. Run it with the flow saved and check again."
+    },
+    {
+      "title": "Save, close, and reopen",
+      "where": "Top bar",
+      "action": "Give the flow a name (something you'll understand a year from now, not \"flow 1\"), save, close the tab, and go back in. Check it's still there with its two boxes. Notice that the activate switch is still off: saving isn't activating.",
+      "expect": "The flow shows up in your list with the name you gave it, and the switch is off.",
+      "stuck": "If closing warns you about unsaved changes, that means you hadn't saved. That warning is your friend."
+    },
+    {
+      "title": "Write the three spots down on your sheet",
+      "where": "On the paper from lesson 01",
+      "action": "Three lines, in your own words: where you add a box, where you see what comes out of a box, and where you investigate a failure. Writing it yourself locks it in far better than rereading it.",
+      "expect": "Three sentences written in your own hand.",
+      "stuck": "If one won't come out right, go back to the matching task and do it again while watching."
+    }
+  ],
+  "errors": [
+    {
+      "message": "I ran it and nothing happens, no green, no red",
+      "means": "You didn't run the flow, you saved it. They're different buttons and they're close together.",
+      "fix": "Look for the button that says \"Test workflow\" or \"Execute workflow.\" Save is the other one. After running, the boxes change color and a line appears in the history."
+    },
+    {
+      "message": "The box is green but the right column is empty",
+      "means": "The box worked and returned nothing. It's not an error: it's a result. A filter that cuts everything, a search with no results, or an empty list all look like this.",
+      "fix": "Go up to the previous box and check ITS right column: if there's nothing there either, the problem is further upstream. Keep going backward until you find the first box that does bring data."
+    },
+    {
+      "message": "I can't find the executions list",
+      "means": "Depending on the version it's in the side menu, in a tab next to the flow, or up top.",
+      "fix": "Search for the word Executions. If your flow has never run, the list shows up empty and looks like it doesn't exist: run it once and it'll appear."
+    },
+    {
+      "message": "My manual executions aren't being saved in the history",
+      "means": "There's a setting that decides whether manual, successful, and failed executions get saved, and it doesn't always come fully turned on.",
+      "fix": "In the flow's settings (the gear icon, not the general settings) look for the save executions options and turn on at least failed and manual ones while you're learning. They take up little space and are worth a lot."
+    },
+    {
+      "message": "I connected the boxes but the data isn't reaching the second one",
+      "means": "The arrow is drawn but you haven't run it again, or you connected it after running.",
+      "fix": "Run it again. A box's left column shows data from the LAST run, it doesn't update on its own when you draw a new arrow."
+    },
+    {
+      "message": "The flow works when I press the button but not on its own",
+      "means": "It's saved but not activated, or the trigger is manual, which by definition only starts when you launch it.",
+      "fix": "Two things: swap the manual trigger for a real one (scheduled, webhook — a notification another website sends your flow — or app-based) and then flip the activate switch. With the manual one in place, activating does nothing."
+    },
+    {
+      "message": "I lost the flow I was building",
+      "means": "You closed without saving. n8n warns you, but the warning is easy to dismiss without reading.",
+      "fix": "There's no recovery in most cases. Get in the habit of saving every few changes: the shortcut is the same as any other program."
+    }
+  ],
+  "matters": [
+    "Checking the right-hand column of each box after running it, before building the next one. It's the habit that separates people who build flows from people who copy tutorials. The field names you see there are exactly the ones you'll be able to use afterward.",
+    "Understanding that green doesn't mean it worked. A green box can have done nothing, and that's the hardest failure to find because it doesn't throw an error. The item count on the arrow is the real check.",
+    "Knowing the activate switch exists and is off. A tested, saved flow doesn't run on its own, and it doesn't warn you that it isn't running. It's the most common thing people forget.",
+    "The executions list. When something fails, the answer is there, with the real data from that moment. Two minutes looking at that equals two hours of changing things at random."
+  ],
+  "ignore": [
+    "The thousand nodes in the right-hand panel. You're going to use six or seven for months: a trigger, a filter, a spreadsheet, a chat, a generic API call (the door through which a service hands over its data), and little else. Exploring the list is a pleasant way of not building anything.",
+    "Community templates, for now. They're useful once you already understand what you're looking at; right now they're just other people's flows with twenty boxes you don't know how to read. Come back to them in lesson 08.",
+    "The flow's advanced settings: execution mode, maximum time, saved version. The defaults are fine and none of those settings are going to be your problem for the next two months."
+  ],
+  "canDo": [
+    "Show you the exact data that went in and out of each box on each run, with the time, so you never have to guess what happened.",
+    "Save the flow exactly as it ran at a specific moment, so you can look back at it days later.",
+    "Warn you with color when a box blows up, and let you open it right there to see the full error.",
+    "Let you test the flow as many times as you want without activating it, with fake data, before it touches anything real."
+  ],
+  "cantDo": [
+    "Tell you that a green box didn't do what you wanted. The color only reports whether there was an error, not whether the result is correct.",
+    "Remind you to activate the flow. It can stay off forever with not a single warning.",
+    "Keep the history forever: old executions get deleted according to your settings, and if you don't check it in time it might already be gone.",
+    "Recover a flow you closed without saving. The warning when you close is the only safety net there is."
+  ],
+  "words": [
+    [
+      "Canvas",
+      "The central area where you draw the flow by dragging boxes and connecting them with arrows."
+    ],
+    [
+      "Node",
+      "Each box. It does exactly one thing: watch, decide, transform, or act on an app."
+    ],
+    [
+      "Execution",
+      "Every time the flow starts up. It gets saved with the real data from that moment."
+    ],
+    [
+      "Item",
+      "Each element that travels over an arrow: an email, a row, an order. The number over the arrow says how many are going."
+    ],
+    [
+      "Input / output panel",
+      "The left and right columns when you open a box: what arrives and what it returns."
+    ],
+    [
+      "JSON",
+      "The format data really travels in. You don't need to know how to write it, but you do need to recognize it."
+    ],
+    [
+      "Manual trigger",
+      "The one that only starts when you press the button. It's what you use to learn and to test."
+    ],
+    [
+      "Save",
+      "Keeps the drawing. It doesn't make it work."
+    ],
+    [
+      "Run",
+      "Launches it once, right now, usually with test data."
+    ],
+    [
+      "Activate",
+      "The switch that makes it run on its own from now on. Without this, the flow does nothing."
+    ]
+  ],
+  "pieces": [
+    {
+      "kind": "checklist",
+      "title": "You can find your way around n8n if you can do this without looking",
+      "caption": "Eight things. If you miss three or more, repeat tasks 2 through 8.",
+      "items": [
+        "Add a new box and connect it to the previous one",
+        "Open a box and say what's in the left column and the right column",
+        "Switch the view from table to JSON and back",
+        "Find the number of items traveling over an arrow",
+        "Run the flow and see the result in the history",
+        "Open an old execution and read a box's data",
+        "Tell apart the save button, the run button, and the activate switch",
+        "Say out loud why a green box might not have done anything"
+      ]
+    },
+    {
+      "kind": "compare",
+      "title": "The three buttons people mix up",
+      "caption": "Save, run, and activate. Three different things, three different moments.",
+      "header": [
+        "",
+        "Save",
+        "Run",
+        "Activate"
+      ],
+      "rows": [
+        [
+          "What it does",
+          "Keeps the drawing",
+          "Launches it once, now",
+          "Leaves it running on its own"
+        ],
+        [
+          "When you use it",
+          "Every few changes",
+          "A hundred times while building",
+          "Once, when you're done"
+        ],
+        [
+          "With the browser closed",
+          "It's kept",
+          "It does nothing",
+          "It keeps working"
+        ],
+        [
+          "What it leaves in the history",
+          "Nothing",
+          "One test line",
+          "The lines from real cases"
+        ],
+        [
+          "If you forget it",
+          "You lose your changes",
+          "You don't check anything",
+          "The flow does NOTHING and doesn't warn you"
+        ]
+      ]
+    }
+  ],
+  "next": "Leave the two-box flow saved: you're going to reuse it. In lesson 06 you'll build the first real automation, with a trigger that watches something and an action that writes somewhere real, and leave it running within fifteen minutes."
+}

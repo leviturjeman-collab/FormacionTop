@@ -2,11 +2,13 @@ import { Download, FileText, Trash2 } from 'lucide-react'
 import { useCourse, useIndexes } from '../course'
 import { href } from '../router'
 import { store, useStudent } from '../store'
+import { useLocale } from '../i18n'
 
 export default function Progreso() {
   const course = useCourse()
   const { bySlug } = useIndexes()
   const student = useStudent()
+  const locale = useLocale()
 
   const entries = Object.entries(student.lessons)
     .filter(([slug, progress]) => !slug.startsWith('curso:') && progress.done.length > 0)
@@ -73,53 +75,60 @@ export default function Progreso() {
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker">Tu recorrido</span>
-        <h1>Progreso</h1>
+        <span className="st-kicker">{locale === 'en' ? 'Your journey' : 'Tu recorrido'}</span>
+        <h1>{locale === 'en' ? 'Progress' : 'Progreso'}</h1>
         <p>
-          Todo esto vive únicamente en este navegador. No hay cuentas ni servidor: si borras los datos del
-          navegador, se pierde. Descárgalo si quieres conservarlo o llevarlo a otro equipo.
+          {locale === 'en' ? (
+            <>All of this lives only in this browser. There are no accounts or server: if you clear your
+            browser data, it's lost. Download it if you want to keep it or move it to another computer.</>
+          ) : (
+            <>Todo esto vive únicamente en este navegador. No hay cuentas ni servidor: si borras los datos del
+            navegador, se pierde. Descárgalo si quieres conservarlo o llevarlo a otro equipo.</>
+          )}
         </p>
       </div>
 
       <div className="st-stat-row">
         <div>
           <strong>{totalDone}</strong>
-          <span>niveles completados de {course.stats.lessons * 3}</span>
+          <span>{locale === 'en' ? `levels completed out of ${course.stats.lessons * 3}` : `niveles completados de ${course.stats.lessons * 3}`}</span>
         </div>
         <div>
           <strong>{entries.length}</strong>
-          <span>lecciones tocadas</span>
+          <span>{locale === 'en' ? 'lessons touched' : 'lecciones tocadas'}</span>
         </div>
         <div>
           <strong>{cursoDone}/{cursoBase.length}</strong>
-          <span>lecciones del Programa completadas</span>
+          <span>{locale === 'en' ? 'Program lessons completed' : 'lecciones del Programa completadas'}</span>
         </div>
         <div>
           <strong>{notesWritten}</strong>
-          <span>notas en el cuaderno</span>
+          <span>{locale === 'en' ? 'notes in the notebook' : 'notas en el cuaderno'}</span>
         </div>
       </div>
 
       <div className="st-actions">
         <button type="button" className="st-btn-ghost" onClick={download}>
           <Download size={13} />
-          Descargar mi progreso
+          {locale === 'en' ? 'Download my progress' : 'Descargar mi progreso'}
         </button>
         <button type="button" className="st-btn-ghost" onClick={downloadNotebook} disabled={!notesWritten}>
           <FileText size={13} />
-          Descargar mi cuaderno
+          {locale === 'en' ? 'Download my notebook' : 'Descargar mi cuaderno'}
         </button>
         <button
           type="button"
           className="st-btn-danger"
           onClick={() => {
-            if (window.confirm('Se borrará todo tu progreso en este navegador. Esta acción no se puede deshacer. ¿Seguro?')) {
+            if (window.confirm(locale === 'en'
+              ? 'This will delete all your progress in this browser. This action cannot be undone. Are you sure?'
+              : 'Se borrará todo tu progreso en este navegador. Esta acción no se puede deshacer. ¿Seguro?')) {
               store.reset()
             }
           }}
         >
           <Trash2 size={13} />
-          Borrar todo
+          {locale === 'en' ? 'Delete all' : 'Borrar todo'}
         </button>
       </div>
 
@@ -127,8 +136,8 @@ export default function Progreso() {
         <table className="st-progress-table">
           <thead>
             <tr>
-              <th>Lección</th>
-              <th>Niveles completados</th>
+              <th>{locale === 'en' ? 'Lesson' : 'Lección'}</th>
+              <th>{locale === 'en' ? 'Levels completed' : 'Niveles completados'}</th>
             </tr>
           </thead>
           <tbody>
@@ -150,9 +159,9 @@ export default function Progreso() {
         </table>
       ) : (
         <div className="st-empty">
-          <h2>Todavía no hay nada registrado</h2>
-          <p>En cuanto completes el primer nivel de una lección, aparecerá aquí.</p>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Ir a la ruta</a>
+          <h2>{locale === 'en' ? 'Nothing recorded yet' : 'Todavía no hay nada registrado'}</h2>
+          <p>{locale === 'en' ? 'As soon as you complete the first level of a lesson, it will show up here.' : 'En cuanto completes el primer nivel de una lección, aparecerá aquí.'}</p>
+          <a className="st-btn" href={href({ name: 'ruta' })}>{locale === 'en' ? 'Go to the path' : 'Ir a la ruta'}</a>
         </div>
       )}
     </div>

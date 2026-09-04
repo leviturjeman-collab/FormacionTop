@@ -1,0 +1,119 @@
+{
+  "id": "arreglar-errores",
+  "title": "When something isn't working and you don't know why",
+  "intro": "Here are the prompts for the moment you get red text, a blank screen, or something that just isn't doing what it should. They get the AI to translate the problem into plain English, tell you what to try first, and ask you what it needs to know instead of guessing. Use them the moment you're stuck, without trying to figure it out on your own first.",
+  "model": "Claude works better for pasting long errors, whole files, and diagnostic conversations that drag on; ChatGPT is more convenient for everyday use, screenshots, and issues with office tools; Gemini wins when the failure involves something from Google (Drive, Sheets, Gmail, Apps Script) or when you want to show it a video of what you're seeing.",
+  "prompts": [
+    {
+      "name": "Translate the error into plain English",
+      "when": "You got red text, a window full of strange wording, or a warning you don't understand. This is the first one to reach for.",
+      "prompt": "Act as a very patient computer teacher explaining things to someone who has never programmed and doesn't know what a terminal is. I'm going to paste an error message exactly as it appears on my screen. I don't understand a single word of it, so don't assume anything, and translate every technical term the first time you use it.\n\nContext: I'm using [TOOL OR PROGRAM]. What I was trying to do was [WHAT YOU WERE DOING]. The error appeared [WHEN IT APPEARED].\n\nHere's the full error, copied without changing anything:\n\n[PASTE THE FULL ERROR HERE]\n\nAnswer me in exactly this order and with these headings:\n1. WHAT IT'S TELLING YOU: a single sentence, in plain everyday language, no jargon.\n2. WHAT PART MATTERS: point me to the specific line I need to look at and tell me which parts are noise I can ignore.\n3. WHY IT HAPPENS: the three most likely causes, ranked from most to least common.\n4. WHAT TO DO NOW: only the first thing I should try, explained step by step, telling me exactly where to click and what to type. Don't assume I know how to open hidden menus.\n5. HOW I'LL KNOW IT WORKED: what I should see on screen if the fix went well.\n\nIf the error I pasted isn't enough to answer, don't guess: tell me exactly what other information you need and how I can get it.",
+      "fill": [
+        ["[TOOL OR PROGRAM]", "Where it happened. Example: the site I'm building in Lovable, my Windows 11 computer, the Google spreadsheet"],
+        ["[WHAT YOU WERE DOING]", "The specific action, no embellishment. Example: I clicked the Publish button, I pasted the code you gave me into the index.html file"],
+        ["[WHEN IT APPEARED]", "The exact moment. Example: right after clicking Save, after waiting about 20 seconds, when reloading the page"],
+        ["[PASTE THE FULL ERROR HERE]", "The whole text, including the lines that look like junk. Don't summarize or trim it: the important part is usually the bit you'd throw away"]
+      ],
+      "expect": "A one-sentence explanation of what happened, three suspects ranked by likelihood, and a single concrete action to try now, not a list of ten.",
+      "next": "Do only step 4 and nothing else. Come back to the same conversation and report what happened, even if nothing changed. Don't open a new chat: the AI loses all its context."
+    },
+    {
+      "name": "No error, but it's not working",
+      "when": "Nothing turned red, there's no warning of any kind, but the result isn't what you expected.",
+      "prompt": "Act as a support technician helping someone with no technical background who cannot see their screen. There's no error message at all, so you'll have to work only from what I describe. Don't assume I know the difference between something being broken and something being misconfigured.\n\nWHAT I EXPECTED TO HAPPEN: [WHAT SHOULD HAPPEN]\nWHAT ACTUALLY HAPPENS: [WHAT YOU SEE]\nWHERE IT HAPPENS: [TOOL OR PROGRAM]\nWHAT I DID RIGHT BEFORE: [LAST ACTION]\nHOW OFTEN IT HAPPENS: [ALWAYS OR SOMETIMES]\n\nBefore giving me any solution, I want you to do this:\n1. Repeat back in your own words what you understand is happening. If I explained it badly, I'll see it there.\n2. Tell me whether this sounds like the thing isn't happening at all, is happening but wrong, or is happening correctly and I'm looking in the wrong place. Those are three different problems.\n3. Give me at most three quick checks, in order, each under a minute, and for each one tell me what result would mean we're on the right track and what result would rule it out.\n\nDon't give me the solution yet. First I want to know where the problem is. If this description isn't enough for you to get oriented, ask me for what's missing in the form of closed yes-or-no questions.",
+      "fill": [
+        ["[WHAT SHOULD HAPPEN]", "Describe it the way you'd explain it to your mom. Example: after filling out the form and clicking Submit, I should get an email"],
+        ["[WHAT YOU SEE]", "Just the literal facts, no interpretation. Example: the page stays the same, the button turns gray for a second and goes back to normal, no email arrives"],
+        ["[TOOL OR PROGRAM]", "Where you are. Example: my Wix website, the ChatGPT app on my phone"],
+        ["[LAST ACTION]", "The last thing you touched before it stopped working. Example: I changed the button color, I pasted in text the AI gave me"],
+        ["[ALWAYS OR SOMETIMES]", "Example: always, I've tried it six times; or only from my phone, it's fine on the computer"]
+      ],
+      "expect": "A summary of your problem in its own words (so you can check you explained it well), a hypothesis of where it's breaking, and two or three short checks.",
+      "next": "Run the checks in order and report back the result of each one, even if it's boring. That boring detail is exactly the data it needs to rule things out."
+    },
+    {
+      "name": "Ask me questions instead of guessing",
+      "when": "The AI keeps throwing random fixes that don't work, or you notice it's making up what your situation looks like.",
+      "prompt": "Change of approach. So far you've been giving me solutions based on assumptions about my situation, and none of them have worked. Let's do this the other way around.\n\nFrom now on: don't propose any solution, any fix, or any code until you're at least 90 percent sure of the cause. Your only job right now is to question me.\n\nRules for the interrogation:\n- Ask me questions ONE AT A TIME. Don't dump a list of eight on me, I'll freeze up.\n- Every question has to be answerable by looking at my screen or making one click. Don't ask me what version of something I have without telling me where to check.\n- If a question requires me to look up a piece of information, tell me click by click where to find it.\n- Start with the question that rules out the most possibilities at once, not the most obvious one.\n- After each answer I give, tell me in one line what you just ruled out and how close you are to being sure of the problem.\n- Once you reach that 90 percent, stop asking and tell me: the cause, why it fits everything I've told you, and the fix in steps.\n\nHere's the problem: [DESCRIBE THE PROBLEM IN TWO SENTENCES]. Start with your first question.",
+      "fill": [
+        ["[DESCRIBE THE PROBLEM IN TWO SENTENCES]", "No jargon, no theories of your own about the cause. Example: my site looks fine on the computer but on mobile the photos come out huge and cover the text. I've tried three times and it's still the same"]
+      ],
+      "expect": "A single question, short and specific, with instructions on where to look. No solutions yet.",
+      "next": "Answer only that question and wait. If it goes back to dumping a list of solutions on you, tell it: you skipped the method, go back to asking me one at a time."
+    },
+    {
+      "name": "Blank screen",
+      "when": "You open the page or app and absolutely nothing shows up. No error, no content, nothing.",
+      "prompt": "Act as a technician who diagnoses blank screens. Nothing shows on screen: no content, no error message, just white. I don't know how to code and I don't know how to open developer tools, so if you need me to look at something hidden, you have to guide me key by key.\n\nDETAILS:\n- Where I see it blank: [WHERE]\n- What should show up: [WHAT SHOULD BE VISIBLE]\n- The last time it worked: [WHEN IT LAST WORKED]\n- What I touched since then: [WHAT YOU CHANGED]\n- The browser tab: [WHETHER IT LOADS OR NOT]\n\nI want you to work through it like this:\n1. Explain in two sentences why a blank screen almost always means something broke before it got to drawing anything, and what that implies.\n2. Give me the four typical causes for this, each in one line, in plain language.\n3. Guide me to see the hidden message: tell me step by step how to open the browser console (give me the exact key on Windows and on Mac), which tab to click, and what text to copy for you. Warn me that I'll see yellow entries there that don't matter, and which ones do.\n4. When I paste that text, translate it for me and tell me what to do.\n\nIf you need any information from me before all this, ask now instead of assuming.",
+      "fill": [
+        ["[WHERE]", "Example: the site I just published on Vercel, the Lovable preview, the app on my phone"],
+        ["[WHAT SHOULD BE VISIBLE]", "Example: the homepage with the logo and three buttons"],
+        ["[WHEN IT LAST WORKED]", "Example: ten minutes ago, last night, it has never worked"],
+        ["[WHAT YOU CHANGED]", "Everything you touched, even if it seems irrelevant. Example: I pasted in a block of code you gave me and renamed an image"],
+        ["[WHETHER IT LOADS OR NOT]", "Example: the loading spinner has already stopped and the background is white; or it just keeps spinning forever"]
+      ],
+      "expect": "An explanation of why the blank is blank, and above all, key-by-key instructions to surface the error message hiding behind it.",
+      "next": "Follow the instructions, copy the red text that shows up in the console, and paste it in. Now you have a normal error and can move on to the first prompt in this family."
+    },
+    {
+      "name": "It worked before and now it doesn't",
+      "when": "Something was working, you touched things, and now it's broken. You don't know which change broke it.",
+      "prompt": "Act as a fault investigator. Something that used to work has stopped working, and I don't know which of the changes I made is to blame. I don't want a generic fix: I want us to find the specific change that broke it.\n\nWHAT USED TO WORK: [WHAT WAS WORKING]\nWHAT IT DOES NOW: [WHAT IT DOES NOW]\nCHANGES I MADE IN BETWEEN, IN ORDER: [LIST OF CHANGES]\n\nDo this:\n1. Look at my list of changes and rank them from most to least suspicious, explaining in one line why each one is or isn't a candidate.\n2. Tell me which one we undo first and exactly how to undo it, step by step. If undoing something could permanently erase my work, warn me IN CAPITAL LETTERS before the steps and tell me how to make a backup first.\n3. After undoing it, tell me what to check and what each possible result means: if it works again, we found the culprit; if not, we move to the next one.\n4. Don't have me undo several things at once. One, check, report back, and we decide.\n\nIf my list of changes is incomplete or unclear, ask me what's missing before we start.",
+      "fill": [
+        ["[WHAT WAS WORKING]", "Example: the contact form used to send the email and show a thank-you message"],
+        ["[WHAT IT DOES NOW]", "Example: clicking Submit does nothing, the button doesn't even press down"],
+        ["[LIST OF CHANGES]", "Everything you touched since it last worked, in order and unfiltered. Example: 1) changed the button text, 2) pasted in code you gave me for the cookie notice, 3) uploaded a new photo"]
+      ],
+      "expect": "Your list of changes ranked by suspicion, with reasons, and a single change to undo first with its steps.",
+      "next": "Undo only that change and check. If it works again, you've found the culprit: then ask how to make that same change but correctly. Before undoing anything, make a copy of the file: some things can't be recovered."
+    },
+    {
+      "name": "One change at a time",
+      "when": "You've been given a list of five things to try and you don't know where to start without making it worse.",
+      "prompt": "I need you to turn what you just told me into a one-step-at-a-time plan, because when I change several things at once I later can't tell what fixed or broke something.\n\nRewrite the diagnosis as a sequence of tests with these rules:\n- Each step changes ONE thing only. Never two.\n- Each step starts with the one that carries the least risk and gives the most information.\n- For each step, give me: exactly what to do (click by click), what I should see if it works, what I should see if it doesn't, and how to revert it if it doesn't.\n- If any step is irreversible or could delete something of mine, write it IN CAPITAL LETTERS at the start of that step and tell me how to back it up first.\n- If any step involves paying for something (a subscription, a domain, credits), tell me the approximate price before I do it.\n- Five steps maximum. If more are needed, give me the first five and we'll continue from there.\n\nAlso give me one sentence up front: what you expect this batch of tests to discover. That way I know why I'm doing them.\n\nMy situation is still the same as what I told you: [SUMMARIZE YOUR PROBLEM IN ONE SENTENCE].",
+      "fill": [
+        ["[SUMMARIZE YOUR PROBLEM IN ONE SENTENCE]", "Repeat it even if you already said it, so it doesn't lose track. Example: the images in my store don't show up on mobile"]
+      ],
+      "expect": "A short numbered list, each step with its test and its rollback, and clear warnings about what can't be undone.",
+      "next": "Do step 1 and only step 1. Report the result. Resisting the urge to do three steps in a row is what separates fixing it from breaking it completely."
+    },
+    {
+      "name": "Three attempts in and it's still the same",
+      "when": "The conversation has stalled: the AI keeps repeating variations of the same thing and you're going in circles.",
+      "prompt": "Stop. We've made [NUMBER OF ATTEMPTS] attempts and the problem is exactly the same as before. That means the starting theory is wrong, so don't give me another variation of the same thing.\n\nDo this and only this:\n1. Summarize in five lines everything we've tried and what result each one gave. I want to see it written out.\n2. Say out loud what you were assuming about my situation that might not be true. Be specific: which assumption, and why you made it.\n3. Propose a completely different explanation for the problem. Genuinely different, not a dressed-up version of the last one.\n4. Tell me the single test that would separate your old theory from the new one: something I can do in two minutes whose result makes clear which of the two is right.\n5. If you think this problem can't be solved over chat and I need something else (starting the file from scratch, using a different tool, asking someone for help), tell me plainly. I'd rather hear that this can't be fixed here than keep going in circles.\n\nBe direct. No need to soften anything or cheer me on.",
+      "fill": [
+        ["[NUMBER OF ATTEMPTS]", "The actual number of times you've tried something and it failed. Example: four"]
+      ],
+      "expect": "An honest summary of what's been tried, the assumptions it was making written out plainly, and an alternative theory with a test to decide between them.",
+      "next": "Run the test from point 4. If it also tells you this can't be fixed over chat, listen: save a copy of what you have and start that part from scratch — it usually costs less time than persisting."
+    },
+    {
+      "name": "Check it's really fixed",
+      "when": "It looks like it's working now. Before celebrating, make sure you didn't break something else along the way.",
+      "prompt": "It looks like the problem is solved, but I don't fully trust it: I want to check it thoroughly and make sure the fix hasn't broken anything else.\n\nWHAT WAS BROKEN: [THE ORIGINAL PROBLEM]\nWHAT WE DID TO FIX IT: [THE FIX]\n\nGive me three things:\n1. A CHECKLIST of five to eight items, each written as an action I take and the exact result I should see. Include the original problem, but also the parts we touched along the way that could have broken without me noticing.\n2. THE TRAPS: two or three situations where this could fail again even though it looks fine now (on mobile, logged out, with lots of data, in another browser). Tell me how to test each one.\n3. THE SUMMARY FOR THE FUTURE: write me five lines about what was happening, why it was happening, and how it got fixed, in plain language with no jargon, so I can save it in a note and paste it back here if it happens again.\n\nIf you think the fix is a patch that won't hold for long, say so clearly and explain what would be needed to fix it properly.",
+      "fill": [
+        ["[THE ORIGINAL PROBLEM]", "In one sentence. Example: the buy button didn't go anywhere"],
+        ["[THE FIX]", "What you did, even if you didn't understand it. Example: I pasted a block of code you gave me into the file you pointed to and clicked Save"]
+      ],
+      "expect": "A checklist you can tick off, a couple of scenarios where it could break again, and a short summary you can save in a note.",
+      "next": "Go through the whole list, including the points that seem absurd. Then save the summary from point 3 in a notes document: it's the material that will save you the next hour lost."
+    }
+  ],
+  "canDo": [
+    "Translate any error message into plain English and tell you which line matters and which is noise",
+    "Work out the problem from a description of yours in everyday language, without you knowing a single technical term",
+    "Guide you key by key to see messages that are hidden, like the browser console",
+    "Write out the entire fix code and tell you where to paste it, so all you have to do is copy"
+  ],
+  "cantDo": [
+    "It can't see your screen: if you don't describe or paste what shows up, it will make it up with total confidence",
+    "It doesn't know what you've changed since yesterday, so any diagnosis it gives without asking is a gamble",
+    "It can't undo what you've already deleted or recover a file you've overwritten: that has no way back",
+    "It almost never nails it on the first try with unusual problems; the value is in the back-and-forth conversation, not the first answer"
+  ],
+  "tips": [
+    "Paste the whole error, including the ugly lines that look like junk. That's often exactly where the detail that solves the case is, and it's the first thing people trim away",
+    "Stay in the same chat while the problem lasts. Opening a new one erases everything you'd already ruled out and you start from zero",
+    "Also report the failed attempts, with exactly what happened. Saying 'that didn't work' doesn't help; saying 'I did step 2 and the button still did nothing' rules out half a dozen causes"
+  ]
+}

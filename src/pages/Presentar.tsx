@@ -4,6 +4,7 @@ import type { LevelId } from '../types'
 import { useIndexes } from '../course'
 import { href } from '../router'
 import { buildSlides } from '../teacher'
+import { useLocale } from '../i18n'
 
 /**
  * Vista de presentación.
@@ -13,6 +14,7 @@ import { buildSlides } from '../teacher'
  */
 export default function Presentar({ slug, level }: { slug: string; level: LevelId }) {
   const { bySlug } = useIndexes()
+  const locale = useLocale()
   const lesson = bySlug.get(slug)
   const [index, setIndex] = useState(0)
 
@@ -38,8 +40,8 @@ export default function Presentar({ slug, level }: { slug: string; level: LevelI
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>No hay nada que presentar</h2>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
+          <h2>{locale === 'en' ? 'There is nothing to present' : 'No hay nada que presentar'}</h2>
+          <a className="st-btn" href={href({ name: 'ruta' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
         </div>
       </div>
     )
@@ -50,10 +52,10 @@ export default function Presentar({ slug, level }: { slug: string; level: LevelI
   return (
     <div className="st-deck">
       <header className="st-deck-bar">
-        <span>{lesson.title} · nivel {level}</span>
+        <span>{lesson.title} · {locale === 'en' ? 'level' : 'nivel'} {level}</span>
         <div>
           <b>{index + 1} / {slides.length}</b>
-          <a href={href({ name: 'leccion', slug, level })} aria-label="Salir de la presentación">
+          <a href={href({ name: 'leccion', slug, level })} aria-label={locale === 'en' ? 'Exit the presentation' : 'Salir de la presentación'}>
             <X size={16} />
           </a>
         </div>
@@ -78,7 +80,7 @@ export default function Presentar({ slug, level }: { slug: string; level: LevelI
 
       <footer className="st-deck-nav">
         <button type="button" onClick={() => setIndex((value) => Math.max(0, value - 1))} disabled={index === 0}>
-          <ArrowLeft size={16} /> Anterior
+          <ArrowLeft size={16} /> {locale === 'en' ? 'Previous' : 'Anterior'}
         </button>
         <i><b style={{ width: `${((index + 1) / slides.length) * 100}%` }} /></i>
         <button
@@ -86,7 +88,7 @@ export default function Presentar({ slug, level }: { slug: string; level: LevelI
           onClick={() => setIndex((value) => Math.min(slides.length - 1, value + 1))}
           disabled={index === slides.length - 1}
         >
-          Siguiente <ArrowRight size={16} />
+          {locale === 'en' ? 'Next' : 'Siguiente'} <ArrowRight size={16} />
         </button>
       </footer>
     </div>

@@ -33,14 +33,15 @@ export interface LoadState {
   error: string | null
 }
 
-export function useCourseLoader(): LoadState {
+export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
   const [state, setState] = useState<LoadState>({ course: null, error: null })
 
   useEffect(() => {
     let cancelled = false
+    const file = locale === 'en' ? 'course.en.json' : 'course.json'
     // no-cache: el curso se regenera desde el vault con frecuencia y el
     // nombre del archivo no cambia, así que se revalida siempre.
-    fetch(`${import.meta.env.BASE_URL}course.json`, { cache: 'no-cache' })
+    fetch(`${import.meta.env.BASE_URL}${file}`, { cache: 'no-cache' })
       .then((response) => {
         if (!response.ok) throw new Error(`El servidor respondió ${response.status}`)
         return response.json()
@@ -49,6 +50,21 @@ export function useCourseLoader(): LoadState {
         if (!cancelled) setState({ course: data, error: null })
       })
       .catch((error: Error) => {
+        // Si falta el curso en inglés (build incompleto), se cae al español
+        // en vez de romper la app.
+        if (locale === 'en') {
+          fetch(`${import.meta.env.BASE_URL}course.json`, { cache: 'no-cache' })
+            .then((response) => response.json())
+            .then((data: CourseData) => {
+              if (!cancelled) setState({ course: data, error: null })
+            })
+            .catch(() => {
+              if (!cancelled) {
+                setState({ course: null, error: `No se ha podido cargar el curso (${error.message}).` })
+              }
+            })
+          return
+        }
         if (!cancelled) {
           setState({
             course: null,
@@ -61,7 +77,7 @@ export function useCourseLoader(): LoadState {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [locale])
 
   return state
 }

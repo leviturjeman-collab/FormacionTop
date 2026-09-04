@@ -1,0 +1,122 @@
+{
+  "id": "extractor-de-datos-de-documentos-api",
+  "order": 14,
+  "title": "Document Data Extractor",
+  "kicker": "Code-based Agents",
+  "platform": "api",
+  "platformLabel": "API (code)",
+  "level": "avanzado",
+  "what": "A Python script that reads a text document (an exported invoice, a delivery note, a long email, a contract) and pulls out the structured data you ask for: issuer, date, amounts, line items, references. It uses the Anthropic API with a forced schema, so the output is always a JSON with the same fields, and every piece of data comes with the literal excerpt from the document it was pulled from, so you can verify it without rereading the whole document. Fields that don't appear in the document come back as null, never invented.",
+  "forWho": "For anyone who keys data from documents by hand into a spreadsheet or system: administration, accounting, logistics. It pays off from a daily chunk of manual keying; with dozens of documents a day it's transformative.",
+  "tools": ["python", "claude"],
+  "capabilities": [
+    "Extracts the fields you define from any text document, with a schema guaranteed by the API",
+    "Returns the literal document quote each value was pulled from, alongside every field, for quick verification",
+    "Returns null for fields the document doesn't have: filling in by guesswork is forbidden",
+    "Validates the extraction after the call (date format, numbers) and downgrades to null anything that doesn't check out, warning via stderr",
+    "Processes a single file or an entire folder, generating one JSON per document"
+  ],
+  "limits": [
+    "Doesn't read PDF or images directly: it works on plain text; convert first (pdftotext, copy-paste, OCR) or request the PDF-capable version as an extension",
+    "Doesn't guarantee 100%: it extracts correctly the vast majority of the time, but the pipeline must assume errors; that's why the quotes and verification exist",
+    "Shouldn't be the only control on data that moves money: an extracted amount is checked against its quote before being booked",
+    "Doesn't keep memory across documents: each one is processed in isolation"
+  ],
+  "files": [
+    {
+      "name": "extractor.py",
+      "language": "python",
+      "content": "#!/usr/bin/env python3\n\"\"\"Structured data extractor for text documents (Anthropic API).\n\nUsage:\n  python extractor.py factura.txt\n  python extractor.py --carpeta ./documentos --salida ./extraidos\n\nRequirements:\n  pip install anthropic\n  export ANTHROPIC_API_KEY=\"your-key\"\n\nWorks on .txt. If you have a PDF, convert it first (e.g. pdftotext factura.pdf).\n\"\"\"\n\nimport argparse\nimport json\nimport os\nimport re\nimport sys\nfrom pathlib import Path\n\ntry:\n    import anthropic\nexcept ImportError:\n    sys.exit(\"Missing the Anthropic SDK. Install it with: pip install anthropic\")\n\n# ── Configuration: define HERE what you extract ─────────────────────────\n\nMODELO = \"claude-haiku-4-5\"  # extracting fields is a small-model task\nMAX_CARACTERES = 60000\n\nSISTEMA = (\n    \"You are a data extractor for administrative documents. \"\n    \"Extract EXCLUSIVELY what the document says, by calling the tool. \"\n    \"Golden rule: if a field doesn't appear in the document, return it as null. \"\n    \"Never infer, calculate, or fill in data that isn't written. \"\n    \"For every field with a value, the quote is the literal excerpt from the document \"\n    \"it was pulled from.\"\n)\n\n# Each field carries its own quote. Adapt properties and required to your documents.\nCAMPO_CON_CITA = lambda tipo, descripcion: {\n    \"type\": \"object\",\n    \"properties\": {\n        \"valor\": {\"type\": [tipo, \"null\"], \"description\": descripcion},\n        \"cita\": {\n            \"type\": [\"string\", \"null\"],\n            \"description\": \"Literal excerpt from the document the value was pulled from.\",\n        },\n    },\n    \"required\": [\"valor\", \"cita\"],\n    \"additionalProperties\": False,\n}\n\nHERRAMIENTA = {\n    \"name\": \"registrar_datos\",\n    \"description\": \"Records the data extracted from the document.\",\n    \"strict\": True,\n    \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"tipo_documento\": {\n                \"type\": \"string\",\n                \"enum\": [\"factura\", \"albaran\", \"presupuesto\", \"contrato\", \"otro\"],\n            },\n            \"emisor\": CAMPO_CON_CITA(\"string\", \"Name of who issued the document\"),\n            \"nif\": CAMPO_CON_CITA(\"string\", \"Issuer's tax ID as it appears\"),\n            \"fecha\": CAMPO_CON_CITA(\"string\", \"Document date in YYYY-MM-DD format\"),\n            \"numero\": CAMPO_CON_CITA(\"string\", \"Document number or reference\"),\n            \"importe_total\": CAMPO_CON_CITA(\"number\", \"Total amount with tax, in the document's currency\"),\n            \"conceptos\": {\n                \"type\": \"array\",\n                \"description\": \"Main line items or concepts in the document.\",\n                \"items\": {\n                    \"type\": \"object\",\n                    \"properties\": {\n                        \"descripcion\": {\"type\": \"string\"},\n                        \"importe\": {\"type\": [\"number\", \"null\"]},\n                    },\n                    \"required\": [\"descripcion\", \"importe\"],\n                    \"additionalProperties\": False,\n                },\n            },\n        },\n        \"required\": [\n            \"tipo_documento\",\n            \"emisor\",\n            \"nif\",\n            \"fecha\",\n            \"numero\",\n            \"importe_total\",\n            \"conceptos\",\n        ],\n        \"additionalProperties\": False,\n    },\n}\n\n# ── Post-validation: the AI proposes, the code checks ───────────────────\n\n\ndef validar(datos: dict, nombre: str) -> dict:\n    \"\"\"Checks formats and downgrades to null anything that doesn't check out, warning.\"\"\"\n    fecha = datos.get(\"fecha\", {}).get(\"valor\")\n    if fecha is not None and not re.fullmatch(r\"\\d{4}-\\d{2}-\\d{2}\", str(fecha)):\n        print(f\"WARNING [{nombre}]: date '{fecha}' not in YYYY-MM-DD format; nulled.\", file=sys.stderr)\n        datos[\"fecha\"][\"valor\"] = None\n    total = datos.get(\"importe_total\", {}).get(\"valor\")\n    if total is not None and (not isinstance(total, (int, float)) or total < 0):\n        print(f\"WARNING [{nombre}]: importe_total '{total}' invalid; nulled.\", file=sys.stderr)\n        datos[\"importe_total\"][\"valor\"] = None\n    return datos\n\n\ndef extraer(client: \"anthropic.Anthropic\", texto: str, nombre: str) -> dict:\n    respuesta = client.messages.create(\n        model=MODELO,\n        max_tokens=2048,\n        system=SISTEMA,\n        tools=[HERRAMIENTA],\n        tool_choice={\"type\": \"tool\", \"name\": \"registrar_datos\"},\n        messages=[{\"role\": \"user\", \"content\": f\"Document \\u00ab{nombre}\\u00bb:\\n\\n{texto}\"}],\n    )\n    for bloque in respuesta.content:\n        if bloque.type == \"tool_use\" and bloque.name == \"registrar_datos\":\n            return validar(dict(bloque.input), nombre)\n    raise RuntimeError(\"The API did not return the expected extraction.\")\n\n\ndef procesar_fichero(client, ruta: Path, salida: Path | None) -> bool:\n    try:\n        texto = ruta.read_text(encoding=\"utf-8\", errors=\"replace\").strip()\n    except OSError as e:\n        print(f\"ERROR: can't read {ruta}: {e}\", file=sys.stderr)\n        return False\n    if not texto:\n        print(f\"WARNING: {ruta} is empty; skipping.\", file=sys.stderr)\n        return False\n    if len(texto) > MAX_CARACTERES:\n        print(f\"WARNING: {ruta} truncated to {MAX_CARACTERES} characters.\", file=sys.stderr)\n        texto = texto[:MAX_CARACTERES]\n\n    try:\n        datos = extraer(client, texto, ruta.name)\n    except anthropic.AuthenticationError:\n        sys.exit(\"Invalid or revoked API key. Check ANTHROPIC_API_KEY.\")\n    except anthropic.RateLimitError:\n        print(f\"ERROR: rate limit hit on {ruta.name}; retry later.\", file=sys.stderr)\n        return False\n    except anthropic.APIStatusError as e:\n        print(f\"API error ({e.status_code}) on {ruta.name}: {e.message}\", file=sys.stderr)\n        return False\n    except anthropic.APIConnectionError:\n        sys.exit(\"No connection to the API. Check your network and retry.\")\n\n    datos[\"_documento\"] = ruta.name\n    resultado = json.dumps(datos, ensure_ascii=False, indent=2)\n    if salida:\n        salida.mkdir(parents=True, exist_ok=True)\n        destino = salida / (ruta.stem + \".json\")\n        destino.write_text(resultado + \"\\n\", encoding=\"utf-8\")\n        print(f\"OK {ruta.name} \\u2192 {destino}\")\n    else:\n        print(resultado)\n    return True\n\n\ndef main() -> None:\n    parser = argparse.ArgumentParser(description=\"Extracts structured data from .txt documents\")\n    parser.add_argument(\"fichero\", nargs=\"?\", help=\"Text document to process\")\n    parser.add_argument(\"--carpeta\", help=\"Process every .txt in a folder\")\n    parser.add_argument(\"--salida\", help=\"Folder to write the .json files to (one per document)\")\n    args = parser.parse_args()\n\n    if not os.environ.get(\"ANTHROPIC_API_KEY\"):\n        sys.exit(\n            \"Missing the ANTHROPIC_API_KEY environment variable.\\n\"\n            \"Create the key at console.anthropic.com and export it before running.\"\n        )\n\n    client = anthropic.Anthropic()\n    salida = Path(args.salida) if args.salida else None\n\n    if args.carpeta:\n        ficheros = sorted(Path(args.carpeta).glob(\"*.txt\"))\n        if not ficheros:\n            sys.exit(f\"No .txt files in {args.carpeta}.\")\n        correctos = sum(procesar_fichero(client, f, salida) for f in ficheros)\n        print(f\"\\nProcessed {correctos} of {len(ficheros)} documents.\", file=sys.stderr)\n        sys.exit(0 if correctos == len(ficheros) else 1)\n\n    if not args.fichero:\n        sys.exit(\"Specify a file or use --carpeta. See --help.\")\n    ok = procesar_fichero(client, Path(args.fichero), salida)\n    sys.exit(0 if ok else 1)\n\n\nif __name__ == \"__main__\":\n    main()\n"
+    },
+    {
+      "name": "README.md",
+      "language": "markdown",
+      "content": "# Document Data Extractor\n\nPulls structured data (issuer, date, number, amounts, line items) from text documents, with a literal quote for every value and mandatory `null` when the data isn't there.\n\n## Installation\n\n```bash\npip install anthropic\nexport ANTHROPIC_API_KEY=\"your-key\"\n```\n\n## Usage\n\n```bash\n# One document, result printed to screen\npython extractor.py factura.txt\n\n# A whole folder, one JSON per document\npython extractor.py --carpeta ./documentos --salida ./extraidos\n```\n\nOutput per document (always the same shape):\n\n```json\n{\n  \"tipo_documento\": \"factura\",\n  \"emisor\": {\"valor\": \"Talleres M\u00e1rquez S.L.\", \"cita\": \"TALLERES M\u00c1RQUEZ S.L.\"},\n  \"nif\": {\"valor\": \"B12345678\", \"cita\": \"CIF: B12345678\"},\n  \"fecha\": {\"valor\": \"2025-03-14\", \"cita\": \"Fecha: 14/03/2025\"},\n  \"numero\": {\"valor\": \"F-2025-0231\", \"cita\": \"Factura n\u00ba F-2025-0231\"},\n  \"importe_total\": {\"valor\": 847.0, \"cita\": \"TOTAL: 847,00 \u20ac\"},\n  \"conceptos\": [{\"descripcion\": \"Cambio de embrague\", \"importe\": 700.0}],\n  \"_documento\": \"factura.txt\"\n}\n```\n\n## I have a PDF, not a txt\n\nConvert it first: `pdftotext factura.pdf factura.txt` (poppler-utils package), or open the PDF and copy the text. If the PDF is a scan (image), you need OCR first; and if you want to skip the conversion, ask Claude Code to adapt the script to send the PDF directly as a document to the API.\n\n## Adapt it to your documents\n\nThe fields live in `HERRAMIENTA` (with the `CAMPO_CON_CITA` helper) and the checks in `validar()`. Add your own: due date, IBAN, delivery address... Give each new field a concrete description: that's what improves extraction the most.\n\n## The verification loop (don't skip it)\n\n1. The AI extracts with a quote.\n2. `validar()` checks formats in code.\n3. **A person checks the value against the quote** before the data moves money.\n\nWith 20 real documents, measure: correct fields, fields that came back null when they shouldn't have, and invented fields (the serious ones). If there are any invented ones, tighten `SISTEMA` and measure again before using it for real."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Set up the environment",
+      "action": "pip install anthropic (Python 3.10 or later, due to the Path | None usage).",
+      "expect": "python -c \"import anthropic\" runs with no errors.",
+      "stuck": "On Python 3.9, replace \"Path | None\" in the script with \"Optional[Path]\" and import Optional from typing."
+    },
+    {
+      "title": "Export your key",
+      "action": "export ANTHROPIC_API_KEY=\"sk-ant-...\" with the key created at console.anthropic.com.",
+      "expect": "echo $ANTHROPIC_API_KEY shows it."
+    },
+    {
+      "title": "Save the script and get a test .txt",
+      "action": "Copy extractor.py into your working folder. Convert a real invoice: pdftotext factura.pdf factura.txt, or copy the text by hand.",
+      "expect": "A factura.txt file readable with cat."
+    },
+    {
+      "title": "First extraction",
+      "action": "python extractor.py factura.txt",
+      "expect": "The JSON with the fields filled in, each with its quote, and null wherever the invoice doesn't say.",
+      "stuck": "If half the document comes back null, check the .txt: PDF conversions sometimes mangle tables; try pdftotext -layout."
+    },
+    {
+      "title": "Adjust the fields to your documents",
+      "action": "Edit HERRAMIENTA to add or remove fields (due date, IBAN...) and add its check in validar() if it has a fixed format.",
+      "expect": "The JSON has exactly the fields your process needs."
+    },
+    {
+      "title": "Process in batch and verify",
+      "action": "python extractor.py --carpeta ./documentos --salida ./extraidos with 10-20 real documents, and check value against quote in each one.",
+      "expect": "A real accuracy measurement and zero invented fields. Only then connect it to your spreadsheet or system."
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal run",
+      "input": "An invoice converted to text with a clear issuer, date, number, and total.",
+      "expect": "All fields with a value and a correct literal quote; line items with their amounts."
+    },
+    {
+      "name": "Incomplete document",
+      "input": "A delivery note with no amounts.",
+      "expect": "tipo_documento albaran, importe_total with valor null and cita null, no invented amounts."
+    },
+    {
+      "name": "Odd date",
+      "input": "A document with the date \"March 14th, 25\".",
+      "expect": "Either the correctly normalized date 2025-03-14 with its quote, or null with a WARNING via stderr; never a different, invented date."
+    },
+    {
+      "name": "Batch with one empty file",
+      "input": "A folder with 3 documents, one of them empty.",
+      "expect": "It processes the 2 good ones, warns about the empty one via stderr, and exits with code 1 due to the incomplete one."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Anthropic API",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Key in the ANTHROPIC_API_KEY environment variable, never in the script or the repo.",
+      "cost": "Pay per token; extracting a normal document with claude-haiku-4-5 costs a fraction of a cent"
+    }
+  ],
+  "risks": [
+    "A wrongly extracted amount that ends up booked. Mitigation: value-vs-quote checking by a person is part of the pipeline, not a nicety; for payments, double-check.",
+    "Documents with personal or tax data traveling to the API. Mitigation: check your account's retention policy and don't process what your regulations don't allow to leave the premises.",
+    "Growing confidence and shrinking verification over time. Mitigation: keep a fixed sampling rate (e.g. verify 1 in 10) forever, and everything if it moves money.",
+    "PDF-to-text conversions that mangle tables and throw off amounts. Mitigation: try pdftotext -layout and validate the total against the sum of line items in your code or spreadsheet."
+  ],
+  "examples": [
+    {
+      "name": "Single document",
+      "prompt": "python extractor.py albaran-2025-114.txt"
+    },
+    {
+      "name": "Monthly batch",
+      "prompt": "python extractor.py --carpeta ./facturas-marzo --salida ./extraidos && ls extraidos/"
+    },
+    {
+      "name": "Extend with Claude Code",
+      "prompt": "Starting from extractor.py, add a final CSV dump with one row per document (emisor, fecha, numero, importe_total) and a warning column when any field is null."
+    }
+  ],
+  "kits": ["rag-documental", "crm-reporting-institucional"]
+}

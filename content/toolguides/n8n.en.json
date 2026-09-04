@@ -1,0 +1,309 @@
+{
+  "id": "n8n",
+  "tool": "n8n",
+  "plain": "n8n is a board where you build automatic errands by connecting boxes with a line, like drawing a pipe: something goes in on one end (an email, a WhatsApp message, the morning hour) and an action comes out the other end without you having to be there. It's similar to Zapier, but with two differences you'll feel in your wallet and in your freedom: it charges you per complete run instead of per step, and you can run it on a rented computer of your own for five euros a month with unlimited runs. What makes it special for this course is that an entire n8n flow is a piece of text you can copy and paste: you ask the AI \"write me the flow,\" copy what it gives back, hit Ctrl+V over the canvas, and all the boxes show up already connected. You just fill in your data and flip the switch.",
+  "account": {
+    "url": "n8n.io",
+    "free": "There are two paths. The easy one: n8n Cloud, the version they host, with a 14-day free trial and no card required. Once it ends, the Starter plan runs around €20-24 a month (roughly 2,500 executions and 5 flows active at once) and Pro around €50-60. The cheap path: install it yourself on a rented computer (a VPS from Hetzner or DigitalOcean for €4-6 a month); the software is free and executions are unlimited, but you're the one who fixes anything that breaks. Prices change every few months: check n8n.io/pricing the day you're about to pay instead of trusting this figure. On top of that, whichever AI you use inside it (OpenAI, Claude) is billed separately and isn't included in any plan.",
+    "steps": [
+      [
+        "Create your account at n8n.io",
+        "Click the 'Get started free' button at the top right. Choose the Cloud option, not the download. It asks for your email and a password, and makes you pick the server region: choose the European one if you're going to handle Spanish customer data. That choice can't be changed later."
+      ],
+      [
+        "Skip the questionnaire and watch the trial clock",
+        "It asks what you do for a living and what you want to automate. Answer quickly or hit 'Skip'. At the top you'll see a notice like 'X days left in your trial'. Write it on your calendar: on day 15 the flows switch off and quietly stop doing their job."
+      ],
+      [
+        "Open your first empty canvas",
+        "On the home screen, click the orange 'Create Workflow' button at the top right. An almost-empty gray board opens with a box that says 'Add first step...'. That board is called the canvas, and it's where you'll spend your time."
+      ],
+      [
+        "Connect a single account, your Gmail or your Telegram",
+        "Left-hand menu, 'Overview' and the 'Credentials' tab, then the 'Add credential' button. Search for 'Gmail OAuth2'. A Google window opens asking for permissions: read them, because that's where you actually grant access to your real inbox. On n8n Cloud this connection takes two clicks; if you self-hosted it, Gmail forces you to create a Google Cloud project, which takes a good half hour."
+      ],
+      [
+        "Set up Telegram as your safety net",
+        "First, open Telegram on your phone, find @BotFather, message it /newbot and follow the steps. It gives you back a token (a long password). Then message your bot anything and find @userinfobot to get your chat ID (your user number). With those two things you can already receive free, instant alerts. It's the cheapest thing you'll set up and the one you'll use the most."
+      ],
+      [
+        "Import your first flow by pasting it",
+        "Copy the JSON for the 'Notify me when something breaks' template from this guide, go back to the canvas, click any empty gray spot and hit Ctrl+V. The boxes show up already connected. That's the entire import ritual: there's no menu, no file-upload dialog. Ctrl+V."
+      ],
+      [
+        "Save and find the switch",
+        "Ctrl+S saves. At the top right there's a switch that says 'Inactive'. While it's off, the flow only runs when you click 'Test workflow'. As soon as you flip it to 'Active' it starts acting on its own on your real data. Don't touch it yet."
+      ]
+    ],
+    "warning": "Activating a flow is not a dry run: it does real things, on your real accounts, and there's no undo button. The classic accident is the email loop: you build a flow that fires on every incoming email and replies by email, someone has an auto-reply set up, and within ten minutes you've sent two hundred messages from your real address. That's why the templates in this guide save drafts instead of sending. And if you self-host it on a server: n8n encrypts your saved passwords with a key called N8N_ENCRYPTION_KEY that's generated automatically the first time it runs. Copy it and store it off the server today. If you lose that key, all your saved credentials become unreadable forever, and you'll have to reconnect account by account by hand."
+  },
+  "first": [
+    "Paste the 'Notify me when something breaks' flow with Ctrl+V, put in your Telegram chat ID and save it. Five minutes and you've got a watchdog.",
+    "Paste the 'Website watchdog' flow, swap the domain for your own, and click 'Test workflow' at the bottom center. Watch the boxes turn green one by one.",
+    "Double-click the 'Call the website' box and study the three columns: left is INPUT (what comes in), center is settings, right is OUTPUT (what comes out). That panel is 80% of n8n.",
+    "In the OUTPUT column, click the 'Schema' tab, grab the statusCode field with your mouse and drop it into a text field on another node. n8n writes the formula on its own. You'll never type a field name by hand again.",
+    "Select a node, press the P key, and notice the pin icon: you've just frozen the test result. Now you can tweak the rest of the flow a thousand times without calling the website again or spending AI money."
+  ],
+  "shortcuts": [
+    [
+      "Ctrl+V over the canvas",
+      "Pastes an entire flow from the clipboard: the boxes appear already placed and connected. This is how you import any template, whether it's yours or one the AI just wrote for you. If you learn one shortcut, make it this one."
+    ],
+    [
+      "Ctrl+A then Ctrl+C",
+      "Selects the whole flow and copies it to the clipboard as text. Use it to paste to the AI and say 'fix this for me' or 'add a step to this'. Copy and paste is how you make backups and how you ask for help."
+    ],
+    [
+      "Tab",
+      "Opens the node search on the right. Type 'gmail', 'telegram', 'whatsapp' or 'wait' and hit Enter. Faster than hunting for the + button, and it's how you add any step."
+    ],
+    [
+      "Double-click on a box",
+      "Opens the three-column panel: INPUT on the left, settings in the center, OUTPUT on the right. This is where the real work happens. To exit, press Escape or click 'Back to canvas' at the top left."
+    ],
+    [
+      "Dragging an INPUT field into a slot",
+      "In the INPUT column, 'Schema' tab, you grab the field's name and drop it into whichever slot you want to fill. n8n writes the exact formula on its own. Typing those field names by hand is the number one cause of flows that don't work."
+    ],
+    [
+      "P key with a node selected",
+      "Pins or unpins the test result. Once pinned, the node always returns those same data and stops calling the real app. Saves AI money and prevents accidentally sending emails while you're building."
+    ],
+    [
+      "D key with a node selected",
+      "Switches that one box off or on. The flow skips it as if it didn't exist. It's the trick for testing an email flow without the last step, the one that sends."
+    ],
+    [
+      "Ctrl+Enter",
+      "Runs the entire flow from start to finish, same as the 'Test workflow' button at the bottom center. The boxes turn green one by one, and any that fail get a red border."
+    ],
+    [
+      "Ctrl+S",
+      "Saves. n8n doesn't autosave. Changes you don't save are lost on reload, and an active flow keeps running the old version until you save."
+    ],
+    [
+      "1 key, 0 key, and Ctrl+drag",
+      "1 fits the entire flow on screen, 0 returns to normal zoom, and dragging with Ctrl held down (or with the mouse wheel pressed) moves the canvas without touching the boxes. Shift+S drops a yellow note so you can leave reminders on top of the flow."
+    ]
+  ],
+  "daily": [
+    "The three-column panel. Double-click any node and you see at once what's coming in (INPUT), what it does (center), and what it returns (OUTPUT). If something doesn't come out the way you expect, the answer is always in the left column: you're receiving something different from what you thought.",
+    "Dragging fields instead of typing them. 'Schema' tab in INPUT, grab the field, drop it in the slot. The slot turns purple and the formula appears. Below it, in gray, you'll see the actual value it's going to carry: if it says [undefined] there, the formula is pointing at an empty spot.",
+    "'Test step' before 'Test workflow'. Every node has its own test button (above the OUTPUT column). Build one step, test it, look at the data, and only then add the next one. Building five steps at once and testing at the end is how you lose an afternoon.",
+    "The pin. Press P on the trigger node and its result gets frozen. That test email, that WhatsApp message, that row. Now you can rerun the flow forty times without spending a single cent on AI and without depending on a new email arriving.",
+    "The history. Left-hand menu, 'Executions'. It lists every time each flow has run, in green or red. Click one and you see the flow exactly as it was at that moment, with the data that passed through each box. It's the plane's black box.",
+    "Credentials live separately. You connect Gmail once, and every Gmail node in every one of your flows reuses that connection. If something suddenly stops working across several flows at once, it's almost always an expired credential, not broken flows.",
+    "Saving isn't activating. Ctrl+S saves the drawing. The switch at the top right, flipping from 'Inactive' to 'Active', is what puts it to work on its own. A saved, switched-off flow does absolutely nothing, however nicely built it is."
+  ],
+  "templates": [
+    {
+      "name": "Inbox under control: every new email, a draft written by AI",
+      "what": "Watches your Gmail. When an unread email comes in, the AI reads it, decides whether it deserves a reply, and if it does, writes the draft and saves it in the Gmail thread. It doesn't send anything: you open Gmail, read it, tweak a couple of words, and hit send. For anyone who gets between ten and a hundred emails a day and loses the morning answering the same things. It filters out ads and automated notifications on its own.",
+      "how": "Copy the whole block of text below. Open n8n, click 'Create Workflow', click any gray area of the canvas and hit Ctrl+V. Four connected boxes appear. Double-click 'New email' and under 'Credential to connect with' choose your Gmail (or create it right there with 'Create new credential'). Do the same in 'Save draft' with the same credential, and in 'AI drafts' choose your OpenAI account. Now open 'AI drafts' and replace the [BRACKETS] in the top box with your own details. Click 'Test workflow' at the bottom center: it grabs your latest unread email and you'll see the draft in your Gmail within seconds. Once you like the tone, Ctrl+S and flip the switch to 'Active'.",
+      "fill": [
+        [
+          "[YOUR NAME] and [YOUR BUSINESS] inside the 'AI drafts' node",
+          "Your real name and one sentence about what you do: 'Levi, who runs an online climbing gear store'"
+        ],
+        [
+          "The model in 'AI drafts'",
+          "gpt-4o-mini if you want it cheap (a few cents a month at this volume); gpt-4o if you want better writing and don't mind paying a few euros"
+        ],
+        [
+          "Gmail credential in the 'New email' and 'Save draft' nodes",
+          "Your email account. Use a test account the first week, not the business one"
+        ],
+        [
+          "The 'New email' filter",
+          "Set by default to INBOX and unread. If you get a lot of mail, switch it to a specific Gmail label so it only watches that"
+        ],
+        [
+          "The 'New email' frequency",
+          "Set to every minute by default. On n8n Cloud that's up to 43,200 checks a month: if your plan is tight, set it to every 15 minutes"
+        ]
+      ],
+      "code": "{\n  \"name\": \"Inbox under control - AI draft\",\n  \"nodes\": [\n    {\n      \"parameters\": {\n        \"pollTimes\": {\n          \"item\": [\n            {\n              \"mode\": \"everyMinute\"\n            }\n          ]\n        },\n        \"simple\": false,\n        \"filters\": {\n          \"labelIds\": [\n            \"INBOX\"\n          ],\n          \"readStatus\": \"unread\"\n        },\n        \"options\": {}\n      },\n      \"id\": \"n8n-mail-01\",\n      \"name\": \"New email\",\n      \"type\": \"n8n-nodes-base.gmailTrigger\",\n      \"typeVersion\": 1.2,\n      \"position\": [\n        -260,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"modelId\": {\n          \"__rl\": true,\n          \"value\": \"gpt-4o-mini\",\n          \"mode\": \"list\",\n          \"cachedResultName\": \"gpt-4o-mini\"\n        },\n        \"messages\": {\n          \"values\": [\n            {\n              \"role\": \"system\",\n              \"content\": \"You are the assistant for [YOUR NAME], who runs [YOUR BUSINESS]. You write reply drafts in professional English, in under 120 words. Never invent prices, deadlines, or availability: if the email asks for something you don't have, leave the gap written as [CONFIRM]. Don't promise anything. Always sign as [YOUR NAME]. If the email is advertising, an automated invoice, or an app notification, reply with exactly the word IGNORE and nothing else.\"\n            },\n            {\n              \"content\": \"=From: {{ $json.from.value[0].address }}\\nSubject: {{ $json.subject }}\\n\\n{{ $json.text }}\"\n            }\n          ]\n        },\n        \"options\": {\n          \"temperature\": 0.3\n        }\n      },\n      \"id\": \"n8n-mail-02\",\n      \"name\": \"AI drafts\",\n      \"type\": \"@n8n/n8n-nodes-langchain.openAi\",\n      \"typeVersion\": 1.8,\n      \"position\": [\n        -40,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"conditions\": {\n          \"options\": {\n            \"caseSensitive\": false,\n            \"leftValue\": \"\",\n            \"typeValidation\": \"loose\",\n            \"version\": 2\n          },\n          \"conditions\": [\n            {\n              \"id\": \"cond-ignorar\",\n              \"leftValue\": \"={{ $json.message.content }}\",\n              \"rightValue\": \"IGNORE\",\n              \"operator\": {\n                \"type\": \"string\",\n                \"operation\": \"notContains\"\n              }\n            }\n          ],\n          \"combinator\": \"and\"\n        },\n        \"looseTypeValidation\": true,\n        \"options\": {}\n      },\n      \"id\": \"n8n-mail-03\",\n      \"name\": \"Deserves a reply\",\n      \"type\": \"n8n-nodes-base.if\",\n      \"typeVersion\": 2.2,\n      \"position\": [\n        180,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"resource\": \"draft\",\n        \"subject\": \"=Re: {{ $('New email').item.json.subject }}\",\n        \"emailType\": \"text\",\n        \"message\": \"={{ $json.message.content }}\",\n        \"options\": {\n          \"sendTo\": \"={{ $('New email').item.json.from.value[0].address }}\",\n          \"threadId\": \"={{ $('New email').item.json.threadId }}\"\n        }\n      },\n      \"id\": \"n8n-mail-04\",\n      \"name\": \"Save draft\",\n      \"type\": \"n8n-nodes-base.gmail\",\n      \"typeVersion\": 2.1,\n      \"position\": [\n        420,\n        -100\n      ]\n    }\n  ],\n  \"connections\": {\n    \"New email\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"AI drafts\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"AI drafts\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Deserves a reply\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Deserves a reply\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Save draft\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ],\n        []\n      ]\n    }\n  },\n  \"pinData\": {},\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    },
+    {
+      "name": "WhatsApp assistant that only answers the usual questions",
+      "what": "Someone messages your business WhatsApp asking about hours, address, or how much something costs. The AI replies in two sentences right away, using the details you gave it, and if it's asked something it doesn't know, it says a person will look into it. It ignores voice notes and photos so it doesn't reply with nonsense. For shops, consultancies, academies, and anyone who answers the same thing twenty times a day.",
+      "how": "Before touching n8n there's a tedious part you can't skip: WhatsApp for businesses runs through Meta. Go to developers.facebook.com, create a Business-type app, add the 'WhatsApp' product, and note two things from the setup screen: the 'Phone number ID' and the access token. With that you can move on. In n8n, paste the JSON below with Ctrl+V. Open 'WhatsApp message', create the 'WhatsApp Trigger API' credential with your token and your 'App Secret'; n8n will show you a URL and a 'Verify Token' that you need to copy into Meta, under WhatsApp > Configuration > Webhook, and check the 'messages' box. Open 'Reply via WhatsApp' and paste your Phone number ID where it says PASTE_HERE. Replace the [BRACKETS] in the 'AI replies' node with your own details. Save and activate: the WhatsApp trigger only listens while the flow is 'Active'.",
+      "fill": [
+        [
+          "PASTE_HERE_YOUR_PHONE_NUMBER_ID in 'Reply via WhatsApp'",
+          "The long number Meta gives you under WhatsApp > API Setup. It's not your phone number, it's an identifier"
+        ],
+        [
+          "[YOUR HOURS], [YOUR ADDRESS], [YOUR PRICES], [YOUR TIMEFRAME] in 'AI replies'",
+          "Write it exactly as you'd tell a new employee. Whatever you don't put there, the AI won't know and will refer to a person"
+        ],
+        [
+          "'WhatsApp Trigger API' credential",
+          "Your Meta access token and the app's App Secret. Both are on developers.facebook.com"
+        ],
+        [
+          "'WhatsApp API' credential on the reply node",
+          "The same access token. Careful: the test token expires after 24 hours; to make it last, generate a permanent one from Business Settings > System Users"
+        ],
+        [
+          "Numbers allowed to message you during testing",
+          "In Meta, under 'To', add your own phone to the list of allowed recipients. While you're in test mode, nothing reaches any other number"
+        ]
+      ],
+      "code": "{\n  \"name\": \"WhatsApp Assistant\",\n  \"nodes\": [\n    {\n      \"parameters\": {\n        \"updates\": [\n          \"messages\"\n        ]\n      },\n      \"id\": \"n8n-wa-01\",\n      \"name\": \"WhatsApp message\",\n      \"type\": \"n8n-nodes-base.whatsAppTrigger\",\n      \"typeVersion\": 1,\n      \"position\": [\n        -260,\n        0\n      ],\n      \"webhookId\": \"change-me-on-import\"\n    },\n    {\n      \"parameters\": {\n        \"conditions\": {\n          \"options\": {\n            \"caseSensitive\": true,\n            \"leftValue\": \"\",\n            \"typeValidation\": \"loose\",\n            \"version\": 2\n          },\n          \"conditions\": [\n            {\n              \"id\": \"cond-texto\",\n              \"leftValue\": \"={{ $json.messages[0].type }}\",\n              \"rightValue\": \"text\",\n              \"operator\": {\n                \"type\": \"string\",\n                \"operation\": \"equals\"\n              }\n            }\n          ],\n          \"combinator\": \"and\"\n        },\n        \"looseTypeValidation\": true,\n        \"options\": {}\n      },\n      \"id\": \"n8n-wa-02\",\n      \"name\": \"Text only\",\n      \"type\": \"n8n-nodes-base.if\",\n      \"typeVersion\": 2.2,\n      \"position\": [\n        -40,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"modelId\": {\n          \"__rl\": true,\n          \"value\": \"gpt-4o-mini\",\n          \"mode\": \"list\",\n          \"cachedResultName\": \"gpt-4o-mini\"\n        },\n        \"messages\": {\n          \"values\": [\n            {\n              \"role\": \"system\",\n              \"content\": \"You are the WhatsApp assistant for [YOUR BUSINESS]. You reply in professional English, in 2 or 3 sentences at most, no lists or bold text: it's WhatsApp, not an email. Data you can give: hours [YOUR HOURS], address [YOUR ADDRESS], approximate prices [YOUR PRICES]. If asked something not on that list, say a person will look into it and reply within [YOUR TIMEFRAME]. Never confirm a booking or charge anything.\"\n            },\n            {\n              \"content\": \"={{ $json.messages[0].text.body }}\"\n            }\n          ]\n        },\n        \"options\": {\n          \"temperature\": 0.4\n        }\n      },\n      \"id\": \"n8n-wa-03\",\n      \"name\": \"AI replies\",\n      \"type\": \"@n8n/n8n-nodes-langchain.openAi\",\n      \"typeVersion\": 1.8,\n      \"position\": [\n        180,\n        -100\n      ]\n    },\n    {\n      \"parameters\": {\n        \"operation\": \"send\",\n        \"phoneNumberId\": \"PASTE_HERE_YOUR_PHONE_NUMBER_ID\",\n        \"recipientPhoneNumber\": \"={{ $('WhatsApp message').item.json.messages[0].from }}\",\n        \"textBody\": \"={{ $json.message.content }}\",\n        \"additionalFields\": {}\n      },\n      \"id\": \"n8n-wa-04\",\n      \"name\": \"Reply via WhatsApp\",\n      \"type\": \"n8n-nodes-base.whatsApp\",\n      \"typeVersion\": 1,\n      \"position\": [\n        400,\n        -100\n      ]\n    }\n  ],\n  \"connections\": {\n    \"WhatsApp message\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Text only\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Text only\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"AI replies\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ],\n        []\n      ]\n    },\n    \"AI replies\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Reply via WhatsApp\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"pinData\": {},\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    },
+    {
+      "name": "Website watchdog with instant alert to your phone",
+      "what": "Every 15 minutes it calls your website. If it doesn't respond normally, it sends you a Telegram message on your phone with the error code and the time. For anyone who's built a website or store with AI and doesn't want to find out it's been down for two days because a customer told them. Telegram is free and instant, and it reaches you even on the subway.",
+      "how": "You need the Telegram bot from step 5 of the setup: the token from @BotFather and your chat ID from @userinfobot. Paste the JSON below with Ctrl+V onto a new canvas. Open 'Call the website' and replace https://[YOUR-DOMAIN].com with your real address, with https in front. Open 'Notify me via Telegram', create the credential by pasting the bot token, and replace PASTE_HERE_YOUR_CHAT_ID with your number. To test it without waiting for something to actually go down: change the address to a fake one like https://thisdoesnotexist-1234.com, click 'Test workflow' and check the alert reaches your phone. Then put your real address back, Ctrl+S, and flip the switch to 'Active'.",
+      "fill": [
+        [
+          "https://[YOUR-DOMAIN].com in 'Call the website'",
+          "The full address of your website or store, with https:// in front"
+        ],
+        [
+          "PASTE_HERE_YOUR_CHAT_ID in 'Notify me via Telegram'",
+          "The number @userinfobot gives you on Telegram. It's a number, no quotes or @"
+        ],
+        [
+          "Telegram credential",
+          "The token @BotFather gave you, something like 7123456789:AAH... Paste it in full"
+        ],
+        [
+          "The 15 minutes in 'Every 15 minutes'",
+          "Each check is one execution. 15 minutes is about 2,880 a month, more than the n8n Cloud Starter plan includes. If you're on Cloud, set it to 30 or 60 minutes; if you self-hosted it, you can leave it at 5"
+        ]
+      ],
+      "code": "{\n  \"name\": \"My Website Watchdog\",\n  \"nodes\": [\n    {\n      \"parameters\": {\n        \"rule\": {\n          \"interval\": [\n            {\n              \"field\": \"minutes\",\n              \"minutesInterval\": 15\n            }\n          ]\n        }\n      },\n      \"id\": \"n8n-vig-01\",\n      \"name\": \"Every 15 minutes\",\n      \"type\": \"n8n-nodes-base.scheduleTrigger\",\n      \"typeVersion\": 1.2,\n      \"position\": [\n        -280,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"url\": \"https://[YOUR-DOMAIN].com\",\n        \"options\": {\n          \"timeout\": 10000,\n          \"response\": {\n            \"response\": {\n              \"fullResponse\": true,\n              \"neverError\": true\n            }\n          }\n        }\n      },\n      \"id\": \"n8n-vig-02\",\n      \"name\": \"Call the website\",\n      \"type\": \"n8n-nodes-base.httpRequest\",\n      \"typeVersion\": 4.2,\n      \"position\": [\n        -60,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"conditions\": {\n          \"options\": {\n            \"caseSensitive\": true,\n            \"leftValue\": \"\",\n            \"typeValidation\": \"loose\",\n            \"version\": 2\n          },\n          \"conditions\": [\n            {\n              \"id\": \"cond-caida\",\n              \"leftValue\": \"={{ $json.statusCode }}\",\n              \"rightValue\": 200,\n              \"operator\": {\n                \"type\": \"number\",\n                \"operation\": \"notEquals\"\n              }\n            }\n          ],\n          \"combinator\": \"and\"\n        },\n        \"looseTypeValidation\": true,\n        \"options\": {}\n      },\n      \"id\": \"n8n-vig-03\",\n      \"name\": \"Is down\",\n      \"type\": \"n8n-nodes-base.if\",\n      \"typeVersion\": 2.2,\n      \"position\": [\n        160,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"chatId\": \"PASTE_HERE_YOUR_CHAT_ID\",\n        \"text\": \"=🔴 [YOUR-DOMAIN].com is not responding properly.\\nCode: {{ $json.statusCode }}\\nTime: {{ $now.setZone('Europe/Madrid').toFormat('dd/MM/yyyy HH:mm') }}\",\n        \"additionalFields\": {}\n      },\n      \"id\": \"n8n-vig-04\",\n      \"name\": \"Notify me via Telegram\",\n      \"type\": \"n8n-nodes-base.telegram\",\n      \"typeVersion\": 1.2,\n      \"position\": [\n        400,\n        -100\n      ]\n    }\n  ],\n  \"connections\": {\n    \"Every 15 minutes\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Call the website\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Call the website\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Is down\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Is down\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Notify me via Telegram\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ],\n        []\n      ]\n    }\n  },\n  \"pinData\": {},\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    },
+    {
+      "name": "Notify me when something breaks (the flow that saves the rest)",
+      "what": "Two boxes. It fires when any of your other flows breaks and sends you the flow's name, the node that failed, the error message, and a direct link to view it on Telegram. Without this, a flow can spend three weeks failing silently while you think everything's fine, because n8n doesn't alert you on its own. It's the first one you should build, and the one that costs the least time.",
+      "how": "Paste the JSON below with Ctrl+V onto a new canvas. Set your chat ID and your Telegram credential the same way as in the watchdog. Ctrl+S and name it 'Notify me when something breaks'. This flow does NOT get activated with the switch: it stays off on purpose, because it only fires when another one fails. Now go to each of your other flows, open the three dots at the top right, go to 'Settings', and in the 'Error Workflow' dropdown choose this one. You have to do it flow by flow; it's not inherited. To test it, deliberately put a bad credential into a test flow and run it.",
+      "fill": [
+        [
+          "PASTE_HERE_YOUR_CHAT_ID",
+          "Your Telegram chat ID, the same one used in the watchdog"
+        ],
+        [
+          "Telegram credential",
+          "The same bot you already created. No need for a new one"
+        ],
+        [
+          "The 'Error Workflow' dropdown on each flow",
+          "Choose this flow in the settings of all your other flows, one by one. If you don't, it won't know anything went wrong"
+        ]
+      ],
+      "code": "{\n  \"name\": \"Notify me when something breaks\",\n  \"nodes\": [\n    {\n      \"parameters\": {},\n      \"id\": \"n8n-err-01\",\n      \"name\": \"When a flow fails\",\n      \"type\": \"n8n-nodes-base.errorTrigger\",\n      \"typeVersion\": 1,\n      \"position\": [\n        -200,\n        0\n      ]\n    },\n    {\n      \"parameters\": {\n        \"chatId\": \"PASTE_HERE_YOUR_CHAT_ID\",\n        \"text\": \"=⚠️ An n8n flow just broke\\n\\nFlow: {{ $json.workflow.name }}\\nNode: {{ $json.execution.lastNodeExecuted }}\\nError: {{ $json.execution.error.message }}\\n\\nView it: {{ $json.execution.url }}\",\n        \"additionalFields\": {}\n      },\n      \"id\": \"n8n-err-02\",\n      \"name\": \"Notify me via Telegram\",\n      \"type\": \"n8n-nodes-base.telegram\",\n      \"typeVersion\": 1.2,\n      \"position\": [\n        40,\n        0\n      ]\n    }\n  ],\n  \"connections\": {\n    \"When a flow fails\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Notify me via Telegram\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"pinData\": {},\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    }
+  ],
+  "errors": [
+    [
+      "Workflow could not be activated: Workflow has no trigger node",
+      "\"I can't turn this on because it has no node to fire it.\" The first node you have is 'When clicking Test workflow', which is a manual button only meant for testing. Delete it, press Tab, and choose a real trigger: 'Schedule Trigger' (at a set time), 'Gmail Trigger' (when an email arrives), 'Webhook' (when something calls you from outside)."
+    ],
+    [
+      "The requested webhook \"POST /abc-123\" is not registered / 404 The resource you are requesting could not be found",
+      "You're calling the webhook's test address, and that address only exists during the two minutes you have 'Listen for test event' held down. Every webhook has TWO different addresses, 'Test URL' and 'Production URL', switched between with the tabs inside the node. For everyday use: save, set the flow to 'Active', and use the Production URL."
+    ],
+    [
+      "ERROR: Referenced node is unexecuted. An expression references the node 'New email', but it hasn't been executed yet",
+      "Your formula is looking at the data of a box that hasn't run yet in this test. It happens when you run a single step with 'Test step' without having run the earlier ones. Fix: click 'Test workflow' (Ctrl+Enter) so everything runs from the start, or pin (P key) the first node so its data is always available."
+    ],
+    [
+      "Authorization failed - please check your credentials / 401 Unauthorized",
+      "The password or permission you gave that app is no longer valid. It's almost always an expired token, and with Google it happens if the connection has gone unused for days or if you changed your password. Go to 'Overview' > 'Credentials', open that credential, click 'Reconnect' or sign in with Google again. Don't touch the flow: the flow is fine."
+    ],
+    [
+      "(#131030) Recipient phone number not in allowed list",
+      "A WhatsApp error. Your Meta app is still in test mode and can only message numbers you've manually registered. Go to developers.facebook.com, WhatsApp > API Setup, the 'To' section, and add the phone you want to message, prefix included (+1...). To message any customer, you need to get the business verified with Meta, which is days of paperwork, not minutes."
+    ],
+    [
+      "429 - The service is receiving too many requests from you",
+      "You're hammering the other app faster than it can handle. It usually shows up when a node receives 200 rows at once and fires 200 calls in a row. Two-click fix: open the node, 'Settings' tab, and turn up 'Retry On Fail'. If it keeps happening, add a 'Wait' node of 1 second before it, or lower the batch size in 'Loop Over Items'."
+    ],
+    [
+      "insufficient_quota / You exceeded your current quota, please check your plan and billing details",
+      "This one isn't from n8n, it's from OpenAI: you've run out of balance. Having a paid ChatGPT Plus subscription doesn't give you API credit — they're two separate wallets, and it's the most common mix-up. Go to platform.openai.com, 'Billing' section, and top up $5 or $10. Set a monthly spending limit under 'Usage limits' before activating anything, because a looping flow can eat through your balance in an afternoon."
+    ],
+    [
+      "The field stays [undefined] or says 'Can't get data for expression'",
+      "Your formula is pointing at a field that doesn't exist under that exact name. Nine times out of ten it's a capital letter or an underscore: you wrote $json.Email and the field is actually called email. Don't fix it by hand: clear the slot, go to the INPUT column, 'Schema' tab, and drag the right field over from the left. If the field isn't in INPUT either, the problem is the previous node, not this one."
+    ]
+  ],
+  "prompts": [
+    {
+      "name": "Have the AI write the whole flow for you to paste with Ctrl+V",
+      "prompt": "You're an n8n expert. I need you to write me a COMPLETE n8n flow in JSON format, ready to copy and paste directly onto the canvas with Ctrl+V. I don't know how to code and I'm not going to touch the JSON by hand, so it needs to come whole and well-formed. Here's what I want the flow to do: [DESCRIBE IN PLAIN ENGLISH WHAT YOU WANT, STEP BY STEP, AS YOU'D EXPLAIN IT TO AN INTERN]. It should fire when [WHAT STARTS IT: an email arrives / someone fills out a form / it's 8am / someone calls a web address]. The apps I have connected are [GMAIL, TELEGRAM, GOOGLE SHEETS, OPENAI, WHATEVER APPLIES]. Mandatory rules: use only official n8n nodes, no community nodes; don't use the Code node or JavaScript, solve it with regular nodes, expressions, and the Edit Fields node; format the JSON with the keys nodes, connections, pinData and settings with executionOrder v1; give nodes English names and use those same names inside connections; leave credentials unfilled so I can choose them; place the boxes with spaced-out coordinates so they don't overlap; and mark every one of my own details that needs replacing with [CAPITALIZED BRACKETS]. After the JSON, and outside the code block, write me, in plain English: 1) a numbered list of what I fill in and where, node by node; 2) which credentials I need to create beforehand; 3) what happens the first time I click 'Test workflow'; 4) which actions in this flow are irreversible or cost money. No theoretical explanations of n8n: just the JSON and those four lists."
+    },
+    {
+      "name": "Decode a red error and fix it",
+      "prompt": "I have an n8n flow that's failing, and I don't know how to code, so I need you to translate the problem into plain English and give me the exact clicks to fix it. I'll give you everything I see on screen. The full error message, copied exactly from the red box: [PASTE THE WHOLE ERROR, INCLUDING THE ERROR CODE IF THERE IS ONE]. The node that turns red is called [NODE NAME] and it's a [GMAIL / TELEGRAM / HTTP REQUEST / OPENAI / WHATEVER TYPE] node. What the flow is supposed to do is [EXPLAIN IN ONE SENTENCE]. Here's what shows up in that node's INPUT column, copied from the JSON tab: [PASTE THE INPUT JSON, OR WRITE 'the INPUT column is empty' IF THERE'S NOTHING]. And here's the node's configuration, copied by selecting it and pressing Ctrl+C: [PASTE THE NODE JSON]. Answer me in this structure, no beating around the bush: first, what that error means in one sentence my mother could understand. Second, what the most likely cause is in MY specific case, based on the data I gave you, not in general. Third, the exact steps to fix it: which node to open, which tab to click, which field to change and to what exact value, using the button names as they appear on screen. Fourth, how I can check in 30 seconds that it's fixed. Fifth, if the fix could cause something to actually be sent or cost money, warn me in bold before I do it. If you need to see more of my screen to be sure, tell me exactly where to look instead of guessing."
+    },
+    {
+      "name": "Write the exact expression that goes in a field",
+      "prompt": "I'm inside an n8n node and need to fill a field with data from a previous step, but I don't know how to write expressions. Here's what's coming in, copied from the INPUT column's JSON tab, exactly as it appears: [PASTE THE FULL INPUT JSON, EVEN IF IT'S LONG]. The previous node is called exactly [PREVIOUS NODE NAME, COPIED LETTER FOR LETTER]. What I want to appear in that field is: [DESCRIBE IT IN PLAIN ENGLISH: 'the customer's first name, capitalized', 'today's date in day/month/year format', 'the email subject cut to 60 characters', 'the price with two decimals and a dollar sign after it']. Give me the complete expression, double curly braces included, ready to paste into the field, and remind me that before pasting it I need to flip the field's switch to 'Expression' instead of 'Fixed'. Explain in one line what each piece of the expression does, so next time I can tweak it myself. If the data I'm asking for can be gotten just by dragging a field from the INPUT column without typing anything, tell me and save me the expression: I'd rather drag. If the field I need isn't in the JSON I gave you, don't make it up: tell me which node should be bringing it in and what I need to change first. And warn me if the expression will break when that field arrives empty, giving me the empty-proof version."
+    },
+    {
+      "name": "Audit the flow before flipping the switch",
+      "prompt": "I'm about to activate an n8n flow for the first time and I want someone to review it first, because once I activate it, it's going to touch my real accounts and there's no undo button. Here's the entire flow, copied with Ctrl+A and Ctrl+C over the canvas: [PASTE THE COMPLETE FLOW JSON]. My situation: the trigger is going to fire about [NUMBER] times a day, I'm on [n8n Cloud Starter plan / n8n self-hosted on my own server], and the connected accounts are [REAL BUSINESS ACCOUNTS / TEST ACCOUNTS]. Review it and answer me in plain English with these six sections. One: exactly what's going to happen in the first five minutes after I flip the switch to 'Active', told like a movie. Two: which actions in this flow are irreversible, meaning they send an email, post a message, delete something, or charge money; tell me which node each one is in. Three: whether there's any risk of a loop, meaning the flow triggering itself and repeating without stopping; if there is, tell me how to cut it off. Four: how many executions a month this will use given the numbers I gave you, and whether that exceeds my plan. Five: how much this will cost me a month in dollars, adding up n8n and the AI calls, with the math worked out in front of me. Six: give me a concrete five-step test plan, using the data pin and disabling nodes with the D key, to test the whole thing without anything actually being sent."
+    },
+    {
+      "name": "Move a flow you already have in Zapier or Make over to n8n",
+      "prompt": "I have an automation built in [ZAPIER / MAKE] and it's costing me too much money a month because they charge per step. I want to move it to n8n, where you're charged per complete execution. I don't know how to code, so I need the result ready to paste. Here's the current automation, described step by step exactly as it appears in the tool: [DESCRIBE EACH STEP IN ORDER: what triggers it, which app each step touches, and exactly what it does]. If I have the exported file, I'll paste it here: [PASTE THE EXPORTED ZAPIER JSON OR THE MAKE BLUEPRINT, OR DELETE THIS LINE]. It fires about [NUMBER] times a month and right now I pay [AMOUNT] a month. Do four things for me. First: an equivalence table, what each of my steps turns into when moved to n8n, with the exact name of the n8n node that replaces it. Second: warn me about steps that DON'T have a direct equivalent and how to solve them with other nodes, without using the Code node. Third: the complete n8n flow JSON ready to paste with Ctrl+V, with credentials left empty, node names in English, and [BRACKETS] on everything I need to fill in myself. Fourth: the honest math, how much I'd pay a month on n8n at my volume versus what I pay now, including the plan and the server if needed, and at what volume the switch stops being worth it. Be honest: if my volume doesn't justify moving, tell me and explain why."
+    }
+  ],
+  "words": [
+    [
+      "Node",
+      "Each box on the board. A box is an app doing one thing: 'Gmail sending an email', 'OpenAI writing text'. Add them with the Tab key and open them with a double-click."
+    ],
+    [
+      "Canvas",
+      "The gray board where you place boxes and connect them with lines. You move around it by dragging with Ctrl held down, and you fit everything on screen with the 1 key."
+    ],
+    [
+      "Trigger",
+      "The first box, the one that decides when everything starts. It has a rounded corner and a lightning bolt. Without a real trigger, n8n won't let you activate the flow."
+    ],
+    [
+      "Execution",
+      "One complete pass of the flow, from the first box to the last, whether it has three steps or forty. It's the unit n8n charges you by, which is why it comes out much cheaper than Zapier on long flows."
+    ],
+    [
+      "Item",
+      "Each individual piece of data traveling through the pipe. If the first node brings in 20 emails, that's 20 items, and the next nodes run 20 times, once for each. Understanding this avoids 90% of surprises."
+    ],
+    [
+      "Expression",
+      "A formula between double curly braces, {{ }}, that gets replaced with real data when it runs. It writes itself when you drag a field from the INPUT column. The field turns purple when it holds one."
+    ],
+    [
+      "Data pin",
+      "The pin, P key. Freezes a test's result so that node always returns the same thing while you're building. It only works while testing by hand: once the flow is active, the pin is ignored."
+    ],
+    [
+      "Credential",
+      "The saved permission you give n8n to access your Gmail, your Telegram, or your OpenAI account. It lives outside the flows, under 'Overview' > 'Credentials', and every node for that app shares it."
+    ],
+    [
+      "Webhook",
+      "A web address n8n gives you so something else can notify it. Your vibe-coded website calls that address when someone makes a purchase, and n8n kicks in. It has two versions, test and production, and mixing them up is the most common mistake."
+    ],
+    [
+      "Self-hosted",
+      "Running n8n on a rented computer of your own instead of theirs. It costs about $4-6 a month with unlimited executions, but updates, backups, and outages are your responsibility."
+    ]
+  ],
+  "matters": [
+    "Data travels in a list, and the flow repeats once per item. You bring in 200 rows from a spreadsheet, and the email node after it sends 200 emails, not one. Nobody expects this the first time, and it doesn't show up in testing because your test only has three rows. Before activating, check the number in the corner of the OUTPUT column: that shows how many items are coming out. That number is how many times everything after it is going to run.",
+    "Saving isn't activating, and the test address isn't the production one. A perfect flow that's still 'Inactive' does nothing, and that's the number one reason for 'I built it and it doesn't work'. The second reason is the webhook: the 'Test URL' only lives for the two minutes you have 'Listen for test event' held down, so if you connect your website to that address, it works while you're testing and stops the moment you close the tab. For real life: save, activate, and copy the 'Production URL'.",
+    "Activating means acting on real accounts with no safety net. The first time you turn something on, do it with a test email account and with the D key switching off the last node, the one that sends. And build the 'Notify me when something breaks' flow before any other: n8n doesn't alert you on its own when something breaks. A flow can fail for three weeks straight and you'll find out from an angry customer, not from n8n.",
+    "If you self-host it, you're the IT department. n8n encrypts your saved passwords with a key called N8N_ENCRYPTION_KEY that appears on its own the first time it starts up. Copy it today and store it off the server. If the disk gets wiped or you move n8n to another machine without that key, every saved credential turns into noise, and you'll have to reconnect account by account, going through the Google and Meta paperwork again. Same goes for the database: without a backup, a dead server takes all your flows with it."
+  ],
+  "ignore": [
+    "The whole advanced AI section: AI Agent, Vector Store, memory, chained tools, RAG. They're gorgeous boxes that solve problems you don't have yet. A plain OpenAI node with a good set of instructions covers your first three months. Come back to that section once you've got three straightforward flows running in production.",
+    "The Code node and anything that smells like JavaScript or Python. It exists, and one day it'll save you from a jam, but almost everything you think needs code can be done with 'Edit Fields' to rename fields, 'IF' to make decisions, and a dragged-in expression. If a tutorial starts by dropping you into a Code node for something simple, find another tutorial.",
+    "Self-hosting it on a server in your first month. Docker, environment variables, domains, certificates, queue mode, workers. All of that saves money once you already know which flows you want, and until then it just eats your afternoons. Start on n8n Cloud with the free trial, build four flows, and only then consider moving to save the $24 a month."
+  ]
+}
