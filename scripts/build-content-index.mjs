@@ -26,13 +26,33 @@ import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
 import { buildCategories, buildGlossaryIndex, categoryKeyFor, sectionFor, SECTIONS } from './lib/categories.mjs'
 import { buildInstitutionalPromptLibrary } from './lib/institutional-prompts.mjs'
+import { STAGE_EN, KIND_EN, SECTION_EN, translateFolderLabel } from './lib/i18n-taxonomy.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const projectDir = path.resolve(scriptDir, '..')
 const publicDir = path.join(projectDir, 'public')
 const generatedDir = path.join(publicDir, 'generated')
 
-const IGNORED = new Set(['node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '36_PORTAL_WEB_FORMACION'])
+/*
+ * Idioma de este build. 'es' (por defecto) escribe public/course.json desde
+ * el contenido original. 'en' escribe public/course.en.json: usa el archivo
+ * <nombre>.en.json cuando existe junto al original, y si no existe se queda
+ * con el español antes que dejar un hueco vacío en la app.
+ */
+const LOCALE = process.env.LOCALE === 'en' || process.argv.includes('--locale=en') ? 'en' : 'es'
+const outputFile = LOCALE === 'en' ? 'course.en.json' : 'course.json'
+
+/*
+ * Carpetas que no forman parte del curso: infraestructura, documentación
+ * interna del proyecto (backlog, auditorías, planes de QA) y `content/`,
+ * que se carga de forma explícita con loadContent(). Lo que está aquí no
+ * llega nunca al alumno como lección.
+ */
+const IGNORED = new Set([
+  'node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '.claude',
+  '36_PORTAL_WEB_FORMACION', '99_PENDIENTE_Y_MEJORAS', '23_AUDITORIA_PROFESIONAL',
+  'content', 'scripts', 'src',
+])
 
 async function exists(target) {
   try { await fs.access(target); return true } catch { return false }
@@ -138,11 +158,17 @@ async function loadContent(folder) {
   const dir = path.join(projectDir, 'content', folder)
   if (!(await exists(dir))) return []
   const out = []
-  for (const name of (await fs.readdir(dir)).filter((file) => file.endsWith('.json'))) {
+  const names = (await fs.readdir(dir)).filter((file) => file.endsWith('.json') && !file.endsWith('.en.json'))
+  for (const name of names) {
+    // En build en inglés, si existe "nombre.en.json" se usa esa traducción;
+    // si no existe todavía, se sirve el español antes que dejar un hueco.
+    const target = LOCALE === 'en' && (await exists(path.join(dir, name.replace(/\.json$/, '.en.json'))))
+      ? name.replace(/\.json$/, '.en.json')
+      : name
     try {
-      out.push(JSON.parse(await fs.readFile(path.join(dir, name), 'utf8')))
+      out.push(JSON.parse(await fs.readFile(path.join(dir, target), 'utf8')))
     } catch (error) {
-      console.warn(`  aviso: ${folder}/${name} no es JSON válido (${error.message}). Se ignora.`)
+      console.warn(`  aviso: ${folder}/${target} no es JSON válido (${error.message}). Se ignora.`)
     }
   }
   return out
@@ -156,7 +182,12 @@ const promptFiles = await loadContent('prompts')
 const guideFiles = await loadContent('guias')
 const cursoFiles = await loadContent('lecciones')
 const kitFiles = await loadContent('kits')
+const agentFiles = await loadContent('agentes')
 const faqFiles = await loadContent('preguntas')
+
+// Las guías fundamentales siguen un orden pedagógico, no el del sistema de archivos.
+guideFiles.sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || String(a.title).localeCompare(String(b.title), 'es'))
+agentFiles.sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || String(a.title).localeCompare(String(b.title), 'es'))
 
 /* El orden de las preguntas sigue el recorrido del alumno, no el alfabetico
  * del sistema de archivos: primero lo que se pregunta antes de empezar. */
@@ -195,665 +226,17 @@ function enrichPrompts(items, context) {
 
 for (const family of promptFiles) enrichPrompts(family.prompts, family.title)
 
-const EXTRA_INSTITUTIONAL_KITS = [
-  {
-    id: 'ecommerce-lanzamiento-tienda',
-    order: -12,
-    title: 'E-commerce: lanzamiento de tienda online',
-    kicker: 'Tienda online',
-    audience: 'marcas, tiendas DTC, retail, agencias y alumnos que quieren publicar una tienda real',
-    promise: 'Convierte una idea de tienda en una publicación controlada: catálogo mínimo, páginas críticas, checkout, políticas, analítica y prueba de compra.',
-    focus: 'preparar una tienda online vendible, revisable y lista para publicar sin saltarse catálogo, pagos, envíos ni soporte',
-    entry: 'brief de tienda, productos iniciales, fotos, precios, políticas, dominio, métodos de pago y canales de venta',
-    output: 'checklist de lanzamiento, catálogo mínimo, páginas obligatorias, prueba de checkout, eventos de analítica y plan de soporte',
-    tools: ['shopify', 'woocommerce', 'canva', 'sheets', 'gmail', 'whatsapp', 'openai', 'claude', 'n8n', 'vercel'],
-    promptFamilies: ['ecommerce', 'crear-proyecto', 'probar-reparar', 'seguridad-coste-privacidad'],
-    skillKeywords: ['ecommerce', 'tienda online', 'lanzamiento', 'checkout', 'shopify', 'woocommerce'],
-    deliverables: ['Mapa de tienda', 'Checklist de lanzamiento', 'Prueba de compra ficticia', 'Plan de soporte inicial'],
-    fits: ['Tiendas que van a publicarse pronto', 'Primer catálogo online', 'Migración desde ventas por WhatsApp o Instagram', 'Alumnos que necesitan una tienda demo seria'],
-    notFor: ['Abrir pagos sin prueba', 'Publicar políticas copiadas sin revisión', 'Vender productos regulados sin criterio legal'],
-  },
-  {
-    id: 'ecommerce-catalogo-fichas-seo',
-    order: -11,
-    title: 'E-commerce: catálogo, fichas y SEO de producto',
-    kicker: 'Catálogo y producto',
-    audience: 'equipos de catálogo, tiendas online, copywriters, agencias y responsables de producto',
-    promise: 'Ordena productos, variantes, atributos, descripciones, FAQs, SEO y claims para vender mejor sin inventar características.',
-    focus: 'convertir información de producto dispersa en fichas publicables con SEO, control de claims y evidencia',
-    entry: 'SKU, fotos, atributos, variantes, proveedor, reseñas, preguntas, precios, stock y políticas comerciales',
-    output: 'matriz de catálogo, fichas mejoradas, metadatos SEO, FAQs, lista de claims prohibidos y checklist de carga',
-    tools: ['shopify', 'woocommerce', 'sheets', 'airtable', 'canva', 'openai', 'claude', 'n8n'],
-    promptFamilies: ['ecommerce', 'contenido-negocio', 'conectar-datos', 'probar-reparar'],
-    skillKeywords: ['catalogo', 'producto', 'seo', 'sku', 'variantes', 'ficha de producto'],
-    deliverables: ['Matriz SKU', 'Plantilla de ficha', 'Checklist SEO', 'Control de claims'],
-    fits: ['Catálogos grandes', 'Productos con descripciones pobres', 'Variantes confusas', 'Tiendas con SEO desordenado'],
-    notFor: ['Inventar beneficios', 'Usar reseñas sin permiso', 'Cambiar datos técnicos sin fuente'],
-  },
-  {
-    id: 'ecommerce-conversion-cro-checkout',
-    order: -10,
-    title: 'E-commerce: conversión, carrito y checkout',
-    kicker: 'CRO y compra',
-    audience: 'tiendas con tráfico, responsables de crecimiento, marketing, founders y agencias',
-    promise: 'Detecta fricciones en home, colección, ficha, carrito y checkout para mejorar conversión con cambios medibles.',
-    focus: 'mejorar conversión ecommerce con hipótesis pequeñas, pruebas visibles y cuidado de margen, confianza y experiencia',
-    entry: 'capturas, analítica, embudo, productos, precios, políticas, reseñas, métodos de pago y dudas de clientes',
-    output: 'diagnóstico CRO, backlog priorizado, copy de mejora, eventos de medición y prueba antes/después',
-    tools: ['shopify', 'woocommerce', 'sheets', 'canva', 'openai', 'claude', 'n8n'],
-    promptFamilies: ['ecommerce', 'probar-reparar', 'crear-web', 'entregar-equipo-cliente'],
-    skillKeywords: ['cro', 'conversion', 'carrito', 'checkout', 'embudo', 'landing'],
-    deliverables: ['Mapa de fricción', 'Backlog CRO', 'Prueba A/B manual', 'Eventos de medición'],
-    fits: ['Tráfico sin ventas', 'Abandono de carrito', 'Fichas poco claras', 'Checkout con dudas o costes sorpresa'],
-    notFor: ['Cambiar descuentos sin margen', 'Medir sin baseline', 'Confundir diseño bonito con conversión'],
-  },
-  {
-    id: 'ecommerce-soporte-postventa-whatsapp',
-    order: -9,
-    title: 'E-commerce: soporte, WhatsApp y postventa',
-    kicker: 'Cliente y postventa',
-    audience: 'soporte, atención al cliente, operaciones ecommerce y tiendas que venden por mensajería',
-    promise: 'Convierte mensajes, dudas, pedidos, devoluciones y garantías en una cola clara con borradores, escalado y registro.',
-    focus: 'atender clientes ecommerce sin responder automáticamente a ciegas ni prometer stock, plazos o garantías no verificadas',
-    entry: 'WhatsApp, emails, formularios, pedidos, tracking, políticas, fotos de incidencia y historial de cliente',
-    output: 'cola de soporte, respuestas aprobables, árbol de devoluciones, escalado humano y reporte de incidencias',
-    tools: ['whatsapp', 'telegram', 'gmail', 'sheets', 'airtable', 'n8n', 'openai', 'claude', 'shopify'],
-    promptFamilies: ['ecommerce', 'automatizar', 'crear-agentes', 'seguridad-coste-privacidad'],
-    skillKeywords: ['whatsapp', 'postventa', 'soporte', 'devoluciones', 'garantia', 'pedido'],
-    deliverables: ['Banco de respuestas', 'Árbol de escalado', 'Workflow de incidencias', 'Reporte semanal de soporte'],
-    fits: ['Preguntas repetidas por WhatsApp', 'Devoluciones desordenadas', 'Clientes preguntando por pedidos', 'Soporte sin trazabilidad'],
-    notFor: ['Enviar respuestas sin consentimiento', 'Resolver garantías complejas sin persona', 'Inventar estado de pedido'],
-  },
-  {
-    id: 'ecommerce-marketplaces-multicanal',
-    order: -8,
-    title: 'E-commerce: marketplaces y venta multicanal',
-    kicker: 'Canales de venta',
-    audience: 'tiendas que venden en web propia, Amazon, Etsy, redes sociales, WhatsApp o catálogos externos',
-    promise: 'Adapta productos, feeds, reglas, stock, margen y soporte a varios canales sin duplicar errores.',
-    focus: 'operar venta multicanal con fichas adaptadas, stock coherente, reglas de canal y control de margen',
-    entry: 'catálogo, SKU, atributos, fotos, precios, comisiones, stock, reglas de marketplace y canales activos',
-    output: 'matriz multicanal, fichas adaptadas, checklist de feed, reglas de stock y mapa de incidencias por canal',
-    tools: ['shopify', 'woocommerce', 'sheets', 'airtable', 'canva', 'gmail', 'n8n', 'openai', 'claude'],
-    promptFamilies: ['ecommerce', 'conectar-datos', 'automatizar', 'probar-reparar'],
-    skillKeywords: ['marketplace', 'amazon', 'etsy', 'multicanal', 'feed', 'stock'],
-    deliverables: ['Matriz de canales', 'Checklist de marketplace', 'Reglas de stock', 'Plan de soporte por canal'],
-    fits: ['Tiendas que salen a marketplace', 'Catálogos en varios canales', 'Feeds con errores', 'Stock que no coincide'],
-    notFor: ['Copiar fichas sin adaptar reglas', 'Ignorar comisiones', 'Vender fuera de stock'],
-  },
-  {
-    id: 'ecommerce-automatizaciones-n8n',
-    order: -7,
-    title: 'E-commerce: automatizaciones con n8n',
-    kicker: 'Automatización real',
-    audience: 'operaciones, soporte, marketing automation, tiendas online y alumnos de n8n',
-    promise: 'Diseña flujos importables o guiados para pedidos, stock, carritos, leads, soporte y reportes con pruebas y freno humano.',
-    focus: 'automatizar procesos ecommerce en n8n sin tocar clientes, pagos ni publicaciones hasta validar credenciales, datos y rutas de error',
-    entry: 'eventos de tienda, webhooks, pedidos, carritos, formularios, emails, WhatsApp, stock y hojas de auditoría',
-    output: 'workflow documentado, nodos, campos, credenciales necesarias, casos de prueba, logs y ruta de recuperación',
-    tools: ['n8n', 'shopify', 'woocommerce', 'gmail', 'whatsapp', 'telegram', 'sheets', 'airtable', 'openai', 'claude'],
-    promptFamilies: ['ecommerce', 'automatizar', 'probar-reparar', 'seguridad-coste-privacidad'],
-    skillKeywords: ['n8n', 'workflow', 'webhook', 'pedido', 'carrito', 'stock', 'automatizacion ecommerce'],
-    deliverables: ['Mapa de workflow', 'Tabla de campos', 'Plan de credenciales', 'Casos de prueba n8n'],
-    fits: ['Avisos de pedido problemático', 'Carritos abandonados', 'Reportes semanales', 'Clasificación de incidencias'],
-    notFor: ['Enviar mensajes sin aprobación', 'Procesar pagos automáticamente', 'Bucles sin límite'],
-  },
-  {
-    id: 'ecommerce-campanas-creatividad-producto',
-    order: -6,
-    title: 'E-commerce: campañas, creatividades y producto',
-    kicker: 'Marketing ecommerce',
-    audience: 'marketing, paid media, agencias, creadores y marcas de producto',
-    promise: 'Crea campañas, anuncios, emails, creatividades, imágenes de apoyo y landings con coherencia de marca y control de claims.',
-    focus: 'producir campañas de producto que conecten oferta, margen, stock, creatividad, canal y medición',
-    entry: 'producto, audiencia, stock, margen, reseñas, fotos reales, guía de marca, calendario y restricciones de canal',
-    output: 'plan de campaña, ángulos creativos, prompts visuales, emails, landing, checklist de aprobación y medición',
-    tools: ['canva', 'higgsfield', 'midjourney', 'runway', 'openai', 'claude', 'sheets', 'shopify', 'n8n'],
-    promptFamilies: ['ecommerce', 'contenido-negocio', 'crear-web', 'entregar-equipo-cliente'],
-    skillKeywords: ['campana', 'anuncios', 'producto', 'creatividades', 'email', 'landing'],
-    deliverables: ['Banco de ángulos', 'Prompts visuales', 'Calendario de campaña', 'Checklist de claims'],
-    fits: ['Lanzamientos de producto', 'Black Friday o campañas estacionales', 'Anuncios con varias creatividades', 'Emails comerciales'],
-    notFor: ['Usar fotos que falsean el producto', 'Prometer resultados no demostrados', 'Publicar sin revisar marca'],
-  },
-  {
-    id: 'ecommerce-analitica-margen-stock',
-    order: -5,
-    title: 'E-commerce: analítica, margen y stock',
-    kicker: 'Dirección ecommerce',
-    audience: 'dirección, operaciones, finanzas, responsables ecommerce y equipos de crecimiento',
-    promise: 'Conecta ventas, margen, conversión, stock, soporte y campañas en un dashboard semanal para decidir qué tocar.',
-    focus: 'tomar decisiones ecommerce con métricas simples, fuentes claras y alertas operativas antes de escalar campañas',
-    entry: 'ventas, pedidos, margen, stock, devoluciones, campañas, soporte, productos y objetivos comerciales',
-    output: 'dashboard semanal, alertas de stock/margen, decisiones priorizadas y registro de cambios',
-    tools: ['sheets', 'airtable', 'shopify', 'woocommerce', 'gmail', 'n8n', 'openai', 'claude'],
-    promptFamilies: ['ecommerce', 'conectar-datos', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['analitica', 'margen', 'stock', 'dashboard', 'ventas', 'reporting ecommerce'],
-    deliverables: ['Dashboard semanal', 'Reglas de alerta', 'Registro de decisiones', 'Informe de margen'],
-    fits: ['Tiendas con ventas pero poca claridad', 'Campañas que agotan stock', 'Productos con margen irregular', 'Dirección que necesita decisiones semanales'],
-    notFor: ['Medir vanidad sin margen', 'Cruzar datos sin fuente', 'Escalar anuncios sin stock'],
-  },
-  {
-    id: 'airbnb-operaciones-huespedes',
-    order: -8.8,
-    title: 'Airbnb: mensajes, reservas y atención al huésped',
-    kicker: 'Alquiler vacacional',
-    audience: 'anfitriones, property managers, inmobiliarias turísticas y equipos que gestionan varias viviendas',
-    promise: 'Convierte mensajes de Airbnb, Booking, WhatsApp y correo en respuestas revisadas, tareas claras y registro de cada huésped.',
-    focus: 'gestionar comunicación de alquiler vacacional sin perder reservas, sin prometer cosas que la vivienda no tiene y sin responder automáticamente a ciegas',
-    entry: 'reserva, fechas, idioma, número de huéspedes, normas de la casa, mensajes del huésped, plataforma de origen y estado del pago',
-    output: 'cola de huéspedes, borradores de respuesta, prioridad, responsable, registro de conversación y alertas de casos sensibles',
-    tools: ['gmail', 'whatsapp', 'telegram', 'sheets', 'airtable', 'n8n', 'openai', 'claude'],
-    promptFamilies: ['automatizar', 'contenido-negocio', 'probar-reparar', 'seguridad-coste-privacidad'],
-    skillKeywords: ['airbnb', 'booking', 'huesped', 'reserva', 'whatsapp', 'alquiler vacacional', 'property manager'],
-    deliverables: ['Cola de huéspedes', 'Banco de respuestas', 'Árbol de escalado', 'Registro de reservas'],
-    fits: ['Preguntas repetidas antes de reservar', 'Huéspedes que escriben por varios canales', 'Gestores con varias viviendas', 'Respuestas en varios idiomas'],
-    notFor: ['Enviar mensajes sin revisión al principio', 'Prometer servicios no confirmados', 'Tratar DNI o pagos sin política clara'],
-  },
-  {
-    id: 'airbnb-checkin-limpieza-incidencias',
-    order: -8.7,
-    title: 'Airbnb: check-in, limpieza e incidencias',
-    kicker: 'Operación diaria',
-    audience: 'anfitriones, equipos de limpieza, mantenimiento, conserjería y property managers',
-    promise: 'Coordina check-in, salida, limpieza, parte de daños, reposición y avisos sin depender de memoria ni chats sueltos.',
-    focus: 'automatizar la operación diaria de viviendas turísticas con tareas, responsables, fotos, estados y aprobación humana antes de reclamar o cobrar',
-    entry: 'calendario de reservas, hora de entrada, hora de salida, equipo asignado, checklist de limpieza, fotos, incidencias y normas internas',
-    output: 'agenda operativa, tareas de limpieza, checklist por vivienda, parte de incidencia, aviso al responsable y registro histórico',
-    tools: ['calendar', 'gmail', 'whatsapp', 'sheets', 'airtable', 'n8n', 'openai', 'claude', 'canva'],
-    promptFamilies: ['automatizar', 'conectar-datos', 'probar-reparar', 'seguridad-coste-privacidad'],
-    skillKeywords: ['check-in', 'limpieza', 'mantenimiento', 'incidencia', 'calendario', 'airbnb', 'booking'],
-    deliverables: ['Checklist por vivienda', 'Workflow de limpieza', 'Parte de incidencia', 'Aviso de mantenimiento'],
-    fits: ['Entradas y salidas el mismo día', 'Limpiezas olvidadas', 'Daños fotografiados tarde', 'Reposiciones de última hora'],
-    notFor: ['Cobrar daños automáticamente', 'Compartir datos completos del huésped con proveedores', 'Sustituir revisión humana en reclamaciones'],
-  },
-  {
-    id: 'airbnb-precios-ocupacion-resenas',
-    order: -8.6,
-    title: 'Airbnb: precios, ocupación y reseñas',
-    kicker: 'Revenue y reputación',
-    audience: 'anfitriones con varias propiedades, gestores de alquiler vacacional y consultores de revenue',
-    promise: 'Monta un panel semanal para ver ocupación, noches vacías, precios, reseñas, incidencias repetidas y próximos cambios.',
-    focus: 'tomar decisiones de alquiler vacacional con datos simples antes de tocar precios, descuentos, normas o mensajes públicos',
-    entry: 'calendario, reservas, precio por noche, gastos, ocupación, reseñas, cancelaciones, incidencias y eventos locales',
-    output: 'dashboard semanal, alertas de huecos, resumen de reseñas, hipótesis de precio y lista de mejoras de la vivienda',
-    tools: ['sheets', 'airtable', 'gmail', 'n8n', 'openai', 'claude', 'calendar'],
-    promptFamilies: ['conectar-datos', 'automatizar', 'contenido-negocio', 'probar-reparar'],
-    skillKeywords: ['ocupacion', 'precio por noche', 'resenas', 'revenue', 'airbnb', 'booking', 'dashboard'],
-    deliverables: ['Dashboard de ocupación', 'Resumen de reseñas', 'Backlog de mejoras', 'Alertas de noches vacías'],
-    fits: ['Viviendas con temporadas fuertes', 'Precios puestos a ojo', 'Reseñas que se repiten', 'Decisiones semanales de ocupación'],
-    notFor: ['Cambiar precios sin revisar margen y calendario', 'Inventar datos de mercado', 'Responder reseñas delicadas sin persona'],
-  },
-  {
-    id: 'airbnb-portal-propietarios',
-    order: -8.5,
-    title: 'Airbnb: portal para propietarios y reportes',
-    kicker: 'Property management',
-    audience: 'gestores de viviendas que reportan a propietarios, inmobiliarias turísticas y equipos de administración',
-    promise: 'Prepara reportes claros para propietarios: ingresos, ocupación, incidencias, gastos, reseñas, tareas hechas y decisiones pendientes.',
-    focus: 'crear un sistema de reporting para alquiler vacacional que explique qué ha pasado en cada vivienda sin mandar capturas sueltas ni hojas imposibles',
-    entry: 'propiedades, reservas, ingresos, gastos, limpiezas, incidencias, reseñas, fotos y decisiones pendientes',
-    output: 'portal o informe mensual, tablero por vivienda, resumen ejecutivo, tareas pendientes y registro de decisiones',
-    tools: ['sheets', 'airtable', 'notion', 'gmail', 'canva', 'openai', 'claude', 'n8n', 'vercel'],
-    promptFamilies: ['contenido-negocio', 'conectar-datos', 'crear-web', 'entregar-equipo-cliente'],
-    skillKeywords: ['propietario', 'property manager', 'reporte mensual', 'vivienda turistica', 'airbnb', 'portal'],
-    deliverables: ['Informe mensual', 'Portal por vivienda', 'Resumen ejecutivo', 'Registro de decisiones'],
-    fits: ['Varios propietarios', 'Reportes manuales cada mes', 'Incidencias discutidas por WhatsApp', 'Necesidad de enseñar valor del gestor'],
-    notFor: ['Maquillar números', 'Compartir datos de huéspedes innecesarios', 'Publicar información privada sin permisos'],
-  },
-  {
-    id: 'portal-app-institucional',
-    order: 2,
-    title: 'Portal web o app institucional',
-    kicker: 'Web, app y publicación',
-    audience: 'equipos que necesitan una web, portal interno, dashboard o aplicación pequeña',
-    promise: 'Convierte una necesidad de negocio en una interfaz publicada, con contenido real, rutas claras, QA y mantenimiento.',
-    focus: 'diseñar, construir, revisar y publicar un portal o aplicación institucional',
-    entry: 'brief, contenidos, usuarios, permisos y pantallas necesarias',
-    output: 'web o app navegable, checklist de QA, README, deploy y plan de mantenimiento',
-    tools: ['openai', 'claude', 'v0', 'lovable', 'github', 'vercel', 'figma', 'supabase'],
-    promptFamilies: ['crear-proyecto', 'programar', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['web', 'app', 'deploy', 'qa', 'frontend', 'github', 'vercel'],
-    deliverables: ['Mapa de pantallas', 'Repositorio o versión publicada', 'Plan de QA', 'Manual de actualización'],
-    fits: ['Landing o web corporativa con contenidos reales', 'Portal interno con roles y estados', 'Dashboard de seguimiento para dirección', 'Prototipo que debe enseñarse a cliente sin parecer maqueta'],
-    notFor: ['Apps críticas sin equipo técnico responsable', 'Productos que manejan pagos o salud sin revisión legal', 'Sustituir investigación de usuarios por una pantalla bonita'],
-  },
-  {
-    id: 'rag-documental',
-    order: 3,
-    title: 'Sistema documental y RAG',
-    kicker: 'Datos y conocimiento',
-    audience: 'equipos con manuales, documentos, normativa, contratos o conocimiento interno',
-    promise: 'Convierte documentos dispersos en respuestas con fuente, permisos, actualización y prueba de calidad.',
-    focus: 'organizar documentos y montar una base consultable con respuestas verificables',
-    entry: 'PDF, docs, carpetas, hojas y preguntas frecuentes internas',
-    output: 'inventario documental, base de conocimiento, preguntas de prueba y criterio de respuesta con fuente',
-    tools: ['openai', 'claude', 'notebooklm', 'supabase', 'postgres', 'langchain', 'sheets', 'notion'],
-    promptFamilies: ['conectar-datos', 'probar-reparar', 'seguridad-coste-privacidad'],
-    skillKeywords: ['rag', 'documentos', 'fuentes', 'conocimiento', 'datos'],
-    deliverables: ['Inventario documental', 'Política de fuentes', 'Set de preguntas de prueba', 'Registro de actualización'],
-    fits: ['Manuales internos que nadie encuentra', 'Normativa que debe citar fuente', 'Onboarding con respuestas repetidas', 'Soporte interno con documentación dispersa'],
-    notFor: ['Responder sin fuente visible', 'Meter documentos sensibles sin permisos', 'Usar documentos desactualizados como si fueran verdad vigente'],
-  },
-  {
-    id: 'contenido-presentaciones',
-    order: 4,
-    title: 'Máquina de contenido y presentaciones',
-    kicker: 'Contenido y venta',
-    audience: 'marketing, formación, ventas, agencias, docentes y equipos comerciales',
-    promise: 'Convierte ideas, clases o campañas en guiones, decks, piezas visuales y calendario con revisión editorial.',
-    focus: 'crear contenido institucional reutilizable sin perder tono, fuentes ni aprobación',
-    entry: 'objetivos, audiencia, materiales fuente, calendario y guía de marca',
-    output: 'calendario editorial, guiones, presentaciones, piezas visuales y checklist de aprobación',
-    tools: ['openai', 'claude', 'gamma', 'canva', 'figma', 'midjourney', 'runway', 'higgsfield', 'elevenlabs'],
-    promptFamilies: ['crear-contenido', 'entregar-equipo-cliente', 'seguridad-coste-privacidad'],
-    skillKeywords: ['contenido', 'deck', 'presentacion', 'video', 'imagen', 'marca'],
-    deliverables: ['Calendario editorial', 'Guiones aprobados', 'Deck reutilizable', 'Banco de piezas visuales'],
-    fits: ['Cursos y webinars', 'Presentaciones comerciales', 'Campañas con varias piezas', 'Documentación convertida en materiales enseñables'],
-    notFor: ['Publicar sin revisión de marca', 'Usar imágenes con derechos dudosos', 'Crear mucho contenido sin una métrica o audiencia concreta'],
-  },
-  {
-    id: 'agentes-codigo-produccion',
-    order: 5,
-    title: 'Agentes de código, QA y producción',
-    kicker: 'Código y mantenimiento',
-    audience: 'builders, equipos técnicos, founders y alumnos avanzados',
-    promise: 'Organiza asistentes de código con repositorio, tareas pequeñas, pruebas, revisión humana, deploy y recuperación.',
-    focus: 'construir y mantener software con agentes sin romper producción',
-    entry: 'repositorio, issue, rama, entorno local, pruebas y criterio de aceptación',
-    output: 'tarea técnica acotada, diff revisable, tests, deploy y plan de rollback',
-    tools: ['codex', 'claude-code', 'cursor', 'github', 'typescript', 'react', 'node', 'python', 'docker', 'vercel'],
-    promptFamilies: ['programar', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['codigo', 'qa', 'tests', 'pull request', 'deploy', 'rollback'],
-    deliverables: ['Issue técnico', 'Pull request revisable', 'Plan de pruebas', 'Notas de despliegue'],
-    fits: ['Cambios pequeños en una app existente', 'Corrección de bugs con test', 'Refactor acotado', 'Deploy controlado a producción'],
-    notFor: ['Reescribir un producto entero sin contexto', 'Dar permisos de producción sin revisión', 'Aceptar un diff sin probarlo'],
-  },
-  {
-    id: 'crm-reporting-institucional',
-    order: 6,
-    title: 'CRM, datos y reporting institucional',
-    kicker: 'Ventas y dirección',
-    audience: 'ventas, dirección, operaciones comerciales y administración',
-    promise: 'Conecta captación, seguimiento, reporting y decisiones comerciales con trazabilidad y datos limpios.',
-    focus: 'pasar de leads dispersos a seguimiento medible y reportes de dirección',
-    entry: 'formularios, emails, llamadas, hojas, CRM y estados comerciales',
-    output: 'pipeline limpio, alertas, informe semanal y reglas de seguimiento',
-    tools: ['airtable', 'sheets', 'hubspot', 'gmail', 'slack', 'n8n', 'make', 'openai'],
-    promptFamilies: ['automatizar', 'conectar-datos', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['crm', 'ventas', 'reporting', 'pipeline', 'lead'],
-    deliverables: ['Modelo de datos comercial', 'Workflow de seguimiento', 'Dashboard semanal', 'Manual de estados'],
-    fits: ['Leads que llegan por varios canales', 'Seguimiento comercial que depende de memoria', 'Reportes semanales hechos a mano', 'Carteras de clientes con estados poco claros'],
-    notFor: ['Mandar mensajes comerciales sin consentimiento', 'Automatizar descuentos o cobros sin aprobación', 'Reportar datos que nadie mantiene limpios'],
-  },
-  {
-    id: 'campus-onboarding-ia',
-    order: 7,
-    title: 'Campus de formación y onboarding con IA',
-    kicker: 'Formación interna',
-    audience: 'academias, equipos de formación, RR. HH. y responsables de adopción',
-    promise: 'Convierte conocimiento interno en ruta de aprendizaje, ejercicios, evaluación, evidencias y soporte al alumno.',
-    focus: 'diseñar formación práctica con IA, tareas verificables y seguimiento de progreso',
-    entry: 'temario, perfiles de alumno, materiales fuente, calendario y criterios de evaluación',
-    output: 'programa por niveles, ejercicios, banco de preguntas, evidencias y panel de progreso',
-    tools: ['openai', 'claude', 'notion', 'sheets', 'gamma', 'canva', 'wispr-flow', 'n8n'],
-    promptFamilies: ['aprender-desde-cero', 'crear-contenido', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['formacion', 'onboarding', 'evaluacion', 'alumnos', 'curso'],
-    deliverables: ['Ruta formativa', 'Ejercicios por nivel', 'Banco de preguntas', 'Sistema de evidencias'],
-    fits: ['Formar equipos no técnicos', 'Onboarding de nuevas personas', 'Cursos con prácticas reales', 'Soporte al alumno con dudas repetidas'],
-    notFor: ['Evaluar personas solo con IA', 'Usar datos de menores sin política clara', 'Convertir formación en vídeos sin práctica'],
-  },
-  {
-    id: 'atencion-cliente-multicanal',
-    order: 8,
-    title: 'Atención al cliente multicanal',
-    kicker: 'Soporte y comunicación',
-    audience: 'soporte, recepción, ventas internas y equipos de atención',
-    promise: 'Ordena mensajes de email, WhatsApp, formularios y chat en una cola con prioridad, borrador y aprobación.',
-    focus: 'atender mejor sin responder automáticamente a ciegas',
-    entry: 'mensajes entrantes, datos de cliente, historial y política de respuesta',
-    output: 'cola priorizada, borradores, escalado humano, registro y métricas de respuesta',
-    tools: ['gmail', 'whatsapp', 'telegram', 'slack', 'n8n', 'zapier', 'openai', 'sheets'],
-    promptFamilies: ['automatizar', 'crear-agentes', 'probar-reparar', 'seguridad-coste-privacidad'],
-    skillKeywords: ['soporte', 'cliente', 'whatsapp', 'correo', 'ticket', 'prioridad'],
-    deliverables: ['Mapa de canales', 'Cola de casos', 'Plantillas de respuesta', 'Protocolo de escalado'],
-    fits: ['Bandejas compartidas saturadas', 'WhatsApp de negocio sin seguimiento', 'Tickets sin prioridad', 'Respuestas repetidas que deben revisarse'],
-    notFor: ['Responder temas legales o médicos sin persona responsable', 'Enviar mensajes masivos sin permiso', 'Prometer plazos que el equipo no puede cumplir'],
-  },
-  {
-    id: 'gobierno-costes-ia',
-    order: 9,
-    title: 'Gobierno, seguridad y costes de IA',
-    kicker: 'Control institucional',
-    audience: 'dirección, legal, seguridad, tecnología y responsables de adopción',
-    promise: 'Define qué se puede usar, con qué datos, cuánto cuesta, quién aprueba y cómo se audita.',
-    focus: 'crear una política operativa de IA que permita avanzar sin perder control',
-    entry: 'herramientas en uso, tipos de datos, casos de uso, riesgos y presupuesto',
-    output: 'política de uso, matriz de permisos, límites de gasto, registro de riesgos y cadencia de revisión',
-    tools: ['openai', 'claude', 'github', 'notion', 'sheets', 'n8n', 'supabase', 'vercel'],
-    promptFamilies: ['seguridad-coste-privacidad', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['seguridad', 'coste', 'privacidad', 'politica', 'gobierno', 'auditoria'],
-    deliverables: ['Política de IA', 'Matriz de permisos', 'Registro de riesgos', 'Plan de auditoría'],
-    fits: ['Equipos que ya usan IA sin reglas comunes', 'Dirección que necesita aprobar pilotos', 'Proveedores que piden tratamiento de datos', 'Proyectos que pueden gastar crédito o publicar contenido'],
-    notFor: ['Bloquear todo por miedo', 'Aprobar herramientas sin revisar datos', 'Confundir checklist interna con asesoramiento legal completo'],
-  },
-  {
-    id: 'rrhh-seleccion-onboarding',
-    order: 10,
-    title: 'RR. HH., selección y onboarding',
-    kicker: 'Personas y talento',
-    audience: 'RR. HH., academias, responsables de equipo y pequeñas empresas',
-    promise: 'Ordena candidaturas, entrevistas, altas internas y formación inicial con revisión humana y trazabilidad.',
-    focus: 'gestionar procesos de selección y entrada de personas sin que la IA tome decisiones finales',
-    entry: 'CV, formularios, emails, notas de entrevista y checklist de alta',
-    output: 'pipeline de candidatos, resumen verificable, tareas de onboarding, evidencias y aprobaciones',
-    tools: ['gmail', 'sheets', 'airtable', 'notion', 'n8n', 'openai', 'claude', 'slack'],
-    promptFamilies: ['definir-idea', 'organizar-proyecto', 'trabajo-diario', 'arreglar-errores'],
-    skillKeywords: ['rrhh', 'candidato', 'onboarding', 'formacion', 'aprobacion'],
-    deliverables: ['Pipeline de candidatos', 'Checklist de alta', 'Plantillas de entrevista', 'Registro de decisiones'],
-    fits: ['Candidaturas que llegan por correo', 'Onboarding repetitivo', 'Resúmenes de entrevista', 'Seguimiento de tareas de alta'],
-    notFor: ['Rechazar personas de forma automática', 'Tratar datos sensibles sin base legal', 'Puntuar candidatos sin criterio revisable'],
-  },
-  {
-    id: 'finanzas-facturas-control',
-    order: 11,
-    title: 'Finanzas, facturas y control administrativo',
-    kicker: 'Administración',
-    audience: 'administración, finanzas, gestorías y backoffice',
-    promise: 'Convierte facturas, gastos y documentos administrativos en registros revisables antes de contabilizar o pagar.',
-    focus: 'extraer datos, detectar errores y preparar aprobaciones financieras sin mover dinero automáticamente',
-    entry: 'facturas PDF, emails de proveedores, tickets, hojas de gastos y albaranes',
-    output: 'registro limpio, incidencias, propuesta contable, aprobación y archivo documental',
-    tools: ['gmail', 'sheets', 'airtable', 'n8n', 'openai', 'claude', 'supabase', 'postgres'],
-    promptFamilies: ['datos-propios', 'automatizar', 'seguridad-coste-privacidad', 'arreglar-errores'],
-    skillKeywords: ['factura', 'gasto', 'ocr', 'administracion', 'aprobacion'],
-    deliverables: ['Modelo de factura', 'Flujo de validación', 'Registro de incidencias', 'Política de aprobación'],
-    fits: ['Facturas que llegan por email', 'Gastos que se revisan tarde', 'Albaranes que hay que cruzar', 'Reportes mensuales manuales'],
-    notFor: ['Ejecutar pagos sin firma humana', 'Usar datos bancarios sin minimización', 'Sustituir asesoría fiscal o legal'],
-  },
-  {
-    id: 'legal-contratos-compliance',
-    order: 12,
-    title: 'Legal, contratos y compliance',
-    kicker: 'Riesgo y contratos',
-    audience: 'legal, compliance, dirección, gestorías y consultores',
-    promise: 'Revisa contratos y políticas con checklist, extracción de cláusulas, riesgos y evidencia de revisión.',
-    focus: 'ayudar a revisar documentos legales sin convertir al modelo en abogado ni firmante',
-    entry: 'contratos, anexos, políticas internas, emails de negociación y requisitos normativos',
-    output: 'matriz de cláusulas, riesgos, preguntas abiertas, cambios sugeridos y registro de revisión',
-    tools: ['claude', 'openai', 'notebooklm', 'obsidian', 'sheets', 'n8n', 'supabase'],
-    promptFamilies: ['datos-propios', 'seguridad-coste-privacidad', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['legal', 'contrato', 'compliance', 'rgpd', 'riesgo'],
-    deliverables: ['Checklist contractual', 'Matriz de riesgos', 'Resumen con fuentes', 'Ficha de revisión humana'],
-    fits: ['Contratos repetitivos', 'Políticas internas', 'Revisión RGPD práctica', 'Comparar versiones de documentos'],
-    notFor: ['Dar asesoramiento jurídico final', 'Firmar o aceptar cambios automáticamente', 'Procesar datos sensibles sin autorización'],
-  },
-  {
-    id: 'ecommerce-productos-soporte',
-    order: -4,
-    title: 'Comercio online esencial: catálogo, soporte y postventa',
-    kicker: 'Comercio compacto',
-    audience: 'tiendas pequeñas, retail, atención al cliente y equipos que venden por web, WhatsApp o Instagram',
-    promise: 'Agrupa lo importante de una tienda: fichas de producto, dudas frecuentes, incidencias, stock, seguimiento y checklist de publicación.',
-    focus: 'mantener un comercio online ordenado sin separar catálogo, soporte y postventa en cinco proyectos distintos',
-    entry: 'catálogo, fotos, reseñas, mensajes de clientes, stock, precios, envíos, devoluciones y canales de venta',
-    output: 'fichas base, FAQ, banco de respuestas, incidencias clasificadas, reglas de stock y checklist de publicación',
-    tools: ['shopify', 'sheets', 'airtable', 'gmail', 'whatsapp', 'openai', 'claude', 'canva', 'n8n'],
-    promptFamilies: ['contenido-negocio', 'automatizar', 'crear-web', 'arreglar-errores'],
-    skillKeywords: ['ecommerce', 'producto', 'catalogo', 'soporte', 'ventas'],
-    deliverables: ['Ficha de producto estándar', 'Banco de respuestas', 'Workflow de incidencias', 'Checklist de publicación'],
-    fits: ['Tiendas pequeñas o medianas', 'Productos con descripciones flojas', 'Preguntas repetidas', 'Incidencias postventa'],
-    notFor: ['Inventar claims de producto', 'Cambiar precios sin revisión', 'Usar imágenes sin derechos'],
-  },
-  {
-    id: 'salud-clinicas-administrativo',
-    order: 14,
-    title: 'Clínicas y salud administrativa',
-    kicker: 'Salud con límites',
-    audience: 'clínicas, recepción, administración sanitaria y consultores de procesos',
-    promise: 'Ordena citas, documentación, recordatorios y consultas administrativas sin tocar diagnóstico ni urgencias.',
-    focus: 'automatizar administración sanitaria con límites estrictos y escalado humano',
-    entry: 'formularios de cita, emails, documentos administrativos, consentimientos y recordatorios',
-    output: 'cola administrativa, tareas, avisos, registro de consentimiento y escalado a persona responsable',
-    tools: ['gmail', 'sheets', 'n8n', 'openai', 'claude', 'slack', 'whatsapp', 'supabase'],
-    promptFamilies: ['seguridad-coste-privacidad', 'automatizar', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['salud', 'clinica', 'consentimiento', 'datos sensibles', 'cita'],
-    deliverables: ['Mapa de datos sensibles', 'Flujo de citas', 'Política de escalado', 'Registro de consentimientos'],
-    fits: ['Recordatorios de cita', 'Recepción administrativa', 'Clasificación de consultas no clínicas', 'Documentación preconsulta'],
-    notFor: ['Diagnóstico', 'Triaje médico automático', 'Urgencias', 'Enviar datos de salud sin contrato y control'],
-  },
-  {
-    id: 'educacion-centros-alumnos',
-    order: 15,
-    title: 'Educación, centros y seguimiento de alumnos',
-    kicker: 'Aula y progreso',
-    audience: 'centros educativos, academias, docentes y coordinadores',
-    promise: 'Crea seguimiento de alumnos, comunicación, tareas, evidencias y apoyo docente sin evaluar a ciegas.',
-    focus: 'acompañar aprendizaje con materiales, preguntas y progreso revisable',
-    entry: 'temario, entregas, dudas, asistencia, rúbricas, calendarios y mensajes de familias o alumnos',
-    output: 'ruta de aprendizaje, seguimiento, feedback borrador, alertas y evidencias de progreso',
-    tools: ['sheets', 'notion', 'gamma', 'canva', 'openai', 'claude', 'n8n', 'gmail'],
-    promptFamilies: ['aprender-desde-cero', 'crear-contenido', 'trabajo-diario', 'probar-reparar'],
-    skillKeywords: ['educacion', 'alumno', 'rubrica', 'feedback', 'seguimiento'],
-    deliverables: ['Ruta didáctica', 'Banco de tareas', 'Rúbrica', 'Panel de progreso'],
-    fits: ['Cursos con muchos alumnos', 'Feedback repetitivo', 'Dudas frecuentes', 'Materiales que hay que adaptar por nivel'],
-    notFor: ['Calificar automáticamente sin docente', 'Procesar datos de menores sin política', 'Sustituir tutoría humana'],
-  },
-  {
-    id: 'inmobiliaria-captacion-operaciones',
-    order: 16,
-    title: 'Inmobiliaria, captación y operaciones',
-    kicker: 'Activos y leads',
-    audience: 'inmobiliarias, property managers, agencias y equipos comerciales',
-    promise: 'Ordena leads, inmuebles, visitas, documentación y seguimiento comercial con trazabilidad.',
-    focus: 'gestionar captación y operaciones inmobiliarias sin perder conversaciones ni documentos',
-    entry: 'formularios, portales, WhatsApp, emails, fotos, fichas de inmueble y documentos',
-    output: 'lead cualificado, ficha de inmueble, tareas de visita, seguimiento y registro de estado',
-    tools: ['whatsapp', 'gmail', 'sheets', 'airtable', 'n8n', 'openai', 'claude', 'canva'],
-    promptFamilies: ['contenido-negocio', 'automatizar', 'crear-web', 'entregar-equipo-cliente'],
-    skillKeywords: ['inmobiliaria', 'lead', 'visita', 'documento', 'comercial'],
-    deliverables: ['Pipeline de leads', 'Ficha de inmueble', 'Workflow de visitas', 'Plantillas comerciales'],
-    fits: ['Leads de portales', 'Seguimiento de visitas', 'Documentación dispersa', 'Descripciones de inmuebles revisadas'],
-    notFor: ['Firmar ofertas automáticamente', 'Tratar documentos sensibles sin permiso', 'Prometer condiciones no verificadas'],
-  },
-  {
-    id: 'hosteleria-reservas-operaciones',
-    order: 17,
-    title: 'Hostelería, reservas y operaciones',
-    kicker: 'Restaurantes y servicios',
-    audience: 'restaurantes, hoteles pequeños, caterings y negocios locales',
-    promise: 'Centraliza reservas, pedidos, turnos básicos, incidencias y mensajes de cliente con respuesta revisada.',
-    focus: 'ordenar operaciones diarias de hostelería con automatizaciones pequeñas y mantenibles',
-    entry: 'reservas, WhatsApp, emails, formularios, incidencias, cambios de turno y pedidos',
-    output: 'agenda limpia, avisos, respuestas aprobadas, incidencias y reporte semanal',
-    tools: ['whatsapp', 'gmail', 'sheets', 'n8n', 'openai', 'claude', 'telegram', 'canva'],
-    promptFamilies: ['automatizar', 'trabajo-diario', 'contenido-negocio', 'arreglar-errores'],
-    skillKeywords: ['hosteleria', 'reserva', 'pedido', 'turno', 'incidencia'],
-    deliverables: ['Mapa de canales', 'Flujo de reservas', 'Plantillas de respuesta', 'Reporte semanal'],
-    fits: ['Reservas que llegan por varios sitios', 'Mensajes repetidos', 'Incidencias internas', 'Reportes de cierre semanal'],
-    notFor: ['Cambiar turnos o salarios automáticamente', 'Responder que hay disponibilidad sin comprobar', 'Gestionar alergias o salud sin persona'],
-  },
-  {
-    id: 'agencia-marketing-produccion',
-    order: 18,
-    title: 'Agencia, marketing y producción creativa',
-    kicker: 'Clientes y campañas',
-    audience: 'agencias, freelancers, estudios creativos y equipos de marketing',
-    promise: 'Convierte briefs de cliente en tareas, prompts, piezas, revisiones y entregas con control de marca.',
-    focus: 'producir campañas y materiales creativos con una cadena clara de revisión',
-    entry: 'briefs, assets de marca, objetivos, calendario, feedback de cliente y ejemplos visuales',
-    output: 'plan de campaña, prompts visuales, piezas revisadas, historial de cambios y paquete de entrega',
-    tools: ['figma', 'canva', 'higgsfield', 'runway', 'midjourney', 'openai', 'claude', 'gamma', 'n8n'],
-    promptFamilies: ['contenido-negocio', 'crear-web', 'organizar-proyecto', 'entregar-equipo-cliente'],
-    skillKeywords: ['agencia', 'marca', 'campana', 'contenido', 'video', 'imagen'],
-    deliverables: ['Brief operativo', 'Banco de prompts', 'Checklist de marca', 'Entrega al cliente'],
-    fits: ['Campañas con muchas piezas', 'Revisión de marca', 'Producción de vídeos o imágenes', 'Feedback de cliente desordenado'],
-    notFor: ['Publicar sin aprobación', 'Usar assets sin derechos', 'Entregar piezas sin trazabilidad de cambios'],
-  },
-  {
-    id: 'soporte-tecnico-incidencias',
-    order: 19,
-    title: 'Soporte técnico e incidencias',
-    kicker: 'Tickets y bugs',
-    audience: 'soporte técnico, SaaS, equipos de producto y operaciones IT',
-    promise: 'Clasifica tickets, reproduce errores, pide evidencias, crea issues y mide tiempos de resolución.',
-    focus: 'pasar de mensajes sueltos a incidencias reproducibles y priorizadas',
-    entry: 'tickets, emails, capturas, logs, consola del navegador y pasos para reproducir',
-    output: 'ticket clasificado, checklist de reproducción, issue técnico, prioridad y respuesta al usuario',
-    tools: ['github', 'slack', 'gmail', 'openai', 'claude', 'codex', 'claude-code', 'sheets', 'n8n'],
-    promptFamilies: ['arreglar-errores', 'programar', 'probar-reparar', 'entregar-equipo-cliente'],
-    skillKeywords: ['soporte', 'bug', 'ticket', 'logs', 'playwright', 'qa'],
-    deliverables: ['Plantilla de bug', 'Workflow de triage', 'Issue reproducible', 'Informe de resolución'],
-    fits: ['Errores reportados sin contexto', 'Soporte que repite preguntas', 'Bugs que necesitan capturas', 'Priorización semanal de incidencias'],
-    notFor: ['Tocar producción sin entorno de prueba', 'Cerrar tickets sin reproducción', 'Pedir datos sensibles innecesarios'],
-  },
-  {
-    id: 'administracion-publica-tramites',
-    order: 20,
-    title: 'Administración pública y trámites',
-    kicker: 'Institución pública',
-    audience: 'ayuntamientos, asociaciones, fundaciones y equipos administrativos',
-    promise: 'Ordena trámites, consultas ciudadanas, documentación y respuestas con transparencia y revisión humana.',
-    focus: 'mejorar atención administrativa sin tomar decisiones públicas automáticamente',
-    entry: 'formularios, emails, documentos, solicitudes, preguntas frecuentes y expedientes no sensibles',
-    output: 'caso registrado, documentación faltante, borrador de respuesta, escalado y evidencia pública o interna',
-    tools: ['gmail', 'sheets', 'n8n', 'openai', 'claude', 'notebooklm', 'supabase', 'obsidian'],
-    promptFamilies: ['seguridad-coste-privacidad', 'datos-propios', 'automatizar', 'entregar-equipo-cliente'],
-    skillKeywords: ['tramite', 'institucion', 'ciudadano', 'documento', 'transparencia'],
-    deliverables: ['Mapa de trámites', 'Registro de casos', 'Plantillas de respuesta', 'Política de revisión'],
-    fits: ['Consultas repetidas', 'Documentación incompleta', 'Derivación entre áreas', 'Respuestas basadas en normativa interna'],
-    notFor: ['Resolver expedientes automáticamente', 'Denegar derechos sin funcionario responsable', 'Procesar datos especialmente protegidos sin revisión formal'],
-  },
-]
+/*
+ * Los kits institucionales viven en content/kits/*.json, un archivo por kit,
+ * escritos a mano y completos. Aqui solo se ordenan: no se genera ni se clona
+ * ningun kit en build. Si falta contenido, se nota en la pagina y se escribe
+ * en su archivo, no aqui.
+ */
+const institutionalKits = [...kitFiles].sort((a, b) => (a.order || 0) - (b.order || 0))
 
-function cloneJson(value) {
-  return JSON.parse(JSON.stringify(value))
-}
-
-function scenarioBrief(scenario, basePrompt) {
-  return `Actúa como arquitecta institucional de sistemas de IA. Vamos a diseñar el kit "${scenario.title}" para una organización real. El foco no es montar botones sueltos: es ${scenario.focus}.
-
-Contexto obligatorio:
-- Institución o cliente: [INSTITUCION]
-- Área responsable: [AREA_EQUIPO]
-- Personas usuarias: [PERFIL_PERSONA]
-- Problema o proceso: [PROCESO_O_PROBLEMA]
-- Entrada real: ${scenario.entry}. Ajusta esto con [ENTRADA_REAL].
-- Salida esperada: ${scenario.output}. Ajusta esto con [SALIDA_ESPERADA].
-- Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]
-- Restricciones: [RESTRICCIONES]
-- Datos sensibles: [DATOS_SENSIBLES]
-- Fecha de revisión: [FECHA_REVISION]
-
-Primero devuelve el proceso actual en pasos, después hazme solo las tres preguntas que más cambiarían el diseño y espera mi respuesta. Cuando conteste, separa qué va manual, qué se automatiza, qué se prueba con datos ficticios, quién aprueba y qué evidencia se guarda. No recomiendes usar datos reales hasta que existan permisos, pruebas y criterio de parada.
-
-Si necesitas una base más estricta, conserva esta lógica de trabajo:
-
-${basePrompt}`
-}
-
-function adaptPrompt(prompt, scenario, index) {
-  return {
-    ...prompt,
-    id: `${scenario.id}-${prompt.id || `prompt-${index + 1}`}`,
-    name: `${scenario.title} · ${prompt.name}`,
-    when: `Úsalo dentro del kit "${scenario.title}" cuando toque ${String(prompt.when || 'preparar una decisión verificable').toLowerCase()}`,
-    prompt: `Adapta este paso al kit "${scenario.title}". Foco: ${scenario.focus}. Entrada principal: ${scenario.entry}. Salida esperada: ${scenario.output}. Mantén revisión humana, prueba con datos ficticios, coste visible, privacidad y evidencia.\n\n${prompt.prompt}`,
-    expect: `${prompt.expect} Adaptado a ${scenario.title}, con evidencia y siguiente acción claras.`,
-  }
-}
-
-function adaptWorkflow(workflow, scenario) {
-  return {
-    ...workflow,
-    name: `${scenario.title} · circuito base`,
-    what: `Circuito base para ${scenario.focus}. Está pensado como esqueleto importable: entrada, normalización, validación, IA si aporta valor, registro, aviso y aprobación humana antes de cualquier acción sensible.`,
-    needs: [
-      `Una entrada definida: ${scenario.entry}.`,
-      `Una salida aprobada: ${scenario.output}.`,
-      'Credenciales de prueba, no credenciales definitivas, hasta pasar los casos normal, incompleto, duplicado y extremo.',
-    ],
-    fill: [
-      ['[ENTRADA_REAL]', scenario.entry],
-      ['[SALIDA_ESPERADA]', scenario.output],
-      ['[CANAL_AVISO]', 'Dónde se avisa a la persona responsable: Slack, correo, Telegram o panel interno.'],
-      ['[APROBADOR]', 'Persona que revisa antes de publicar, enviar, borrar, cobrar o cambiar permisos.'],
-    ],
-    careful: [
-      'No actives el circuito con datos reales hasta tener prueba con datos ficticios y aprobación humana.',
-      'No conectes cuentas personales si el kit pertenece a una institución o cliente.',
-      'Si publica, envía mensajes, cambia permisos o consume crédito, debe existir un punto de parada visible.',
-    ],
-  }
-}
-
-const COMPACTED_ECOMMERCE_KIT_IDS = new Set([
-  'ecommerce-catalogo-fichas-seo',
-  'ecommerce-conversion-cro-checkout',
-  'ecommerce-marketplaces-multicanal',
-  'ecommerce-campanas-creatividad-producto',
-  'ecommerce-analitica-margen-stock',
-])
-
-function expandInstitutionalKits(files) {
-  if (!files.length) return files
-  const base = files.find((kit) => kit.id === 'operaciones-ia') || files[0]
-  const generated = EXTRA_INSTITUTIONAL_KITS
-    .filter((scenario) => !COMPACTED_ECOMMERCE_KIT_IDS.has(scenario.id))
-    .map((scenario) => {
-    const kit = cloneJson(base)
-    kit.id = scenario.id
-    kit.order = scenario.order
-    kit.title = scenario.title
-    kit.kicker = scenario.kicker
-    kit.promise = scenario.promise
-    kit.audience = scenario.audience
-    kit.plain = `Este kit sirve para ${scenario.focus}. Trabaja con ${scenario.entry} y busca terminar con ${scenario.output}. No es una colección de prompts sueltos: combina alcance, herramientas, datos, fases, pruebas, riesgos, entrega y mantenimiento. La versión mínima debe funcionar con datos ficticios antes de tocar cuentas reales; la versión real necesita responsable, aprobación y evidencia guardada.`
-    kit.fits = scenario.fits
-    kit.notFor = scenario.notFor
-    kit.tools = scenario.tools
-    kit.promptFamilies = scenario.promptFamilies
-    kit.skillKeywords = scenario.skillKeywords
-    kit.deliverables = scenario.deliverables
-    kit.brief = {
-      ...kit.brief,
-      name: `Define el kit de ${scenario.title}`,
-      when: 'Lo primero: antes de elegir herramienta, automatización o pantalla.',
-      prompt: scenarioBrief(scenario, kit.brief.prompt),
-      expect: `Un alcance inicial para ${scenario.title}: proceso, preguntas críticas, límites, prueba con datos ficticios y criterio de éxito.`,
-    }
-    kit.scopes = (kit.scopes || []).map((scope) => ({
-      ...scope,
-      what: scope.id === 'minimo'
-        ? `Piloto pequeño de ${scenario.focus}: una entrada, una salida, una revisión humana y evidencia guardada.`
-        : scope.id === 'estandar'
-          ? `Sistema operativo de ${scenario.focus}: varios casos, estados, pruebas, responsables y documentación.`
-          : `Versión avanzada de ${scenario.focus}: métricas, alertas, recuperación, histórico y revisión periódica.`,
-    }))
-    kit.prompts = (kit.prompts || []).slice(0, 10).map((prompt, index) => adaptPrompt(prompt, scenario, index))
-    kit.workflows = (kit.workflows || []).slice(0, 1).map((workflow) => adaptWorkflow(workflow, scenario))
-    kit.phases = (kit.phases || []).map((phase) => ({
-      ...phase,
-      goal: `${phase.goal} En este kit se aplica a: ${scenario.focus}.`,
-      deliverable: `${phase.deliverable} · Adaptado a ${scenario.output}.`,
-    }))
-    kit.testData = [
-      { name: 'Normal', input: `Caso ficticio completo para ${scenario.title}: ${scenario.entry}.`, expect: `Se genera ${scenario.output} con responsable, estado y evidencia.` },
-      { name: 'Incompleto', input: `Falta un dato clave en ${scenario.entry}.`, expect: 'El sistema no inventa: pide el dato, marca bloqueo y conserva registro.' },
-      { name: 'Duplicado', input: `El mismo caso llega dos veces por canales distintos.`, expect: 'Se detecta duplicado y no se crean dos acciones reales.' },
-      { name: 'Extremo', input: `Caso sensible, urgente o con coste dentro de ${scenario.focus}.`, expect: 'Se detiene, escala a una persona y marca aprobación humana obligatoria.' },
-    ]
-    kit.delivery = (kit.delivery || []).map((item) => ({
-      ...item,
-      what: `${item.what} En este kit debe dejar claro cómo operar ${scenario.title}.`,
-    }))
-    return kit
-  })
-  const existingIds = new Set(files.map((kit) => kit.id))
-  return [...files, ...generated.filter((kit) => !existingIds.has(kit.id))]
-}
-
-const institutionalKits = expandInstitutionalKits(kitFiles)
-
+// Se regenera todo desde cero: sin esto, los archivos de lecciones o
+// workflows retirados se quedarían huérfanos en public/generated.
+await fs.rm(generatedDir, { recursive: true, force: true })
 await fs.mkdir(generatedDir, { recursive: true })
 const allFiles = await walk(vaultDir)
 const markdownFiles = allFiles.filter((file) => file.toLowerCase().endsWith('.md'))
@@ -914,6 +297,9 @@ const usedSlugs = new Set()
 
 for (const absolute of markdownFiles) {
   const relativePath = toPosix(path.relative(vaultDir, absolute))
+  // Los .md sueltos en la raíz (README, changelog, planes) son documentación
+  // del proyecto, no material del curso.
+  if (!relativePath.includes('/')) continue
   const raw = await fs.readFile(absolute, 'utf8')
   const signal = extract(raw, relativePath)
 
@@ -1276,7 +662,7 @@ const toolPages = TOOLS
   .filter((tool) => tool.count > 0 || tool.guide || conItinerario.has(tool.id))
   .sort((a, b) => b.count - a.count)
 
-const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles)
+const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles, institutionalKits, LOCALE)
 for (const family of promptLibrary) enrichPrompts(family.prompts, family.title)
 
 /* --- Biblioteca: carpetas del vault -------------------------------- */
@@ -1286,10 +672,22 @@ const folders = [...new Set(lessons.map((lesson) => lesson.folder))]
   .map((folder) => ({
     id: slugify(folder),
     folder,
-    label: folderLabel(folder),
+    label: LOCALE === 'en' ? translateFolderLabel(folderLabel(folder)) : folderLabel(folder),
     count: lessons.filter((lesson) => lesson.folder === folder).length,
     lessonSlugs: lessons.filter((lesson) => lesson.folder === folder).map((lesson) => lesson.slug),
   }))
+
+/* --- Traducción de la taxonomía fija (solo texto de código) --------- */
+
+const localizedStages = LOCALE === 'en'
+  ? stages.map((stage) => ({ ...stage, ...(STAGE_EN[stage.id] || {}) }))
+  : stages
+const localizedKinds = LOCALE === 'en'
+  ? Object.fromEntries(Object.entries(KINDS).map(([id, value]) => [id, { ...value, ...(KIND_EN[id] || {}) }]))
+  : KINDS
+const localizedSections = SECTIONS.map(({ id, label, hint }) =>
+  LOCALE === 'en' && SECTION_EN[id] ? { id, ...SECTION_EN[id] } : { id, label, hint },
+)
 
 /* --- Workflows importables ----------------------------------------- */
 
@@ -1309,8 +707,9 @@ const course = {
   generatedAt: new Date().toISOString(),
   vaultName: path.basename(vaultDir),
   levels: LEVELS.map((id) => ({ id, ...LEVEL_META[id] })),
-  kinds: KINDS,
-  sections: SECTIONS.map(({ id, label, hint }) => ({ id, label, hint })),
+  locale: LOCALE,
+  kinds: localizedKinds,
+  sections: localizedSections,
   tools: TOOLS.map(({ id, label, icon }) => ({ id, label, icon })),
   stats: {
     lessons: lessons.filter((lesson) => lesson.format === 'leccion').length,
@@ -1324,6 +723,7 @@ const course = {
     projects: areaProjects.length,
     decks: deckFiles.length,
     kits: institutionalKits.length,
+    agents: agentFiles.length,
     preguntas: faqFiles.reduce((suma, grupo) => suma + (grupo.preguntas?.length || 0), 0),
     sourceWords: lessons.reduce((sum, lesson) => sum + lesson.sourceWords, 0),
     quizQuestions: lessons.reduce(
@@ -1336,14 +736,15 @@ const course = {
     ),
     interactivePieces: lessons.reduce((sum, lesson) => sum + lesson.interactive.length, 0),
   },
-  stages,
+  stages: localizedStages,
   categories,
   projects: areaProjects,
   decks: deckFiles,
   prompts: promptLibrary,
   guides: guideFiles,
   curso: cursoFiles.sort((a, b) => (a.number || 0) - (b.number || 0)),
-  kits: institutionalKits.sort((a, b) => (a.order || 0) - (b.order || 0)),
+  kits: institutionalKits,
+  agents: agentFiles,
   preguntas: faqFiles,
   toolPages,
   glossaryIndex,
@@ -1351,7 +752,7 @@ const course = {
   lessons,
 }
 
-await fs.writeFile(path.join(publicDir, 'course.json'), JSON.stringify(course), 'utf8')
+await fs.writeFile(path.join(publicDir, outputFile), JSON.stringify(course), 'utf8')
 
 console.log(
   `Curso generado: ${lessons.length} lecciones x 3 niveles en ${categories.length} categorias.

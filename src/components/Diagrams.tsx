@@ -5,6 +5,7 @@ import {
 import type {
   BeforeAfterPiece, CanvasPiece, DataFlowPiece, DecisionPiece, ScreenMapPiece,
 } from '../types'
+import { useLocale } from '../i18n'
 
 /* ------------------------------------------------------------------ *
  * LIENZO DE NODOS                                                     *
@@ -20,6 +21,7 @@ import type {
  * configuración, y que el trabajo consiste en mirar esas tres cosas.
  */
 export function Canvas({ piece }: { piece: CanvasPiece }) {
+  const locale = useLocale()
   const [open, setOpen] = useState<number | null>(0)
   const abierto = open !== null ? piece.nodes[open] : null
 
@@ -30,7 +32,7 @@ export function Canvas({ piece }: { piece: CanvasPiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">{piece.nodes.length} nodos</span>
+        <span className="st-piece-badge">{locale === 'en' ? `${piece.nodes.length} nodes` : `${piece.nodes.length} nodos`}</span>
       </header>
 
       <div className="st-canvas-track" role="list">
@@ -57,9 +59,9 @@ export function Canvas({ piece }: { piece: CanvasPiece }) {
           <h5>{abierto.label}</h5>
           <p>{abierto.does}</p>
           <dl>
-            <div><dt>Recibe</dt><dd>{abierto.input}</dd></div>
-            <div><dt>Devuelve</dt><dd>{abierto.output}</dd></div>
-            {abierto.breaks && <div className="breaks"><dt>Se rompe si</dt><dd>{abierto.breaks}</dd></div>}
+            <div><dt>{locale === 'en' ? 'Receives' : 'Recibe'}</dt><dd>{abierto.input}</dd></div>
+            <div><dt>{locale === 'en' ? 'Returns' : 'Devuelve'}</dt><dd>{abierto.output}</dd></div>
+            {abierto.breaks && <div className="breaks"><dt>{locale === 'en' ? 'Breaks if' : 'Se rompe si'}</dt><dd>{abierto.breaks}</dd></div>}
           </dl>
         </div>
       )}
@@ -78,6 +80,7 @@ export function Canvas({ piece }: { piece: CanvasPiece }) {
  * devolver cincuenta.
  */
 export function DataFlow({ piece }: { piece: DataFlowPiece }) {
+  const locale = useLocale()
   const [paso, setPaso] = useState(0)
   const actual = piece.steps[paso]
 
@@ -88,12 +91,12 @@ export function DataFlow({ piece }: { piece: DataFlowPiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">paso {paso + 1} de {piece.steps.length}</span>
+        <span className="st-piece-badge">{locale === 'en' ? `step ${paso + 1} of ${piece.steps.length}` : `paso ${paso + 1} de ${piece.steps.length}`}</span>
       </header>
 
       <div className="st-dataflow-stage">
         <div className="st-dataflow-side">
-          <span className="st-dataflow-label">Entran</span>
+          <span className="st-dataflow-label">{locale === 'en' ? 'In' : 'Entran'}</span>
           <div className="st-dataflow-items">
             {Array.from({ length: Math.min(actual.in, 8) }).map((unused, i) => (
               <span className="st-dataflow-item" key={i} />
@@ -108,7 +111,7 @@ export function DataFlow({ piece }: { piece: DataFlowPiece }) {
         </div>
 
         <div className="st-dataflow-side">
-          <span className="st-dataflow-label">Salen</span>
+          <span className="st-dataflow-label">{locale === 'en' ? 'Out' : 'Salen'}</span>
           <div className="st-dataflow-items">
             {Array.from({ length: Math.min(actual.out, 8) }).map((unused, i) => (
               <span className="st-dataflow-item out" key={i} />
@@ -126,7 +129,7 @@ export function DataFlow({ piece }: { piece: DataFlowPiece }) {
             key={step.label}
             className={i === paso ? 'on' : ''}
             onClick={() => setPaso(i)}
-            aria-label={`Paso ${i + 1}: ${step.label}`}
+            aria-label={locale === 'en' ? `Step ${i + 1}: ${step.label}` : `Paso ${i + 1}: ${step.label}`}
           >
             {i + 1}
           </button>
@@ -196,6 +199,7 @@ export function Decision({ piece }: { piece: DecisionPiece }) {
  * de bien.
  */
 export function ScreenMap({ piece }: { piece: ScreenMapPiece }) {
+  const locale = useLocale()
   const [zona, setZona] = useState(0)
 
   return (
@@ -205,7 +209,7 @@ export function ScreenMap({ piece }: { piece: ScreenMapPiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">{piece.areas.length} zonas</span>
+        <span className="st-piece-badge">{locale === 'en' ? `${piece.areas.length} areas` : `${piece.areas.length} zonas`}</span>
       </header>
 
       <div className="st-screenmap-frame">
@@ -241,6 +245,7 @@ export function ScreenMap({ piece }: { piece: ScreenMapPiece }) {
  * después, el prompt antes y después, el flujo antes y después.
  */
 export function BeforeAfter({ piece }: { piece: BeforeAfterPiece }) {
+  const locale = useLocale()
   return (
     <figure className="st-piece st-beforeafter">
       <header className="st-piece-head">
@@ -252,7 +257,7 @@ export function BeforeAfter({ piece }: { piece: BeforeAfterPiece }) {
 
       <div className="st-ba-grid">
         <div className="st-ba-col before">
-          <h5><X size={12} aria-hidden /> {piece.beforeLabel || 'Antes'}</h5>
+          <h5><X size={12} aria-hidden /> {piece.beforeLabel || (locale === 'en' ? 'Before' : 'Antes')}</h5>
           <ul>
             {piece.rows.map((row) => (
               <li key={row.before}><CircleDot size={9} aria-hidden />{row.before}</li>
@@ -260,7 +265,7 @@ export function BeforeAfter({ piece }: { piece: BeforeAfterPiece }) {
           </ul>
         </div>
         <div className="st-ba-col after">
-          <h5><Check size={12} aria-hidden /> {piece.afterLabel || 'Después'}</h5>
+          <h5><Check size={12} aria-hidden /> {piece.afterLabel || (locale === 'en' ? 'After' : 'Después')}</h5>
           <ul>
             {piece.rows.map((row) => (
               <li key={row.after}><Play size={9} aria-hidden />{row.after}</li>

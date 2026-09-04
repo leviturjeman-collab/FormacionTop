@@ -6,6 +6,7 @@ const dist = path.resolve(root, 'dist')
 
 const privateOutputs = [
   'course.json',
+  'course.en.json',
   'catalog.json',
   'student-catalog.json',
   'generated',
@@ -24,4 +25,4 @@ for (const item of privateOutputs) {
   await fs.rm(target, { recursive: true, force: true })
 }
 
-console.log('Build protegido: course/catalog/student-catalog/generated no se publican como estáticos.')
+console.log('Build protegido: course/course.en/catalog/student-catalog/generated no se publican como estáticos.')

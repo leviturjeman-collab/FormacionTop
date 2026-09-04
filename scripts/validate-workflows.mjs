@@ -231,6 +231,7 @@ function deepFind(value, pointer, out, depth = 0) {
 
 if (DEFAULT_SCAN) {
   scanEmbedded('content/kits', 'content/kits')
+  scanEmbedded('content/agentes', 'content/agentes')
   scanEmbedded('content/automatizaciones', 'content/automatizaciones')
   scanEmbedded('content/toolguides', 'content/toolguides')
   scanEmbedded('content/recipes', 'content/recipes')

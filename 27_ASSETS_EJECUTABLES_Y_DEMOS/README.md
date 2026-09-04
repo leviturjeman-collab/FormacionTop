@@ -15,7 +15,7 @@ Esta carpeta existe porque una academia premium no puede ser solo texto. Aqui vi
 
 ## Estructura
 
-- `workflows/`: exports n8n de ejemplo.
+- Los workflows n8n importables viven en `35_AUTOMATIZACIONES_SKILLS_BIBLIOTECA/workflows_n8n_40/` (un unico sitio, con guia de credenciales por flujo).
 - `payloads/`: entradas correctas e incorrectas.
 - `schemas/`: schemas JSON.
 - `datasets/`: datos CSV para practicas.

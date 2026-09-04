@@ -1,68 +1,333 @@
 {
-  "name": "23 Vector Refresh Scheduler",
+  "name": "23 · Refresco programado de vectores",
   "nodes": [
+    {
+      "parameters": {
+        "content": "## 23 · Refresco de vectores\n\nCada día a las 03:00 busca trozos con embedding_estado = pendiente, pide el embedding a OpenAI y actualiza la fila.\n\nRequiere: tabla documentos_rag del flujo 21 (con columna embedding, tipo vector si usas pgvector), credencial Header Auth de OpenAI (Authorization: Bearer TU_CLAVE), Postgres y Google Sheets.",
+        "width": 460,
+        "height": 260
+      },
+      "id": "nodo_022",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "field": "hours",
-              "hoursInterval": 24
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
             }
           ]
         }
       },
-      "id": "trigger",
-      "name": "Schedule",
+      "id": "nodo_023",
+      "name": "Cada día a las 03:00",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.2,
       "position": [
         0,
-        0
+        340
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"23 Vector Refresh Scheduler\",\n    category: \"rag\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "operation": "executeQuery",
+        "query": "SELECT id, titulo, trozo FROM documentos_rag WHERE embedding_estado = 'pendiente' ORDER BY id LIMIT 25;",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_024",
+      "name": "Buscar trozos pendientes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        220,
+        340
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REEMPLAZAR",
+          "name": "Postgres (Supabase)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const filas = $input.all().filter(function (item) {\n  return item.json && item.json.id !== undefined && item.json.id !== null;\n});\nif (filas.length === 0) {\n  return [ { json: { hay_pendientes: false, total_pendientes: 0 } } ];\n}\nreturn filas.map(function (item) {\n  const j = item.json;\n  return {\n    json: {\n      hay_pendientes: true,\n      id: j.id,\n      titulo: j.titulo || '',\n      contenido: String(j.trozo || '').slice(0, 8000)\n    }\n  };\n});"
+      },
+      "id": "nodo_025",
+      "name": "Preparar pendientes",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        440,
+        340
       ]
     },
     {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_003",
+              "leftValue": "={{ $json.hay_pendientes }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_026",
+      "name": "¿Hay pendientes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'text-embedding-3-small', input: $json.contenido }) }}",
+        "options": {}
+      },
+      "id": "nodo_027",
+      "name": "Pedir embedding a OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "OpenAI API (Authorization: Bearer)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE documentos_rag SET embedding = $1, embedding_estado = 'actualizado' WHERE id = $2;",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify($json.data[0].embedding) }},{{ $('Preparar pendientes').item.json.id }}"
+        }
+      },
+      "id": "nodo_028",
+      "name": "Actualizar vector",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1100,
+        240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REEMPLAZAR",
+          "name": "Postgres (Supabase)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const actualizados = $('Preparar pendientes').all();\nconst salida = {\n  documentos_actualizados: actualizados.length,\n  ids: actualizados.map(function (i) { return i.json.id; }).join(', '),\n  estado: 'vectores_refrescados',\n  fecha: new Date().toISOString()\n};\nreturn [ { json: salida } ];"
+      },
+      "id": "nodo_029",
+      "name": "Resumir refresco",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Refrescos"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_030",
+      "name": "Registrar refresco",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1540,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "REEMPLAZAR_tu_correo@ejemplo.com",
+        "subject": "=[n8n] Vectores refrescados: {{ $json.documentos_actualizados }}",
+        "emailType": "text",
+        "message": "=Refresco nocturno completado.\n\nDocumentos actualizados: {{ $json.documentos_actualizados }}\nIDs: {{ $json.ids }}\nFecha: {{ $json.fecha }}",
+        "options": {}
+      },
+      "id": "nodo_031",
+      "name": "Avisar por Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1760,
+        240
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
       "parameters": {},
-      "id": "respond",
-      "name": "Fin",
+      "id": "nodo_032",
+      "name": "Nada pendiente",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        880,
+        460
       ]
     }
   ],
   "connections": {
-    "Schedule": {
+    "Cada día a las 03:00": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Buscar trozos pendientes",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Buscar trozos pendientes": {
       "main": [
         [
           {
-            "node": "Fin",
+            "node": "Preparar pendientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar pendientes": {
+      "main": [
+        [
+          {
+            "node": "¿Hay pendientes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay pendientes?": {
+      "main": [
+        [
+          {
+            "node": "Pedir embedding a OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nada pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedir embedding a OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Actualizar vector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar vector": {
+      "main": [
+        [
+          {
+            "node": "Resumir refresco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumir refresco": {
+      "main": [
+        [
+          {
+            "node": "Registrar refresco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar refresco": {
+      "main": [
+        [
+          {
+            "node": "Avisar por Gmail",
             "type": "main",
             "index": 0
           }
@@ -71,23 +336,6 @@
     }
   },
   "settings": {
-    "executionOrder": "v1",
-    "timezone": "Europe/Madrid"
-  },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "rag",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Schedule": [
-      {
-        "referencia": "PRUEBA-0001",
-        "nombre": "Caso de ejemplo",
-        "email": "prueba@ejemplo.es",
-        "mensaje": "Texto de prueba para ver el flujo funcionando.",
-        "fecha": "2026-09-01"
-      }
-    ]
+    "executionOrder": "v1"
   }
 }

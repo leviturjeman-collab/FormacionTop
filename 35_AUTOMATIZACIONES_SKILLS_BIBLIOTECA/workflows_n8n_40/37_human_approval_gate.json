@@ -1,66 +1,440 @@
 {
-  "name": "37 Human Approval Gate",
+  "name": "37 · Puerta de aprobación humana reutilizable",
   "nodes": [
     {
       "parameters": {
-        "path": "37-human-approval-gate",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 37 · Puerta de aprobación\n\nOtros flujos llaman a este webhook con accion, solicitante, detalle y (opcional) telefono_aviso. El flujo envía la solicitud a Telegram con botones Aprobar / Rechazar y ESPERA la decisión; después responde al flujo llamante con aprobada/rechazada.\n\nOJO: quien llama al webhook queda esperando hasta que alguien decida (o caduque el tiempo de espera).",
+        "width": 500,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_172",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"37 Human Approval Gate\",\n    category: \"ai_ops\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "content": "## Credenciales\n\n- Telegram: bot gratis con @BotFather + tu chat_id.\n- WhatsApp Business Cloud: Phone Number ID + token de Meta (solo para avisar al solicitante si dio teléfono).\n- Google Sheets: pestaña \"Aprobaciones\" como registro de auditoría.",
+        "width": 420,
+        "height": 240
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_173",
+      "name": "Nota de credenciales",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wf-37-solicitud-aprobacion",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "nodo_174",
+      "name": "Solicitud de aprobación",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['accion', 'solicitante', 'detalle'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst salida = {\n  accion: String(b.accion || '').trim(),\n  solicitante: String(b.solicitante || '').trim(),\n  detalle: String(b.detalle || '').trim().slice(0, 1500),\n  telefono_aviso: String(b.telefono_aviso || '').trim(),\n  faltan: faltan,\n  valido: faltan.length === 0\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_175",
+      "name": "Validar solicitud",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_022",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_176",
+      "name": "¿Solicitud completa?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "REEMPLAZAR_CHAT_ID",
+        "message": "=Solicitud de aprobación\n\nAcción: {{ $json.accion }}\nSolicitante: {{ $json.solicitante }}\nDetalle: {{ $json.detalle }}\n\nPulsa Aprobar o Rechazar.",
+        "responseType": "approval",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "id": "nodo_177",
+      "name": "Pedir aprobación por Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        260
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REEMPLAZAR",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_023",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_178",
+      "name": "¿Aprobada?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "asig_Marcar_como_aprobada_0",
+              "name": "decision",
+              "value": "aprobada",
+              "type": "string"
+            },
+            {
+              "id": "asig_Marcar_como_aprobada_1",
+              "name": "accion",
+              "value": "={{ $('Validar solicitud').first().json.accion }}",
+              "type": "string"
+            },
+            {
+              "id": "asig_Marcar_como_aprobada_2",
+              "name": "solicitante",
+              "value": "={{ $('Validar solicitud').first().json.solicitante }}",
+              "type": "string"
+            },
+            {
+              "id": "asig_Marcar_como_aprobada_3",
+              "name": "decidido_en",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "nodo_179",
+      "name": "Marcar como aprobada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "asig_Marcar_como_rechazada_0",
+              "name": "decision",
+              "value": "rechazada",
+              "type": "string"
+            },
+            {
+              "id": "asig_Marcar_como_rechazada_1",
+              "name": "accion",
+              "value": "={{ $('Validar solicitud').first().json.accion }}",
+              "type": "string"
+            },
+            {
+              "id": "asig_Marcar_como_rechazada_2",
+              "name": "solicitante",
+              "value": "={{ $('Validar solicitud').first().json.solicitante }}",
+              "type": "string"
+            },
+            {
+              "id": "asig_Marcar_como_rechazada_3",
+              "name": "decidido_en",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "nodo_180",
+      "name": "Marcar como rechazada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumberId": "REEMPLAZAR_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $('Validar solicitud').first().json.telefono_aviso }}",
+        "textBody": "=Tu solicitud \"{{ $json.accion }}\" ha sido APROBADA. Ya puede ejecutarse.",
+        "additionalFields": {}
+      },
+      "id": "nodo_181",
+      "name": "Avisar por WhatsApp al solicitante",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        60
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REEMPLAZAR",
+          "name": "WhatsApp Business Cloud"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Aprobaciones"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_182",
+      "name": "Registrar decisión",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1320,
+        280
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, decision: $json.decision, accion: $json.accion } }}",
+        "options": {}
+      },
+      "id": "nodo_183",
+      "name": "Responder decisión",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        280
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_184",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        480
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Solicitud de aprobación": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar solicitud",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar solicitud": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Solicitud completa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Solicitud completa?": {
+      "main": [
+        [
+          {
+            "node": "Pedir aprobación por Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedir aprobación por Telegram": {
+      "main": [
+        [
+          {
+            "node": "¿Aprobada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Aprobada?": {
+      "main": [
+        [
+          {
+            "node": "Marcar como aprobada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar como rechazada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como aprobada": {
+      "main": [
+        [
+          {
+            "node": "Avisar por WhatsApp al solicitante",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Registrar decisión",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como rechazada": {
+      "main": [
+        [
+          {
+            "node": "Registrar decisión",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar decisión": {
+      "main": [
+        [
+          {
+            "node": "Responder decisión",
             "type": "main",
             "index": 0
           }
@@ -71,13 +445,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "ai_ops",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Solicitud de aprobación": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +454,10 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "accion": "enviar_campaña_email",
+          "solicitante": "flujo-18-carritos",
+          "detalle": "Enviar recordatorio a 42 carritos abandonados de más de 24 h.",
+          "telefono_aviso": "34600000000"
         }
       }
     ]

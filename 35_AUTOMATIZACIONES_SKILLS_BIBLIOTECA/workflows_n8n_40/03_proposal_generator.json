@@ -1,66 +1,348 @@
 {
-  "name": "03 Proposal Generator",
+  "name": "03 · Generador de propuestas comerciales con IA",
   "nodes": [
     {
       "parameters": {
-        "path": "03-proposal-generator",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 03 · Generador de propuestas\n\n1. Credenciales: Anthropic API, Gmail (OAuth2) y Google Sheets (OAuth2).\n2. Pestañas necesarias: \"Propuestas\" y \"Solicitudes incompletas\".\n3. La propuesta se guarda como BORRADOR en Gmail dirigido al cliente: nadie la envía hasta que una persona la revisa, ajusta el precio y pulsa enviar.",
+        "width": 420,
+        "height": 240
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"03 Proposal Generator\",\n    category: \"ventas\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-03-solicitud-propuesta",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo-002",
+      "name": "Webhook solicitud",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        40,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Los datos de la solicitud llegan dentro de body.\nconst b = $json.body ?? {};\nreturn [{ json: {\n  cliente: String(b.cliente ?? '').trim(),\n  email: String(b.email ?? '').trim().toLowerCase(),\n  servicios: String(b.servicios ?? '').trim(),\n  presupuesto_orientativo: String(b.presupuesto_orientativo ?? '').trim(),\n  plazo: String(b.plazo ?? '').trim(),\n  notas: String(b.notas ?? '').trim(),\n  recibido_en: new Date().toISOString(),\n} }];"
+      },
+      "id": "nodo-003",
+      "name": "Normalizar solicitud",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        260,
+        400
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ $json }}"
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo-004",
+      "name": "Responder recepción",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        480,
+        400
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.cliente }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-2",
+              "leftValue": "={{ $json.servicios }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-005",
+      "name": "¿Datos obligatorios?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-5', max_tokens: 2048, system: \"Eres consultor comercial de una empresa de formacion y automatizacion con IA. Responde SOLO con JSON valido con las claves: titulo, resumen_ejecutivo, alcance (lista de strings), plazos, precio_orientativo y condiciones.\", messages: [{ role: 'user', content: 'Redacta una propuesta comercial en espanol, tono profesional y cercano, para esta solicitud. El precio es ORIENTATIVO y lo validara una persona. Solicitud: ' + JSON.stringify($json) }] }) }}",
+        "options": {}
+      },
+      "id": "nodo-006",
+      "name": "Redactar propuesta con IA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// La API de Anthropic devuelve una lista de bloques; con el razonamiento\n// activado el primero puede ser de tipo \"thinking\", asi que buscamos el\n// primer bloque de texto en vez de leer content[0] a ciegas.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet ia = {};\ntry {\n  // La IA a veces envuelve el JSON en un bloque de codigo; lo limpiamos.\n  ia = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  ia = { titulo: 'REVISAR: la IA no devolvio JSON', resumen_ejecutivo: texto, alcance: [], plazos: '', precio_orientativo: '', condiciones: '' };\n}\nconst original = $('Normalizar solicitud').item.json;\nreturn [{ json: { ...original, ...ia, ia_texto_bruto: texto.slice(0, 500) } }];"
+      },
+      "id": "nodo-007",
+      "name": "Interpretar propuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ 'Propuesta: ' + $json.titulo }}",
+        "emailType": "text",
+        "message": "={{ 'Hola ' + $json.cliente + ',\\n\\n' + $json.resumen_ejecutivo + '\\n\\nAlcance:\\n' + ($json.alcance || []).map((a) => '- ' + a).join('\\n') + '\\n\\nPlazos: ' + $json.plazos + '\\nPrecio orientativo: ' + $json.precio_orientativo + '\\nCondiciones: ' + $json.condiciones + '\\n\\n--\\nBORRADOR generado con IA: revisa alcance y precio antes de enviar.' }}",
+        "options": {
+          "sendTo": "={{ $json.email }}"
+        }
+      },
+      "id": "nodo-008",
+      "name": "Borrador de propuesta",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1360,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Propuestas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.recibido_en }}",
+            "cliente": "={{ $json.cliente }}",
+            "email": "={{ $json.email }}",
+            "titulo": "={{ $json.titulo }}",
+            "precio_orientativo": "={{ $json.precio_orientativo }}",
+            "estado": "borrador pendiente de revision humana"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-009",
+      "name": "Registrar propuesta",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1580,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Solicitudes incompletas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.recibido_en }}",
+            "motivo": "faltan campos obligatorios (cliente o servicios)",
+            "datos_recibidos": "={{ JSON.stringify($json) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-010",
+      "name": "Registrar incompleta",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        920,
+        520
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook": {
+    "Webhook solicitud": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Normalizar solicitud",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Normalizar solicitud": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "Responder recepción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder recepción": {
+      "main": [
+        [
+          {
+            "node": "¿Datos obligatorios?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Datos obligatorios?": {
+      "main": [
+        [
+          {
+            "node": "Redactar propuesta con IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar incompleta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redactar propuesta con IA": {
+      "main": [
+        [
+          {
+            "node": "Interpretar propuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar propuesta": {
+      "main": [
+        [
+          {
+            "node": "Borrador de propuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Borrador de propuesta": {
+      "main": [
+        [
+          {
+            "node": "Registrar propuesta",
             "type": "main",
             "index": 0
           }
@@ -72,28 +354,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "ventas",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "lead_id": "LEAD-2026-0148",
-          "nombre": "Marta Solís",
-          "email": "marta.solis@ejemplo.es",
-          "empresa": "Construcciones Solís SL",
-          "telefono": "+34 600 111 222",
-          "interes": "formación para 12 personas",
-          "origen": "web"
-        }
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

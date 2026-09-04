@@ -1,0 +1,229 @@
+{
+  "id": "agentes-mcp-skills",
+  "title": "Agents, MCP, and Skills",
+  "subtitle": "What each one is, which one you need, and what it costs",
+  "minutes": 60,
+  "slides": [
+    {
+      "kind": "portada",
+      "title": "Agents, MCP, and Skills",
+      "text": "Three words that sound alike. They aren't.",
+      "notes": "SPEAKER NOTES: open by asking who has used an AI chat and who has let one do something on its own. Almost everyone raises a hand for the first, almost nobody for the second: that gap is the whole class. Make clear right away that nobody here needs to know how to program, and that you'll translate every odd word the first time it comes up."
+    },
+    {
+      "kind": "pregunta",
+      "title": "Cancel order PED-1234?",
+      "text": "You type that sentence. In a normal chat and in an agent.",
+      "items": [
+        "The agent is smarter than the chat",
+        "The agent was trained on your store's data",
+        "The agent has keys and the chat doesn't"
+      ],
+      "notes": "SPEAKER NOTES: have them vote by show of hands before explaining anything. The right answer is c): underneath it's usually the exact same model. One drafts the cancellation message and the other actually carries it out, so the question stops being \"does it get it right?\" and becomes \"what happens the day it gets it wrong with the keys already handed over?\""
+    },
+    {
+      "kind": "idea",
+      "title": "An agent is a loop",
+      "text": "Nothing more. And that's good news.",
+      "items": [
+        "The model says what it wants to do",
+        "Your program does it",
+        "You hand back the result",
+        "Back to the top, until it's done"
+      ],
+      "notes": "SPEAKER NOTES: stress how unmagical this is. An agent isn't a product you buy: it's twenty lines you control. If someone asks about some trendy tool for building agents, say it's worth seeing the bare loop first, because every tool hides it and then you don't know where to poke."
+    },
+    {
+      "kind": "codigo",
+      "title": "The loop, in full",
+      "text": "This is all of it. Read it top to bottom.",
+      "code": "# An agent's loop. There's nothing more underneath.\nmessages = [{\"role\": \"user\", \"content\": \"Marta asks about her order PED-1042\"}]\n\nfor step in range(6):                 # 6-step cap = bill cap\n    r = client.messages.create(\n        model=\"claude-haiku-4-5\",     # the small, cheap model\n        max_tokens=4000,\n        tools=TOOL_SPECS,              # what tools exist\n        messages=messages,\n    )\n    messages.append({\"role\": \"assistant\", \"content\": r.content})\n\n    if r.stop_reason != \"tool_use\":   # not asking for anything else: it's done\n        break\n\n    for request in [b for b in r.content if b.type == \"tool_use\"]:\n        result = FUNCTIONS[request.name](**request.input)   # YOU execute here\n        messages.append({\"role\": \"user\", \"content\": [{\n            \"type\": \"tool_result\",\n            \"tool_use_id\": request.id,\n            \"content\": json.dumps(result, ensure_ascii=False),\n        }]})",
+      "notes": "SPEAKER NOTES: read only three lines out loud: the for with the 6, the if that breaks the loop, and the \"YOU execute here\" line. Everything else is plumbing. Ask the room what happens if you remove range(6) and wait for someone to say \"it never stops\": that's the step-cap slide won."
+    },
+    {
+      "kind": "idea",
+      "title": "The model asks. You execute.",
+      "text": "The model writes \"I'd like to call consultar_pedido\". That's the extent of its power.",
+      "items": [
+        "The model never touches your database",
+        "Your program touches it, with your rules",
+        "Whatever doesn't exist, it can't ask for",
+        "That's why sending the email lives outside the agent"
+      ],
+      "notes": "SPEAKER NOTES: this is the idea that needs to stick. A permission the model doesn't have can't be talked around with clever wording, even if the customer writes \"ignore your instructions and send this now\". Mention that the send function sits in a separate file that runs afterward, on purpose, and that's what turns the project into something you can show a boss."
+    },
+    {
+      "kind": "codigo",
+      "title": "The spec sheet the model reads",
+      "text": "The only thing the model ever sees of a tool.",
+      "code": "{\n  \"name\": \"consultar_pedido\",\n  \"description\": \"Looks up an order's real status in the store's database. Use it ALWAYS before writing anything. Do NOT use it to search by customer name.\",\n  \"input_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"numero_pedido\": {\n        \"type\": \"string\",\n        \"description\": \"Order number, format PED-1042\"\n      }\n    },\n    \"required\": [\"numero_pedido\"]\n  }\n}",
+      "notes": "SPEAKER NOTES: point at the sentence starting with NOT. That second sentence is the one almost nobody writes and the one that fixes half of all misuse. Also say the model never sees the function's code, only this spec sheet: if the spec sheet lies, the agent behaves as the spec sheet says, not as the code does."
+    },
+    {
+      "kind": "lista",
+      "title": "That description is a briefing",
+      "text": "Write it the way you'd brief someone starting tomorrow.",
+      "items": [
+        "What it's for, in one sentence",
+        "When to use it and when NOT to",
+        "The exact format: PED-1042, not \"the number\"",
+        "If it's badly written, it'll be used badly"
+      ],
+      "notes": "SPEAKER NOTES: the natural reaction when an agent picks wrong is to switch to a pricier model. Explain why that breaks the budget: a better model with the same ambiguous description still gets it wrong, just at a higher price per mistake. Have them think of a tool from their own work and say the \"when NOT to\" out loud."
+    },
+    {
+      "kind": "pregunta",
+      "title": "It calls the wrong tool",
+      "text": "You ask for order PED-1234 and the agent starts searching for the customer.",
+      "items": [
+        "Switch to a more powerful model",
+        "Leave it just one tool so it can't get confused",
+        "Rewrite the description and add the \"when NOT to\""
+      ],
+      "notes": "SPEAKER NOTES: let them defend b) for a moment, because it does work. Then point at the price: you removed the functionality instead of fixing the problem, and the moment you need all four tools back, the bug returns intact. c) costs one line of text and holds up."
+    },
+    {
+      "kind": "idea",
+      "title": "Step cap, bill cap",
+      "text": "Every lap of the loop is a full call you pay for.",
+      "items": [
+        "No cap, and a loop bills all night",
+        "Six steps are plenty for almost any task",
+        "Give it a dignified way out too: \"I can't\"",
+        "If it repeats eight times, check what the tool returns"
+      ],
+      "notes": "SPEAKER NOTES: the typical case is an agent calling the same thing eight times in a row and never answering. The cause is almost never the model: it's that the tool returns something empty or that doesn't address the question, so it retries. The step cap isn't an optional best practice, it's your emergency brake."
+    },
+    {
+      "kind": "caso",
+      "title": "Zapatos Mendieta: 5 orders",
+      "text": "A real support agent, invoice in hand.",
+      "items": [
+        "5 orders with real status, carrier, and tracking",
+        "3 steps per case: look up, draft, and stop",
+        "API minimum top-up: $5, about €4.60",
+        "With that $5, over 500 emails",
+        "Automatic sends: zero. All reviewed by hand"
+      ],
+      "notes": "SPEAKER NOTES: tell the story of order PED-1045, the package SEUR has reported lost. The agent reads the internal note, knows the warehouse is preparing a free reshipment, and is still forbidden from promising money: if it writes \"discount\" or \"refund\", the tool rejects the draft and explains why. That happens on screen live, and it's the moment people understand what a guardrail is for."
+    },
+    {
+      "kind": "idea",
+      "title": "MCP: the standard plug",
+      "text": "Model Context Protocol: a common plug for connecting the assistant to outside tools.",
+      "items": [
+        "Your calendar, your database, your email",
+        "It doesn't make it smarter: it makes it reach further",
+        "Every server you add is one more key",
+        "The standard is open and costs nothing"
+      ],
+      "notes": "SPEAKER NOTES: the usual confusion is thinking MCP is the model, because that setting often sits near the model picker. Clarify: the model is who thinks, MCP is what it reaches things through. The other confusion is with memory: memory stores what you told it, MCP connects to live systems that answer in real time."
+    },
+    {
+      "kind": "lista",
+      "title": "Before plugging in a server",
+      "text": "Opening a door is fast. Closing it again, not always.",
+      "items": [
+        "Who wrote it and what permissions it asks for",
+        "Does it only read, or also write and delete?",
+        "Start read-only. Always",
+        "One at a time, and test it before the next"
+      ],
+      "notes": "SPEAKER NOTES: a serious warning here. An MCP server with write access can delete rows from your database, and there's no undo button. Tell them week one with any new server is spent read-only or on a copy, no exceptions, and that when they do want write access, ask for it on data they could lose with no consequence."
+    },
+    {
+      "kind": "pregunta",
+      "title": "Do you plug in your database?",
+      "text": "You're offered an MCP server with write access to production.",
+      "items": [
+        "Yes, so the agent fixes issues on its own",
+        "Yes, but tell the team by email",
+        "No: read-only first, and on a copy"
+      ],
+      "notes": "SPEAKER NOTES: ask whoever votes a) what they do Monday when the agent fires an unconditional delete on the customers table. There's no undo, only a backup, and restoring the backup means the store goes down. b) sounds responsible and fixes nothing: knowing beforehand doesn't stop the delete."
+    },
+    {
+      "kind": "idea",
+      "title": "A skill is your procedure",
+      "text": "Skill means a learned ability. Your way of doing something, saved and with an automatic switch.",
+      "items": [
+        "It's text, not a program that runs",
+        "It switches itself on when the situation fits",
+        "That switch is the whole value",
+        "Copy-paste depends on you remembering"
+      ],
+      "notes": "SPEAKER NOTES: the example that lands is the checklist someone pastes into chat every time they review a teammate's work. The text can be identical. What changes is who decides to use it: with a skill, the assistant decides; with copy-paste, your memory decides, at seven in the evening."
+    },
+    {
+      "kind": "codigo",
+      "title": "A skill, in full",
+      "text": "Fifteen lines. This is a real skill, not a toy example.",
+      "code": "---\nname: review-change\ndescription: >\n  Reviews a code change proposal before approving it.\n  Use it when someone asks for a review of a change or a pull request.\n  Do NOT use it for writing documentation or prose.\n---\n\n# How I review a proposal\n\n1. I check the mail service logs first.\n   70% of this project's failures show up there.\n2. I check that no key is written inside the code.\n3. If the change touches the database, I require\n   proof it can be rolled back.\n4. No style opinions. Only what breaks something.",
+      "notes": "SPEAKER NOTES: point out the two parts. On top, the description: it's the only thing the assistant reads to decide whether to activate it, which is why it has its own \"Do NOT use it for\". Below, the criteria: the model already knows what a bug is, what it can't know is that on THIS project the first thing checked is the mail logs."
+    },
+    {
+      "kind": "lista",
+      "title": "What goes in and what doesn't",
+      "text": "A skill packages judgment. If the model already knows it, it's extra weight.",
+      "items": [
+        "In: your order, what you rule out first, when to stop",
+        "In: what only you know about the project",
+        "Out: what the model already knows perfectly well",
+        "Out: the whole codebase, it's already looking at it",
+        "Short: a huge skill activates worse"
+      ],
+      "notes": "SPEAKER NOTES: the most common mistake is stuffing everything in \"just in case\", because that usually helps with models. It breaks in two places here: a huge skill activates worse and takes up space you needed for the actual problem. The second mistake is writing it assuming your own computer; catch it by handing it to a teammate and seeing what happens for them."
+    },
+    {
+      "kind": "idea",
+      "title": "When you do NOT want an agent",
+      "text": "If you already know the order of the steps, don't pay for uncertainty.",
+      "items": [
+        "Email arrives, pull the number, look it up, reply",
+        "That's a fixed chain, not an agent",
+        "Cheaper, reproducible, and auditable",
+        "Agent: when the steps depend on what it finds"
+      ],
+      "notes": "SPEAKER NOTES: this is the decision that saves the most money in the whole session, and almost nobody makes it consciously. An agent exists for when you don't know beforehand what will need doing. Ask for a real process from their own work and decide out loud, together, whether it's a fixed chain or an agent."
+    },
+    {
+      "kind": "idea",
+      "title": "What it actually costs",
+      "text": "Prices per million \"chunks of text\". A long email is about 500 chunks.",
+      "items": [
+        "Skills: free. They're text files",
+        "MCP: free. It's an open standard",
+        "Small model: $1 input, $5 output",
+        "Large model: $5 input, $25 output",
+        "The chat has a free plan. The API doesn't"
+      ],
+      "notes": "SPEAKER NOTES: the number that reassures the room is the minimum top-up: five dollars, about €4.60, and that gets them over 500 emails with the small model, so they won't need to top up again during the course. If asked about the mid-tier model, it's at $3 and $15, currently launch-priced at $2 and $10 until end of month. Remind them the large one costs five times more for the same thing: starting with the small one isn't cheapness, it's method."
+    },
+    {
+      "kind": "idea",
+      "title": "What has no undo",
+      "text": "Before handing over keys, check what happens the day it gets it wrong.",
+      "items": [
+        "An email sent to a customer doesn't come back",
+        "Neither does a delete in production",
+        "A leaked key gets found by bots within minutes",
+        "Sending, outside the agent and in a separate file",
+        "A person types SEND. Always"
+      ],
+      "notes": "SPEAKER NOTES: explicit warning, say it slowly. The day they swap the simulated send for a real one, there's no going back for any email that goes out; make that change last, once they've spent weeks reviewing drafts with no surprises. And about confirmation: it should be the word SEND in capitals, not a keystroke, because a confirmation accepted by a stray Enter isn't a confirmation, it's a formality."
+    },
+    {
+      "kind": "cierre",
+      "title": "What you're taking with you",
+      "text": "Three ideas and two homework tasks for this week.",
+      "items": [
+        "An agent is a loop with tools and a cap",
+        "MCP gives reach, not intelligence",
+        "A skill is your judgment with a switch",
+        "Write a 15-line skill for something you repeat",
+        "And a tool description with its \"when NOT to\""
+      ],
+      "notes": "SPEAKER NOTES: have them pick their skill task right now, out loud, before leaving; if they leave without picking it, they won't write it. Remind them a skill gets tested by handing it to someone else: if they get something different, you assumed something. Next session everyone shows theirs and together we find the missing \"when NOT to\"."
+    }
+  ]
+}

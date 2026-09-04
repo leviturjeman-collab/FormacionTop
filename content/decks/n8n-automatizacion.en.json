@@ -1,0 +1,234 @@
+{
+  "id": "n8n-automatizacion",
+  "title": "n8n and automation",
+  "subtitle": "You leave here with a working flow and knowing what breaks",
+  "minutes": 60,
+  "slides": [
+    {
+      "kind": "portada",
+      "title": "n8n: automate without writing code",
+      "text": "Today you'll build a four-box flow that works on its own every morning.",
+      "notes": "Start with no slide: ask who's ever programmed. If two out of twenty raise a hand, perfect, say it out loud: nobody writes code today. Promise something concrete: in 60 minutes they'll have a flow that reads a spreadsheet and pings Slack."
+    },
+    {
+      "kind": "pregunta",
+      "title": "What task do you repeat every week?",
+      "text": "Raise your hand for the one closest to yours.",
+      "items": [
+        "Copying data from an email into a spreadsheet",
+        "Downloading invoices and renaming them one by one",
+        "Notifying by WhatsApp for every new order",
+        "Answering the same email twenty times"
+      ],
+      "notes": "Ask for three answers out loud and write them on the board with a name and owner: 'Ana's invoices'. Don't erase them for the whole class. You'll come back to them in the case-study slide and work out the hours together."
+    },
+    {
+      "kind": "idea",
+      "title": "Automating is plugging programs into each other",
+      "text": "When X happens, do Y. Without you sitting at the computer.",
+      "items": [
+        "You already do it by hand: look, copy, paste, notify",
+        "The machine does the same thing, always the same way, never tired",
+        "Boring and repetitive gets automated. What needs judgment doesn't"
+      ],
+      "notes": "Stress the last line. Automating a hard decision goes badly; automating 'copy column C to Slack' goes well. The practical rule: if you can explain the task to an intern in two minutes, it can be automated."
+    },
+    {
+      "kind": "idea",
+      "title": "What n8n is, in plain terms",
+      "text": "A board where you draw the flow with boxes and arrows.",
+      "items": [
+        "You drag boxes, connect them, hit run",
+        "Over 400 services already connected: Gmail, Sheets, Slack, Notion",
+        "You watch the flow run on screen, box by box",
+        "Pronounced \"n-eight-n\". German, from 2019"
+      ],
+      "notes": "If you have n8n open, show the canvas for ten seconds before continuing. Let them see boxes and arrows, not a text editor. Clarify now that 'node' and 'box' are the same word: they'll hear it both ways."
+    },
+    {
+      "kind": "lista",
+      "title": "Four words and you already speak n8n",
+      "items": [
+        "Workflow: the whole flow, the complete diagram",
+        "Node: each box, one step",
+        "Trigger: the node that starts everything",
+        "Execution: one full run of the flow",
+        "Credential: the key to get into Gmail or Slack"
+      ],
+      "notes": "Write them on the board and don't erase them. Every time you use one during class, point at it. The one that confuses people is 'execution': one execution is the whole flow running once, even if it has twenty boxes. That matters later for pricing."
+    },
+    {
+      "kind": "codigo",
+      "title": "The data traveling around is called JSON",
+      "text": "Pronounced \"jay-son\". A record with labels and values.",
+      "code": "{\n  \"nombre\": \"Marta Ruiz\",\n  \"email\": \"marta@clinica.es\",\n  \"asunto\": \"No puedo cancelar mi cita\",\n  \"importe\": 640,\n  \"urgente\": true\n}",
+      "notes": "Read it out loud like a record: 'label nombre, value Marta Ruiz'. Point at the three rules everyone breaks: quotes on labels, comma between lines, no comma on the last one. Text gets quotes, numbers don't. A good 80% of day-one bugs are one comma."
+    },
+    {
+      "kind": "idea",
+      "title": "JSON in, JSON out. Always",
+      "text": "Each box receives the record, changes it, and passes it to the next one.",
+      "items": [
+        "n8n shows you the input and output of every box",
+        "If box 3 fails, look at what came out of box 2",
+        "Debugging is reading those two columns. Nothing more"
+      ],
+      "notes": "This is the key slide of the class. If they take one idea away, make it this one. Debugging means hunting for the bug: translate it. Tell them that when something doesn't work, the answer isn't on Google, it's in the previous node's output column."
+    },
+    {
+      "kind": "lista",
+      "title": "Three ways to start a flow",
+      "items": [
+        "Schedule: every day at 8:00. The safest",
+        "Webhook: a web address that sits listening",
+        "Event: an email arrives, a form gets filled in",
+        "Manual: you click the button. Testing only"
+      ],
+      "notes": "Webhook means a 'web hook': a URL you give another program so it can notify you. Lower expectations: 90% of their flows will be 'every day at 8' and that's perfectly fine. Schedule is the easiest to control and gives the fewest scares."
+    },
+    {
+      "kind": "pregunta",
+      "title": "Which trigger would you use here?",
+      "text": "You want a summary of the day's sales in Slack at 19:00.",
+      "items": [
+        "A webhook",
+        "Schedule, at 19:00",
+        "Every time an order comes in",
+        "Manual, I click the button myself"
+      ],
+      "notes": "b is correct. c is the trap: trigger on every order and you send 300 messages a day instead of one, plus you burn 300 executions. Ask 'what's wrong with c?' before giving the answer and let them say it."
+    },
+    {
+      "kind": "codigo",
+      "title": "Expressions: pulling a piece of earlier data",
+      "text": "Two curly braces and n8n goes fetch the value from the record.",
+      "code": "To:      {{ $json.email }}\nSubject: About your message: {{ $json.asunto }}\n\nHi {{ $json.nombre.split(' ')[0] }},\nwe've received your inquiry about {{ $json.importe }} €.",
+      "notes": "$json means 'the record arriving at this box'. The dot goes one level down: $json.email is that record's email. split(' ')[0] splits the name at the space and takes the first piece: Marta, not Marta Ruiz. Type it live if you can: n8n shows the real value below as you type."
+    },
+    {
+      "kind": "caso",
+      "title": "Case: 140 appointment reminders",
+      "text": "A clinic with 140 appointments a month, reminding each one by hand.",
+      "items": [
+        "Before: 6 hours a month of front desk calls, 18 no-shows",
+        "Flow: read the schedule at 9:00, send an SMS 24h before",
+        "Four nodes. Built in an afternoon",
+        "After: 7 no-shows. 11 appointments recovered a month",
+        "Cost: about €25/month plus the SMS"
+      ],
+      "notes": "Do the math with them on the board: 11 appointments at €60 is €660 a month that used to be lost. Be honest about the source: these are numbers from a reasonable estimate, not a study. If you have a real case with real invoices, tell yours and skip this slide."
+    },
+    {
+      "kind": "idea",
+      "title": "The key gets saved once",
+      "text": "Connect Gmail once and every flow of yours reuses that credential.",
+      "items": [
+        "n8n stores it encrypted. It never appears inside the diagram",
+        "Never type a password by hand into a field",
+        "Exporting a flow doesn't carry credentials with it"
+      ],
+      "notes": "Serious warning: if they paste an API key by hand into a text field and then share the flow, that key travels with the file. It's rookie security mistake number one. If it happens, the key gets revoked and a new one issued; it doesn't 'peel off'."
+    },
+    {
+      "kind": "lista",
+      "title": "What breaks on day one",
+      "items": [
+        "401: the key is wrong or expired",
+        "429: you're going too fast and the service throttles you",
+        "The flow works in the editor but is deactivated",
+        "One extra comma in the JSON",
+        "The node gets nothing because the previous one returned zero rows"
+      ],
+      "notes": "'It's deactivated' happens every time: they test it in the editor, it works, they close it, and it never fires again. The Active switch is top right. For 429, the fix isn't retrying more: it's waiting between calls."
+    },
+    {
+      "kind": "codigo",
+      "title": "Two addresses: test and production",
+      "text": "A webhook gives you two URLs and they don't do the same thing.",
+      "code": "Test:        https://your-n8n.app/webhook-test/new-appointment\nProduction:  https://your-n8n.app/webhook/new-appointment\n\nTest       -> only listens if you've clicked \"Listen for test event\"\nProduction -> only works if the flow is Active",
+      "notes": "Notice the dash in 'webhook-test': it's the only difference and it costs a whole afternoon of frustration. If they paste the test one into a real service, nothing arrives and there's no visible error anywhere. Show them where each one gets copied from."
+    },
+    {
+      "kind": "pregunta",
+      "title": "Do you activate it Friday at 18:00?",
+      "text": "Freshly built flow: sends an email to every customer. 4,200 contacts.",
+      "items": [
+        "Yes, it'll run over the weekend",
+        "No, I send it to myself first",
+        "Yes, but limiting the list to 10 contacts",
+        "Doesn't matter, if it goes wrong I'll undo it"
+      ],
+      "notes": "d) is the important one and it's false: there's no undo. The right sequence is b then c. Tell the classic story: a badly closed loop that triggers itself and fires off 5,000 executions in three minutes, with 5,000 emails behind them."
+    },
+    {
+      "kind": "idea",
+      "title": "What can't be undone",
+      "text": "n8n has no undo button over the real world.",
+      "items": [
+        "Sent emails and messages: don't come back",
+        "Deleted rows in Sheets or Notion: don't come back",
+        "Payments, invoices, and orders fired off: don't come back",
+        "Fixed rule: send it to yourself first, always"
+      ],
+      "notes": "Say it slowly, this is the part of the class that spares them a real headache. Add two habits: put a limit node in while testing, and use a Slack channel or your own email as the recipient until the flow has run clean three times in a row."
+    },
+    {
+      "kind": "lista",
+      "title": "What this actually costs",
+      "items": [
+        "On your own server: free. You pay hosting, €5-10/month",
+        "n8n Cloud: from about €20-25/month",
+        "There's a free 14-day trial to get started",
+        "n8n bills per execution, not per step: 20 nodes = 1",
+        "If you add AI, the model is billed separately"
+      ],
+      "notes": "The fourth point is n8n's sales pitch: in Zapier a 20-step flow uses 20 tasks, here it uses one execution. Warn them prices change and to check the site the day they actually sign up. Hosting it yourself is free in licensing terms, but you maintain it yourself."
+    },
+    {
+      "kind": "lista",
+      "title": "n8n, Zapier, or Make: which one",
+      "items": [
+        "Zapier: easiest to get started, gets pricey fast",
+        "Make: very visual and cheap, less fine control",
+        "n8n: steeper curve, full control, you can self-host",
+        "Sensitive data that can't leave the building: n8n"
+      ],
+      "notes": "Don't sell n8n as superior at everything. If someone needs two simple automations and hates the technical side, Zapier is the honest answer. n8n wins when there's volume, odd logic, or data that by contract can't sit on someone else's server."
+    },
+    {
+      "kind": "idea",
+      "title": "Putting AI inside the flow",
+      "text": "One more box: you feed it text, it hands back organized text.",
+      "items": [
+        "Classifying 300 tickets: is this an invoice, a complaint, or spam?",
+        "Summarizing a 40-minute call into five lines",
+        "Pulling name and amount out of an invoice PDF",
+        "Have it read and propose. Not delete or send on its own"
+      ],
+      "notes": "Start without an agent: a model node, input and output, and look at the result. The agent node can use tools on its own and that's where people get into trouble. Always leave a person approving before anything goes out to a customer."
+    },
+    {
+      "kind": "lista",
+      "title": "Your first flow: four nodes",
+      "items": [
+        "Schedule: every day at 8:00",
+        "Google Sheets: read the new rows",
+        "IF: is the amount over €500?",
+        "Slack: notify the sales channel"
+      ],
+      "notes": "This is the flow they build now, they get 15 minutes. IF means the condition: if it's met, it exits from the top; if not, from the bottom. Walk around the room and look for two specific mistakes: an unshared sheet and the Active switch left untouched."
+    },
+    {
+      "kind": "cierre",
+      "title": "What you're taking away, what you do tomorrow",
+      "text": "One idea, one task, and one safety rule.",
+      "items": [
+        "The idea: JSON in, JSON out. That's all of n8n",
+        "The task: build your four-node flow before Thursday",
+        "The rule: test it on yourself before releasing it to the world",
+        "Bring whatever flow breaks on you to the next class"
+      ],
+      "notes": "Close by asking for a concrete commitment out loud: each person says which of their own tasks, from the ones written on the board at the start, they'll automate first. Remind them bringing a broken flow is worth more than bringing a perfect one: next class is about fixing things."
+    }
+  ]
+}

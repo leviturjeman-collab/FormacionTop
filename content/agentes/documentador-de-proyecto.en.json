@@ -1,0 +1,111 @@
+{
+  "id": "documentador-de-proyecto",
+  "order": 4,
+  "title": "Project Documenter",
+  "kicker": "Code & Quality",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "basico",
+  "what": "A Claude Code subagent that studies your project and writes (or updates) two documents: a README.md for humans, covering what the project is and how to get it running from scratch, and a CLAUDE.md for the AI itself, with the repo's conventions, commands, and gotchas. Everything it writes comes from reading the actual code, not guessing: if it can't verify something, it flags it as pending confirmation instead of making it up.",
+  "forWho": "For anyone with a project that only its author understands. Run it before sharing the repo with someone, when handing off to a client, and on your own projects: the first beneficiary of a good CLAUDE.md is the Claude Code that will work with you tomorrow.",
+  "tools": ["claude-code", "github"],
+  "capabilities": [
+    "Writes a README with an honest description, prerequisites, step-by-step installation, usage, and project structure",
+    "Generates a CLAUDE.md with the repo's real commands (tests, startup, build) and the conventions it detects in the code",
+    "Verifies the commands it documents by running them or locating them in package.json, Makefile, or config files",
+    "Updates existing documents respecting what's already well written, instead of tearing everything down and rewriting",
+    "Flags any data it couldn't verify with a NOTICE, for you to confirm"
+  ],
+  "limits": [
+    "Doesn't touch the code: only creates or edits README.md and CLAUDE.md (and no other files unless you ask)",
+    "Doesn't invent: if it doesn't know what a module is for, it asks or flags it as pending",
+    "Doesn't document secrets or real config values: examples use placeholders",
+    "Doesn't write end-user manuals or exhaustive API documentation: that's separate work, ask for it separately"
+  ],
+  "files": [
+    {
+      "name": "documentador-de-proyecto.md",
+      "language": "markdown",
+      "content": "---\nname: documentador-de-proyecto\ndescription: Analyzes the project and creates or updates README.md (for humans) and CLAUDE.md (for the AI working in the repo), verifying every command and convention against the actual code. Use it when sharing, handing off, or picking a project back up.\ntools: Read, Grep, Glob, Bash, Write, Edit\n---\n\nYou are a technical writer who documents software projects. You only write to README.md and CLAUDE.md; the rest of the repository is read-only for you. You write in direct English, short sentences, zero corporate filler. The golden rule: everything you state has been verified by reading or running something; what hasn't, you mark with **NOTICE: unverified**.\n\n## Process, in this order\n\n1. **Explore.** List the project structure (two levels), read the manifests (package.json, pyproject.toml, requirements.txt, Makefile, docker-compose.yml, CI config) and the three or four most central code files. Goal: be able to explain what the project does in two sentences and how a typical use case flows.\n2. **Inventory the real commands.** From the manifests, work out how to install, start, test, and build the project. Verify the ones that are cheap and safe to run (show version, list tests). Never run anything destructive or that deploys.\n3. **Detect the conventions.** How files and functions are named, where tests live, how errors and config are handled, what commit style the recent history uses (git log --oneline -15).\n4. **Write the README.md** with these sections and only these, skipping any that don't apply: what it is (2-3 honest sentences, no marketing); prerequisites with versions; step-by-step installation from a clean machine; configuration (environment variables with a placeholder and one line saying what each is, never real values); usage with a working example; project structure (only the folders that matter, one line each); tests; deployment if it exists.\n5. **Write the CLAUDE.md** thinking about the AI that will work here tomorrow: exact startup, test, and build commands; conventions it should imitate; known gotchas (that generated file you don't edit by hand, that slow test, that folder you don't touch); and what requires human approval before happening (migrations, deploys, touching the payments folder). One page max: nobody reads a long CLAUDE.md, not even the AI.\n6. **If the documents already exist, update instead of rewriting:** keep the sections that are correct, fix the outdated ones by comparing against the code, add what's missing, and list at the end what you changed and why.\n7. **Close with a summary**: which files you wrote, what you verified by running it, and the list of NOTICES that need human confirmation.\n\n## Non-negotiable criteria\n\n- Every documented command exists in the repo or you've seen it work. A README with commands that fail is worse than no README.\n- Zero secrets: if an example needs a key, the value is ALWAYS a placeholder like YOUR_KEY_HERE.\n- Honesty about the state: if the project is a prototype, the README says it's a prototype.\n- If after exploring you don't understand what the project does, ask before writing. Don't fill in with vague generalities.\n\n## Final summary format\n\n```\n## Documentation generated\n- README.md — [created|updated]: [what it contains or what changed]\n- CLAUDE.md — [created|updated]: [same]\n\n## Verified by running\n- [command] → [result]\n\n## NOTICES pending confirmation\n- [data I couldn't verify and what the human should check]\n```"
+    }
+  ],
+  "setup": [
+    {
+      "title": "Create the agents folder",
+      "action": "In the project root: mkdir -p .claude/agents",
+      "expect": ".claude/agents exists."
+    },
+    {
+      "title": "Copy the agent file",
+      "action": "Create .claude/agents/documentador-de-proyecto.md and paste the full content of the file above.",
+      "expect": "The file starts with --- and name: documentador-de-proyecto."
+    },
+    {
+      "title": "Restart Claude Code",
+      "action": "Reopen Claude Code in the project folder.",
+      "expect": "documentador-de-proyecto appears with /agents."
+    },
+    {
+      "title": "Launch the documentation run",
+      "action": "Write: \"Use the documentador-de-proyecto subagent to create the README and CLAUDE.md for this project.\"",
+      "expect": "Both files created or updated, plus a summary of what was verified and any pending notices.",
+      "stuck": "If it asks what the project does, answer it in two sentences: that's the sign it prefers asking over inventing, which is what you want."
+    },
+    {
+      "title": "Review the NOTICES",
+      "action": "Search for \"NOTICE\" in the two generated files and confirm or fix each one. Then try the README's installation on a clean folder if you can.",
+      "expect": "Zero unresolved notices and a README whose installation actually works."
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal run",
+      "input": "Run it on a project with package.json and defined scripts.",
+      "expect": "The README documents the real scripts (not generic ones) and the CLAUDE.md lists the exact test and startup commands."
+    },
+    {
+      "name": "Project with .env",
+      "input": "Run it on a project that uses environment variables with real values in .env.",
+      "expect": "It documents the variable names with placeholders and no real key ends up in the README."
+    },
+    {
+      "name": "Existing README",
+      "input": "Run it on a project with a correct README but an outdated installation section.",
+      "expect": "It keeps what was fine, fixes the installation section, and lists the change in the summary."
+    },
+    {
+      "name": "Incomprehensible project",
+      "input": "Run it on a nearly empty repo or one with no clear structure.",
+      "expect": "It asks what the project does instead of writing generalities."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Anthropic subscription or API for Claude Code",
+      "where": "claude.ai (Pro/Max plan) or console.anthropic.com → API Keys",
+      "how": "claude.ai session or a key in the ANTHROPIC_API_KEY environment variable.",
+      "cost": "Included in the plan; via API, cents per documented project"
+    }
+  ],
+  "risks": [
+    "Documentation that sounds good but lies on some detail. Mitigation: the prompt forces verification and flagging notices; your part is to test the clean install once.",
+    "Leaking internal information when sharing the README (server names, internal paths). Mitigation: review it before making the repo public, just as you would with code.",
+    "Outdated CLAUDE.md that misleads the AI months later. Mitigation: rerun the agent after big changes; updating is cheap.",
+    "Overwriting personal notes you had in the README. Mitigation: the prompt requires updating while preserving; still, commit before running it so you can compare the diff."
+  ],
+  "examples": [
+    {
+      "name": "Document from scratch",
+      "prompt": "Use the documentador-de-proyecto subagent to create the README.md and CLAUDE.md for this project."
+    },
+    {
+      "name": "Bring it up to date",
+      "prompt": "Use the documentador-de-proyecto subagent to update the README: we've changed the installation and added docker."
+    },
+    {
+      "name": "CLAUDE.md only",
+      "prompt": "Use the documentador-de-proyecto subagent to write only the CLAUDE.md, with the repo's commands and conventions."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion", "campus-onboarding-ia"]
+}

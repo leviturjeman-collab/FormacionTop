@@ -43,6 +43,8 @@ export interface StudentState {
   lessons: Record<string, LessonProgress>
   lastLesson?: string
   project?: ProjectProfile
+  /** Idioma de la interfaz y del contenido: 'es' o 'en'. */
+  locale?: 'es' | 'en'
 }
 
 export interface ProjectProfile {
@@ -328,6 +330,10 @@ export const store = {
 
   setPreferredLevel(preferredLevel: LevelId) {
     commit({ ...state, preferredLevel })
+  },
+
+  setLocale(locale: 'es' | 'en') {
+    commit({ ...state, locale })
   },
 
   toggleTeacher() {

@@ -1,0 +1,357 @@
+{
+  "id": "n8n-08",
+  "tool": "n8n",
+  "slot": 8,
+  "number": 208,
+  "stageId": "automatizacion",
+  "title": "The four triggers and when to use each one",
+  "promise": "You'll pick your process's trigger without hesitating: scheduled, webhook (the notification the service itself sends you), app-based, or manual. You'll leave it built and verified in your real flow. You'll have its condition written down and its first firing seen in the history.",
+  "minutes": 25,
+  "why": "Teresa wants her flow to fire \"when an order comes into the store.\" She builds a scheduled trigger every five minutes that asks the store whether there are new orders. It works, but of the 288 daily checks, 280 come back empty: it's three in the morning and nobody's buying. On top of that, an order can take up to five minutes to get processed. The customer who pays at 12:00:01 waits until 12:05. Her store had webhooks, meaning notifications it sends on its own: it could have told her the exact second. Teresa picked the wrong trigger because nobody told her there were four and what tells them apart.",
+  "theory": [
+    {
+      "title": "The question that decides everything: who finds out first?",
+      "text": "Every trigger answers the same question: when does this start. The difference is in who detects the moment. If the moment is set by the clock, it's a scheduled trigger. If the outside service can notify you itself, it's a webhook. If the service doesn't notify but n8n knows how to ask it, it's an app trigger. And if it starts when you press the button, it's manual. Choosing well means asking yourself: who's the first to know that what matters to me has happened, and can they tell me?",
+      "analogy": "Want to know a package has arrived? You either go down to check the lobby every hour (scheduled), or the mailman rings your bell (webhook), or you ask the doorman who's already watching the entrance (app-based).",
+      "visual": {
+        "kind": "decision",
+        "title": "The trigger selector",
+        "caption": "Answer with your process notes in front of you. Two questions and you're done.",
+        "question": "Can the service where the thing you care about happens notify you itself?",
+        "branches": [
+          {
+            "answer": "Yes: it has webhooks (stores, forms, payment gateways...)",
+            "then": "Webhook. The best option when it exists",
+            "why": "You get notified at the exact second, with no empty checks and no waiting. In exchange, your n8n needs to be reachable from the internet. That's the price to pay (lesson 27).",
+            "cost": "Instant and with no wasted calls"
+          },
+          {
+            "answer": "It doesn't notify, but n8n has a trigger for that service",
+            "then": "App trigger",
+            "why": "The Gmail Trigger, Sheets Trigger, or similar node asks on its own every X minutes and hands you what's new. It's a scheduled trigger with the dirty work already done: it keeps track of what it's already seen.",
+            "cost": "A few minutes of delay, minimal setup"
+          },
+          {
+            "answer": "What matters is set by the clock: every day, every hour",
+            "then": "Scheduled",
+            "why": "Morning reports, summaries, reviews, cleanups. Here time itself IS the condition, and this trigger is exactly that.",
+            "cost": "Zero delay relative to what you want: the time"
+          },
+          {
+            "answer": "It should only start when I say so",
+            "then": "Manual",
+            "why": "Processes a human launches after reviewing something: a migration, a load, a mass send. And anything you're testing, always.",
+            "cost": "None: you are the trigger"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Scheduled: when time is the condition",
+      "text": "The Schedule Trigger you already used fires by clock: every day at 9, every Monday, every hour. It's perfect when what you want IS a moment: \"the morning summary.\" It's a trap when you use it to watch something that happens on its own schedule, like \"are there orders?\" There, it forces you to choose: either ask a lot into thin air, or find out late. The rule: if you find yourself setting \"every 5 minutes\" so you don't miss something, you almost certainly wanted a webhook or an app trigger.",
+      "example": "Used well: your flow's 9:00 pending-tasks email. Used badly: asking every 5 minutes whether there are orders, like Teresa: 288 checks for 8 orders."
+    },
+    {
+      "title": "Webhook: let them call you",
+      "text": "The webhook flips it around: you publish an address and the service sends you a notification the exact moment something happens. The notification carries the payload, meaning the case's data. Zero empty checks, zero delay. In exchange, your n8n needs to be somewhere reachable from the internet: the cloud or a server, not your laptop. And you need to prepare your flow for repeated notifications, because services retry if you don't respond in time. It's the professional trigger par excellence, and it gets a whole lesson to itself, lesson 27.",
+      "example": "Web forms, stores (order created, payment received), payment gateways, calendars... Almost every modern service knows how to notify via webhook. You check by looking for the word webhooks in its documentation.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "Scheduled versus webhook, the same day at the store",
+        "caption": "Eight orders in one day. Look at how many executions each approach needs.",
+        "steps": [
+          {
+            "label": "Scheduled every 5 min",
+            "does": "288 checks a day, most of them empty",
+            "in": 288,
+            "out": 8,
+            "why": "288 executions to catch 8 orders: 280 overnight or dead-hour checks that come back empty. It works, but you pay in executions and in delay (up to 5 minutes per order)."
+          },
+          {
+            "label": "Webhook",
+            "does": "The store notifies when there's an order",
+            "in": 8,
+            "out": 8,
+            "why": "Eight notifications, eight executions, one second of delay. The same information, no noise. When the service knows how to notify, notifying wins."
+          }
+        ]
+      }
+    },
+    {
+      "title": "App-based: scheduled with the work already done",
+      "text": "Nodes like Gmail Trigger or Sheets Trigger are triggers that ask the service on their own every few minutes and hand you only what's new. Underneath, they're a scheduled trigger, but with the two hard parts already solved. They keep track of what they've already seen, so they never give you the same thing twice. And they translate the service's response into clean items, meaning one case per line. The fine print: most only see what happens AFTER you activate the flow. Also, how often it checks depends on the plan and the version.",
+      "example": "A Gmail Trigger with the filter \"subject contains QUOTE ACCEPTED\" is the natural piece for Rocío's process from lesson 01. Nobody has to open the email for the flow to find out."
+    },
+    {
+      "title": "Manual: the one you use a hundred times, and the one that saves delicate processes",
+      "text": "The manual trigger looks like the toy one, but it has two serious roles. You already live the first one: it's the testing trigger, the one you use while building any flow. The second is for processes that should NOT start on their own: a mass send to clients, a data migration, a deletion. There, requiring a person to press it is the feature, not the limitation: it's a button with a human in front of it as a guardrail.",
+      "example": "\"Send the newsletter\" as a manual flow: someone reviews the draft, and once it's approved, they click. The automation does the work; the decision stays human."
+    },
+    {
+      "title": "Changing the trigger isn't rebuilding the flow",
+      "text": "The trigger is the first box, and only the first. Everything else — filters, transformations, actions — works with the items that arrive, no matter where the start came from. Imagine you start with a scheduled trigger and later switch to a webhook because volume goes up. You only change one box and check the fields have the same names. So today's choice isn't a marriage. It's the best option given what you know now, and the signs for changing it are clear.",
+      "analogy": "Changing the doorbell doesn't force you to renovate the house. The wiring inside stays the same.",
+      "visual": {
+        "kind": "compare",
+        "title": "The four, side by side",
+        "caption": "The table to decide in ten seconds. Your process from your notes lands in one column.",
+        "header": [
+          "",
+          "Scheduled",
+          "Webhook",
+          "App-based",
+          "Manual"
+        ],
+        "rows": [
+          [
+            "Who detects it",
+            "The clock",
+            "The service tells you",
+            "n8n asks on its own",
+            "You"
+          ],
+          [
+            "Delay",
+            "The interval's",
+            "Seconds",
+            "Minutes",
+            "Zero: you decide"
+          ],
+          [
+            "Empty checks",
+            "Many if watching for events",
+            "None",
+            "It handles them internally",
+            "None"
+          ],
+          [
+            "Needs n8n reachable",
+            "No",
+            "YES (cloud or server)",
+            "No",
+            "No"
+          ],
+          [
+            "Possible duplicates",
+            "If you don't track it",
+            "Yes: retries",
+            "It manages them",
+            "No"
+          ],
+          [
+            "Ideal for",
+            "Summaries, reports, cleanups",
+            "Orders, payments, forms",
+            "Email, sheets, known apps",
+            "Testing and delicate processes"
+          ]
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Classify your process",
+      "where": "With your notes from lesson 01 in front of you",
+      "action": "Reread your trigger sentence: \"this starts when ___.\" Run it through the theory's selector: can the service notify you? Does n8n have a trigger for it? Does the clock set it? Write in your notes which of the four applies and why, in one line.",
+      "expect": "A new line in your notes: \"trigger: [type], because [reason].\"",
+      "stuck": "If you're torn between webhook and app-based: search your service's name in n8n's node panel. If \"[Service] Trigger\" exists, app-based is today's shortcut."
+    },
+    {
+      "title": "Check whether your service knows how to notify",
+      "where": "In your process's service documentation or settings",
+      "action": "Search for the word \"webhooks\" in its settings or documentation. It's usually under Settings, Integrations, or Developers. Don't build it yet: just confirm whether it exists and write it in your notes. It's information that decides your lesson 27.",
+      "expect": "A yes or no written in your notes, with where you saw it.",
+      "stuck": "If the service is Gmail, Sheets, or similar, the practical answer is \"use the app trigger\": it exists, it's maintained, and it saves you the problem."
+    },
+    {
+      "title": "Build your process's trigger, in a new flow",
+      "where": "In n8n, a new flow named after your process",
+      "action": "Create the flow that's going to be YOURS, the one from your notes. Give it its first box: the trigger you chose, configured with your real condition. If it's app-based, with its filter (sender, subject, sheet). If it's scheduled, with its time and its checked timezone. Just the trigger: the rest of the flow comes in the next lessons.",
+      "expect": "A new flow, with a proper name, whose first box is your configured trigger.",
+      "stuck": "If your choice was webhook, build today's version with the app-based or scheduled trigger as a placeholder. Webhook needs lesson 27 and an n8n reachable from the internet. Note \"switch to webhook\" and move on."
+    },
+    {
+      "title": "Trigger the first real firing",
+      "where": "In the real service and in the executions list",
+      "action": "Make the real condition happen: send yourself the email with the exact subject, add the row, or wait for the time. Then open the executions list and find the line. It should be there, opened by the system, with the real payload inside. Open it and read what fields your item carries.",
+      "expect": "An execution (a saved run) that fired without you touching n8n, and you reading the real field names that arrive.",
+      "stuck": "Not showing up? Three suspects, in order. One: the flow isn't activated. Two: the app trigger only sees what happens after activation. Three: your condition is written differently from how it arrived (capital letters, spaces)."
+    },
+    {
+      "title": "Write down the fields that arrive",
+      "where": "In your notes",
+      "action": "From the execution you just opened, copy the exact names of the five or six fields the item carries. For example: whatever the sender field is called, the subject, the date. These are the names you'll use in the expressions in the coming lessons. Copying them now saves you from guessing them later.",
+      "expect": "Your notes have a list of real fields with their exact names.",
+      "stuck": "Copy the names from the trigger's right-hand column, in table or JSON view. Exactly as they are, capital letters, hyphens, and all."
+    },
+    {
+      "title": "Decide what happens with duplicates, in writing",
+      "where": "In your notes",
+      "action": "Write a line: \"if the same case arrives twice, I want ___.\" You're not going to build it yet, that's lesson 39. But deciding it now, right after picking the trigger, is when you think about it best. Duplicates will arrive: webhooks retry and emails get marked unread.",
+      "expect": "The decision written down: ignore it, update the existing one, or notify.",
+      "stuck": "If you don't know what to choose, the safest answer is almost always \"check if it already exists by [unique piece of data] and skip creating another if it does.\""
+    }
+  ],
+  "errors": [
+    {
+      "message": "The app trigger isn't seeing emails/rows that were already there",
+      "means": "Most of these triggers only process what happens AFTER the flow is activated. Anything before that doesn't exist for them.",
+      "fix": "That's by design, not a bug. To process the historical data, do a one-time initial load separately: a manual flow that reads everything that already exists once. And leave the trigger for what's new."
+    },
+    {
+      "message": "The scheduled trigger fires but always comes back empty",
+      "means": "You're checking at times when there's nothing, or your query can't tell new from already-seen and you're over-filtering.",
+      "fix": "First option: switch to an app or webhook trigger if they exist, since they track it for you. If you stick with scheduled, mark what's processed in a status column. That way you don't depend on memory."
+    },
+    {
+      "message": "I'm getting two executions for the same event",
+      "means": "The service retried the notification (webhooks) or the item met the condition again (an email marked unread again).",
+      "fix": "Today: note it as confirmation that your decision from task 6 matters. The real fix is checking whether the case already exists before creating it, and that's lesson 39. Don't try to fix it by tweaking the trigger: it doesn't get fixed there."
+    },
+    {
+      "message": "I activated the flow but the webhook still gives me the test URL",
+      "means": "You're copying the address from the node's test tab, which is what shows by default in the editor.",
+      "fix": "The webhook node has two tabs or two URLs: test and production. With the flow activated, the right one for the external service is production. The test one only lives while the editor is listening."
+    },
+    {
+      "message": "I want two triggers in the same flow",
+      "means": "You want the same process to start two different ways: by time AND by notification, for example.",
+      "fix": "It's possible: n8n allows several triggers in one flow, and each one opens its own execution. But first ask yourself if they're really the same process. If the paths diverge quickly, two clearer flows beat one with two heads."
+    },
+    {
+      "message": "My trigger's condition isn't filtering: everything comes through",
+      "means": "The trigger's own filters (subject, sender, label) are empty or written wrong, and you're receiving the whole inbox.",
+      "fix": "Set the filter ON the trigger itself if it has one: it's the cheapest option, because what doesn't apply doesn't even come in. And as a backup, keep your filter node right after it, robust like the one from lesson 06. Belt and suspenders."
+    }
+  ],
+  "matters": [
+    "The question of who finds out first. It's the one that picks the right trigger in ten seconds, and the one Teresa never asked herself: 288 daily checks for 8 orders.",
+    "Knowing that the app trigger only sees what happens after activation. It's the number one surprise of first real flows: \"it's not processing yesterday's emails.\" It's not a bug: it's by design.",
+    "Copying the real field names from the first execution. Ten minutes now versus guessing in every expression across the next twenty lessons.",
+    "Deciding in writing what happens with duplicates. Repeated notifications will arrive; the difference between a solid flow and a fragile one is having decided before they arrive."
+  ],
+  "ignore": [
+    "Advanced cron expressions for the scheduled trigger (the asterisks like 0 9 * * 1-5). The visual mode covers everything you need this month; fine-grained cron exists and can wait.",
+    "Building the real webhook if your n8n is on your laptop. Without a public address it isn't going to work, and getting frustrated with that today is free: lesson 27 sets it up properly, with a network.",
+    "The exotic triggers in the panel: n8n's own incoming email, RSS, MQTT. They exist for specific cases; today's four cover 95% of real processes."
+  ],
+  "canDo": [
+    "Start your flow the exact second something happens, if the service knows how to notify: the webhook is true real time.",
+    "Keep track of what it's already seen, with app triggers: you receive only what's new, clean and in items.",
+    "Give the same flow several starting points, each with its own path, when the process really calls for it.",
+    "Switch triggers without rebuilding anything else, as long as the resulting fields keep the same names."
+  ],
+  "cantDo": [
+    "Notify you of past events: the app trigger starts watching once you activate it, and anything before that doesn't exist for it.",
+    "Guarantee a single notification: webhooks retry and emails reappear. Duplication is a matter of when, not if.",
+    "Receive webhooks on a laptop with no public address. That needs the cloud or a server.",
+    "Choose for you. You're the one who answers the question of who finds out first, with your process in front of you; the rest is configuration."
+  ],
+  "words": [
+    [
+      "Schedule Trigger",
+      "The scheduled one: fires by clock. Perfect when time IS the condition."
+    ],
+    [
+      "Webhook Trigger",
+      "The one that waits for outside notifications at an address of yours. Real time, but your n8n needs to be reachable from the internet."
+    ],
+    [
+      "App Trigger",
+      "The app-based one (Gmail Trigger, Sheets Trigger...): asks on its own and hands over what's new."
+    ],
+    [
+      "Manual Trigger",
+      "Starts when you press it. For testing, and for processes that require a human in front."
+    ],
+    [
+      "Polling",
+      "Asking every X minutes whether there's anything new. It's what an app trigger does under the hood."
+    ],
+    [
+      "Interval",
+      "How often a polling-type trigger asks. Shorter: fresher, but more checks."
+    ],
+    [
+      "Delay",
+      "The time between something happening and your flow finding out. From a webhook: seconds. From polling: the interval."
+    ],
+    [
+      "Retry",
+      "The repeated notification a service sends if you don't respond in time. The classic source of duplicates."
+    ],
+    [
+      "Initial load",
+      "The one-time, manual processing of the historical data an app trigger doesn't see."
+    ],
+    [
+      "Trigger condition",
+      "Your notes' sentence: \"this starts when ___.\" The more precise, the fewer false triggers."
+    ]
+  ],
+  "pieces": [
+    {
+      "kind": "cases",
+      "title": "Three processes, three triggers: reason through each one",
+      "caption": "Before looking at the answer, decide for yourself which one fits each case.",
+      "cases": [
+        {
+          "id": "informe",
+          "label": "The Monday report",
+          "hint": "Weekly sales summary at 8:00",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Scheduled, no doubt about it: time IS the condition. Nobody needs to tell you it's Monday. Schedule Trigger, Monday 8:00, timezone checked, and off it goes."
+            }
+          ]
+        },
+        {
+          "id": "pedido",
+          "label": "The store order",
+          "hint": "Act the moment someone buys",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Webhook if the store has them, and almost all do: notification within the second, no empty checks. Teresa's every-5-minutes schedule works, but it costs 288 executions a day and up to 5 minutes of waiting per order."
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Search for \"webhooks\" in the store's settings",
+                "As long as there's no n8n reachable from the internet: App Trigger if it exists, or scheduled as a placeholder",
+                "Decide right away what happens with duplicate notifications"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "masivo",
+          "label": "The mass send to clients",
+          "hint": "A campaign that goes out once reviewed",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Manual, and it's the professional choice: having it start on its own would be a risk, not a convenience. A person reviews, a person clicks, the automation does the rest. The button with a human in front is the guardrail."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "checklist",
+      "title": "Your process's trigger is well chosen if",
+      "caption": "Six checks on YOUR new flow, not on the example.",
+      "items": [
+        "You can say in one sentence who finds out first and why that trigger",
+        "The new flow exists, with a proper name, and its first box configured",
+        "You've triggered a real firing and it's in the history, opened by the system",
+        "You have the exact field names that arrive copied down",
+        "You know whether your service has webhooks, and you've noted it for lesson 27",
+        "It's written down what should happen when the same case arrives twice"
+      ]
+    }
+  ],
+  "next": "Your real flow already has its first box and you know which fields arrive. Lesson 09 follows that data's journey: items, JSON, and the input and output panel, in depth — the foundation for the expressions in lesson 16."
+}

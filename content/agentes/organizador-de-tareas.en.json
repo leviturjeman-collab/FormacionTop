@@ -1,0 +1,112 @@
+{
+  "id": "organizador-de-tareas",
+  "order": 5,
+  "title": "Task Organizer",
+  "kicker": "Code & Quality",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "basico",
+  "what": "A Claude Code subagent that turns a big, fuzzy goal (\"I want the app to send invoices by email\") into a list of small, ordered, verifiable tasks. It studies the project's actual state so it doesn't propose work already done or impossible steps, and delivers each task with its done criterion: what command to run or what to check to know it's finished. The result is written to a plan file that you, your team, or Claude Code itself can follow, task by task.",
+  "forWho": "For anyone who gets stuck on \"where do I even start?\" or asks the AI for huge things that come out half-done. It pays off when starting any feature that takes more than an afternoon: ten minutes of breaking it down saves days of undoing.",
+  "tools": ["claude-code", "github", "notion"],
+  "capabilities": [
+    "Splits a goal into tasks under one hour each, every one with a checkable deliverable",
+    "Orders tasks by dependency: nothing appears before what it needs",
+    "Verifies against the real code what already exists, so it doesn't plan work that's already done",
+    "Writes each task with its done criterion: the command, test, or check that closes it out",
+    "Generates the plan in a markdown file ready to turn into GitHub issues or cards in your tracker"
+  ],
+  "limits": [
+    "Doesn't execute the plan: it writes it. Implementing each task is a separate step, yours or another Claude Code session's",
+    "Doesn't decide business priorities: if two goals compete, it asks you which comes first",
+    "Doesn't estimate in hours or dates: it marks relative size (S/M/L) because an AI's hour estimates are smoke",
+    "Doesn't create the GitHub issues on its own: it leaves the material and the command ready, but creating them is your call"
+  ],
+  "files": [
+    {
+      "name": "organizador-de-tareas.md",
+      "language": "markdown",
+      "content": "---\nname: organizador-de-tareas\ndescription: Turns a big goal into a plan of small tasks, ordered by dependency, each with a verifiable done criterion. Writes the plan to PLAN.md. Use it before starting any feature that takes more than an afternoon.\ntools: Read, Grep, Glob, Bash, Write\n---\n\nYou are a technical planner. Your only deliverable is a task plan written to a PLAN.md file; you implement nothing and don't touch any other file. You speak concretely, with no management jargon.\n\n## Process, in this order\n\n1. **Understand the goal.** If the request is ambiguous on something that changes the plan (invoices as PDF or in the email body? for all customers or only new ones?), ask at most three questions and wait. If it's reasonably clear, proceed and note your assumptions at the top of the plan.\n2. **Study the ground.** Explore the project: what already exists toward the goal (is there an email module? an invoice model?), what conventions the code follows, how things are tested here. Every step of the plan must fit what's there, not an imaginary project.\n3. **Break it down with these rules:**\n   - Each task fits in under an hour of work. If it doesn't, split it.\n   - Each task leaves the project working: no \"step 3: everything broken until step 7.\" If a big change forces a break, wrap it in a task that includes getting the tests green again.\n   - Each task has ONE checkable deliverable: a test that passes, a command that responds, a screen that shows something concrete. \"Research X\" only counts if its deliverable is a written decision.\n   - Risky or uncertain tasks come as early as possible: whatever could sink the plan gets discovered at the start, not the end.\n4. **Order by dependency** and mark which ones could be done in parallel.\n5. **Mark the size** of each task: S (minutes), M (half an hour), L (close to an hour). No concrete hours or dates.\n6. **Write PLAN.md** in the format below. If a PLAN.md already exists, ask whether to replace it or add a new section.\n7. **Close with the next step**: which is the first task and how to ask Claude Code for it.\n\n## PLAN.md format\n\n```\n# Plan: [goal in one sentence]\n\nAssumptions: [short list, or \"none\"]\nOut of scope: [what this plan does NOT include]\n\n## Tasks\n\n### 1. [Title in imperative: \"Create the invoice model\"] (S|M|L)\n- What: [2-3 sentences on what needs to be done and where]\n- Depends on: [task numbers, or \"nothing\"]\n- Done when: [exact check: command, test, or what to look at]\n\n### 2. ...\n\n## Suggested order\n[1 → 2 → 3...; in parallel: 4 and 5]\n\n## Plan risks\n- [what could make this plan change and in which task it would be discovered]\n```\n\n## Non-negotiable criteria\n\n- No task without a verifiable \"Done when.\" \"That it works\" is not a criterion; \"pytest tests/test_facturas.py passes\" is.\n- Maximum 15 tasks per plan. If more come out, the goal is too big: propose splitting it into phases and plan only the first one in detail.\n- The plan mentions real project files and modules, with their paths.\n- If you detect that part of the goal is already implemented, say so and exclude it from the plan."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Create the agents folder",
+      "action": "In the project root: mkdir -p .claude/agents",
+      "expect": ".claude/agents exists."
+    },
+    {
+      "title": "Copy the agent file",
+      "action": "Create .claude/agents/organizador-de-tareas.md and paste the full content of the file above.",
+      "expect": "The file starts with --- and name: organizador-de-tareas."
+    },
+    {
+      "title": "Restart Claude Code",
+      "action": "Reopen Claude Code in the project folder.",
+      "expect": "organizador-de-tareas appears with /agents."
+    },
+    {
+      "title": "Give it a real goal",
+      "action": "Write: \"Use the organizador-de-tareas subagent: I want [your goal in one or two sentences].\"",
+      "expect": "A PLAN.md with numbered tasks, dependencies, sizes, and a done criterion for each. It may ask you up to three questions first.",
+      "stuck": "If the tasks come out huge or vague, reply: \"task 3 doesn't fit in an hour, split it\" — it's designed to accept that kind of correction."
+    },
+    {
+      "title": "Execute the plan task by task",
+      "action": "Ask Claude Code: \"do task 1 from PLAN.md and stop when it meets its done criterion.\" Mark each completed task in the file.",
+      "expect": "Controlled progress: each session closes concrete tasks and PLAN.md reflects the real state.",
+      "stuck": "If you want the tasks as GitHub issues, ask: \"turn the tasks in PLAN.md into issues with gh issue create, show me the commands before running them.\""
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal run",
+      "input": "\"I want users to be able to export their data to CSV from their profile.\"",
+      "expect": "A plan of 5-10 S/M/L tasks, starting with the export endpoint or function, with tests as the done criterion, and no invented modules that don't exist."
+    },
+    {
+      "name": "Ambiguous goal",
+      "input": "\"Improve the application's performance.\"",
+      "expect": "It asks questions (what's slow? how is it measured?) or starts the plan with a measurement task whose deliverable is a concrete figure, not blind optimizations."
+    },
+    {
+      "name": "Work already done",
+      "input": "Ask it to plan something that's already half-built in the code.",
+      "expect": "It detects what exists, says so, and the plan only covers what's missing."
+    },
+    {
+      "name": "Goal too big",
+      "input": "\"I want to turn the app into a multi-tenant SaaS with payments.\"",
+      "expect": "It proposes phases and delivers a detailed plan only for the first one, instead of 40 unmanageable tasks."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Anthropic subscription or API for Claude Code",
+      "where": "claude.ai (Pro/Max plan) or console.anthropic.com → API Keys",
+      "how": "claude.ai session or a key in the ANTHROPIC_API_KEY environment variable.",
+      "cost": "Included in the plan; via API, cents per generated plan"
+    }
+  ],
+  "risks": [
+    "Plans that age: by the third task, reality has already changed. Mitigation: treat PLAN.md as a living document; ask to replan what's pending when something big changes.",
+    "Following the plan on autopilot even when a task exposes a deeper problem. Mitigation: the done criterion exists to stop you; if a task doesn't meet it, rethink before continuing.",
+    "Confusing a plan with a commitment: showing PLAN.md to a client as if it were a fixed quote. Mitigation: the S/M/L sizes are technical guidance, not a commercial offer.",
+    "Endless questions on vague goals. Mitigation: the prompt limits them to three; if you can't answer them, that's the sign the goal needs more thought before it can be planned."
+  ],
+  "examples": [
+    {
+      "name": "New feature",
+      "prompt": "Use the organizador-de-tareas subagent: I want the app to send a reminder email three days before each appointment."
+    },
+    {
+      "name": "Technical debt",
+      "prompt": "Use the organizador-de-tareas subagent: I want to migrate hardcoded config to environment variables without breaking anything."
+    },
+    {
+      "name": "Picking a project back up",
+      "prompt": "Use the organizador-de-tareas subagent: this project has been stalled for six months, I want a plan to make it deployable again."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion"]
+}

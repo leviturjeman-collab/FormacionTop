@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { ArrowDownAZ, ArrowUpAZ, Search } from 'lucide-react'
 import type { ComparePiece } from '../types'
+import { useLocale } from '../i18n'
 
 /** Tabla comparativa ordenable y filtrable, construida desde el material del vault. */
 export default function Compare({ piece }: { piece: ComparePiece }) {
+  const locale = useLocale()
   const [sort, setSort] = useState<{ column: number; asc: boolean } | null>(null)
   const [filter, setFilter] = useState('')
 
@@ -32,8 +34,8 @@ export default function Compare({ piece }: { piece: ComparePiece }) {
           <input
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
-            placeholder="Filtrar"
-            aria-label="Filtrar la tabla"
+            placeholder={locale === 'en' ? 'Filter' : 'Filtrar'}
+            aria-label={locale === 'en' ? 'Filter the table' : 'Filtrar la tabla'}
           />
         </label>
       </header>
@@ -69,7 +71,11 @@ export default function Compare({ piece }: { piece: ComparePiece }) {
         </table>
       </div>
 
-      {!rows.length && <p className="st-empty">Nada coincide con «{filter}».</p>}
+      {!rows.length && (
+        <p className="st-empty">
+          {locale === 'en' ? `Nothing matches "${filter}".` : `Nada coincide con «${filter}».`}
+        </p>
+      )}
     </figure>
   )
 }

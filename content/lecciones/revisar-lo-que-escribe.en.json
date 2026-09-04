@@ -1,0 +1,187 @@
+{
+  "id": "revisar-lo-que-escribe",
+  "number": 20,
+  "stageId": "asistentes",
+  "title": "Reviewing what AI writes without knowing how to code",
+  "promise": "You'll be able to review any change AI makes to your project in under five minutes. You'll see which files it touched and whether what already worked still works. And you'll have the exact questions that pull out what it hasn't told you.",
+  "minutes": 25,
+  "why": "Javier roasts coffee in Gijón and sells it through his website. He asked AI for a field to enter discount coupons. He tested the coupon CAFE10, it worked on the first try, and he published it that same afternoon. Three weeks later his accountant asked why 47 orders had shown zero shipping cost. The same change had also touched the cart file. The $5 shipping charge had stopped being added. $230 lost for not spending ninety seconds checking something that, on the surface, had nothing to do with coupons. Reviewing isn't reading code. It's knowing where to look.",
+  "theory": [
+    {
+      "title": "You're not a code reviewer, you're the site foreman",
+      "text": "You're never going to read that code and you don't need to. What you do need to do is exactly what anyone hiring a contractor does. Know which rooms they went into. Turn on the tap to see if water comes out. And have it in writing what was done. Three questions cover almost everything: what have you touched, does what worked before still work, and what aren't you telling me. None of the three requires understanding a single line. This is where almost everyone starts doubting themselves: \"if I don't understand what's inside, how am I supposed to catch a bug?\" The answer: you're not going to catch the subtle bug hidden in the logic. A user is going to find that one in two months. You're going to catch two other things, which cause 90% of real disasters. The change that had no business being there. And whatever broke along the way. Both of those are visible today, for free, with your own eyes.",
+      "analogy": "You don't know whether the pipe's soldering was done right. But you do know if the plumber tore into the hallway wall when the problem was in the kitchen. And you do know whether water comes out when you turn on the tap. Nobody's ever asked you for a plumbing license to check that.",
+      "example": "Nuria is a physical therapist in Salamanca and has a website for her patients to book appointments. She asked to change a button's green. The AI changed the button and, \"while it was at it,\" unified the colors across the whole project: 19 files. The button looked beautiful. And the appointment calendar became unreadable on mobile, which is where 80% of her patients come in from. The bug wasn't hidden in the code: it was in file number 19."
+    },
+    {
+      "title": "The file list: the one signal you can read without knowing how to code",
+      "text": "A project is a folder with files in it, and every file has a name. That's all you need to know to use the most powerful signal you'll ever have: how many files it touched and which ones. The rule of thumb: a small change touches one to three files. If you ask to move a button and fourteen come back, it's not that the project is complicated. It's that the AI did things you didn't ask for. There are two different situations, and it helps to know which one you're in. If you're working in ChatGPT's, Claude's, or Gemini's chat and it gives you back code blocks for you to paste, you're the one in charge of pasting. The trap there is the phrase \"here's the complete file.\" That complete file may have lost forty lines of yours along the way. And you won't miss them until something stops working. If you're using a tool that writes directly to your disk (Claude Code, Codex, Cursor), the list flies by on screen and disappears. In both cases the solution is the same: demand the written report and ask for a one-sentence justification per file. If it can't justify one, that file doesn't belong. And there are names worth stopping for even if only one shows up. For example package.json (the list of borrowed pieces) and anything called .env (your keys live there). Also anything with config, auth, login, payment, checkout, db, or migration in the name.",
+      "example": "Real test: ask it \"change the Submit button's text to Book\" and then ask for the report. If it tells you it touched three files to change one word, ask about the second and third. Almost always one of them is \"I took the chance to\" something."
+    },
+    {
+      "title": "What worked before: the regression nobody goes looking for",
+      "text": "When AI hands you something new, you test the new thing. It's natural, and it's exactly where the problem sneaks in. What breaks is almost never what you just asked for. It's something else in the project that shared a file with what you touched. That's called a regression, and it's the most expensive kind of failure because it can work wrong for weeks with nobody looking at it. The antidote fits on one page: write down ONCE the list of the five paths that, if broken, leave you with no business. In a store those would be: land on the site, view a product, add it to cart, pay, and receive the confirmation email. Every time the AI touches something, you walk through those five paths by hand, with the mouse and with your finger, and it takes ninety seconds. The doubt that always comes up is \"every time, even for a one-word change?\" The answer is yes, every time, precisely because of that: Javier's change was literally a text field and cost him $230. Add one more thing almost everyone skips: do it on mobile too. Mobile breaks on its own and you're probably looking from a laptop.",
+      "analogy": "It's the round a bar manager does before closing. He doesn't check the electrician's work; he turns on the coffee machine, opens the tap, tests the card reader, and pulls down the shutter. Four ten-second gestures that save you opening tomorrow unable to take payments."
+    },
+    {
+      "title": "The ten seconds that save your project",
+      "text": "Before asking for anything, duplicate the project folder and put today's date in its name. Takes ten seconds, costs $0, and it's the difference between \"I lost an afternoon\" and \"I lost three weeks of work.\" The professional version of this is called version control, or Git, and it's much better. AI can set it up for you in ten minutes if you ever want, but you don't need it today. What you can't afford is having nothing at all. Learn to tell apart two types of change, because they don't get reviewed the same way. Reversible ones are almost all of them: touching a file, changing a text, adding a screen; if you have a copy, you go back and nothing happened. Irreversible ones are few and always the same. Deleting or emptying a database. Publishing to production. Sending emails to your customer list. And deleting a folder with Shift+Delete (that skips the trash). Before any of those four, the AI stops and you read what it's about to do. If you work only inside the chat, with no files on your computer, your backup is the conversation itself. Don't delete chats and save every version that works into a separate document. The text box doesn't have a version history you can rely on.",
+      "example": "A folder name that works: \"gijoncoffee\" next to \"gijoncoffee-2026-08-19-before-coupons.\" With the date and what you were about to do. Two months from now, once you have five copies, that final bit of the name is the only thing that'll tell you which one to go back to."
+    },
+    {
+      "title": "The questions that dismantle an answer that's too pretty",
+      "text": "Almost every answer ends with something like \"done, it's working now.\" That sentence means nothing, because in a huge number of cases the AI hasn't run absolutely anything. It's written what usually works and assumed the rest. The single most valuable question in this whole lesson is seven words: \"did you run this or are you assuming?\" What you should never ask is \"are you sure?\", because that verifies nothing. It either agrees with you, or backs away from something that was fine just because it sensed you doubting. The ones that do work are specific and don't accept a yes or no. What did I lose with this change. What used to work and might not now. If this fails a month from now, what's the most likely cause. And give me the three steps I do on screen to check it, no terminal. And the most productive one of all is asking it to attack itself. Tell it it's a reviewer paid to find other people's mistakes. Ask for the three worst flaws in its own work. The tone of the answer changes completely, because you've removed its obligation to defend itself. Notice that none of these questions ask you to understand the code. They ask you to understand the risk, and that's your job, not its.",
+      "example": "Try both in a row with the same change. With \"is this okay?\" it answers yes in four lines. With \"you're a senior reviewer paid per bug found, give me the three worst in this change\" the answer changes. You get things like \"I haven't checked what happens if the user leaves the field empty\" or \"I assumed prices always arrive with two decimals.\" It's the same AI and the same code: only the role you gave it changed."
+    },
+    {
+      "title": "Six warning signs you can spot without reading a line",
+      "text": "There are markers you recognize just like you recognize a water stain without being a building inspector. First: the words TODO, FIXME, \"pending,\" \"to implement,\" or \"real logic would go here\" inside the files. They mean gaps someone has to fill in, and that someone is you. Second: hard-coded data, meaning the demo works beautifully because it always returns the same three products even though you have forty. Third, and the only one that can genuinely cost you money: a key stuck directly inside a code file. Something like sk-proj-… or AIza…. Whoever sees your page or your published folder sees it, and spends it. Fourth: a file that grows from 80 to 900 lines. It almost always means stuff that should've been spread out got dumped there instead. Fifth: the phrase \"I cleaned up unused code,\" one of the most expensive in the trade. Because what wasn't used was being used somewhere. Sixth: \"for compatibility I installed X.\" Every new borrowed piece is one more thing that can break on its own on a random Tuesday morning, without you touching anything. And a check that costs nothing: in Chrome, press F12, go to the \"Console\" tab. Red lines are errors. You don't need to understand them, just count them before and after. If there were zero before and there are six now, something broke even if the page looks perfect.",
+      "example": "Rubén builds a recipe website in Alicante. The AI left his OpenAI key written inside a project file. He uploaded the folder to a public GitHub repository on a Thursday. Monday he had $370 in usage that wasn't his. There are programs scanning public repositories (code folders uploaded for anyone to see) hunting for keys. And they find them in minutes, not days."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Duplicate the folder before asking for anything at all",
+      "where": "In your computer's file explorer: on Windows the yellow folder in the taskbar; on Mac Finder, the blue face in the Dock",
+      "action": "Find your project folder. Click it once to select it, press Ctrl+C (Cmd+C on Mac), and then Ctrl+V (Cmd+V) in that same spot. A copy will appear named with \"- copy\" at the end. Right-click the copy and choose \"Rename.\" Give it the original name plus today's date and what you're about to do: for example \"gijoncoffee-2026-08-19-before-coupons.\" Don't move it elsewhere, leave it right next to the original. If your project doesn't exist as a folder yet and only lives inside a chat, skip to task 2. Come back here the day you have files.",
+      "expect": "Two folders side by side: the working one with its usual name and the copy with the date. Open it and check it has the same content as the original, not an empty folder. If your project is over 1 GB, it's probably mostly the node_modules folder (borrowed pieces). You can copy the folder without it: it re-downloads on its own.",
+      "stuck": "If you have no idea where the folder is, ask the AI you've been working with. Write: \"Tell me this project's exact folder path on my computer and how to get there by clicking, without using the terminal.\" If your project lives in a web tool like Lovable, Replit, or Bolt, look in the menu for a \"Download\" or \"Export\" option. Save the compressed file with the date in the name."
+    },
+    {
+      "title": "Write your list of the five essentials",
+      "where": "In the ChatGPT, Claude, or Gemini app, in the same conversation you're building your project in",
+      "action": "This list gets written once and used a hundred times. Paste the message below, swapping the first line for your project. When it gives you the table, read it and correct it: you know better than it does what's essential to your business. Then copy it into a phone note or write it on paper next to your computer. It needs to be somewhere you see it without searching for it.",
+      "prompt": "I work on [DESCRIBE YOUR PROJECT IN ONE SENTENCE: what it is and for whom]. I don't know how to code and I'm going to review every change you make myself.\n\nI need my list of essentials: the five paths a user takes through my project that, if they break, leave me with no business.\n\nFor each one give me:\n1. A short name, 5 words max.\n2. The exact steps I do myself on screen to check it, numbered, saying where I click and what I type. With concrete test data (an email, a password, a product), not \"enter your details.\"\n3. What I should see exactly if it's working. One sentence.\n4. What I'll see if it's broken.\n\nRules: no terminal, no commands, no installing tools. Everything has to be done with the mouse in the browser and with a finger on mobile. All five together can't take more than 90 seconds. Give it to me as a table I can copy and paste into a note.",
+      "expect": "A five-row table with steps you can follow without thinking. Every step has to say where to click, not \"go to the relevant section.\" If any row makes you open the terminal or install something, that row is wrong: send it back.",
+      "stuck": "If it gives you five generic paths that'd apply to any website, you didn't give it enough of your own details. Give it three uncomfortable facts. What you charge. What a customer does in the first minute they arrive. And what people call you about most when something's broken. That changes the whole list."
+    },
+    {
+      "title": "Demand the work report after every change",
+      "where": "In the conversation, right after the AI tells you it finished a change",
+      "action": "This is the central message of the lesson, and the one you'll use most. Paste it exactly as-is, unmodified, the moment the AI says \"done.\" Don't ask it to explain the code: ask for the report. Read it in full before touching anything, and pay special attention to sections three and four, the ones almost nobody reads.",
+      "prompt": "Before I accept this change, give me the report. In this exact format and nothing else added:\n\nFILES TOUCHED\nComplete list, one per line: file name + a single sentence on why it needed touching. Mark NEW for any you created. Mark DELETED for any you removed and tell me what was in them.\n\nWHAT IT DOES NOW THAT IT DIDN'T BEFORE\nThree lines max, in plain English, no function or variable names.\n\nWHAT MIGHT HAVE BROKEN\nWhat worked before and might not work now because of this. If you think there's nothing, tell me anyway which other parts of the project use the files you touched.\n\nWHAT I RAN AND WHAT I DIDN'T\nSay literally \"I ran it\" or \"I didn't run it, I'm assuming.\" Don't vouch for anything you haven't actually tested.\n\nHOW I CHECK IT\nThree steps max, on screen, no terminal, with concrete test data.\n\nHOW TO UNDO IT\nWhat would need to happen to get back exactly to the state from five minutes ago.\n\nDon't explain the code to me. Don't tell me it's ready. Just the report.",
+      "expect": "Six headings with short lists underneath. The \"WHAT MIGHT HAVE BROKEN\" section has to say something. If it puts \"nothing,\" push back with \"then tell me what other screens use those same files.\" And the \"ran\" section has to be one of the two literal phrases, not a slippery paragraph.",
+      "stuck": "If it answers with a nice summary instead of the format, reply with just \"the format I asked for, the six sections.\" No need to repeat the whole message. If the conversation is very long and it's forgotten, paste it in full again: no harm in repeating it."
+    },
+    {
+      "title": "Count the files and make it justify each one",
+      "where": "In the conversation, with the report from task 3 in front of you",
+      "action": "Count the lines under FILES TOUCHED. If it's one, two, or three and your request was small, move on. If it's more than four, or if you see names that have nothing to do with what you asked, paste the message below. This message does two things: it forces it to separate what's necessary from what it did for its own sake, and then forces it to undo the latter.",
+      "prompt": "You touched [NUMBER] files and what I asked you for was [DESCRIBE THE CHANGE IN ONE SENTENCE].\n\nJustify each file separately, in this format:\nFILE NAME — ESSENTIAL or EXTRA — one sentence why.\n\nESSENTIAL means what I asked for doesn't work without touching that file. EXTRA is anything else: cleanup, improvement, unifying styles, reorganizing, updating a borrowed piece, or fixing something you noticed along the way.\n\nThen tell me how many are ESSENTIAL and how many are EXTRA.\n\nAnd last: undo every EXTRA one and leave me only the ESSENTIAL ones. If undoing one breaks the main change, don't undo it and explain in one line why it's linked.\n\nDon't ask me for permission file by file. Don't explain the benefits of clean code to me. Just do it.",
+      "expect": "A list where each file carries its label and a count like \"4 essential, 10 extra.\" Then, confirmation it undid the ten. Once it's done, ask again for task 3's report: the touched-files list should have shrunk.",
+      "stuck": "If it tells you they're all essential, ask about a specific one: \"File [NAME], what exactly stops working if you revert it? Answer in one sentence.\" If the answer starts with \"improves,\" \"unifies,\" \"makes easier,\" or \"in the future,\" that file was extra. If it also says it can't undo it anymore, that's where you use the backup from task 1."
+    },
+    {
+      "title": "Run the ninety-second round, mobile included",
+      "where": "In your browser, with the website or app open in front of you, and then on mobile",
+      "action": "Pull out your list from task 2 and walk through the five paths, one after another. Don't skip any because \"that one's surely fine.\" Use real test data: put a product in the cart, type an email, hit the send button. Then open the same page on mobile and repeat at least two of the five. To finish, in Chrome on your computer press F12. Go to the \"Console\" tab and reload with F5: count the red lines. You don't need to read or understand them, just know how many there are.",
+      "expect": "All five paths working and the same number of red lines as before the change (ideally zero). If a new red line shows up, copy it exactly — with the mouse, selecting the text —. Paste it to the AI saying \"this showed up in the console after your change, it wasn't there before.\" It's the most useful information you can give it and almost nobody gives it.",
+      "stuck": "If something fails and you don't know whether it's the change's fault, open the same page in an incognito window (Ctrl+Shift+N in Chrome). That rules out old cached data in your browser. If mobile shows the old version instead of the new one, pull down to reload. Or close the tab and reopen it."
+    },
+    {
+      "title": "Ask whether it ran it or is just imagining it",
+      "where": "In the conversation, right after a \"done, it's working\"",
+      "action": "Four short questions that separate what's verified from what's assumed. This is especially useful when you're working in the regular ChatGPT or Claude chat. There, the AI often can't run anything at all and still tells you it works. Paste the message and don't accept paragraphs: you want the four answers.",
+      "prompt": "Answer only this and nothing else, no context paragraphs and no rewriting the code:\n\n1. Did you run the code you just wrote, here and now, or are you assuming it works? Answer with one word: \"ran\" or \"assumed.\"\n2. If \"ran\": paste me the literal output you got, exactly as it appeared, including any warnings.\n3. If \"assumed\": tell me the three specific things that could make it not work on my computer that you can't check from here.\n4. What part of this change have you not tested at all? Even if it seems small. If you thought about the happy path but not the bad one (an empty field, accented text, a negative number, no internet connection), say so.\n\nDon't apologize. Just the four answers.",
+      "expect": "\"Assumed\" most of the time, and that's normal, not a problem: the problem is not knowing it. The valuable part is point 4, since that's where the bad paths nobody tested show up. Save that list: it's what you're going to test yourself by hand in task 5's round.",
+      "stuck": "If it answers \"ran\" but doesn't paste any output, it didn't run it. Reply: \"You said ran but didn't give me the output. Repeat: ran or assumed?\" If your tool does actually run things for real (Claude Code, Codex, Cursor), the output exists and it can paste it with no problem."
+    },
+    {
+      "title": "Make it criticize itself like a hostile reviewer",
+      "where": "In the conversation, after the report and before accepting the change",
+      "action": "Changing its role is the trick that pulls out the most information in the least time. While it's \"your assistant,\" its job is to leave you satisfied. Give it the role of a reviewer paid per bug found, and its job becomes finding you problems. Paste it as-is and read it calmly: usually one of the three flaws it gives you is real.",
+      "prompt": "Switch roles. From now on you're a senior developer paid to find flaws in other people's work, and the work in front of you is the change you just made. You get paid for every flaw found, not for saying it's fine.\n\nGive me:\n- The 3 most likely flaws in this change, ranked by how expensive it'd be if it happens with real clients.\n- For each one: what a user would have to do to trigger it, in concrete steps I can repeat right now.\n- What you assumed without asking me, and what happens if that assumption is false.\n- What you did the fast way instead of the correct way, and what would break the day this has ten times more users.\n- One thing that, if I were an angry customer, would make me lose trust in this website.\n\nYou're forbidden from saying the change is well designed. Forbidden from ending on a reassuring note. If you genuinely find nothing relevant, write \"I don't find anything relevant\" and stop.",
+      "expect": "Three flaws with steps you can reproduce yourself in two minutes. Reproduce them: if one is confirmed, that's your next task. The assumptions section is usually the most revealing, since that's where whatever it decided for you without asking shows up.",
+      "stuck": "If you get soft text full of \"could be considered,\" it's still in assistant mode. Push: \"The three specific flaws, with numbered steps to trigger them. No general recommendations.\" And if it gives flaws you don't understand, reply \"explain flaw 2 to me as if I were the business owner and didn't know how to code: what would happen to a customer and what would it cost me?\""
+    },
+    {
+      "title": "Run the warning-sign audit on it",
+      "where": "In the conversation, once a week or every five or six changes in a row",
+      "action": "This isn't for every change: it's the maintenance review. Search all at once for the six things you can spot without reading code. Always do it before showing the project to anyone and always, always, before publishing it online.",
+      "prompt": "Audit the work you've done on this project. Answer me only with what you find, looking specifically for these six things:\n\n1. GAPS: any TODO, FIXME, \"pending,\" \"to implement,\" \"real logic would go here,\" or function that doesn't do anything yet. Tell me where it is and what's missing.\n2. FAKE DATA: hard-typed values inside the code that in the real version should come from somewhere else (made-up product lists, fixed prices, example users, simulated responses). Tell me which ones and what would happen the day a real customer uses this.\n3. EXPOSED KEYS: any password, key, token, or long weird string put directly into a code file instead of into the environment variables file. Tell me even if it's a test one.\n4. BLOATED FILES: which file has grown the most, from how many lines to how many.\n5. NEW PIECES: what you installed or added to the dependency list that wasn't there at the start, and whether it was actually needed.\n6. DELETIONS: what you removed, even if it looked like dead code.\n\nOne heading per category and a list underneath. If a category has nothing, write \"nothing.\" Don't add recommendations or conclusions at the end.",
+      "expect": "Six headings. It's normal for GAPS and FAKE DATA to have things in them. That's a sign the audit is working, not that you did something wrong. If something shows up under EXPOSED KEYS, fix that today, before publishing anything.",
+      "stuck": "If a key shows up and you don't know what to do, ask it like this: \"Pull that key out of the code, move the value to the .env file, check that .env is in .gitignore, and tell me whether that key has ever been uploaded to the internet.\" If the answer is yes, go into that service's website (OpenAI, Stripe, whatever), delete that key, and create a new one. An exposed key doesn't get protected: it gets revoked."
+    },
+    {
+      "title": "Undo a change on purpose, to stop fearing it",
+      "where": "On your computer and in the conversation, with the task 1 backup already made",
+      "action": "You're going to practice undoing when you don't need to, which is the only way it goes well the day you actually do. Ask the AI for a small, visible change: \"change the homepage's title to TEST RUN.\" Check it on screen. And now undo it two different ways. First ask it \"put the title back exactly as it was and don't touch anything else.\" Then, even though it worked, delete the working folder and rename your backup to take its place. Do both, even though it seems redundant: you want to know both work.",
+      "expect": "The title goes back to what it was both ways. When restoring from the copy, check the site still starts up and the ninety-second round passes in full. That's what you were really testing: that your backup is actually useful for something.",
+      "stuck": "If the site doesn't start after restoring the copy, it's almost always two things that didn't get copied. The node_modules folder (the borrowed pieces) or the .env file with your keys. Give this to the AI: \"I restored a backup of my project and now it won't start. Tell me, step by step, without assuming anything, what files or folders are usually missing from a backup and how I get them back.\" Finding this out today is worth far more than finding it out during an emergency."
+    },
+    {
+      "title": "Set the rule permanently so you never have to repeat it",
+      "where": "In ChatGPT: side menu, \"Projects,\" your project, \"Instructions.\" In Claude: \"Projects,\" your project, \"Project instructions.\" In Gemini: \"Gems.\" If you use Claude Code or Cursor: a file called RULES.md in the project folder",
+      "action": "Everything in this lesson can turn into a fixed rule the AI applies on its own. Copy the text below and paste it wherever your tool keeps it. If you can't find that spot, paste it as the first message of every new conversation: it works the same, you just have to remember to do it.",
+      "prompt": "This is a fixed rule for everything we do together on this project. Save it and apply it from now on without me having to remind you.\n\nWHO I AM: I don't know how to code. I'm not going to read the code. I review based on the report you give me and on what I see on screen.\n\nHOW YOU WORK WITH ME:\n1. One change at a time. If I ask for two things, do the first, give me the report, and wait for my answer.\n2. Don't touch any file that isn't needed for what I asked. No cleanup on the side, no unifying styles, no updating things \"while we're at it.\" If you see something you'd fix, note it in one line at the end and don't touch it.\n3. After every change, always and without me asking: files touched with one sentence each, what might have broken, whether you ran it or are assuming, and the three steps I do on screen to check it.\n4. Before deleting anything, installing something new, touching the database, or publishing online, stop and ask me with these exact words: \"this doesn't undo easily.\" Wait for me to say yes.\n5. Never write a key, password, or token inside a code file. They always go into the environment variables file.\n6. If you haven't tested something, say so. \"Should work\" doesn't count as an answer.\n7. Translate any technical word for me in parentheses the first time you use it.\n\nReply only with \"rule saved\" and any questions you have. Nothing else.",
+      "expect": "A short \"rule saved.\" From then on, in the following conversations the report should arrive on its own, without you asking. If it's forgotten after three changes, don't repeat the whole rule: write \"rule 3\" and it'll pick it back up.",
+      "stuck": "If your tool has no projects or saved instructions, create a text file on your computer called RULES.txt with that content. Paste it at the start of every session. Ten seconds of copy-paste save you half a day's worth of corrections."
+    }
+  ],
+  "matters": [
+    "Counting the touched files. It's the one signal you can read without knowing how to code, and it catches almost every disaster before it happens. When you ask for something small and fourteen files come back, you're not looking at a complicated project. You're looking at an AI that did too much. And what it did too much of is exactly what's going to break.",
+    "Checking what worked before, not just what's new. You always test the new thing because that's what you were waiting for. Nobody tests the old thing, and that's why a regression can live for three weeks charging the wrong shipping. A ninety-second round versus a customer discovering the bug for you: there's no comparison.",
+    "Duplicating the folder before touching anything. Ten seconds and $0 versus the real possibility of losing weeks of work. And knowing the four kinds of change that don't undo. Emptying the database, publishing to production, emailing your customers, and deleting with Shift+Delete. In front of those four, you're the one who stops, not the AI.",
+    "Asking \"did you run this or are you assuming?\" The phrase \"done, it's working\" means nothing: in the regular chat the AI runs nothing at all and still says it. That question turns a promise into a fact, and the fact tells you whether you need to test it by hand right now or not."
+  ],
+  "ignore": [
+    "Understanding the code line by line. You're never going to read it, and starting to study it now would take time away from what does work. People who review well without coding aren't the ones who understand a little of everything. They're the ones who always ask the same three questions.",
+    "Automated tests and coverage. It's the serious version of the ninety-second round and it comes in its own time, once the project has real users. Today your test is your finger, your phone, and an hour and a half of practice.",
+    "Git, branches, and commits. It's the professional undo, and someday you'll want it, because it lets you go back to any exact point without piling up folders. In the meantime, a copy with the date in the name covers the same ground with zero learning curve."
+  ],
+  "canDo": [
+    "Tell you in plain language what changed and why, if you give it the exact format you want it in. Without a format it gives you a pretty summary; with a format it gives you a report.",
+    "Write you the on-screen checking steps, with concrete test data and no terminal, if you ask with those exact words.",
+    "Genuinely criticize itself harshly when you give it the role of a reviewer paid per bug found. Same model, saying very different things depending on the role it's given.",
+    "Undo a change it just made, if you ask in the same conversation and you haven't closed anything along the way."
+  ],
+  "cantDo": [
+    "Know whether something broke in a part of the project it hasn't looked at. It only has in front of it what you've shown it, and the file that broke could be in a folder it never opened.",
+    "Remember how your project was between one conversation and another. A new chat is a blank memory: it doesn't know what was there yesterday or what you decided. That's why you ask for the report in the same chat where it made the change.",
+    "Undo the irreversible. An emptied database doesn't come back by telling it \"go back.\" Neither do emails already sent to your customer list, or a published version a thousand people have already seen.",
+    "Tell you on its own initiative that it hasn't tested something. By default it closes with \"done, it's working.\" The \"I haven't run it\" only shows up when you ask in a way it can't slip out of."
+  ],
+  "words": [
+    [
+      "Diff",
+      "The list of what changed: what was written before and what's written now. Additions are shown in green and removals in red. Even without understanding a single line, the size of that list already tells you whether the change was small or huge."
+    ],
+    [
+      "Regression",
+      "Something that used to work and stopped working because of a change made somewhere else. It's the most expensive kind of bug because nobody goes looking for it: everyone's watching the new thing."
+    ],
+    [
+      "Dependency",
+      "A piece someone else wrote that your project uses borrowed. The more you pile up, the more things can break on their own on a random Tuesday morning without you touching anything."
+    ],
+    [
+      "Environment variable",
+      "Secret or changing data kept separately, in a loose file called .env, instead of inside the code. That's where your passwords and keys need to live so they don't travel glued to the rest of the project."
+    ],
+    [
+      "API key",
+      "A long string of letters and numbers that identifies your account to a paid service. It works like a credit card: whoever has it spends in your name and you pay for it."
+    ],
+    [
+      "Hard-coded",
+      "Data typed by hand into the code instead of coming from where it should. The demo works beautifully because it always shows the same three products, even though you have forty in the warehouse."
+    ],
+    [
+      "Local and production",
+      "Local is the copy running on your computer that only you see. Production is the published one everyone sees. Something working in the first guarantees absolutely nothing about the second."
+    ],
+    [
+      "Browser console",
+      "A hidden screen inside Chrome where the page reports what's happening to it. Opens with F12. Red lines are failures; you don't need to understand them, just count how many there are before and after."
+    ],
+    [
+      "Version control",
+      "A system that saves every state your project has gone through. Lets you go back to any of them without having saved copies by hand. The most used one is called Git."
+    ],
+    [
+      "Refactor",
+      "Reorganizing something's insides without changing what shows on the outside. Sounds harmless and breaks the most things, because it touches many files at once without fixing anything visible."
+    ]
+  ],
+  "next": "In the next lesson you'll learn to split a big assignment into small pieces reviewed one at a time, which is exactly what makes this review take five minutes instead of two hours."
+}

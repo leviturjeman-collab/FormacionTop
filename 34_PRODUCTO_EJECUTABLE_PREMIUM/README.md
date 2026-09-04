@@ -16,7 +16,7 @@ Esta carpeta agrupa las piezas que convierten la boveda en producto ejecutable.
 | Bloque | Contenido |
 |---|---|
 | [[mini_repos_clonables/README]] | 10 mini repos base |
-| [[workflows_n8n_importables/README]] | 25 workflows n8n importables |
+| [[workflows_n8n_importables/README]] | puntero a los 40 workflows n8n de la biblioteca (35_) |
 | [[datasets_casos/README]] | datasets CSV/JSON ficticios |
 | [[examenes_practicos/README]] | examenes por modulo |
 | [[solucionarios/README]] | respuestas esperadas y fixes |

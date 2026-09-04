@@ -1,66 +1,345 @@
 {
-  "name": "18 Abandoned Cart Followup",
+  "name": "18 · Seguimiento de carrito abandonado por WhatsApp",
   "nodes": [
     {
       "parameters": {
-        "path": "18-abandoned-cart-followup",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 18 · Carrito abandonado\n\n1. Credenciales: Google Sheets, Slack Bot y WhatsApp Business Cloud.\n2. Pestaña \"Carritos\" con columnas: carrito_id, cliente, telefono, importe, abandonado_en (ISO), consentimiento (si|no), estado (pendiente|contactado).\n3. Pestaña \"Carritos descartados\" y \"Recordatorios enviados\".\n4. Crea en Meta la plantilla \"recordatorio_carrito\" (idioma es) y espera a que la aprueben ANTES de activar el flujo.",
+        "width": 460,
+        "height": 280
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"18 Abandoned Cart Followup\",\n    category: \"ecommerce\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "content": "## Doble freno\n\n1) Solo se contacta a clientes con consentimiento=si y carrito de más de 1 hora.\n2) Slack pide aprobación (Approve) antes de cada envío. Si nadie aprueba, no sale nada.",
+        "width": 380,
+        "height": 200
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo-002",
+      "name": "Nota · Freno humano",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "nodo-003",
+      "name": "Cada hora",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Carritos"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "estado",
+              "lookupValue": "pendiente"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "nodo-004",
+      "name": "Leer carritos pendientes",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        260,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Un carrito es elegible si tiene telefono, consentimiento explicito\n// y lleva mas de 1 hora abandonado (y menos de 48 h: despues ya no molestamos).\nconst ahora = Date.now();\nreturn $input.all().map((i) => {\n  const c = i.json;\n  const abandonado = Date.parse(c.abandonado_en);\n  const horas = Number.isFinite(abandonado) ? (ahora - abandonado) / 36e5 : -1;\n  const telefono = String(c.telefono ?? '').replace(/[^+0-9]/g, '');\n  const consentimiento = String(c.consentimiento ?? '').trim().toLowerCase() === 'si';\n  const elegible = Boolean(telefono) && consentimiento && horas >= 1 && horas <= 48;\n  let motivo_descarte = '';\n  if (!telefono) motivo_descarte = 'sin telefono';\n  else if (!consentimiento) motivo_descarte = 'sin consentimiento';\n  else if (horas < 1) motivo_descarte = 'todavia no ha pasado 1 hora';\n  else if (horas > 48) motivo_descarte = 'demasiado antiguo (>48h)';\n  return { json: { ...c, telefono, horas_abandonado: Math.round(horas * 10) / 10, elegible, motivo_descarte } };\n});"
+      },
+      "id": "nodo-005",
+      "name": "Evaluar elegibilidad",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        480,
+        400
       ]
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.elegible }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
-      "id": "respond",
-      "name": "Respond",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "id": "nodo-006",
+      "name": "¿Elegible?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_CANAL"
+        },
+        "message": "={{ 'Carrito ' + $json.carrito_id + ' de ' + $json.cliente + ' (' + $json.importe + ' EUR, ' + $json.horas_abandonado + ' h abandonado).\\nSe enviara la plantilla aprobada \"recordatorio_carrito\" por WhatsApp al ' + $json.telefono + '.\\nAprueba para enviar; ignora para no contactar.' }}",
+        "responseType": "approval",
+        "options": {}
+      },
+      "id": "nodo-007",
+      "name": "Aprobar recordatorio",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        300
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "REEMPLAZAR_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $('Evaluar elegibilidad').item.json.telefono }}",
+        "template": "recordatorio_carrito|es"
+      },
+      "id": "nodo-008",
+      "name": "Recordatorio WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
-      ]
+        1140,
+        300
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REEMPLAZAR",
+          "name": "WhatsApp Business Cloud"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Recordatorios enviados"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $now.toISO() }}",
+            "carrito_id": "={{ $('Evaluar elegibilidad').item.json.carrito_id }}",
+            "cliente": "={{ $('Evaluar elegibilidad').item.json.cliente }}",
+            "telefono": "={{ $('Evaluar elegibilidad').item.json.telefono }}",
+            "importe": "={{ $('Evaluar elegibilidad').item.json.importe }}",
+            "plantilla": "recordatorio_carrito",
+            "aprobado_por_humano": "si"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-009",
+      "name": "Registrar recordatorio",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1360,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Carritos descartados"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $now.toISO() }}",
+            "carrito_id": "={{ $json.carrito_id }}",
+            "motivo": "={{ $json.motivo_descarte }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-010",
+      "name": "Registrar descartado",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        920,
+        520
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook": {
+    "Cada hora": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Leer carritos pendientes",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Leer carritos pendientes": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "Evaluar elegibilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar elegibilidad": {
+      "main": [
+        [
+          {
+            "node": "¿Elegible?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Elegible?": {
+      "main": [
+        [
+          {
+            "node": "Aprobar recordatorio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar descartado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprobar recordatorio": {
+      "main": [
+        [
+          {
+            "node": "Recordatorio WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recordatorio WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Registrar recordatorio",
             "type": "main",
             "index": 0
           }
@@ -72,26 +351,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "ecommerce",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
-        }
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

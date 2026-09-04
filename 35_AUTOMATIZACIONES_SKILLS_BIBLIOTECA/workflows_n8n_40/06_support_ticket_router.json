@@ -1,66 +1,402 @@
 {
-  "name": "06 Support Ticket Router",
+  "name": "06 · Router de tickets de soporte con confirmación WhatsApp",
   "nodes": [
     {
       "parameters": {
-        "path": "06-support-ticket-router",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 06 · Router de tickets\n\n1. Credenciales: Anthropic API, Google Sheets, Slack Bot y WhatsApp Business Cloud.\n2. Pestañas: \"Tickets\" y \"Tickets incompletos\".\n3. REEMPLAZAR_PHONE_NUMBER_ID: el Phone Number ID de tu número de WhatsApp Business.\n4. La confirmación por WhatsApp SOLO sale si alguien la aprueba en Slack (Approve).",
+        "width": 420,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"06 Support Ticket Router\",\n    category: \"soporte\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "content": "## Ojo con WhatsApp\n\nEl mensaje de texto libre solo llega si el cliente te escribió en las últimas 24 h. Fuera de esa ventana necesitas una plantilla aprobada por Meta (mira el flujo 18).",
+        "width": 380,
+        "height": 200
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo-002",
+      "name": "Nota · Ventana 24h",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wf-06-ticket-nuevo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "nodo-003",
+      "name": "Webhook ticket",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        40,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Los datos del ticket llegan dentro de body.\nconst b = $json.body ?? {};\nreturn [{ json: {\n  ticket_id: String(b.ticket_id ?? 'TK-' + Date.now()),\n  cliente: String(b.cliente ?? '').trim(),\n  telefono: String(b.telefono ?? '').replace(/[^+0-9]/g, ''),\n  email: String(b.email ?? '').trim().toLowerCase(),\n  asunto: String(b.asunto ?? '').trim(),\n  mensaje: String(b.mensaje ?? '').trim(),\n  recibido_en: new Date().toISOString(),\n} }];"
+      },
+      "id": "nodo-004",
+      "name": "Normalizar ticket",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        260,
+        400
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ $json }}"
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo-005",
+      "name": "Responder recepción",
       "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.mensaje }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-2",
+              "leftValue": "={{ $json.telefono }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-006",
+      "name": "¿Ticket completo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-5', max_tokens: 1024, system: \"Eres el triaje de soporte de una empresa SaaS. Responde SOLO con JSON valido con: area (facturacion|tecnico|general), prioridad (alta|media|baja), resumen (frase corta) y respuesta_sugerida (2-3 frases en espanol, tono amable).\", messages: [{ role: 'user', content: 'Clasifica este ticket de soporte: ' + JSON.stringify($json) }] }) }}",
+        "options": {}
+      },
+      "id": "nodo-007",
+      "name": "Clasificar ticket con IA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// La API de Anthropic devuelve una lista de bloques; con el razonamiento\n// activado el primero puede ser de tipo \"thinking\", asi que buscamos el\n// primer bloque de texto en vez de leer content[0] a ciegas.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet ia = {};\ntry {\n  // La IA a veces envuelve el JSON en un bloque de codigo; lo limpiamos.\n  ia = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  ia = { area: 'general', prioridad: 'media', resumen: 'REVISAR: la IA no devolvio JSON', respuesta_sugerida: '' };\n}\nconst original = $('Normalizar ticket').item.json;\nreturn [{ json: { ...original, ...ia, ia_texto_bruto: texto.slice(0, 500) } }];"
+      },
+      "id": "nodo-008",
+      "name": "Interpretar clasificación",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Tickets"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.recibido_en }}",
+            "ticket_id": "={{ $json.ticket_id }}",
+            "cliente": "={{ $json.cliente }}",
+            "telefono": "={{ $json.telefono }}",
+            "area": "={{ $json.area }}",
+            "prioridad": "={{ $json.prioridad }}",
+            "resumen": "={{ $json.resumen }}",
+            "estado": "abierto"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-009",
+      "name": "Registrar ticket",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1360,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_CANAL"
+        },
+        "message": "={{ 'Ticket ' + $json.ticket_id + ' de ' + $json.cliente + ' → area ' + $json.area + ', prioridad ' + $json.prioridad + '.\\nResumen: ' + $json.resumen + '\\n\\nConfirmacion propuesta para WhatsApp:\\n\"' + 'Hola ' + $json.cliente + ', hemos recibido tu consulta (' + $json.ticket_id + '). El equipo de ' + $json.area + ' te respondera en breve.' + '\"\\n\\nAprueba para enviarla al cliente.' }}",
+        "responseType": "approval",
+        "options": {}
+      },
+      "id": "nodo-010",
+      "name": "Aprobar confirmación",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1580,
+        300
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumberId": "REEMPLAZAR_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $('Normalizar ticket').item.json.telefono }}",
+        "textBody": "={{ 'Hola ' + $('Normalizar ticket').item.json.cliente + ', hemos recibido tu consulta (' + $('Normalizar ticket').item.json.ticket_id + '). El equipo de ' + $('Interpretar clasificación').item.json.area + ' te respondera en breve. Gracias por escribirnos.' }}"
+      },
+      "id": "nodo-011",
+      "name": "Confirmar por WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
-      ]
+        1800,
+        300
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REEMPLAZAR",
+          "name": "WhatsApp Business Cloud"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Tickets incompletos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.recibido_en }}",
+            "motivo": "faltan campos obligatorios (mensaje o telefono)",
+            "datos_recibidos": "={{ JSON.stringify($json) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-012",
+      "name": "Registrar incompleto",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        920,
+        520
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook": {
+    "Webhook ticket": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Normalizar ticket",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Normalizar ticket": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "Responder recepción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder recepción": {
+      "main": [
+        [
+          {
+            "node": "¿Ticket completo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Ticket completo?": {
+      "main": [
+        [
+          {
+            "node": "Clasificar ticket con IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar ticket con IA": {
+      "main": [
+        [
+          {
+            "node": "Interpretar clasificación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar clasificación": {
+      "main": [
+        [
+          {
+            "node": "Registrar ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar ticket": {
+      "main": [
+        [
+          {
+            "node": "Aprobar confirmación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprobar confirmación": {
+      "main": [
+        [
+          {
+            "node": "Confirmar por WhatsApp",
             "type": "main",
             "index": 0
           }
@@ -72,27 +408,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "soporte",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "ticket_id": "SUP-4471",
-          "email": "cliente@ejemplo.es",
-          "asunto": "No puedo acceder al panel",
-          "cuerpo": "Desde ayer me sale error 500 al entrar. He probado con dos navegadores.",
-          "prioridad": "alta",
-          "canal": "email"
-        }
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

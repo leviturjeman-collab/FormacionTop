@@ -1,66 +1,258 @@
 {
-  "name": "07 SLA Breach Alert",
+  "name": "07 · Alerta de incumplimiento de SLA por Telegram",
   "nodes": [
     {
       "parameters": {
-        "path": "07-sla-breach-alert",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 07 · Alerta de SLA\n\n1. Credenciales: Telegram Bot (token de @BotFather) y Google Sheets (OAuth2).\n2. Pestaña \"Tickets\" con columnas: ticket_id, asunto, prioridad (alta|media|baja), creado_en (ISO), estado.\n3. Pestaña \"Alertas SLA\" para el histórico de avisos.\n4. REEMPLAZAR_CHAT_ID: tu chat o grupo de Telegram (usa @userinfobot para saberlo).\n5. SLA por defecto: alta 4 h, media 8 h, baja 24 h. Cámbialo en \"Evaluar SLA\".",
+        "width": 440,
+        "height": 280
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"07 SLA Breach Alert\",\n    category: \"soporte\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo-002",
+      "name": "Cada 30 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Tickets"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "estado",
+              "lookupValue": "abierto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "nodo-003",
+      "name": "Leer tickets abiertos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        260,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calcula cuantas horas lleva abierto cada ticket y su limite de SLA.\nconst SLA_HORAS = { alta: 4, media: 8, baja: 24 };\nconst ahora = Date.now();\nconst filas = $input.all().map((i) => i.json);\nconst incumplidos = [];\nfor (const t of filas) {\n  const creado = Date.parse(t.creado_en);\n  if (!Number.isFinite(creado)) continue; // fila sin fecha valida: la ignoramos\n  const horas = (ahora - creado) / 36e5;\n  const limite = SLA_HORAS[String(t.prioridad ?? '').toLowerCase()] ?? 24;\n  if (horas > limite) {\n    incumplidos.push({\n      ticket_id: t.ticket_id,\n      asunto: t.asunto,\n      prioridad: t.prioridad,\n      horas_abierto: Math.round(horas * 10) / 10,\n      limite_horas: limite,\n    });\n  }\n}\nconst lineas = incumplidos\n  .map((t) => '- ' + t.ticket_id + ' (' + t.prioridad + '): ' + t.horas_abierto + ' h abiertas, limite ' + t.limite_horas + ' h. ' + t.asunto)\n  .join('\\n');\nreturn [{ json: {\n  hay_incumplidos: incumplidos.length > 0,\n  total: incumplidos.length,\n  incumplidos,\n  mensaje: 'ALERTA SLA: ' + incumplidos.length + ' ticket(s) fuera de plazo\\n' + lineas + '\\nRevisa el panel de soporte y reasigna. Este aviso no responde al cliente.',\n  evaluado_en: new Date().toISOString(),\n} }];"
+      },
+      "id": "nodo-004",
+      "name": "Evaluar SLA",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        480,
+        400
       ]
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.hay_incumplidos }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
-      "id": "respond",
-      "name": "Respond",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "id": "nodo-005",
+      "name": "¿Hay incumplimientos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "REEMPLAZAR_CHAT_ID",
+        "text": "={{ $json.mensaje }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "nodo-006",
+      "name": "Alertar por Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REEMPLAZAR",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Alertas SLA"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.evaluado_en }}",
+            "total_incumplidos": "={{ $json.total }}",
+            "detalle": "={{ JSON.stringify($json.incumplidos) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-007",
+      "name": "Registrar alerta",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1140,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "nodo-008",
+      "name": "Todo en plazo",
+      "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        920,
+        520
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Cada 30 minutos": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Leer tickets abiertos",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Leer tickets abiertos": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "Evaluar SLA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar SLA": {
+      "main": [
+        [
+          {
+            "node": "¿Hay incumplimientos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay incumplimientos?": {
+      "main": [
+        [
+          {
+            "node": "Alertar por Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Todo en plazo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alertar por Telegram": {
+      "main": [
+        [
+          {
+            "node": "Registrar alerta",
             "type": "main",
             "index": 0
           }
@@ -72,27 +264,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "soporte",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "ticket_id": "SUP-4471",
-          "email": "cliente@ejemplo.es",
-          "asunto": "No puedo acceder al panel",
-          "cuerpo": "Desde ayer me sale error 500 al entrar. He probado con dos navegadores.",
-          "prioridad": "alta",
-          "canal": "email"
-        }
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

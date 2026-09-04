@@ -1,0 +1,316 @@
+{
+  "id": "agente-resumen-semanal",
+  "order": 12,
+  "title": "Weekly Summary Agent",
+  "kicker": "Automation",
+  "platform": "n8n",
+  "platformLabel": "n8n",
+  "level": "intermedio",
+  "what": "An n8n workflow that eliminates the Friday report: at the time you choose, it reads the Google Sheet where your team logs activity (cases, sales, incidents, hours), passes it to Claude to draft an executive summary with figures and points needing attention, and leaves that summary as a Gmail draft addressed to whoever needs to receive it. You open it, review it, correct whatever's needed, and send it. The mechanical part disappears; responsibility for what's stated stays yours.",
+  "forWho": "For whoever builds the same report every week by copying from a spreadsheet: coordinators, operations managers, admin staff. It pays off if the report takes you more than half an hour a week and your data already lives in a sheet.",
+  "tools": ["n8n", "sheets", "claude", "gmail"],
+  "capabilities": [
+    "Triggers automatically every Friday at the configured time, with nobody needing to remember",
+    "Reads the rows from the log sheet and condenses them for analysis (up to 200 recent rows)",
+    "Drafts an executive summary with claude-sonnet-5: what happened, key figures, qualitative comparison, and points to watch",
+    "Leaves the result as a Gmail draft with recipient and subject already set: review and send, two clicks",
+    "States in the email itself how many rows were analyzed, so the reader knows where it comes from"
+  ],
+  "limits": [
+    "Doesn't send the email: it leaves it in drafts. The summary goes out under your name, so you approve it",
+    "Doesn't verify the sheet's data: if the log is wrong, the summary will be well-written and poorly informed",
+    "Doesn't compute complex exact metrics: it drafts from the rows; for dashboards with auditable numbers use a spreadsheet or a BI panel",
+    "Shouldn't receive columns with sensitive personal data: it summarizes activity, not people's personal files"
+  ],
+  "flow": {
+    "name": "Weekly Summary Agent (Sheets → AI → draft)",
+    "nodes": [
+      {
+        "name": "Flow note",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-380, -220],
+        "parameters": {
+          "content": "## Weekly summary with a human brake\nFriday 4:00 PM → read Google Sheets → Claude drafts → Gmail draft.\n\nBefore activating: 1) Google Sheets credential and your sheet's ID, 2) httpHeaderAuth credential with your Anthropic key (x-api-key header), 3) Gmail credential and the recipient's email.\n\nThe email is NEVER sent on its own: it stays in Drafts until you approve it.",
+          "height": 300,
+          "width": 340
+        }
+      },
+      {
+        "name": "Every Friday afternoon",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "weeks",
+                "triggerAtDay": [5],
+                "triggerAtHour": 16
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "Read log sheet",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [220, 0],
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "REPLACE_DOCUMENT_ID",
+            "mode": "id"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "REPLACE_TAB_NAME",
+            "mode": "name"
+          },
+          "options": {}
+        },
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "REPLACE",
+            "name": "Google Sheets (log)"
+          }
+        }
+      },
+      {
+        "name": "Condense rows",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [440, 0],
+        "parameters": {
+          "jsCode": "// Combines all sheet rows into a single text block for the AI.\nconst rows = $input.all().map(function (item) { return item.json; });\n\n// Sensible limit: the 200 most recent rows (adjust to your sheet).\nconst trimmed = rows.slice(-200);\nconst lines = trimmed.map(function (r) { return JSON.stringify(r); }).join('\\n');\n\nconst system = 'You are an operations analyst writing in English, professional but approachable. ' +\n  'Based on the log rows I give you, write the weekly summary for the team: ' +\n  '1) what happened this week in 3-4 sentences; ' +\n  '2) the key figures that can be derived from the rows (totals, breakdowns), citing which column they come from; ' +\n  '3) points to watch: at most 3, only if the data supports them; ' +\n  '4) what to keep an eye on next week. ' +\n  'Never invent data not present in the rows. If something cannot be known from this data, say so. ' +\n  'Format: plain email text, no markdown, maximum 300 words.';\n\nconst payload = {\n  model: 'claude-sonnet-5',\n  max_tokens: 1200,\n  system: system,\n  messages: [ { role: 'user', content: 'Log rows (one per line, as JSON):\\n' + lines } ]\n};\n\nreturn [ { json: { payload: payload, totalRows: rows.length } } ];"
+        }
+      },
+      {
+        "name": "Draft with Claude",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [660, 0],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.payload) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "REPLACE",
+            "name": "Anthropic (x-api-key header)"
+          }
+        }
+      },
+      {
+        "name": "Extract summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [880, 0],
+        "parameters": {
+          "jsCode": "// Collects the drafted text and the number of rows analyzed.\nconst raw = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : 'The AI did not return text. Check the execution in n8n.';\nconst total = $('Condense rows').first().json.totalRows;\n\nreturn [ { json: { summary: raw.trim(), totalRows: total } } ];"
+        }
+      },
+      {
+        "name": "Weekly summary draft",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [1100, 0],
+        "parameters": {
+          "resource": "draft",
+          "subject": "=Weekly summary — {{ $now.format('dd/MM/yyyy') }}",
+          "message": "=Summary generated from {{ $json.totalRows }} rows in the log sheet.\n\n{{ $json.summary }}\n\n---\nAutomatically generated draft. Review and correct it before sending: whatever it states goes out under your name.",
+          "options": {
+            "sendTo": "REPLACE_RECIPIENT_EMAIL"
+          }
+        },
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REPLACE",
+            "name": "Gmail (account sending the summary)"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Every Friday afternoon": {
+        "main": [
+          [
+            {
+              "node": "Read log sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read log sheet": {
+        "main": [
+          [
+            {
+              "node": "Condense rows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Condense rows": {
+        "main": [
+          [
+            {
+              "node": "Draft with Claude",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Draft with Claude": {
+        "main": [
+          [
+            {
+              "node": "Extract summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract summary": {
+        "main": [
+          [
+            {
+              "node": "Weekly summary draft",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "ai-node-prompt.md",
+      "language": "markdown",
+      "content": "# The writer's prompt (\"Condense rows\" node)\n\nThe prompt lives in the `system` constant of that node. Base version:\n\n```\nYou are an operations analyst writing in English, professional but approachable.\nBased on the log rows I give you, write the weekly summary for the team:\n1) what happened this week in 3-4 sentences;\n2) the key figures that can be derived from the rows, citing which column they come from;\n3) points to watch: at most 3, only if the data supports them;\n4) what to keep an eye on next week.\nNever invent data not present in the rows. If something cannot be known from this data, say so.\nFormat: plain email text, no markdown, maximum 300 words.\n```\n\n## How to adapt it\n\n- **Your audience**: if it goes to leadership, ask for \"executive tone, no jargon\"; if it goes to the team, \"friendly tone\".\n- **Your sections**: replace the 4 sections with the ones from your usual report; people like recognizing the structure.\n- **Your definitions**: if \"closed case\" means something specific in your sheet, define it in the prompt so it doesn't interpret it its own way.\n- **The golden rule stays**: \"never invent data\" is not negotiable. A polished summary with invented figures is the worst possible outcome."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Prepare the log sheet",
+      "action": "Make sure your Google Sheet has clear column headers in row 1 (date, type, status, amount...) and one row per event. Copy the document ID (the string between /d/ and /edit in the URL).",
+      "expect": "A sheet with clean headers and its ID copied."
+    },
+    {
+      "title": "Import the workflow",
+      "action": "In n8n: Workflows → Add workflow → ⋯ → Import from file, pasting the JSON from the flow field.",
+      "expect": "6 nodes in a chain plus the yellow note."
+    },
+    {
+      "title": "Connect Google Sheets",
+      "action": "Open \"Read log sheet\", create the Google Sheets OAuth2 credential (sign in and accept permissions), and replace REPLACE_DOCUMENT_ID and the tab name with yours.",
+      "expect": "Running the node alone shows your rows as n8n items.",
+      "stuck": "If it returns empty, the tab name doesn't match exactly (capitalization and spaces count)."
+    },
+    {
+      "title": "Create the Anthropic credential",
+      "action": "Open \"Draft with Claude\" → Credentials → Header Auth with Name: x-api-key and Value: your key from console.anthropic.com.",
+      "expect": "Node with the credential assigned and no keys written into it."
+    },
+    {
+      "title": "Connect Gmail and set the recipient",
+      "action": "Open \"Weekly summary draft\", create the Gmail OAuth2 credential for the account that will sign the summary, and change REPLACE_RECIPIENT_EMAIL to the real address (can be yours to start).",
+      "expect": "Green node with recipient set."
+    },
+    {
+      "title": "Generate a test summary",
+      "action": "Click Test workflow and wait: it will read the sheet, call Claude, and create the draft.",
+      "expect": "A Gmail draft with subject \"Weekly summary — [date]\", the number of rows analyzed, and the summary. Compare two figures from the text against your sheet.",
+      "stuck": "If the summary cites odd columns, rename the sheet headers to human names: the AI reads them literally."
+    },
+    {
+      "title": "Activate and adjust the time",
+      "action": "Set it to Active. If you want a different day or time, edit the \"Every Friday afternoon\" node (day 5 = Friday; the time runs on n8n's server timezone, check it against the first real run).",
+      "expect": "Every Friday the draft appears on its own; you review it and send it."
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal test",
+      "input": "Test workflow with a sheet that has 20-50 real activity rows.",
+      "expect": "A draft with a faithful summary: figures that match the sheet and at most 3 points to watch."
+    },
+    {
+      "name": "Thin sheet",
+      "input": "Run it with a sheet of only 3 rows.",
+      "expect": "The summary doesn't inflate conclusions: it states there's too little data to assess trends."
+    },
+    {
+      "name": "No automatic sending",
+      "input": "After any run, check the Gmail Sent folder.",
+      "expect": "No summaries in it: everything is in Drafts. If something got sent automatically, the Gmail node is no longer set to resource draft: check it."
+    },
+    {
+      "name": "Traceable figure",
+      "input": "Ask someone on the team whether the summary matches their week.",
+      "expect": "The claims in the text can be traced to specific rows in the sheet; if not, adjust the prompt to require citing columns."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Google Sheets (OAuth2)",
+      "where": "Inside n8n, when opening the Sheets node → Create new credential",
+      "how": "Sign in with the account that can see the sheet and accept the permissions. On self-hosted n8n, first create the OAuth project in Google Cloud with the callback n8n specifies.",
+      "cost": "free"
+    },
+    {
+      "name": "Anthropic API",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Key stored in an n8n Header Auth credential (Name: x-api-key). Never inside a node.",
+      "cost": "pay per token; a weekly summary with claude-sonnet-5 costs a few cents"
+    },
+    {
+      "name": "Gmail (OAuth2)",
+      "where": "Inside n8n, when opening the Gmail node",
+      "how": "Session for the account that will sign the summaries, with permissions accepted.",
+      "cost": "free"
+    }
+  ],
+  "risks": [
+    "A convincing summary built on bad data: an outdated sheet produces false reports with good prose. Mitigation: the email states how many rows were analyzed; if the number drops below normal, be suspicious and check the sheet.",
+    "Figures hallucinated by the AI. Mitigation: the prompt forbids inventing data and requires citing columns; your review of the draft is the final control, which is why it never sends itself.",
+    "Personal data from the sheet traveling to the API. Mitigation: log activity with codes or initials, not full personal records.",
+    "Sending without reading because \"it's always fine\". Mitigation: the day you stop reading it, take your name off it; a report nobody reviews shouldn't have anyone's signature on it."
+  ],
+  "examples": [
+    {
+      "name": "Change day and audience",
+      "prompt": "Edit the trigger to Monday 8:00 AM (day 1, hour 8) and change the audience in the prompt to \"leadership, executive tone, maximum 150 words\"."
+    },
+    {
+      "name": "Two sheets, one summary",
+      "prompt": "Duplicate the Sheets node to also read the incidents tab, merge both with a Merge node, and adjust the prompt so it distinguishes the two logs."
+    }
+  ],
+  "kits": ["crm-reporting-institucional"]
+}

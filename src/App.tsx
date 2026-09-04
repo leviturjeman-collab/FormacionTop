@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BookOpen, BookMarked, Boxes, BrainCircuit, Compass, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Lock, LogOut, Menu, Presentation, Puzzle, Search, ShieldCheck, Sparkles, TrendingUp, X } from 'lucide-react'
+import { BookOpen, BookMarked, Bot, Boxes, BrainCircuit, Compass, Globe, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Lock, LogOut, Menu, Presentation, Puzzle, Search, ShieldCheck, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
 import { store, useStudent } from './store'
+import { LOCALES, useLocale } from './i18n'
 import Inicio from './pages/Inicio'
 import MiProyecto from './pages/MiProyecto'
 import Leccion from './pages/Leccion'
@@ -17,10 +18,32 @@ import Deck from './pages/Deck'
 import Prompts from './pages/Prompts'
 import Skills from './pages/Skills'
 import Kits from './pages/Kits'
+import Agentes from './pages/Agentes'
 import Admin from './pages/Admin'
 import Guia from './pages/Guia'
 import { CursoIndice, CursoLeccion } from './pages/Curso'
 import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
+
+function LanguageSwitch() {
+  const locale = useLocale()
+  return (
+    <div className="st-lang-switch" role="group" aria-label="Idioma">
+      <Globe size={12} />
+      {LOCALES.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className={locale === item.id ? 'on' : ''}
+          onClick={() => store.setLocale(item.id)}
+          aria-pressed={locale === item.id}
+          title={item.label}
+        >
+          {item.short}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClose: () => void }) {
   const course = useCourse()
@@ -74,6 +97,8 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         </div>
       </a>
 
+      <LanguageSwitch />
+
       <form
         className="st-side-search"
         onSubmit={(event) => {
@@ -111,6 +136,9 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         </a>
         <a className={is('kits') ? 'active' : ''} href={href({ name: 'kits' })} onClick={onClose}>
           <Boxes size={14} /> Kits institucionales
+        </a>
+        <a className={is('agentes') ? 'active' : ''} href={href({ name: 'agentes' })} onClick={onClose}>
+          <Bot size={14} /> Agentes
         </a>
         {student.adminUnlocked && (
           <a className={is('admin') ? 'active' : ''} href={href({ name: 'admin' })} onClick={onClose}>
@@ -254,6 +282,7 @@ function StudentAccessGate() {
           <span className="st-kicker"><ShieldCheck size={12} /> Academia privada</span>
           <h1>Entra con tu PIN</h1>
           <p>Tu ruta se abre cuando validas el PIN que te ha dado el profesor.</p>
+          <LanguageSwitch />
 
           <form className="st-pin-card" onSubmit={submit} aria-label="Acceso de alumno por PIN">
             <label>
@@ -329,6 +358,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'prompts': return ['Prompts']
       case 'skills': return ['Skills']
       case 'kits': return ['Kits institucionales']
+      case 'agentes': return ['Agentes']
       case 'admin': return ['Súper administrador']
       case 'guia': return ['Guías']
       case 'curso': {
@@ -379,6 +409,7 @@ function Pages({ route }: { route: Route }) {
     case 'prompts': return <Prompts familyId={route.familyId} />
     case 'skills': return <Skills />
     case 'kits': return <Kits />
+    case 'agentes': return <Agentes agentId={route.agentId} />
     case 'admin': return <Admin />
     case 'guia': return <Guia guideId={route.guideId} />
     case 'curso': return route.lessonId ? <CursoLeccion lessonId={route.lessonId} /> : <CursoIndice />
@@ -536,7 +567,8 @@ function Shell() {
 }
 
 function AuthenticatedAcademy() {
-  const { course, error } = useCourseLoader(true)
+  const student = useStudent()
+  const { course, error } = useCourseLoader(true, student.locale || 'es')
 
   if (error) {
     return (

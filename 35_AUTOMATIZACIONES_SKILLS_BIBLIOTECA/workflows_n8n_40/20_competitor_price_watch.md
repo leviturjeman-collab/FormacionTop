@@ -1,353 +1,74 @@
-# 20 Competitor Price Watch
+# 20 · Vigilancia de precios de la competencia por Telegram
 
-## Objetivo
+## Qué hace
 
-Automatizacion n8n para el area **ecommerce**. Esta plantilla es didactica: debe importarse, probarse con payload ficticio y adaptarse antes de produccion.
+Cada día a las 09:00 recorre las URLs de productos de la competencia que tengas en la pestaña "Competidores", descarga cada página, extrae el precio con una expresión regular (formato 1.234,56 €) y lo compara con el precio anterior guardado. Si hay cambio, te avisa por Telegram con la variación en %; si no consigue leer el precio, también te avisa para que ajustes la regex. Todo queda en "Historico precios". El flujo solo vigila: cambiar tus precios es decisión tuya.
 
-## Entrada esperada
+## Antes de empezar
 
-JSON con datos del proceso: usuario, email si aplica, descripcion, prioridad, fuente y consentimiento cuando haya datos personales.
+- Una cuenta de **n8n**: n8n Cloud (de pago, con prueba gratuita) o **self-hosted gratis** (Docker en tu servidor).
+- **Google Sheets/Gmail/Calendar**: gratis con tu cuenta de Google.
+- **Telegram**: el bot es **GRATIS** — se crea en 1 minuto con @BotFather.
+- **Scraping**: sin coste, pero respeta robots.txt y los términos de cada web; algunas tiendas bloquean bots.
 
-## Salida esperada
+## Credenciales paso a paso
 
-JSON enriquecido con estado, categoria, decision, evidencia y siguiente accion.
+### Google Sheets (OAuth2) — gratis con cuenta de Google
+1. En n8n: **Credentials > New > Google Sheets OAuth2 API**.
+2. En n8n Cloud basta con pulsar **Sign in with Google** y autorizar tu cuenta.
+3. En n8n self-hosted, antes crea un proyecto en [console.cloud.google.com](https://console.cloud.google.com), activa la **Google Sheets API**, crea un **OAuth Client ID** (tipo Web) y pega la Redirect URI que te muestra n8n; después copia Client ID y Client Secret en la credencial y haz el Sign in.
+4. Crea una hoja de cálculo nueva, copia el ID que hay en su URL (entre `/d/` y `/edit`) y pégalo en los nodos donde pone `REEMPLAZAR_ID_DOCUMENTO`.
 
-## Caso feliz
+### Telegram Bot — GRATIS
+1. En Telegram abre **@BotFather** → escribe `/newbot` → dale nombre y usuario → copia el **token**.
+2. En n8n: **Credentials > New > Telegram API** → pega el token → guarda como **Telegram Bot**.
+3. Escribe cualquier cosa a tu bot (o añádelo a un grupo) y averigua el chat: abre `https://api.telegram.org/bot<TOKEN>/getUpdates` en el navegador y copia `chat.id`, o pregunta a **@userinfobot**.
+4. Pega ese número donde pone `REEMPLAZAR_CHAT_ID`.
 
-Payload completo, credenciales configuradas y salida validada.
+## Cómo importar
 
-## Caso roto
+1. En n8n ve a **Workflows > ⋯ > Import from File** (o *Import from Clipboard* y pega el contenido del JSON).
+2. Al abrirse el lienzo verás nodos con un triángulo de aviso: son los que salen "en gris" porque les falta credencial. Abre cada uno y selecciona la credencial que creaste en el paso anterior.
+3. Sustituye todos los valores `REEMPLAZAR...` (ID de la hoja, canal, chat, email...).
+   - Pestaña **Competidores** con columnas: competidor, producto, url_producto, precio_anterior (punto decimal, p. ej. 19.90), activo (si|no). Pestaña **Historico precios**.
+4. Ejecuta primero con **Execute Workflow** (modo test) antes de pulsar **Active**.
 
-Campo obligatorio ausente, credencial falsa, API rate limit, dato sensible sin consentimiento o accion que requiere aprobacion humana.
+## Nodo a nodo
 
-## Reparacion
-
-Validar schema, anadir nodo de aprobacion humana, separar secrets, registrar logs y documentar rollback.
-
-## Rubrica
-
-- 1: importa pero no se entiende.
-- 2: funciona con payload feliz.
-- 3: maneja caso roto.
-- 4: incluye logs, permisos y defensa.
-
-<!-- IMPLEMENTACION_DETALLADA_2026_08_18 -->
-
-# Implementacion detallada - 20 Competitor Price Watch
-
-## Para que sirve
-
-Esta automatizacion sirve para convertir un proceso repetible de **proceso** en un flujo observable. No esta pensada como magia ni como sustituto de criterio humano: su funcion es recibir una entrada, validarla, aplicar reglas o asistencia IA cuando tenga sentido, producir una salida estructurada y dejar evidencia de lo ocurrido.
-
-En una empresa o proyecto real, este tipo de workflow ayuda a reducir trabajo manual, estandarizar decisiones, evitar olvidos y detectar casos que requieren revision humana. La clave es no automatizar todo desde el primer dia. Primero se automatiza la parte estable: recibir datos, comprobar formato, clasificar, registrar y responder. Despues se agregan integraciones externas, CRM, emails, Slack, bases de datos o modelos LLM.
-
-## Cuando usarla
-
-Usala cuando el proceso cumpla estas condiciones:
-
-- Ocurre varias veces por semana.
-- Tiene entradas reconocibles.
-- Produce una salida que puede definirse.
-- Tiene errores frecuentes que se pueden detectar.
-- Se puede probar con datos ficticios.
-- No requiere una decision sensible sin revision humana.
-
-No la uses si el proceso cambia cada vez, si depende de informacion privada sin consentimiento, si no hay criterio de exito o si una ejecucion incorrecta puede causar dano financiero, legal o reputacional sin aprobacion.
-
-## Requisitos
-
-- n8n Cloud o n8n self-hosted.
-- Conocer la diferencia entre trigger, node, input, output y execution.
-- Dataset o payload ficticio.
-- Variables de entorno o credenciales separadas.
-- Una cuenta de destino si se conecta con CRM, email, Slack, GitHub u otra API.
-- Checklist de privacidad si aparecen datos personales.
-
-## Implementacion paso a paso en n8n
-
-1. Importar el JSON del workflow desde esta carpeta.
-2. Abrir el workflow en n8n y revisar todos los nodes antes de activarlo.
-3. Configurar credenciales ficticias o de prueba.
-4. Revisar el trigger: webhook, schedule, manual trigger o evento externo.
-5. Abrir cada node y comprobar que entrada espera.
-6. Ejecutar con payload correcto.
-7. Revisar input/output node por node.
-8. Ejecutar con payload roto.
-9. Anadir validaciones antes de cualquier accion externa.
-10. Anadir aprobacion humana si el workflow envia emails, modifica CRM, publica contenido, crea tickets o toca datos sensibles.
-11. Documentar rollback.
-12. Activar solo despues de probar preview/caso ficticio.
-
-## Variables y credenciales
-
-Crear `.env.example` o nota de credenciales con nombres, no valores reales:
-
-```bash
-N8N_WEBHOOK_URL=replace_me
-CRM_API_KEY=replace_me_server_only
-SLACK_BOT_TOKEN=replace_me_server_only
-OPENAI_API_KEY=replace_me_server_only
-DATABASE_URL=replace_me_server_only
-```
-
-Nunca guardar claves reales dentro del JSON exportado. Si el workflow se comparte con alumnos, limpiar credenciales y usar placeholders.
-
-## Caso feliz
-
-El caso feliz debe usar un payload completo. Por ejemplo:
-
-```json
-{"email":"demo@example.com","need":"automatizar seguimiento","source":"formulario","consent":true}
-```
-
-Resultado esperado:
-
-- El workflow se ejecuta sin errores.
-- Cada node recibe y devuelve datos comprensibles.
-- La salida incluye estado, categoria y siguiente accion.
-- No se ejecuta ninguna accion sensible sin control.
-- Queda evidencia en executions/logs.
-
-## Caso ambiguo
-
-Payload ambiguo:
-
-```json
-{"message":"quiero mejorar ventas"}
-```
-
-Resultado profesional esperado: no inventar. El workflow debe marcar `needs_review`, pedir mas datos o enviar a revision humana. Si usa LLM, el prompt debe indicar que no rellene campos desconocidos.
-
-## Caso roto
-
-Ejemplos de ruptura controlada:
-
-- Falta `email`.
-- `consent` es `false`.
-- La API key es invalida.
-- El CRM devuelve `401` o `403`.
-- El proveedor devuelve `429`.
-- El payload cambia de estructura.
-- La tool intenta ejecutar una accion no permitida.
-
-## Reparacion
-
-Documentar:
-
-```markdown
-Sintoma:
-Causa probable:
-Evidencia:
-Cambio realizado:
-Prevencion:
-Rollback:
-```
-
-La reparacion minima suele ser anadir un node de validacion, normalizar campos, capturar errores, limitar retries, pedir aprobacion humana o separar mejor credenciales.
-
-## Produccion
-
-Antes de activar en produccion:
-
-- Probar minimo 10 payloads.
-- Revisar logs.
-- Definir responsable humano.
-- Configurar alertas.
-- Medir coste si usa LLM.
-- Documentar como desactivar el workflow.
-- Guardar version exportada.
-- Escribir fecha de revision.
-
-## Defensa de 3 minutos
-
-El alumno debe explicar: que problema resuelve, que datos entran, que nodes se ejecutan, que salida produce, que fallo provoco, como lo reparo, que permisos usa y que riesgo queda.
-
-<!-- IMPLEMENTACION_AMPLIADA_PROCESO_2026_08_18 -->
-
-## Implementacion operativa ampliada
-
-### 1. Problema que resuelve
-
-**20 Competitor Price Watch** resuelve un problema recurrente: convertir una tarea manual, ambigua o repetitiva en un proceso que pueda ejecutarse con el mismo criterio cada vez. En formacion, esta pieza sirve para que el alumno deje de pensar en "usar IA" como una conversacion suelta y empiece a pensar en sistemas: entrada, validacion, transformacion, salida, evidencia, revision y mejora.
-
-En un contexto real, esta automatizacion puede ahorrar tiempo, reducir errores, acelerar respuesta a clientes o crear una base de conocimiento operativa. Pero su valor depende de que se implemente con limites. Si se conecta a datos reales sin consentimiento, si ejecuta acciones externas sin aprobacion o si no deja logs, la automatizacion no es profesional aunque funcione en demo.
-
-### 2. Donde encaja en un proceso
-
-El flujo recomendado es:
-
-```text
-Entrada -> Validacion -> Normalizacion -> Decision -> Accion -> Registro -> Revision humana si aplica
-```
-
-La entrada puede ser un webhook, CSV, formulario, email, ticket, issue, transcripcion, factura o documento. La validacion comprueba que no falten campos. La normalizacion convierte nombres, fechas, importes o textos a formato estable. La decision puede ser una regla, un LLM o una combinacion. La accion puede ser responder, crear tarea, actualizar CRM, enviar alerta o guardar en base de datos. El registro permite auditar. La revision humana protege acciones sensibles.
-
-### 3. Preparacion antes de implementar
-
-Antes de tocar herramientas, crear una ficha:
-
-```markdown
-Objetivo:
-Usuario:
-Entrada:
-Salida esperada:
-Campos obligatorios:
-Datos sensibles:
-Herramientas:
-Credenciales:
-Caso feliz:
-Caso ambiguo:
-Caso roto:
-Rollback:
-```
-
-Esta ficha evita improvisar. Tambien ayuda a decidir si conviene hacerlo con n8n, script, API, GitHub Actions, backend, skill o proceso manual. La mejor herramienta es la minima que permite repetir, verificar y explicar.
-
-### 4. Implementacion local
-
-Si esta pieza es codigo, implementarla primero localmente con datos ficticios. No conectar APIs reales hasta comprobar formato.
-
-Pasos:
-
-1. Crear carpeta de prueba.
-2. Copiar el archivo o plantilla.
-3. Crear `.env.example`.
-4. Crear un payload ficticio correcto.
-5. Crear un payload roto.
-6. Ejecutar la pieza.
-7. Guardar output.
-8. Anadir manejo de errores.
-9. Documentar que variables necesita.
-10. Preparar una version para clase.
-
-Ejemplo de payload correcto:
-
-```json
-{"id":"demo-001","email":"demo@example.com","need":"automatizar seguimiento","consent":true}
-```
-
-Ejemplo de payload roto:
-
-```json
-{"need":"automatizar seguimiento"}
-```
-
-### 5. Integracion con n8n
-
-Para llevarlo a n8n:
-
-1. Crear Webhook node.
-2. Pegar el payload correcto.
-3. Anadir Code node o HTTP Request node.
-4. Validar campos obligatorios.
-5. Si falta algo, devolver `needs_review`.
-6. Si esta completo, continuar a la accion.
-7. Antes de enviar emails o modificar sistemas, anadir aprobacion humana.
-8. Responder con JSON claro.
-
-Salida recomendada:
-
-```json
-{
-  "status":"processed",
-  "category":"demo",
-  "next_action":"review_or_send",
-  "requires_human_approval":true,
-  "evidence":"execution_id_or_log_url"
-}
-```
-
-### 6. Integracion con API o backend
-
-Si se convierte en endpoint:
-
-- Usar `POST` para entradas que modifican estado.
-- Validar JSON antes de procesar.
-- No aceptar campos desconocidos sin revisar.
-- Registrar `request_id`.
-- Devolver errores legibles.
-- Separar secretos del frontend.
-
-Ejemplo de respuesta de error:
-
-```json
-{"ok":false,"error":"missing_required_field","field":"email","action":"send_to_review"}
-```
-
-### 7. Seguridad y permisos
-
-Checklist minimo:
-
-- No usar datos reales en clase.
-- No guardar API keys en archivos.
-- No publicar `.env`.
-- Usar scopes minimos.
-- Registrar acciones.
-- Anadir aprobacion humana para side effects.
-- Preparar rollback.
-- Rotar claves si se filtran.
-
-Side effects son acciones que cambian el mundo: enviar email, actualizar CRM, cobrar, borrar, publicar, crear tickets, modificar base de datos o contactar usuarios. Esas acciones requieren mas control que una simple clasificacion.
-
-### 8. Pruebas necesarias
-
-Probar minimo:
-
-| Caso | Entrada | Resultado esperado |
+| Nodo | Qué hace | Qué tocar |
 |---|---|---|
-| Feliz | payload completo | `processed` |
-| Ambiguo | datos incompletos | `needs_review` |
-| Roto | formato incorrecto | error controlado |
-| Seguridad | dato sensible | redaccion o bloqueo |
-| Coste | batch grande | limite o aviso |
+| Cada día a las 9 | Disparador diario | La hora o frecuencia |
+| Leer competidores | Lee Competidores filtrando activo = si | El ID del documento |
+| Descargar página | GET a cada url_producto (respuesta como texto, timeout 15 s) | Añade un header User-Agent en Options si te bloquean |
+| Extraer y comparar precio | Busca el primer precio "1.234,56 €" en el HTML y lo compara (corre una vez por producto) | La expresión regular: ajústala al HTML de cada tienda |
+| ¿Precio leído? | Separa lecturas correctas de fallos | Nada |
+| ¿Ha cambiado? | Detecta variaciones de al menos 1 céntimo | El umbral (p. ej. solo avisar si >2%) |
+| Avisar cambio de precio | Telegram con antes/ahora y variación % | REEMPLAZAR_CHAT_ID |
+| Registrar histórico | Fila por producto y día en Historico precios (haya cambio o no) | Nada |
+| Avisar fallo de lectura | Telegram avisando de que la regex no encontró precio | Nada |
 
-Si usa LLM, anadir evals:
+## Pruébalo
 
-```json
-{"input":"lead sin email","expected":"pedir email","fail_if":"inventa email"}
-```
+1. **Normal**
+   Añade una fila con una URL real cuyo precio conozcas y precio_anterior distinto al actual. Ejecuta. Debes ver: aviso de Telegram con la variación y fila en Historico precios. Actualiza precio_anterior con el nuevo valor para la próxima comparación.
+2. **Incompleto**
+   Fila con url_producto que devuelve 404 o sin precio visible en el HTML. Debes ver: aviso "no he podido leer el precio" por Telegram; nada se registra como cambio.
+3. **Duplicado**
+   La misma URL en dos filas → dos comprobaciones y posibles avisos dobles. Mantén una fila por producto.
+4. **Extremo**
+   Una página con varios precios (rebaja + original). Debes ver: coge el PRIMERO que aparece en el HTML, que puede no ser el bueno — afina la regex o usa un selector previo al precio.
 
-### 9. Produccion
+## Errores típicos
 
-Antes de produccion:
+- **Siempre "fallo de lectura"** → la tienda renderiza el precio con JavaScript: el GET trae HTML sin precio. Busca el dato en el JSON embebido de la página o usa la API de la tienda si existe.
+- **403 al descargar** → bloqueo anti-bot: añade User-Agent de navegador en Options > Headers, baja la frecuencia y valora si esa web permite scraping.
+- **Variaciones fantasma** → precio_anterior con coma decimal ("19,90"): usa punto (19.90) en la hoja.
+- **Avisos repetidos del mismo cambio** → no actualizaste precio_anterior tras el aviso; hazlo parte de tu rutina o añade un nodo que lo actualice (appendOrUpdate).
 
-- Revisar logs.
-- Medir coste.
-- Probar 10 casos.
-- Documentar propietario.
-- Preparar alerta.
-- Exportar version.
-- Definir rollback.
-- Crear README de entrega.
+## Coste estimado
 
-Una automatizacion profesional debe poder apagarse sin romper el negocio. Si nadie sabe desactivarla, no esta lista.
+**0 € de APIs**: Telegram, Sheets y las descargas HTTP son gratis; no hay llamada de IA. Solo el coste de n8n. Con 20 competidores diarios ≈ 600 ejecuciones de nodos HTTP al mes: irrelevante para self-host, cuenta ejecuciones en n8n Cloud. Precios orientativos a fecha de redacción: **COMPROBAR EN LA WEB OFICIAL** antes de presupuestar.
 
-### 10. Como explicarlo al alumno
+## Aviso legal
 
-El alumno debe poder responder:
-
-- Que automatiza.
-- Que no automatiza.
-- Que datos necesita.
-- Que herramienta usa.
-- Que riesgo evita.
-- Que fallo provoco.
-- Que evidencia guardo.
-- Que haria en version 2.
-
-La defensa no debe sonar teorica. Debe sonar como alguien que ha ejecutado, roto y reparado el proceso.
-
-### 11. Variantes utiles
-
-Variantes para ampliar:
-
-- Version manual en checklist.
-- Version n8n visual.
-- Version codigo local.
-- Version API.
-- Version con base de datos.
-- Version con LLM.
-- Version con aprobacion humana.
-- Version con observabilidad.
-
-Cada variante debe mantener el mismo criterio: entrada clara, salida verificable y fallo controlado.
+Los precios públicos no son datos personales, pero el scraping puede infringir los términos de uso de la web: revisa robots.txt, no martillees los servidores (1 vez al día basta) y no uses los datos para acuerdos de precios con competidores — la fijación coordinada de precios es ilegal (derecho de competencia).

@@ -1,0 +1,111 @@
+{
+  "id": "documentador-de-proyecto",
+  "order": 4,
+  "title": "Documentador de proyecto",
+  "kicker": "Código y calidad",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "basico",
+  "what": "Un subagente de Claude Code que estudia tu proyecto y escribe (o actualiza) dos documentos: un README.md para personas, con qué es el proyecto y cómo arrancarlo desde cero, y un CLAUDE.md para la propia IA, con las convenciones, comandos y trampas del repo. Todo lo que escribe sale de leer el código real, no de suponer: si no puede verificar un dato, lo marca como pendiente de confirmar en vez de inventarlo.",
+  "forWho": "Para cualquiera con un proyecto que solo entiende su autor. Compensa antes de compartir el repo con alguien, al entregar a un cliente, y en tus propios proyectos: el primer beneficiado de un buen CLAUDE.md es el Claude Code que trabajará contigo mañana.",
+  "tools": ["claude-code", "github"],
+  "capabilities": [
+    "Escribe un README con descripción honesta, requisitos, instalación paso a paso, uso y estructura del proyecto",
+    "Genera un CLAUDE.md con los comandos reales del repo (tests, arranque, build) y las convenciones que detecta en el código",
+    "Verifica los comandos que documenta ejecutándolos o localizándolos en package.json, Makefile o la configuración",
+    "Actualiza documentos existentes respetando lo que ya está bien escrito, en vez de arrasar y reescribir",
+    "Marca con AVISO todo dato que no pudo verificar, para que lo confirmes tú"
+  ],
+  "limits": [
+    "No toca el código: solo crea o edita README.md y CLAUDE.md (y no otros ficheros salvo que se lo pidas)",
+    "No inventa: si no sabe para qué sirve un módulo, pregunta o lo marca como pendiente",
+    "No documenta secretos ni valores de configuración reales: en los ejemplos usa placeholders",
+    "No escribe manuales de usuario final ni documentación de API exhaustiva: eso es otro trabajo, pídelo aparte"
+  ],
+  "files": [
+    {
+      "name": "documentador-de-proyecto.md",
+      "language": "markdown",
+      "content": "---\nname: documentador-de-proyecto\ndescription: Analiza el proyecto y crea o actualiza el README.md (para personas) y el CLAUDE.md (para la IA que trabaje en el repo), verificando cada comando y convención contra el código real. Úsalo al compartir, entregar o retomar un proyecto.\ntools: Read, Grep, Glob, Bash, Write, Edit\n---\n\nEres un escritor técnico que documenta proyectos de software. Solo escribes en README.md y CLAUDE.md; el resto del repositorio es de solo lectura para ti. Escribes en español directo, frases cortas, cero relleno corporativo. La regla de oro: todo lo que afirmas lo has verificado leyendo o ejecutando algo; lo que no, lo marcas con **AVISO: sin verificar**.\n\n## Proceso, en este orden\n\n1. **Explora.** Lista la estructura del proyecto (dos niveles), lee los manifiestos (package.json, pyproject.toml, requirements.txt, Makefile, docker-compose.yml, la configuración de CI) y los tres o cuatro ficheros de código más centrales. Objetivo: poder explicar qué hace el proyecto en dos frases y cómo fluye un caso de uso típico.\n2. **Inventaría los comandos reales.** De los manifiestos saca cómo se instala, cómo se arranca, cómo se testea, cómo se construye. Verifica los que sean baratos y seguros de ejecutar (mostrar versión, listar tests). Nunca ejecutes nada destructivo o que despliegue.\n3. **Detecta las convenciones.** Cómo se nombran ficheros y funciones, dónde viven los tests, cómo se manejan errores y configuración, qué estilo de commits usa el historial reciente (git log --oneline -15).\n4. **Escribe el README.md** con estas secciones y solo estas, saltándote las que no apliquen: qué es (2-3 frases honestas, sin marketing); requisitos previos con versiones; instalación paso a paso desde máquina limpia; configuración (variables de entorno con placeholder y una línea de qué es cada una, nunca valores reales); uso con un ejemplo que funcione; estructura del proyecto (solo las carpetas que importan, una línea cada una); tests; despliegue si existe.\n5. **Escribe el CLAUDE.md** pensando en la IA que trabajará aquí mañana: comandos exactos de arranque, test y build; convenciones que debe imitar; trampas conocidas (ese fichero generado que no se edita a mano, ese test lento, esa carpeta que no se toca); y qué requiere aprobación humana antes de hacerse (migraciones, deploys, tocar la carpeta de pagos). Máximo una página: el CLAUDE.md largo no se lo lee ni la IA.\n6. **Si los documentos ya existen, actualiza en vez de reescribir:** conserva las secciones correctas, corrige las desfasadas comparándolas contra el código, añade las que falten y lista al final qué cambiaste y por qué.\n7. **Cierra con un resumen**: qué ficheros escribiste, qué verificaste ejecutando, y la lista de AVISOS que necesitan confirmación humana.\n\n## Criterios que no negocias\n\n- Cada comando documentado existe en el repo o lo has visto funcionar. Un README con comandos que fallan es peor que ningún README.\n- Cero secretos: si un ejemplo necesita una clave, el valor es SIEMPRE un placeholder tipo TU_CLAVE_AQUI.\n- Honestidad sobre el estado: si el proyecto es un prototipo, el README dice que es un prototipo.\n- Si tras explorar no entiendes qué hace el proyecto, pregunta antes de escribir. No rellenes con vaguedades.\n\n## Formato del resumen final\n\n```\n## Documentación generada\n- README.md — [creado|actualizado]: [qué contiene o qué cambió]\n- CLAUDE.md — [creado|actualizado]: [ídem]\n\n## Verificado ejecutando\n- [comando] → [resultado]\n\n## AVISOS pendientes de confirmar\n- [dato que no pude verificar y qué debería comprobar el humano]\n```"
+    }
+  ],
+  "setup": [
+    {
+      "title": "Crea la carpeta de agentes",
+      "action": "En la raíz del proyecto: mkdir -p .claude/agents",
+      "expect": "Existe .claude/agents."
+    },
+    {
+      "title": "Copia el fichero del agente",
+      "action": "Crea .claude/agents/documentador-de-proyecto.md y pega el contenido completo del fichero de arriba.",
+      "expect": "El fichero empieza por --- y name: documentador-de-proyecto."
+    },
+    {
+      "title": "Reinicia Claude Code",
+      "action": "Reabre Claude Code en la carpeta del proyecto.",
+      "expect": "Con /agents aparece documentador-de-proyecto."
+    },
+    {
+      "title": "Lanza la documentación",
+      "action": "Escribe: «Usa el subagente documentador-de-proyecto para crear el README y el CLAUDE.md de este proyecto».",
+      "expect": "Los dos ficheros creados o actualizados y un resumen con lo verificado y los avisos pendientes.",
+      "stuck": "Si te pregunta qué hace el proyecto, contéstale en dos frases: es la señal de que prefiere preguntar a inventar, que es lo que quieres."
+    },
+    {
+      "title": "Repasa los AVISOS",
+      "action": "Busca «AVISO» en los dos ficheros generados y confirma o corrige cada uno. Luego prueba la instalación del README en una carpeta limpia si puedes.",
+      "expect": "Cero avisos sin resolver y un README cuya instalación funciona de verdad."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "Lánzalo sobre un proyecto con package.json y scripts definidos.",
+      "expect": "El README documenta los scripts reales (no genéricos) y el CLAUDE.md lista los comandos exactos de test y arranque."
+    },
+    {
+      "name": "Proyecto con .env",
+      "input": "Lánzalo sobre un proyecto que usa variables de entorno con valores reales en .env.",
+      "expect": "Documenta los nombres de las variables con placeholders y ninguna clave real acaba en el README."
+    },
+    {
+      "name": "README existente",
+      "input": "Lánzalo sobre un proyecto con un README correcto pero con la sección de instalación desfasada.",
+      "expect": "Conserva lo que estaba bien, corrige la instalación y lista el cambio en el resumen."
+    },
+    {
+      "name": "Proyecto incomprensible",
+      "input": "Lánzalo sobre un repo casi vacío o sin estructura clara.",
+      "expect": "Pregunta qué hace el proyecto en vez de escribir generalidades."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Suscripción o API de Anthropic para Claude Code",
+      "where": "claude.ai (plan Pro/Max) o console.anthropic.com → API Keys",
+      "how": "Sesión de claude.ai o clave en ANTHROPIC_API_KEY del entorno.",
+      "cost": "Incluido en el plan; por API, céntimos por proyecto documentado"
+    }
+  ],
+  "risks": [
+    "Documentación que suena bien pero miente en un detalle. Mitigación: el prompt obliga a verificar y a marcar avisos; tu parte es probar la instalación en limpio una vez.",
+    "Filtrar información interna al compartir el README (nombres de servidores, rutas internas). Mitigación: repásalo antes de hacer público el repo, igual que harías con el código.",
+    "CLAUDE.md desfasado que despista a la IA meses después. Mitigación: relanza el agente tras cambios grandes; actualizar es barato.",
+    "Sobrescribir notas personales que tenías en el README. Mitigación: el prompt exige actualizar conservando; aun así, haz commit antes de lanzarlo para poder comparar el diff."
+  ],
+  "examples": [
+    {
+      "name": "Documentar desde cero",
+      "prompt": "Usa el subagente documentador-de-proyecto para crear el README.md y el CLAUDE.md de este proyecto."
+    },
+    {
+      "name": "Poner al día",
+      "prompt": "Usa el subagente documentador-de-proyecto para actualizar el README: hemos cambiado la instalación y añadido docker."
+    },
+    {
+      "name": "Solo el CLAUDE.md",
+      "prompt": "Usa el subagente documentador-de-proyecto para escribir únicamente el CLAUDE.md, con los comandos y las convenciones del repo."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion", "campus-onboarding-ia"]
+}

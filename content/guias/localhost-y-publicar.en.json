@@ -1,0 +1,183 @@
+{
+  "id": "localhost-y-publicar",
+  "order": 5,
+  "title": "What localhost is, what publishing is, and how it all works",
+  "kicker": "Fundamentals",
+  "intro": "You're going to understand, once and for all, what happens between the moment you ask the AI for something and the moment your website is live on the internet with an address you can send over WhatsApp. There are three separate places involved (your computer, GitHub, and Vercel), and until you see how they fit together, it all looks like black magic. By the end you'll know where your project stands at any given moment, how to move it from one place to another without typing a single command, and what to do when publishing fails.",
+  "minutes": 30,
+  "theory": [
+    {
+      "title": "Localhost: your project alive, but only for you",
+      "text": "When the AI builds your website, the files stay in a folder on your computer. There, they're not really anything yet: they're saved text. To see it working you need a program that reads those files and serves them as if they were a real website; that program is called a server, and the AI starts it for you. While it's running, your browser can open a strange-looking address like http://localhost:3000 and there's your site, working. Localhost literally means 'this computer': that address only exists inside your machine. If you send it to your sister, she gets an error, because on her computer that same address points to her computer. And the moment you shut down your machine or close the server, it stops working.",
+      "analogy": "It's like cooking in your own home. The dish exists, it smells great, and you can eat it, but it's in your kitchen. No one walking down the street can come in and try it."
+    },
+    {
+      "title": "The GitHub repository: the good copy, and one with memory",
+      "text": "A repository (repo, for short) is your project's folder saved on the internet, on the website github.com. Two things set it apart from just dropping it in Drive. First: it keeps the complete history, because every time you upload changes, a snapshot of the entire project at that moment is saved, with the date and a note about what you touched. Each of those snapshots is called a commit. Second: you can go back to any of those snapshots whenever you want. That makes GitHub your safety net. If tomorrow the AI wrecks half your site trying to fix a button, you haven't lost anything: you go back to yesterday's version. For what you're going to do it costs $0 and doesn't ask for a card.",
+      "analogy": "A photo album of your project where every photo shows the whole thing, not just the part that changed. You can point at any photo and say: I want to go back to being like this."
+    },
+    {
+      "title": "Vercel: the one who puts it on the internet",
+      "text": "Vercel is a company whose job is taking the code from a GitHub repository and turning it into a public website with its own address, something like your-project.vercel.app. You give it permission once to look at your repository, and from then on it keeps watching it: every time you upload something new to GitHub, Vercel finds out on its own, grabs the new version, and publishes it. You don't have to tell it anything. The free plan, called Hobby, costs $0 and comfortably handles a personal project or a small business's website; the paid one runs about $20 a month and you won't need it at the start.",
+      "analogy": "A storefront on the main street connected by a conveyor belt to your warehouse. You leave the new product in the warehouse and it shows up in the storefront on its own."
+    },
+    {
+      "title": "Three addresses, and never mix them up",
+      "text": "Your project is going to live in three places at once, and each has its own address. http://localhost:3000 is your computer: only you, it shuts off when you shut down. github.com/your-username/your-project is the storage room with the history: it's not a website people can use, it's the saved code. your-project.vercel.app is the real website, the one anyone from anywhere can see. When something doesn't add up, the first question is always the same: which of the three addresses am I looking at? Half the scares come from looking at the public site expecting to see a change you only made on your own computer.",
+      "analogy": "The workshop, the archive, and the store. The same chair can be in all three, but in different versions."
+    },
+    {
+      "title": "The cycle: the four steps you're going to repeat a thousand times",
+      "text": "One: you ask the AI for the change and it touches the files on your computer. Two: you look at it on localhost, in your browser, and check whether you like it and whether it works; here you can break whatever you want, no one sees it. Three: when it's good, it gets uploaded to GitHub, which saves that new snapshot. Four: Vercel detects it on its own and publishes the new version at the public address, usually in under two minutes. What matters is the order, and you never skip from step one straight to four. Localhost is where you get to make mistakes for free; the public address is where you make mistakes in front of people.",
+      "analogy": "Cooking, tasting the sauce with a spoon, and only then bringing the dish out to the dining room. No one with any sense brings out the dish without tasting it first."
+    },
+    {
+      "title": "What a deployment is, and why the first one almost always fails",
+      "text": "A deployment is one specific attempt to publish a specific version. Vercel takes your code, assembles it (that phase is called the build), and if everything fits, it switches it on. If something doesn't fit, that deployment is marked red and nothing bad happens: the version already published stays up and people keep seeing it. The first one almost always fails for two reasons. One, your computer is forgiving and the server isn't: it lets slide errors that aren't forgiven there. And two, the passwords and keys the project needs are stored in a file on your computer that's deliberately excluded from GitHub, so Vercel doesn't have them and you have to hand them over yourself. It's not that you did something wrong. It's the normal toll of the first time.",
+      "analogy": "Assembling furniture with the instructions in hand: the first time there's always one leftover screw. It doesn't mean the furniture is badly designed."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Start your project and open it on localhost",
+      "where": "In the AI app you're working with (Claude, ChatGPT, or Gemini) and then in your browser",
+      "action": "With your project open in the conversation, ask the AI to start it up. It'll reply with an address starting with http://localhost and ending in a colon and a number, almost always 3000 or 5173. Copy it and paste it into your browser's address bar. Leave the conversation open in the meantime: if you close it, the server stops and the address stops working.",
+      "prompt": "Start the project locally and tell me the exact address I need to open in the browser. If something needs installing first, install it yourself and let me know when it's ready to view.",
+      "expect": "Your browser shows your site, not an error page, and at the top it shows something like http://localhost:3000.",
+      "stuck": "If the browser says it can't connect, go back to the AI and paste it that message along with the address you tried. The most common cause is that the server closed, or that it's running on a different number."
+    },
+    {
+      "title": "Confirm with your phone that localhost is yours alone",
+      "where": "On your phone, with wifi turned off",
+      "action": "Take your phone, turn off wifi so it uses mobile data, and type in the browser the same address from before, in full with http:// in front. Nothing bad will happen: it's a check so you can see with your own eyes what 'only on your computer' really means.",
+      "expect": "Your phone shows an error like 'can't reach this site'. That's exactly correct: it confirms your project isn't on the internet yet.",
+      "stuck": "If something does load, check the address bar: the phone probably ran a Google search instead of opening the address. Type it in full, with http:// in front."
+    },
+    {
+      "title": "Create your GitHub account",
+      "where": "On the github.com website, from your computer's browser",
+      "action": "Go to github.com and click 'Sign up' in the top right. It'll ask for an email, a password, and a username. Choose your username carefully, because it's going to show up in the address of all your projects and changing it later is a hassle. Confirm the email you receive afterward. It costs $0 and doesn't ask for a card.",
+      "expect": "You're in on github.com and see your dashboard with your photo and username in the top right.",
+      "stuck": "If it asks you to solve a puzzle or verify you're human, do it yourself: that's not something you can hand off to the AI."
+    },
+    {
+      "title": "Upload your project to a new repository",
+      "where": "In the AI app",
+      "action": "It's easiest to let the AI do it: it has the files in front of it and knows what needs to be left out. First decide one thing: private (only you see it) or public (everyone sees it). Always start private. A public repository shows your entire code to anyone, and if any file contains a password or a payment key, it stays saved in the history even after you delete it later. That doesn't undo cleanly.",
+      "prompt": "Upload this project to a new GitHub repository named [your-project-name], set to PRIVATE. Before uploading anything, make sure neither the node_modules folder nor any file with keys or passwords (.env or similar) gets uploaded: add them to the .gitignore. When you're done, give me the repository link.",
+      "expect": "The AI gives you a link like github.com/your-username/your-project. You open it in your browser and see your files listed there.",
+      "stuck": "If it can't upload due to permissions, it'll ask you to connect your GitHub account: do that yourself from the window that opens and authorize with your username. Never type your password inside the chat."
+    },
+    {
+      "title": "Look at the history and understand what a commit is",
+      "where": "On the GitHub website, on your repository's page",
+      "action": "Above the file list, on the right, there's a clock icon with a number next to it and the word 'Commits'. Click there. You'll see the list of saved snapshots of your project, each with its note and its time. Open one: what shows in red is what got removed and what's green is what got added.",
+      "expect": "You see at least one line with a description, your username, and a time, and opening it shows the detail in green and red.",
+      "stuck": "If there's only one commit and it says 'Initial commit', that's perfect: it's the first snapshot, the whole project at once."
+    },
+    {
+      "title": "Create your Vercel account by signing in with GitHub",
+      "where": "On the vercel.com website",
+      "action": "Go to vercel.com and click 'Sign Up'. Among the options, choose 'Continue with GitHub'. That way you don't have to invent another password, and Vercel is connected to your repositories from minute one. It'll ask for permission to view them: you can grant it only for the project you want to publish ('Only select repositories') rather than for all of them. When it asks about the plan, choose Hobby, the free one: $0, no card.",
+      "expect": "You land on an empty Vercel dashboard offering to import a project.",
+      "stuck": "If it pushes you toward the Pro plan (about $20 a month), look below for the 'Hobby' or 'Personal' option. For what you're going to do, it's more than enough."
+    },
+    {
+      "title": "Import the repository and launch the first deployment",
+      "where": "In the Vercel dashboard",
+      "action": "Click 'Add New...' then 'Project'. You'll see the list of your GitHub repositories; find yours and click 'Import'. On the next screen don't touch any of the settings: click 'Deploy' directly. You'll see a screen with text scrolling by, which is the build happening live. It takes one to three minutes.",
+      "expect": "Either confetti and a thumbnail of your site with a 'Visit' button, or a red banner saying 'Build Failed'. Both are valid outcomes for this task; the next task handles the red one.",
+      "stuck": "If your repository doesn't show up in the list, click 'Adjust GitHub App Permissions' and grant access to that specific repository."
+    },
+    {
+      "title": "Fix the first failed deployment",
+      "where": "In Vercel and then in the AI app",
+      "action": "If it came out red, open the deployment and expand 'Build Logs'. Scroll down to the first red line and select from there about twenty or thirty lines. Copy them and paste them to the AI with the text below. Don't try to understand it yourself: that text is written for machines, not people.",
+      "prompt": "The deployment on Vercel has failed. Here's the tail end of the build log:\n\n[paste the text you copied here]\n\nTell me in one sentence what happened, fix the problem in the project, and push the fix to GitHub. If the failure is because a key or environment variable is missing, tell me exactly what name I need to create in Vercel and where to get the value from, but don't ask me to paste the key here in the chat.",
+      "expect": "The AI changes something and uploads it, and shortly after, Vercel shows just one new deployment that finishes green with the word 'Ready'.",
+      "stuck": "If it fails because of an environment variable, go into Vercel's 'Settings' then 'Environment Variables', add the name and value yourself by hand, and then click 'Redeploy' on the latest deployment."
+    },
+    {
+      "title": "Open your public address from your phone",
+      "where": "In the Vercel dashboard and on your phone without wifi",
+      "action": "On the project's page, at the top, is the domain you were given: something like your-project.vercel.app. Click it to see it on your computer and then send yourself that address to your phone and open it with wifi off. Warning: this is real internet now. Anyone with the link can see it, and over time Google may end up finding it.",
+      "expect": "Your site opens on your phone without wifi. It's the same thing you were seeing on localhost, but now reachable from anywhere in the world.",
+      "stuck": "If a Vercel screen asking to log in shows up, the project is protected: go into 'Settings', then 'Deployment Protection', and turn off 'Vercel Authentication'."
+    },
+    {
+      "title": "Run through the whole cycle with a small change",
+      "where": "In the AI app, in your browser, and in Vercel",
+      "action": "Ask for a small, clearly visible change, for example the big headline on the homepage. Look at it first on localhost by refreshing the page. Only once you like it, tell it to push it to GitHub. Then go to the Vercel dashboard and just watch, without touching anything.",
+      "prompt": "Change the big headline on the homepage to '[the text you want]'. Don't upload anything yet: I want to see it first on localhost. When I tell you it's good, then push it to GitHub.",
+      "expect": "First you see the new title on localhost. A moment later, without you doing anything, a new deployment shows up in Vercel, and once it says 'Ready', the new title is also on your public address.",
+      "stuck": "If nothing changes on localhost, refresh with Ctrl+F5 (Cmd+Shift+R on Mac) so the browser forgets the version it had cached."
+    },
+    {
+      "title": "Roll back to a previous version in thirty seconds",
+      "where": "In the Vercel dashboard, 'Deployments' tab",
+      "action": "Go into 'Deployments' and you'll see the whole list with their times. Find an earlier one that was working well, click the three dots on the right, and choose 'Promote to Production' (on some accounts it shows as 'Instant Rollback'). This is the emergency button for the day you publish something broken in front of a client.",
+      "expect": "In under a minute your public address shows the old version, and in the list the 'Current' label has moved to that deployment.",
+      "stuck": "To put it back the way it was, promote the most recent deployment again. This doesn't touch anything in GitHub: your code stays the same, all you change is which version is being shown."
+    },
+    {
+      "title": "Write your cheat sheet of the three addresses",
+      "where": "In a note on your phone or on paper",
+      "action": "Write down your project's three addresses, one under the other: the localhost one, the GitHub repository one, and the public Vercel one. Next to each, write in your own words who can see it. Keep it handy for the first few weeks.",
+      "expect": "You have three lines written down and, looking at them, you can say without thinking which of the three you're on when something doesn't show up.",
+      "stuck": "If you can't explain one of them in your own words, go back to the theory section 'Three addresses, and never mix them up'."
+    }
+  ],
+  "canDo": [
+    "See your project working on your own computer before anyone else sees it, and break it consequence-free",
+    "Have a free public web address you can send over WhatsApp to whoever you want",
+    "Go back to any previous version of the project without having lost anything along the way",
+    "Publish a new change in a couple of minutes without typing a single command",
+    "Know why a publish failed and hand it to the AI pre-chewed so it can fix it"
+  ],
+  "cantDo": [
+    "You won't understand error logs on your own, and you don't need to either: they get copied and pasted",
+    "Free Vercel doesn't give you a domain of your own like yourcompany.com; that's bought separately, between $10 and $15 a year, and then connected",
+    "Vercel's free plan is meant for personal projects: if this turns into a business with real traffic, you'll end up paying around $20 a month",
+    "GitHub doesn't save what you never uploaded: if a file was excluded, it's not safe anywhere",
+    "Deleting a repository on GitHub is irreversible, history included, and there's no trash bin to rescue it from",
+    "Localhost isn't good for showing anything to a client: with your computer off, there's absolutely nothing there"
+  ],
+  "words": [
+    [
+      "Localhost",
+      "The address that points to your own computer. Whatever you open there, only you can see."
+    ],
+    [
+      "Server",
+      "The program that takes the project's files and serves them as if they were a website. Without it, your project is just idle files."
+    ],
+    [
+      "Repository (repo)",
+      "Your project's folder saved on GitHub, with its full history behind it."
+    ],
+    [
+      "Commit",
+      "A saved snapshot of the entire project at a specific moment, with a note of what you changed."
+    ],
+    [
+      "Deployment",
+      "An attempt to publish a specific version. Shows green if it worked and red if it didn't."
+    ],
+    [
+      "Build",
+      "The phase where your code gets prepared to run on the internet. It's where most publish attempts break."
+    ],
+    [
+      "Environment variable",
+      "A key or password the project needs that's stored separately from the code, so it doesn't end up published by accident."
+    ],
+    [
+      "Production",
+      "The version that's at the public address, the one people see. The opposite of localhost."
+    ],
+    [
+      "Domain",
+      "Your website's address. Vercel gives you one ending in .vercel.app for free; your own is bought for about $10-15 a year."
+    ]
+  ]
+}

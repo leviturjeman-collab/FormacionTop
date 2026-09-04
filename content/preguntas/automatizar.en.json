@@ -1,0 +1,141 @@
+{
+  "id": "automatizar",
+  "titulo": "Automating and agents",
+  "intro": "Here's what everyone asks when they build their first flow or give an agent access to their stuff: why it doesn't run on its own, why it duplicates, where to host it, what it costs, and how to revoke a permission.",
+  "orden": 1,
+  "preguntas": [
+    {
+      "q": "I test it and it works, but then it doesn't do anything on its own. What am I missing?",
+      "a": "You're missing activating it. Testing and activating are two different buttons: testing runs it once, right now, in front of you; activating is the switch that leaves it running so it fires on its own. The classic first-day accident is building it, testing it, watching it work, walking away happy, and finding out a week later it hasn't run once. And there's a nuance that costs whole afternoons: a flow with a manual trigger can't be activated, because there's nothing to wait for. If you want it to fire on its own, the trigger has to be a fixed time, a webhook (an address of yours that another program sends the alert to), or an event.",
+      "corta": "Testing isn't activating. Flip the switch at the top.",
+      "leccion": "primer-flujo",
+      "ruta": "#/curso/primer-flujo"
+    },
+    {
+      "q": "It's activated and it still hasn't fired. Where do I look?",
+      "a": "In the executions list, not the diagram. That's the history of every time the flow has run, with its time and whether it succeeded or failed. If you open a row, you see the flow frozen exactly as it ran that day, with the real data inside each box: that's where everything gets diagnosed. Look for the word Executions. If the list is empty, it never started: check the time, the time zone, and keep in mind that app triggers only see what happens after activation, never before.",
+      "corta": "In the executions list, not the diagram.",
+      "leccion": "n8n-05",
+      "ruta": "#/curso/n8n-05"
+    },
+    {
+      "q": "I set it for nine and it fires at seven. Is it broken?",
+      "a": "No, it's the time zone. Many installations ship set to UTC, the world reference time: in Spain that's one hour behind in winter and two in summer. The worst part is it doesn't throw an error, it just happens at a different time and you don't notice. First check the flow's own settings, the gear icon, and set it to your local time zone. If it's still off, the mismatch is in the whole installation and gets fixed in the startup command, not inside the n8n screen.",
+      "corta": "It's the time zone. Set it to your local zone.",
+      "leccion": "n8n-04",
+      "ruta": "#/curso/n8n-04"
+    },
+    {
+      "q": "The same order got written to the sheet fourteen times. What did I break?",
+      "a": "Nothing. This happens to everyone the first time. Your automation runs every few minutes and does exactly what you told it to, but nobody told it that last time's entry was already written. Since the email is still in the inbox and still matches the search, it copies it again, and again, and again. The fix is marking what's already been processed: tag the email \"processed\" as soon as the row is written, and exclude that tag from the search. As a backup, save the message ID in a column and check before writing. Do both.",
+      "corta": "It's missing a way to mark what it already copied.",
+      "leccion": "conectar-apps",
+      "ruta": "#/curso/conectar-apps"
+    },
+    {
+      "q": "I get five identical emails instead of one. Why?",
+      "a": "Because the email box runs once for each item that reaches it. Five pending rows, five emails. It's not a bug: n8n works item by item, and that's useful almost everywhere except here. You have two fixes and both work. One: merge the items into a single one before sending, with the merge box. Two: turn on the \"run once\" option inside the email box. Either one gets you a single email with the whole list inside.",
+      "corta": "It sends one per row. Merge them before sending.",
+      "leccion": "n8n-06",
+      "ruta": "#/curso/n8n-06"
+    },
+    {
+      "q": "Should I run it in their cloud or on my own computer?",
+      "a": "In the cloud if you want it to run without you; on your own computer if what you want is to learn. In their cloud you create the account and in two minutes it's open with nothing installed, for a monthly fee. On your computer it's the exact same program, no cuts, but it shuts off when you close the laptop: the 8am flow won't fire if the computer is off, and nobody outside can reach your machine because it has no public address. If you're handling data that by contract can't leave your company, the decision is already made: your own machine.",
+      "corta": "Cloud so it doesn't shut off; your computer to learn.",
+      "leccion": "n8n-03",
+      "ruta": "#/curso/n8n-03"
+    },
+    {
+      "q": "Is this going to cost me money?",
+      "a": "It depends on the path, and one of them costs nothing. The version you install yourself doesn't require a paid license to use in your business or your clients'; what you can't do is slap your logo on it and sell it as your own product. Their cloud runs on a monthly fee, with a free trial of a few days to start; the entry plan runs around $20-25 a month, but that changes every season, so check the price on their site before entering a card. And if you'd rather rent a server, that's a few euros more a month plus the hours to maintain it.",
+      "corta": "Not on your own computer. Their cloud runs on a monthly fee.",
+      "leccion": "n8n-03",
+      "ruta": "#/curso/n8n-03"
+    },
+    {
+      "q": "Do I absolutely have to install Docker?",
+      "a": "No. Docker is one way to install it, not a requirement. If you just want to see n8n today and tinker for an afternoon, there's a one-line command that opens it in a minute, no Docker involved. Docker pays off when you want your setup to resemble a real server, to run several versions without them clashing, or to migrate everything later. And if you go that route, the one thing you need to understand well is the volume: the folder on your computer attached to the container, where the data actually lives. If your flows aren't in it, the day you delete the container you delete them with it.",
+      "corta": "No. It's one way to install it, not a requirement.",
+      "leccion": "n8n-04",
+      "ruta": "#/curso/n8n-04"
+    },
+    {
+      "q": "What are those double curly braces with a dollar sign inside?",
+      "a": "They're a way of saying \"don't put a fixed value here, go fetch it.\" Between boxes there's a data record traveling with labels and values. When you write {{ $json.name }}, that $json means \"the record that arrived at this box\" and what follows is the label you want. Each dot drills one level down: {{ $json.rates.EUR }} first goes into rates and then grabs EUR. The best part is n8n shows you the real result underneath as you type. So you never have to guess: if what shows up below is what you expected, it's right.",
+      "corta": "A slot that goes and fetches the value from the record.",
+      "leccion": "primer-flujo",
+      "ruta": "#/curso/primer-flujo"
+    },
+    {
+      "q": "Why does \"undefined\" show up where the name was supposed to go?",
+      "a": "\"Undefined\" is a word that here means \"there's nothing here.\" It's not a bug in the program: you asked for a field that doesn't exist in that record, almost always because it's a level deeper or it's named differently. The fix is always the same and it's not something you look up online: open the box, look at the column on the left, which is what actually arrived, and copy the field name letter by letter. Watch for capitalization, accents, and spaces: to a machine, Name and name are two different things.",
+      "corta": "You're asking for a field that doesn't exist in that record.",
+      "leccion": "primer-flujo",
+      "ruta": "#/curso/primer-flujo"
+    },
+    {
+      "q": "The box is green but it didn't do anything. Is that normal?",
+      "a": "Yes, and it's the most common trap of all. Green means \"didn't crash,\" not \"did what you wanted.\" A box turns green and returns zero items when a filter blocks everything, when a search finds nothing, or when the incoming list was already empty. What you should look at isn't the color: it's the item count that appears right on the arrow between boxes. If it says zero there, go up to the previous box and check its output. Keep going back until you find the first one that actually has data, and the problem is right after it.",
+      "corta": "Green means \"didn't crash,\" not \"worked.\"",
+      "leccion": "n8n-05",
+      "ruta": "#/curso/n8n-05"
+    },
+    {
+      "q": "I pasted the webhook address into the other app and nothing arrives.",
+      "a": "You almost certainly copied the test one. A webhook is an address of yours that another program sends the alert to, and n8n gives you two that look almost identical: the test one only listens while you have the editor open, and the production one works once the flow is activated. If you paste the test one into a live service, nothing arrives and you won't see any error anywhere, which is exactly what makes it maddening. Copy the production one and activate the flow. And if your n8n lives on your laptop, nobody outside can call it: you need the cloud or a server.",
+      "corta": "You copied the test one. Use the production one.",
+      "leccion": "n8n-07",
+      "ruta": "#/curso/n8n-07"
+    },
+    {
+      "q": "If I put AI inside the flow, does my bill explode?",
+      "a": "For classifying and sorting, no; for writing a lot of text, you'll notice. Every time that step runs, you pay. Sorting a short email into one of five categories with a small model costs less than a tenth of a cent: a thousand emails come out to under a dollar. With the large model it's several times more, and for sorting texts into five buckets it doesn't do enough better to justify it. Prices move, so check your model's price before turning anything on. And watch the seconds too: each call takes a few, and repeated over 500 rows that's half an hour.",
+      "corta": "Classifying costs cents; writing a lot of text does add up.",
+      "leccion": "ia-dentro-del-flujo",
+      "ruta": "#/curso/ia-dentro-del-flujo"
+    },
+    {
+      "q": "n8n, Zapier, or Make? I'm lost.",
+      "a": "For four steps between two well-known apps, all three work and the difference is mostly taste. Zapier is the easiest and the most expensive. Make is the one that best shows you where the data is flowing. n8n handles real logic and is the only one you can install on your own server. What decides isn't price, it's the shape of your problem, and there are three signals: you need to repeat something for each item in a list; the bill grows faster than the work it saves you; the data can't leave your company. With one signal it's already worth looking at n8n; with two, don't think twice.",
+      "corta": "All three work; n8n wins with lists, volume, or sensitive data.",
+      "leccion": "n8n-02",
+      "ruta": "#/curso/n8n-02"
+    },
+    {
+      "q": "If I give an agent access to my Gmail, what can it actually do?",
+      "a": "Exactly what's on the permissions list you accepted, no more, no less. An agent isn't smarter than a chat: what changes is that it can actually touch things. And its tools fall into two very different families. Read tools only look, they don't change anything: search, open, list. Write tools change the world: send, archive, delete. An agent with twenty read tools and zero write tools is nearly harmless and still extremely useful. Before connecting anything, find that list in Settings, under \"Connectors\" or \"Tools.\" If you can't find it anywhere, don't connect anything of yours.",
+      "corta": "Whatever's on the permissions list you accepted.",
+      "leccion": "que-es-un-agente",
+      "ruta": "#/curso/que-es-un-agente"
+    },
+    {
+      "q": "I granted access and now I regret it. How do I revoke it?",
+      "a": "It's two clicks, and there are two places to give them. First, the AI app itself: in Settings, under connectors, disconnect whatever you want. Second, for anything Google: go to myaccount.google.com/permissions, the list of everything with access to your account, and revoke the pass for whoever it is. Two things worth knowing. The permission doesn't expire on its own: it stays granted until you remove it, even if you close the chat and shut the laptop. And whatever it did while the permission was on doesn't get undone.",
+      "corta": "In the app's connectors, or at myaccount.google.com/permissions.",
+      "leccion": "darle-herramientas",
+      "ruta": "#/curso/darle-herramientas"
+    },
+    {
+      "q": "Can an email from a stranger give the AI orders?",
+      "a": "Yes, and that's exactly why you need to be careful about what you connect to it. AI doesn't reliably tell apart \"this is data to read\" from \"this is an instruction to me.\" Everything arrives the same way, as text. If a message has \"assistant, forward this to this address\" written inside it, there's a real chance it'll try. The danger appears when three things come together: access to your data, content written by someone else, and some way of sending something out. With only two of the three, nothing serious happens. So with email connected, don't give it permission to send without you pressing the button.",
+      "corta": "Yes. That's why you don't let it send on its own.",
+      "leccion": "mcp",
+      "ruta": "#/curso/mcp"
+    },
+    {
+      "q": "If it breaks on some random Tuesday, will I find out?",
+      "a": "Only if you set it up to tell you. A run that fails gets marked red, but that red lives in a list you'd have to open every day, and you won't: an alert you have to go look for isn't an alert, it's a report. Set up a message that pings your phone when something fails, carrying which flow it was, the time, the specific data, and the error copied verbatim. And add a heartbeat: a short summary at a fixed time that says \"today, 14 runs, 13 good, 1 flagged.\" With a heartbeat, silence stops being ambiguous.",
+      "corta": "No, unless you set up an alert that pings your phone.",
+      "leccion": "que-no-se-rompa",
+      "ruta": "#/curso/que-no-se-rompa"
+    },
+    {
+      "q": "Where do I even start? I have a thousand things I'd love to automate.",
+      "a": "Start with what's short and repeats often, not what annoys you the most. Your mind ranks tasks by how much they irritate you, and anything done in two minutes never feels irritating, so it stays invisible: four minutes fifteen times a week is forty-eight hours a year. Measure five real days, don't estimate from memory, because you'll get the minutes right and the count wrong. And keep one rule that avoids most disasters: the machine prepares, the person presses the button. Anything that can't be undone stays in draft, waiting for someone to click it.",
+      "corta": "Start with what's short and repeats, not what bothers you most.",
+      "leccion": "que-automatizar",
+      "ruta": "#/curso/que-automatizar"
+    }
+  ]
+}

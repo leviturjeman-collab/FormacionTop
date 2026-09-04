@@ -27,6 +27,7 @@ export type Route =
   | { name: 'prompts'; familyId?: string }
   | { name: 'skills' }
   | { name: 'kits' }
+  | { name: 'agentes'; agentId?: string }
   | { name: 'admin' }
   | { name: 'guia'; guideId?: string }
   | { name: 'curso'; lessonId?: string }
@@ -103,6 +104,8 @@ export function parseHash(hash: string): Route {
     case 'kits':
     case 'institucional':
       return { name: 'kits' }
+    case 'agentes':
+      return { name: 'agentes', agentId: segments[1] }
     case 'admin':
     case 'super-admin':
       return { name: 'admin' }
@@ -157,6 +160,8 @@ export function href(route: Route): string {
       return '#/skills'
     case 'kits':
       return '#/kits'
+    case 'agentes':
+      return route.agentId ? `#/agentes/${encodeURIComponent(route.agentId)}` : '#/agentes'
     case 'admin':
       return '#/admin'
     case 'guia':

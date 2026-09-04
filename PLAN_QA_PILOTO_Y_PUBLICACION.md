@@ -8,7 +8,7 @@ updated: 2026-08-18
 
 ## Puerta 1: calidad técnica
 
-Ejecutar `npm run test`. Debe completarse el índice, validar 40 workflows, pasar TypeScript y producir `dist`. Revisar que `catalog.json` no contenga secretos ni documentos privados. Probar en escritorio a 1440×900, tableta a 768×1024 y móvil a 390×844.
+Ejecutar `npm run test`. Debe completarse el índice, validar 40 workflows, pasar TypeScript y producir `dist`. Revisar que `course.json` no contenga secretos ni documentos privados. Probar en escritorio a 1440×900, tableta a 768×1024 y móvil a 390×844.
 
 Casos mínimos: abrir cada sección; buscar desde `Ctrl+K`; filtrar biblioteca; marcar completado; guardar favorito; imprimir un documento; descargar un workflow; cambiar los cuatro mapas; ejecutar la demo feliz; ejecutarla sin consentimiento; ejecutarla sin email; aprobar; rechazar; exportar evidencia; recargar y comprobar persistencia.
 

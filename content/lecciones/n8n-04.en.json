@@ -1,0 +1,647 @@
+{
+  "id": "n8n-04",
+  "tool": "n8n",
+  "slot": 4,
+  "number": 204,
+  "stageId": "automatizacion",
+  "title": "Installing it on your computer with Docker, step by step",
+  "promise": "You'll have n8n running inside Docker. Your flows and credentials will be saved in a folder that survives deleting the container. You'll have your encryption key safe and the timezone set. And you'll have done, with your own hands, the drill of turning it off and back on.",
+  "minutes": 45,
+  "why": "Sergio automates orders for a hospitality supply store in Zaragoza. He had n8n in Docker, with nine flows and fourteen connected credentials: Gmail, Drive, the warehouse API (the direct connection to the warehouse software), and the bank. One Tuesday he updated to a new version following a tutorial that said \"delete the container and create a new one.\" He did. When it started up, n8n was freshly installed: no flows, no credentials, no users. Three weeks of work. According to the tutorial he hadn't done anything wrong. He was missing one line in the startup command: the one that says where to save the data outside the container. This lesson exists so that doesn't happen to you.",
+  "theory": [
+    {
+      "title": "What Docker is and why bother",
+      "text": "Docker is a program that runs other programs inside sealed boxes. Each box carries inside it everything that program needs: its exact version of everything, its configuration, and its dependencies. Dependencies are the other programs it relies on to work. It doesn't clutter your computer or depend on what you have installed. The practical consequence: n8n in Docker behaves the same on your laptop as on a server. The day you move it there'll be no \"it worked on my machine\" surprises.",
+      "analogy": "A camping stove with its own gas canister and pot. You don't depend on the house having a kitchen, or on which kitchen it is.",
+      "visual": {
+        "kind": "beforeafter",
+        "title": "With Docker and without Docker",
+        "caption": "The same n8n. What changes is what its working depends on.",
+        "beforeLabel": "Installed bare",
+        "afterLabel": "Inside Docker",
+        "rows": [
+          {
+            "before": "Depends on what version of Node you have",
+            "after": "Carries its own version inside, always the same one"
+          },
+          {
+            "before": "Leaves files scattered across your computer",
+            "after": "Everything lives inside the box or in a folder you choose"
+          },
+          {
+            "before": "Fights with other programs that use the same things",
+            "after": "Isolated: it doesn't bother anything, and nothing bothers it"
+          },
+          {
+            "before": "Works on your laptop and fails on the server",
+            "after": "Behaves the same in both places"
+          },
+          {
+            "before": "Rolling back to an earlier version means reinstalling",
+            "after": "Rolling back means changing a tag and starting up"
+          }
+        ],
+        "gain": "The price for all this is learning three words: image, container, and volume."
+      }
+    },
+    {
+      "title": "The distinction that cost Sergio three weeks: image, container, and volume",
+      "text": "These are three different things, and confusing them is what deletes projects. The IMAGE is the mold: n8n as downloaded, the same for everyone and read-only, meaning you never change it. The CONTAINER is the box running, built from that mold. It gets created, stopped, and deleted constantly, and deleting it is normal. The VOLUME is a folder on your computer attached to the box, and that's where the data lives. It's the only thing that survives. If your flows are inside the container and not in a volume, the day you delete the container you delete them with it.",
+      "analogy": "The image is the house's blueprint, the container is the house built from it, and the volume is the safe bolted to the floor. You can knock the house down and rebuild it; the safe is still there with everything inside.",
+      "visual": {
+        "kind": "canvas",
+        "title": "Image, container, and volume: the distinction that cost three weeks",
+        "caption": "Click each one. Confusing the second with the third is what deletes projects.",
+        "nodes": [
+          {
+            "kind": "The mold",
+            "label": "Image",
+            "note": "downloaded, the same for everyone",
+            "role": "trigger",
+            "does": "It's n8n packaged, read-only. You download it once and every container you want gets built from it. You never modify it.",
+            "input": "Downloaded with docker pull.",
+            "output": "A mold that containers get created from.",
+            "breaks": "Nothing. The image doesn't break: if you want another version, you download another one."
+          },
+          {
+            "kind": "The running box",
+            "label": "Container",
+            "note": "created and deleted daily",
+            "role": "action",
+            "does": "n8n running, built from the image. It gets created, stopped, and deleted constantly, and deleting it is NORMAL: it's how you update.",
+            "input": "An image and the startup options.",
+            "output": "n8n alive at localhost:5678.",
+            "breaks": "Nothing, if your data is in the volume. Everything, if it isn't: it goes away with it."
+          },
+          {
+            "kind": "The safe",
+            "label": "Volume",
+            "note": "the folder on your computer",
+            "role": "filter",
+            "does": "A folder of yours attached to the box. This is where the database with your flows, credentials, and users lives. It's the ONLY thing that survives deleting the container.",
+            "input": "The path you put after the -v in the startup command.",
+            "output": "A database.sqlite file that grows with your work.",
+            "breaks": "If the path is written wrong, the folder stays empty and your data lives inside the container without you knowing. Check it on day one."
+          }
+        ]
+      },
+      "example": "The image is the blueprint, the container is the house built from it, and the volume is the safe bolted to the floor. You can knock the house down and rebuild it; the safe is still there with everything inside."
+    },
+    {
+      "title": "The encryption key: the other half of the backup",
+      "text": "n8n saves your credentials encrypted. The key to decrypt them is generated on its own the first time. If one day you restore your data onto another install with a different key, you'll see your credentials in the list but they won't work. n8n can't unlock them. That's why you set the key by hand from the start and save it in your password manager, alongside the backup. A backup of the data without its key is only half a backup.",
+      "example": "The symptom is baffling: the Gmail credential shows up with its name, but any flow that uses it fails saying it's not authorized.",
+      "visual": {
+        "kind": "cases",
+        "title": "What happens when you restore a backup",
+        "caption": "Three real scenarios. Only one ends well.",
+        "cases": [
+          {
+            "id": "bien",
+            "label": "Backup + saved key",
+            "hint": "The only happy ending",
+            "parts": [
+              {
+                "type": "p",
+                "text": "You start the new container with the same encryption key, point the volume at the restored folder, and everything comes back: flows, credentials, and users. You don't notice a thing."
+              }
+            ]
+          },
+          {
+            "id": "regular",
+            "label": "Backup without the key",
+            "hint": "The baffling case",
+            "parts": [
+              {
+                "type": "p",
+                "text": "You see your credentials in the list, with their name and service. They look like they're there. But any flow that uses them fails saying it's not authorized, because n8n can't decrypt them with a different key."
+              },
+              {
+                "type": "ul",
+                "items": [
+                  "The flows do come back: they aren't encrypted",
+                  "The credentials have to be reconnected one by one",
+                  "With fourteen connected services, that's a whole morning"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "roto",
+            "label": "No volume",
+            "hint": "What happened to Sergio",
+            "parts": [
+              {
+                "type": "p",
+                "text": "You delete the container following a tutorial and when it starts up you find a freshly installed n8n: no flows, no credentials, no users. Three weeks of work. There's no trash can, no undo."
+              },
+              {
+                "type": "ul",
+                "items": [
+                  "Check whether database.sqlite exists in your folder",
+                  "If it exists, start it up with the correct path and it comes back",
+                  "If the folder is empty, the data doesn't exist"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "title": "Ports: why 5678 and what that address means",
+      "text": "When you start the container you tell it \"whatever arrives at port 5678 on my computer, send it to 5678 inside the box.\" That's what lets you open http://localhost:5678 in the browser and see n8n. If that number is already taken by another program, the startup fails with a message about the port. And the important part: localhost only exists for you. No one from outside can get in through it. For security that's an advantage. For webhooks (notifications another service sends your n8n when something happens) it's a limitation.",
+      "analogy": "It's a building's street number. Only one buzzer per number, and from another neighborhood's street you can't hear it.",
+      "visual": {
+        "kind": "screenmap",
+        "title": "What each address means",
+        "caption": "The port is the building's street number, and localhost is your own street.",
+        "areas": [
+          {
+            "name": "localhost",
+            "place": "left",
+            "what": "Your own computer, seen as if it were a server. It only exists for you: even if you give someone the link, they won't be able to open it.",
+            "tip": "That's why a webhook doesn't work yet: the outside service has no way to reach your laptop."
+          },
+          {
+            "name": ":5678",
+            "place": "center",
+            "what": "The port, the street number. Only one program can occupy each number at a time, and that's where the \"port is already allocated\" error comes from.",
+            "tip": "If it's taken, change the first number: -p 5679:5678 and go in through localhost:5679."
+          },
+          {
+            "name": "-p 5678:5678",
+            "place": "right",
+            "what": "What tells Docker: \"whatever arrives at 5678 on my computer, send it to 5678 inside the box.\" The first one is yours, the second is the inside one.",
+            "tip": "The inside one doesn't get touched: n8n always listens on 5678 inside its box."
+          }
+        ]
+      }
+    },
+    {
+      "title": "The timezone gets set at startup, not after",
+      "text": "The container comes from the factory set to UTC, the global reference time. In Spain that's one hour behind in winter and two in summer. If you don't tell it otherwise, everything you schedule will happen shifted. And the worst part is it doesn't fail: it just happens at another time. You fix it by passing the timezone in the startup command itself, with two settings. Setting it from the start saves you weeks of confusion.",
+      "example": "A flow set for 08:00 in summer fires at 06:00 real time. Nobody notices until the morning alert arrives before the office opens."
+    },
+    {
+      "title": "Updating means tearing down the box and putting up another, which is why the volume matters",
+      "text": "In Docker you don't update \"from the inside.\" You download the new image, stop the old container, delete it, and create a new one with the new image. It sounds aggressive and it's normal. Everything depends on your data being in the volume. If it is, the new container finds it and you notice nothing. If it isn't, you start from zero. This is exactly the point where Sergio lost three weeks.",
+      "analogy": "Swapping your car for a new one. If your things are in the trunk, they go to the scrapyard with the old car; if they're at home, you take them to the new one.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "Updating: tearing down the box and putting up another",
+        "caption": "Four steps. Notice what survives each one.",
+        "steps": [
+          {
+            "label": "docker pull",
+            "does": "Downloads the new version",
+            "in": 1,
+            "out": 2,
+            "why": "Now you have two images: the old one and the new one. Your container is still running the old one and nothing has happened yet."
+          },
+          {
+            "label": "docker stop",
+            "does": "Turns off the container",
+            "in": 1,
+            "out": 1,
+            "why": "n8n stops responding. Your data stays intact in the folder, and the container still exists: it's just off."
+          },
+          {
+            "label": "docker rm",
+            "does": "Deletes the container",
+            "in": 1,
+            "out": 0,
+            "why": "This is where people get scared, and this is where Sergio lost three weeks. If you have a volume, absolutely nothing happens: what gets deleted is the box, not what's inside the safe."
+          },
+          {
+            "label": "docker run",
+            "does": "Creates the new container",
+            "in": 0,
+            "out": 1,
+            "why": "It starts up with the new image and finds your data in the usual folder. You open localhost:5678 and everything is where you left it, in the new version."
+          }
+        ]
+      }
+    },
+    {
+      "title": "When Docker is more than you need",
+      "text": "If all you want is to see n8n today and tinker for an afternoon, the npx n8n command (a way to try it without installing anything permanent) opens it up in a minute. You don't need any of this. Docker wins in three cases. When you want your install to resemble the final one, the one that'll actually end up running for real. When you want several versions without them fighting. Or when you're going to move this to a server later on. If you're in the first case, skip to lesson 05 with no guilt.",
+      "example": "A lot of people learn with npx for two weeks and set up Docker the day they decide to put a flow into real production.",
+      "visual": {
+        "kind": "decision",
+        "title": "Docker or the fast path?",
+        "caption": "Both are legitimate. Picking the wrong one costs you an afternoon.",
+        "question": "What are you going to do with n8n this week?",
+        "branches": [
+          {
+            "answer": "See what it is and tinker for an afternoon",
+            "then": "npx n8n, and skip this lesson",
+            "why": "One command and you have it open in a minute. It uninstalls just as easily. When you decide this is getting serious, come back here.",
+            "cost": "One minute"
+          },
+          {
+            "answer": "Build flows I want to keep",
+            "then": "Docker, and do the whole lesson",
+            "why": "You're going to pile up flows and credentials, and you want them to survive an update. Half an hour now saves you Sergio's afternoon.",
+            "cost": "Forty-five minutes"
+          },
+          {
+            "answer": "This is going to end up on a server",
+            "then": "Docker, without a doubt",
+            "why": "What you build today on your laptop will work the same on the server, with the same command. No \"it worked on my machine\" surprises.",
+            "cost": "The same command works in both places"
+          }
+        ]
+      }
+    },
+    {
+      "title": "What Docker doesn't give you",
+      "text": "Docker doesn't make backups, doesn't warn you if the container stops, and doesn't protect anything if you delete the volume. It also doesn't turn your laptop into a server: it still shuts off when you close it. Docker solves two things and nothing else: isolating n8n from the rest of your computer and making it work the same anywhere. Everything else is still up to you, and you'll see that in lessons 45 and 46.",
+      "analogy": "A good trunk doesn't stop you from forgetting your keys inside it."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Install Docker Desktop",
+      "where": "docker.com, Docker Desktop section",
+      "action": "Download the version for your system and install it with the default options. On Windows it'll ask you to enable WSL2 (a Linux layer inside Windows): accept, and restart if it asks. When it's done, open the Docker Desktop app and wait for the whale in the toolbar to stop moving. Docker has to be OPEN for any of this to work: installing it isn't enough.",
+      "expect": "The whale icon sitting still and, inside the app, a panel with no containers.",
+      "stuck": "If Windows complains about virtualization, enable it in the BIOS, the settings menu that shows up right before the computer boots. How to get into it depends on your motherboard's model: search for it with your computer's name."
+    },
+    {
+      "title": "Check that Docker responds from the terminal",
+      "where": "In PowerShell (Windows) or Terminal (Mac)",
+      "action": "Type docker --version and press Enter. Then docker run hello-world. The second one downloads a tiny test box, runs it, and writes you a greeting message. If that message shows up, everything else in this lesson is going to work.",
+      "expect": "A version number, and then a paragraph starting with \"Hello from Docker!\".",
+      "stuck": "If it says it can't connect to the Docker daemon (the engine working behind the scenes), Docker Desktop isn't open. Open it and wait for it to fully start."
+    },
+    {
+      "title": "Create the folder where your data is going to live",
+      "where": "In the terminal",
+      "action": "On Windows: mkdir C:\\n8n-data. On Mac or Linux: mkdir ~/n8n-data. This folder is the safe: this is where the database with your flows, credentials, and users lives. Pick a spot you're not going to delete while cleaning up your desktop, and don't put it inside Downloads.",
+      "expect": "The folder exists and is empty. Check by opening it in the file explorer.",
+      "stuck": "If the name has spaces or accents, change it: they cause problems in commands. n8n-data, plain and simple."
+    },
+    {
+      "title": "Generate your encryption key and save it NOW",
+      "where": "In the terminal and in your password manager",
+      "action": "You need a long, random string. Type this command to generate it: on Mac or Linux, openssl rand -hex 32; on Windows PowerShell, -join ((48..57)+(97..102) | Get-Random -Count 64 | %{[char]$_}). Copy the result and save it RIGHT NOW in your password manager, under the name \"n8n encryption key\". Don't move on until you've saved it: without this key, a backup of your credentials is worthless.",
+      "expect": "A 64-character string saved in the password manager.",
+      "stuck": "If you don't have a password manager, this is the moment to install one. In the meantime, don't paste it into a chat or an email."
+    },
+    {
+      "title": "Start n8n with the full command",
+      "where": "In the terminal",
+      "action": "Paste the command below, swapping in your own key and your own path if you're on Windows. It's written across several lines so it's easy to follow: each line does one specific thing, and they're explained one by one in the code block. Read it before running it; it isn't long for no reason.",
+      "prompt": "docker run -d --name n8n --restart unless-stopped \\\n  -p 5678:5678 \\\n  -e GENERIC_TIMEZONE=\"Europe/Madrid\" \\\n  -e TZ=\"Europe/Madrid\" \\\n  -e N8N_ENCRYPTION_KEY=\"PASTE-YOUR-64-CHARACTER-KEY-HERE\" \\\n  -e N8N_DIAGNOSTICS_ENABLED=false \\\n  -v ~/n8n-data:/home/node/.n8n \\\n  docker.n8n.io/n8nio/n8n",
+      "expect": "It returns a long string of letters and numbers: that's the container's identifier. That means it's started up.",
+      "stuck": "On Windows, change ~/n8n-data to C:\\n8n-data and put the command on a single line, removing the trailing backslashes."
+    },
+    {
+      "title": "Open it and create your user",
+      "where": "In the browser",
+      "action": "Go to http://localhost:5678. The first time it takes a few seconds. It'll ask you to create the owner user: email, name, and password. This password also goes in the password manager, and it's also one of those that can't be recovered by email.",
+      "expect": "You're inside n8n, with an empty canvas.",
+      "stuck": "If the browser says it can't connect, wait another thirty seconds and reload: the first startup takes a while. If it still doesn't work, go to task 8 and check the logs."
+    },
+    {
+      "title": "Check that the timezone took effect",
+      "where": "In n8n, in Settings",
+      "action": "Find the timezone setting and check it says Europe/Madrid. If it says UTC or a US timezone, the two timezone lines from the startup didn't get through correctly. Stop the container, delete it, and start it again checking those two lines.",
+      "expect": "Europe/Madrid, without having touched it by hand: it has to come set from startup.",
+      "stuck": "To delete and repeat: docker stop n8n then docker rm n8n. Your data is in the folder, so you lose nothing."
+    },
+    {
+      "title": "Learn to check the logs before you need them",
+      "where": "In the terminal",
+      "action": "Type docker logs n8n and look at what comes out: it's what n8n tells you while it works. Now try docker logs -f n8n, which stays attached showing new lines in real time (exit with Ctrl+C). This command is the first thing you're going to run the day something won't start.",
+      "expect": "A bunch of lines, and among them one that says the editor is available on port 5678.",
+      "stuck": "If you see red lines with the word ERROR, copy them in full: they're exactly what you paste to an AI or search for."
+    },
+    {
+      "title": "Do the drill that separates an installation from a scare",
+      "where": "In the terminal and in the browser",
+      "action": "First, inside n8n, create any flow with two nodes and save it with a recognizable name. Now, in the terminal: docker stop n8n, then docker rm n8n (yes, delete the container), and run the exact same startup command from task 5 again. When it comes up, open localhost:5678.",
+      "expect": "Your flow is still there, with its name, and your user too. That proves the volume works and that you can update without fear.",
+      "stuck": "If the flow ISN'T there, the volume line didn't work: check the -v path, confirm the folder exists, and check that a file called database.sqlite has appeared inside it."
+    },
+    {
+      "title": "Check that the data folder has real content",
+      "where": "In the file explorer",
+      "action": "Open your n8n-data folder. There should be at least one file called database.sqlite and some configuration. That file is your entire installation: flows, encrypted credentials, users, and history. If it's there and growing, everything is correctly attached.",
+      "expect": "A database.sqlite file at least several hundred kilobytes in size.",
+      "stuck": "If the folder is empty, the volume isn't mounted. Stop, delete the container, and check the path: on Windows it has to be the full path with C:\\ in front."
+    },
+    {
+      "title": "Learn to turn it off and on without deleting anything",
+      "where": "In the terminal",
+      "action": "docker stop n8n turns it off without deleting it. docker start n8n turns it back on with everything inside. Practice both right now. You're going to use them every week. And a lot of people confuse stop with rm: that's where the trouble starts. The one that deletes is rm; the one that turns off is stop.",
+      "expect": "After stop, localhost:5678 doesn't respond. After start, it comes back with everything exactly as it was.",
+      "stuck": "If start says the container doesn't exist, you deleted it with rm. No problem: run the command from task 5 again and your data is still in the folder."
+    },
+    {
+      "title": "Learn to update, which is what broke Sergio's setup",
+      "where": "In the terminal",
+      "action": "It's four commands in this order: docker pull docker.n8n.io/n8nio/n8n (downloads the new version), docker stop n8n, docker rm n8n, and the full command from task 5 again. Do it now, even though you just installed it, so you've done it once with your own hands. Your flows are going to still be there, and from today updating stops being scary.",
+      "expect": "n8n comes back up, with your test flow and your user intact, on the new version.",
+      "stuck": "If something looks off after updating, stop, delete, and start with the previous version by adding the tag at the end: docker.n8n.io/n8nio/n8n:1.60.0, for example."
+    },
+    {
+      "title": "Save the startup command somewhere you can find it",
+      "where": "In a text file, next to your data folder",
+      "action": "Create a file called start-n8n.txt and paste your full command inside, with your key and your path, and a line explaining what it does. It's what you're going to copy every time you update. And it's what you'll hand to someone else if they ever need to bring it up.",
+      "expect": "A text file with the command ready to copy.",
+      "stuck": "Never upload it online: it has your encryption key inside. If you save it in a code repository, like GitHub, keep the key separate."
+    },
+    {
+      "title": "Make your first backup today",
+      "where": "In the file explorer",
+      "action": "Stop the container with docker stop n8n, copy the whole n8n-data folder somewhere else (an external drive, your Drive) and start it up again. That's a complete backup. Keep it alongside the encryption key, because the two need each other.",
+      "expect": "A dated copy of the folder, in a place different from the computer running n8n.",
+      "stuck": "You stop the container before copying because copying a database while it's in use can give you a half-finished copy. Thirty seconds off doesn't hurt anyone."
+    }
+  ],
+  "errors": [
+    {
+      "message": "Cannot connect to the Docker daemon at unix:///var/run/docker.sock",
+      "means": "Docker Desktop isn't open. The command you typed is looking for the Docker engine and can't find it running.",
+      "fix": "Open the Docker Desktop app and wait for the whale icon to stop moving. Then repeat the command. If it takes a while to start, that's normal the first time after restarting the computer."
+    },
+    {
+      "message": "docker: Error response from daemon: driver failed programming external connectivity: Bind for 0.0.0.0:5678 failed: port is already allocated",
+      "means": "Port 5678 is already being used by another program, almost always another n8n you left running, via npx or in another container.",
+      "fix": "Check what containers exist with docker ps. If another n8n shows up, stop it with docker stop and its name. If what's holding the port is an npx n8n in another terminal, close it with Ctrl+C. As a last resort, change the first number: -p 5679:5678 and go in through localhost:5679."
+    },
+    {
+      "message": "I deleted the container and n8n came up empty, with no flows or credentials",
+      "means": "You didn't have a volume mounted, or the -v path was misspelled, so the data was living inside the container and went away with it.",
+      "fix": "Check whether there's a database.sqlite in your folder: if there is, start it up again with the correct path and it'll come back. If the folder is empty, the data doesn't exist. This is what happened to Sergio, and it's the reason for task 9: you do that drill on day one, not after three weeks of work."
+    },
+    {
+      "message": "The credentials show up in the list but the flows say they're not authorized",
+      "means": "The data was restored with an encryption key different from the one that encrypted it. n8n sees the credentials but can't unlock them.",
+      "fix": "Start the container with the original key in N8N_ENCRYPTION_KEY: if you saved it, it's a one-minute fix. If you don't have it, there's no way to recover them and you have to reconnect each service by hand. Save it today."
+    },
+    {
+      "message": "Error: EACCES: permission denied, open '/home/node/.n8n/config'",
+      "means": "The user running inside the container doesn't have permission to write to the folder you attached to it. This happens mostly on Linux and Mac with folders created by another user.",
+      "fix": "On Linux or Mac: sudo chown -R 1000:1000 ~/n8n-data, which gives the folder to the user n8n runs as inside the box. Then start it up again. On Windows with Docker Desktop this almost never shows up."
+    },
+    {
+      "message": "Scheduled flows fire at the wrong time",
+      "means": "The timezone is missing from startup, or you only set one of the two variables. GENERIC_TIMEZONE tells n8n how to interpret schedules and TZ sets the system clock inside the box.",
+      "fix": "Stop, delete the container, and start it with both: -e GENERIC_TIMEZONE=\"Europe/Madrid\" and -e TZ=\"Europe/Madrid\". Then check it in Settings and with a scheduled test run."
+    },
+    {
+      "message": "docker: invalid reference format",
+      "means": "The command got copied wrong: almost always because of the trailing backslashes at the end of lines, which don't work the same way in Windows PowerShell.",
+      "fix": "On Windows, type the whole command on a single line with no backslashes, or swap them for backticks. And check that no \"smart quotes\" from a word processor snuck in instead of straight ones."
+    },
+    {
+      "message": "The container stops on its own when I restart my computer",
+      "means": "The restart policy is missing, or Docker Desktop isn't set to start with the system.",
+      "fix": "The command from task 5 includes --restart unless-stopped, which makes it come back on its own. Also, in Docker Desktop's settings, turn on starting when the computer powers on. Even so, your laptop still isn't a server: that's what lesson 46 is for."
+    },
+    {
+      "message": "No such container: n8n",
+      "means": "You're running docker start or docker logs on a container that no longer exists, usually because you deleted it with rm.",
+      "fix": "Check what actually exists with docker ps -a, which also lists stopped ones. If yours isn't there, run the full startup command again: your data is still in the folder."
+    },
+    {
+      "message": "The app is running super slow and the fan won't stop",
+      "means": "Docker Desktop has little memory assigned, or you have several containers running at once from earlier tests.",
+      "fix": "Check docker ps and stop what you're not using. In Docker Desktop's settings, raise the assigned memory to 4 GB if your computer allows it. n8n alone doesn't need much; what weighs it down is piling up forgotten containers."
+    },
+    {
+      "message": "I updated and now a flow that worked is throwing an error",
+      "means": "A version change has altered some node's behavior. This happens now and then on major versions.",
+      "fix": "Roll back to the previous version by adding its tag at the end of the image name: docker.n8n.io/n8nio/n8n:1.60.0. With the flow working again, check the new version's release notes to see what changed before trying again."
+    },
+    {
+      "message": "A webhook receives nothing even though the flow is active",
+      "means": "n8n is on your computer, behind your router, with no public address. The outside service has no way to reach you.",
+      "fix": "To test, use the test address n8n shows you while the editor is open. For it to work for real, n8n needs to be somewhere with a public address, and that's lesson 46. It's not a flaw in the installation."
+    }
+  ],
+  "matters": [
+    "The volume line, the one that starts with -v. It's the difference between deleting a container and not noticing, and deleting a container and losing three weeks of work. If you only keep one thing from this lesson, make it that line and the drill from task 9.",
+    "The encryption key saved in the password manager the same day. A backup of your data without its key is only half a backup: you'll see the credentials but won't be able to use them, and you'll have to reconnect each service by hand.",
+    "Telling stop apart from rm. stop turns off and rm deletes. People mix them up three weeks in, once they've stopped respecting the commands and type them from memory. Practice both today with a test flow inside.",
+    "The two timezone variables at startup. If they're missing, nothing fails and everything just happens at another time, which is far worse: an error that doesn't show an error takes weeks to discover."
+  ],
+  "ignore": [
+    "Docker Compose for the first few weeks. It's the tidy way to start several services at once. It's worth it once you add a separate database. But with a single docker run command you get n8n working just the same, with fewer pieces to understand.",
+    "Switching the database from SQLite to PostgreSQL. The one that comes by default, SQLite, holds up far more than you'd think. The move makes sense once you have a heavy workload on top, or once you set up several n8n instances splitting the executions. Not before.",
+    "Reverse proxies, certificates, and your own domains: everything needed to reach n8n from outside with a secure address of your own. That's lesson 46, for when this moves off your computer. Bringing it in now means solving a problem you don't have and never getting around to building a flow."
+  ],
+  "canDo": [
+    "Give you an installation identical to the one you'll have on a server. What you build today on your laptop will work the same the day you move it, with no configuration surprises.",
+    "Let you delete and recreate the whole installation in twenty seconds without losing anything, which is what stops updating from being scary.",
+    "Isolate n8n from your computer: it doesn't install things all over the place, doesn't depend on what version of anything you have, and doesn't fight with other programs.",
+    "Let you roll back to an earlier version just by changing a tag at the end of the command, if an update breaks something."
+  ],
+  "cantDo": [
+    "Make backups on its own. Docker doesn't save anything for you: you're the one who copies the folder, and if you don't, it doesn't exist.",
+    "Warn you that the container has stopped. If it goes down, it stays down and silent until someone looks or a client asks.",
+    "Turn your laptop into a server. It still shuts off when you close it, and it still has no public address to receive webhooks from outside.",
+    "Protect you from deleting the volume. If you delete the data folder, that's it: no trash can, no undo, just like with any folder."
+  ],
+  "words": [
+    [
+      "Image",
+      "The downloaded mold of n8n, the same for everyone and read-only. Containers get built from it."
+    ],
+    [
+      "Container",
+      "The running box, created from the image. It gets created, stopped, and deleted constantly: that's normal."
+    ],
+    [
+      "Volume (-v)",
+      "The folder on your computer attached to the box. The only thing that survives deleting the container. The most important line in the command."
+    ],
+    [
+      "Port (-p)",
+      "The number you enter through. -p 5678:5678 means \"whatever arrives at 5678 on my computer, send to 5678 in the box\"."
+    ],
+    [
+      "Environment variable (-e)",
+      "A setting passed to the box at startup: the timezone, the encryption key. They're set here, not inside."
+    ],
+    [
+      "Encryption key",
+      "The key n8n uses to encrypt your credentials. Without it, a restored backup shows the credentials but can't use them."
+    ],
+    [
+      "docker run",
+      "Creates a new container and starts it. It's the long command, the one you should save in a file."
+    ],
+    [
+      "docker stop / start",
+      "Turn off and on without deleting. The two you're going to use every week."
+    ],
+    [
+      "docker rm",
+      "Deletes the container. Harmless if you have a volume; catastrophic if you don't."
+    ],
+    [
+      "docker logs",
+      "What n8n reports while it's running. The first thing to check when something won't start."
+    ],
+    [
+      "docker pull",
+      "Downloads the new version of the image. The first step of any update."
+    ],
+    [
+      "Tag",
+      "The version number that goes after the image name, after a colon. It's how you roll back to an earlier version."
+    ]
+  ],
+  "next": "Leave the container running and open localhost:5678. In lesson 05 you'll get to know the screen from the inside: the canvas, each box's data panel, and the execution history, which is where you're going to live from now on.",
+  "pieces": [
+    {
+      "kind": "anatomy",
+      "title": "The startup command, line by line",
+      "caption": "It isn't long for no reason. Each line prevents a specific problem.",
+      "lang": "bash",
+      "code": "docker run -d --name n8n --restart unless-stopped \\\n  -p 5678:5678 \\\n  -e GENERIC_TIMEZONE=\"Europe/Madrid\" \\\n  -e TZ=\"Europe/Madrid\" \\\n  -e N8N_ENCRYPTION_KEY=\"your-64-character-key\" \\\n  -e N8N_DIAGNOSTICS_ENABLED=false \\\n  -v ~/n8n-data:/home/node/.n8n \\\n  docker.n8n.io/n8nio/n8n",
+      "notes": [
+        {
+          "line": 1,
+          "kind": "clave",
+          "text": "-d leaves it running in the background and gives you back the terminal. --name gives it a name so you can stop it later without hunting for identifiers. --restart unless-stopped makes it come back on its own when the computer restarts."
+        },
+        {
+          "line": 2,
+          "kind": "info",
+          "text": "The port: whatever arrives at 5678 on your computer goes to 5678 inside. If it says it's taken, change ONLY the first one."
+        },
+        {
+          "line": 3,
+          "kind": "aviso",
+          "text": "The timezone for n8n. Without this, everything scheduled runs an hour late in winter and two in summer, and it doesn't fail: it just happens at another time."
+        },
+        {
+          "line": 4,
+          "kind": "aviso",
+          "text": "The system timezone inside the box. You need both, and this is the one that's most often forgotten."
+        },
+        {
+          "line": 5,
+          "kind": "clave",
+          "text": "The key your credentials get encrypted with. Save it in your password manager BEFORE starting up: a backup without this key is only half a backup."
+        },
+        {
+          "line": 6,
+          "kind": "info",
+          "text": "Turns off sending usage statistics. Optional, but if you work with client data it's the sensible choice."
+        },
+        {
+          "line": 7,
+          "kind": "clave",
+          "text": "THE IMPORTANT LINE. Attaches a folder of yours to the box. It's the only thing that survives deleting the container. Without it, updating erases three weeks of work."
+        },
+        {
+          "line": 8,
+          "kind": "info",
+          "text": "The image. With nothing after it, it grabs the latest version; with a colon and a number, whichever one you say: useful for rolling back if an update breaks something."
+        }
+      ]
+    },
+    {
+      "kind": "filetree",
+      "title": "What shows up in your data folder",
+      "caption": "If this is empty, the volume isn't working. Check it on day one.",
+      "nodes": [
+        {
+          "name": "n8n-data",
+          "depth": 0,
+          "isFile": false,
+          "path": "the folder you attached with -v"
+        },
+        {
+          "name": "database.sqlite",
+          "depth": 1,
+          "isFile": true,
+          "path": "YOUR ENTIRE INSTALLATION: flows, encrypted credentials, users, and history"
+        },
+        {
+          "name": "config",
+          "depth": 1,
+          "isFile": true,
+          "path": "the configuration, with the encryption key inside if you didn't set it yourself"
+        },
+        {
+          "name": "binaryData",
+          "depth": 1,
+          "isFile": false,
+          "path": "the files that pass through your flows: attachments, images, PDFs"
+        },
+        {
+          "name": "nodes",
+          "depth": 1,
+          "isFile": false,
+          "path": "community nodes you install, if you ever install any"
+        },
+        {
+          "name": "ssh",
+          "depth": 1,
+          "isFile": false,
+          "path": "access keys to repositories, if you use version control for flows"
+        }
+      ]
+    },
+    {
+      "kind": "terminal",
+      "title": "The six commands you're going to use every week",
+      "caption": "Click each one. Notice the difference between stop and rm: it's the one that ruins installations.",
+      "prompt": "$",
+      "steps": [
+        {
+          "command": "docker ps",
+          "output": "CONTAINER ID   IMAGE                       STATUS         NAMES\\na1b2c3d4e5f6   docker.n8n.io/n8nio/n8n     Up 2 hours     n8n",
+          "note": "What's running right now. Add -a and stopped ones show up too."
+        },
+        {
+          "command": "docker logs -f n8n",
+          "output": "Editor is now accessible via:\\nhttp://localhost:5678/",
+          "note": "What n8n reports as it runs. The FIRST thing to check when something won't start. Exit with Ctrl+C."
+        },
+        {
+          "command": "docker stop n8n",
+          "output": "n8n",
+          "note": "Turns off without deleting. localhost:5678 stops responding and your data stays intact."
+        },
+        {
+          "command": "docker start n8n",
+          "output": "n8n",
+          "note": "Turns back on with everything inside. These two are the everyday ones."
+        },
+        {
+          "command": "docker rm n8n",
+          "output": "n8n",
+          "note": "DELETES the container. Harmless if you have a volume; catastrophic if you don't. It's the normal step in an update."
+        },
+        {
+          "command": "docker pull docker.n8n.io/n8nio/n8n",
+          "output": "Status: Downloaded newer image for docker.n8n.io/n8nio/n8n:latest",
+          "note": "Downloads the new version. Then: stop, rm, and the full startup command again."
+        }
+      ]
+    },
+    {
+      "kind": "checklist",
+      "title": "The installation isn't finished until",
+      "caption": "Eight checks. The first three are what keep you from losing work.",
+      "items": [
+        "The encryption key is saved in your password manager",
+        "You've deliberately deleted the container and your flows were still there",
+        "In your data folder there's a database.sqlite and it has some weight to it",
+        "The timezone says Europe/Madrid in n8n's settings",
+        "You can tell docker stop apart from docker rm without thinking",
+        "You've updated once with your own hands: pull, stop, rm, and run",
+        "The startup command is saved in a text file",
+        "You have a copy of the data folder somewhere else, with its date"
+      ]
+    }
+  ]
+}

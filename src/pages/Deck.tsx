@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, NotebookPen, X } from 'lucide-react'
 import { useCourse } from '../course'
 import { href } from '../router'
 import { store, useStudent } from '../store'
+import { useLocale } from '../i18n'
 
 /**
  * Presentación para impartir.
@@ -13,6 +14,7 @@ import { store, useStudent } from '../store'
  */
 export default function Deck({ deckId }: { deckId: string }) {
   const course = useCourse()
+  const locale = useLocale()
   const { teacher } = useStudent()
   const [index, setIndex] = useState(0)
   const [showNotes, setShowNotes] = useState(teacher)
@@ -41,8 +43,8 @@ export default function Deck({ deckId }: { deckId: string }) {
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Esa presentación no existe</h2>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
+          <h2>{locale === 'en' ? 'This presentation does not exist' : 'Esa presentación no existe'}</h2>
+          <a className="st-btn" href={href({ name: 'ruta' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
         </div>
       </div>
     )
@@ -64,10 +66,10 @@ export default function Deck({ deckId }: { deckId: string }) {
             }}
           >
             <NotebookPen size={13} />
-            Notas
+            {locale === 'en' ? 'Notes' : 'Notas'}
           </button>
           <b>{index + 1} / {deck.slides.length}</b>
-          <a href={href({ name: 'ruta' })} aria-label="Salir de la presentación"><X size={16} /></a>
+          <a href={href({ name: 'ruta' })} aria-label={locale === 'en' ? 'Exit the presentation' : 'Salir de la presentación'}><X size={16} /></a>
         </div>
       </header>
 
@@ -90,14 +92,14 @@ export default function Deck({ deckId }: { deckId: string }) {
 
       {showNotes && slide.notes && (
         <aside className="st-deck-notes">
-          <strong>Notas del ponente</strong>
+          <strong>{locale === 'en' ? "Speaker's notes" : 'Notas del ponente'}</strong>
           <p>{slide.notes}</p>
         </aside>
       )}
 
       <footer className="st-deck-nav">
         <button type="button" onClick={() => setIndex((value) => Math.max(0, value - 1))} disabled={index === 0}>
-          <ArrowLeft size={16} /> Anterior
+          <ArrowLeft size={16} /> {locale === 'en' ? 'Previous' : 'Anterior'}
         </button>
         <i><b style={{ width: `${((index + 1) / deck.slides.length) * 100}%` }} /></i>
         <button
@@ -105,7 +107,7 @@ export default function Deck({ deckId }: { deckId: string }) {
           onClick={() => setIndex((value) => Math.min(deck.slides.length - 1, value + 1))}
           disabled={index === deck.slides.length - 1}
         >
-          Siguiente <ArrowRight size={16} />
+          {locale === 'en' ? 'Next' : 'Siguiente'} <ArrowRight size={16} />
         </button>
       </footer>
     </div>

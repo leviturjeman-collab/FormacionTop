@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 import type { AnatomyPiece } from '../types'
+import { useLocale } from '../i18n'
 
 /**
  * Anatomía del código.
@@ -9,7 +10,7 @@ import type { AnatomyPiece } from '../types'
  * anotaciones al lado. Al pasar por una anotación se resalta su línea, así que
  * el alumno ve exactamente de qué se está hablando.
  */
-const KIND_LABEL: Record<string, string> = {
+const KIND_LABEL_ES: Record<string, string> = {
   nota: 'Comentario',
   import: 'Dependencia',
   def: 'Definición',
@@ -22,7 +23,22 @@ const KIND_LABEL: Record<string, string> = {
   campo: 'Campo',
 }
 
+const KIND_LABEL_EN: Record<string, string> = {
+  nota: 'Comment',
+  import: 'Dependency',
+  def: 'Definition',
+  decision: 'Branch',
+  bucle: 'Loop',
+  error: 'Errors',
+  salida: 'Output',
+  secreto: 'Secret',
+  log: 'Log',
+  campo: 'Field',
+}
+
 export default function Anatomy({ piece }: { piece: AnatomyPiece }) {
+  const locale = useLocale()
+  const KIND_LABEL = locale === 'en' ? KIND_LABEL_EN : KIND_LABEL_ES
   const [active, setActive] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
   const lines = piece.code.split('\n')
@@ -48,7 +64,7 @@ export default function Anatomy({ piece }: { piece: AnatomyPiece }) {
           }}
         >
           {copied ? <Check size={13} /> : <Copy size={13} />}
-          {copied ? 'Copiado' : 'Copiar el código'}
+          {copied ? (locale === 'en' ? 'Copied' : 'Copiado') : (locale === 'en' ? 'Copy code' : 'Copiar el código')}
         </button>
       </header>
 
@@ -81,7 +97,7 @@ export default function Anatomy({ piece }: { piece: AnatomyPiece }) {
             >
               <button type="button" onClick={() => setActive(active === note.line ? null : note.line)}>
                 <span className={`st-anatomy-tag kind-${note.kind}`}>{KIND_LABEL[note.kind] || note.kind}</span>
-                <em>línea {note.line}</em>
+                <em>{locale === 'en' ? `line ${note.line}` : `línea ${note.line}`}</em>
                 <p>{note.text}</p>
               </button>
             </li>

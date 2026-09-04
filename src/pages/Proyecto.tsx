@@ -4,6 +4,7 @@ import type { AreaProject } from '../types'
 import { useCourse } from '../course'
 import { href } from '../router'
 import { Code } from '../components/Parts'
+import { useLocale } from '../i18n'
 
 /**
  * Proyecto final de un área.
@@ -13,6 +14,7 @@ import { Code } from '../components/Parts'
  */
 export default function Proyecto({ stageId }: { stageId: string }) {
   const course = useCourse()
+  const locale = useLocale()
   const [done, setDone] = useState<number[]>([])
 
   const project = (course.projects || []).find((item) => item.stageId === stageId) as AreaProject | undefined
@@ -22,9 +24,9 @@ export default function Proyecto({ stageId }: { stageId: string }) {
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Todavía no hay proyecto para esta área</h2>
-          <p>Se está escribiendo. Mientras tanto, las lecciones del área ya están completas.</p>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
+          <h2>{locale === 'en' ? 'There is no project for this area yet' : 'Todavía no hay proyecto para esta área'}</h2>
+          <p>{locale === 'en' ? 'It is being written. In the meantime, the lessons in this area are already complete.' : 'Se está escribiendo. Mientras tanto, las lecciones del área ya están completas.'}</p>
+          <a className="st-btn" href={href({ name: 'ruta' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
         </div>
       </div>
     )
@@ -41,31 +43,31 @@ export default function Proyecto({ stageId }: { stageId: string }) {
           </a>
         )}
         <ChevronRight size={11} />
-        <span>Proyecto final</span>
+        <span>{locale === 'en' ? 'Final project' : 'Proyecto final'}</span>
       </nav>
 
       <header className="st-project-head">
-        <span className="st-kicker"><Rocket size={11} /> Proyecto final del área</span>
+        <span className="st-kicker"><Rocket size={11} /> {locale === 'en' ? 'Final project of the area' : 'Proyecto final del área'}</span>
         <h1>{project.title}</h1>
         <p className="st-lesson-headline">{project.pitch}</p>
         <p className="st-lesson-hook">{project.outcome}</p>
         <div className="st-lesson-meta">
           <span><Clock size={11} /> {project.time}</span>
-          <span>{project.steps.length} pasos</span>
-          <span>{project.structure.length} archivos</span>
+          <span>{project.steps.length} {locale === 'en' ? 'steps' : 'pasos'}</span>
+          <span>{project.structure.length} {locale === 'en' ? 'files' : 'archivos'}</span>
         </div>
       </header>
 
       <div className="st-project-grid">
         <section className="st-block st-block-requisitos">
-          <h3><PackageCheck size={15} /> Necesitas tener esto antes</h3>
+          <h3><PackageCheck size={15} /> {locale === 'en' ? 'You need to have this before you start' : 'Necesitas tener esto antes'}</h3>
           <ul className="st-plain">
             {project.requires.map((item) => <li key={item}>{item}</li>)}
           </ul>
         </section>
 
         <section className="st-block st-block-app">
-          <h3><Folder size={15} /> Cómo queda el proyecto</h3>
+          <h3><Folder size={15} /> {locale === 'en' ? 'How the project ends up' : 'Cómo queda el proyecto'}</h3>
           <ul className="st-tree st-tree-light">
             {project.structure.map((item) => (
               <li key={item.path} className="file">
@@ -78,8 +80,8 @@ export default function Proyecto({ stageId }: { stageId: string }) {
       </div>
 
       <div className="st-section-head">
-        <h2>Construcción paso a paso</h2>
-        <span>{done.length}/{project.steps.length} hechos</span>
+        <h2>{locale === 'en' ? 'Step-by-step build' : 'Construcción paso a paso'}</h2>
+        <span>{done.length}/{project.steps.length} {locale === 'en' ? 'done' : 'hechos'}</span>
       </div>
       <div className="st-checkbar"><span style={{ width: `${percent}%` }} /></div>
 
@@ -98,14 +100,14 @@ export default function Proyecto({ stageId }: { stageId: string }) {
                 {done.includes(index) ? <CheckCircle2 size={17} /> : <Circle size={17} />}
               </button>
               <div>
-                <span className="st-kicker">Paso {index + 1}</span>
+                <span className="st-kicker">{locale === 'en' ? 'Step' : 'Paso'} {index + 1}</span>
                 <h3>{step.title}</h3>
               </div>
             </div>
 
             <p className="st-project-why">{step.why}</p>
             <Code code={step.code} lang={step.lang} />
-            <p className="st-practice-expected"><b>Tienes que ver:</b> {step.expected}</p>
+            <p className="st-practice-expected"><b>{locale === 'en' ? 'You should see:' : 'Tienes que ver:'}</b> {step.expected}</p>
             {step.trouble && (
               <p className="st-project-trouble">
                 <TriangleAlert size={12} />
@@ -117,12 +119,12 @@ export default function Proyecto({ stageId }: { stageId: string }) {
       </ol>
 
       <section className="st-block st-block-comprobar">
-        <h3><CheckCircle2 size={15} /> Está bien hecho si</h3>
+        <h3><CheckCircle2 size={15} /> {locale === 'en' ? 'It is done right if' : 'Está bien hecho si'}</h3>
         <ul className="st-plain">{project.checks.map((item) => <li key={item}>{item}</li>)}</ul>
       </section>
 
       <section className="st-block st-block-ejemplo">
-        <h3><Rocket size={15} /> Cómo ampliarlo</h3>
+        <h3><Rocket size={15} /> {locale === 'en' ? 'How to extend it' : 'Cómo ampliarlo'}</h3>
         <ol className="st-example">
           {project.extend.map((item, index) => (
             <li key={item}><span>{index + 1}</span>{item}</li>
@@ -131,7 +133,7 @@ export default function Proyecto({ stageId }: { stageId: string }) {
       </section>
 
       <section className="st-block st-block-decisiones">
-        <h3>Te lo van a preguntar así</h3>
+        <h3>{locale === 'en' ? "This is how they'll ask you about it" : 'Te lo van a preguntar así'}</h3>
         <ul className="st-plain">{project.defend.map((item) => <li key={item}>{item}</li>)}</ul>
       </section>
     </div>

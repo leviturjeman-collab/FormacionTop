@@ -1,0 +1,312 @@
+{
+  "id": "agente-triaje-de-correo",
+  "order": 10,
+  "title": "Email Triage Agent",
+  "kicker": "Automation",
+  "platform": "n8n",
+  "platformLabel": "n8n",
+  "level": "intermedio",
+  "what": "An n8n workflow that watches your Gmail inbox and, for every new email, does the tedious triage work: classifies it with AI by category and urgency, drafts a reply, and notifies you on Telegram with the summary. The draft stays in your Gmail drafts folder waiting for your review: nothing goes out to the sender without you reading it, adjusting it, and hitting send. It's the inbox pipeline with a built-in human brake.",
+  "forWho": "For whoever handles a shared inbox (info@, support@, orders@) and loses the first hour of the day reading and deciding. It pays off from 15-20 emails a day; below that, manual triage is still faster than maintaining the workflow.",
+  "tools": ["n8n", "gmail", "claude", "telegram"],
+  "capabilities": [
+    "Detects new emails in Gmail every minute without you having the inbox open",
+    "Classifies each email by category (inquiry, order, incident, invoice, spam...) and urgency with claude-haiku-4-5",
+    "Drafts a reply in your tone and leaves it in Gmail Drafts, addressed to the sender",
+    "Notifies you on Telegram with sender, subject, category, urgency, and a two-line summary",
+    "If the AI returns something odd, flags the email as \"needs review\" instead of breaking"
+  ],
+  "limits": [
+    "Sends no email: it creates drafts. The send button is yours and must stay yours",
+    "Doesn't delete, archive, or label emails: it doesn't touch your inbox beyond creating the draft",
+    "Doesn't handle long threads or complex attachments well: it classifies based on the message text; tough cases need a human",
+    "Doesn't decide on complaints or legal matters: its draft in those cases is just an acknowledgment for you to handle"
+  ],
+  "flow": {
+    "name": "Email Triage Agent (drafts with approval)",
+    "nodes": [
+      {
+        "name": "Flow note",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-380, -200],
+        "parameters": {
+          "content": "## Email triage with a human brake\nGmail Trigger → prepare → Claude classifies and drafts → Gmail draft + Telegram alert.\n\nBefore activating: 1) Gmail credential (OAuth2), 2) httpHeaderAuth credential with your Anthropic key (x-api-key header), 3) Telegram bot credential and your chat_id.\n\nThis workflow NEVER sends emails: it only creates drafts.",
+          "height": 300,
+          "width": 340
+        }
+      },
+      {
+        "name": "Incoming email",
+        "type": "n8n-nodes-base.gmailTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0],
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "simple": true,
+          "filters": {}
+        },
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REPLACE",
+            "name": "Gmail (inbox to triage)"
+          }
+        }
+      },
+      {
+        "name": "Prepare AI request",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [220, 0],
+        "parameters": {
+          "jsCode": "// Normalizes the email and builds the request for the Anthropic API.\nconst sender = $json.From || $json.from || 'unknown';\nconst subject = $json.Subject || $json.subject || '(no subject)';\nconst body = ($json.snippet || $json.text || '').slice(0, 2000);\n\nconst system = 'You are the triage assistant for a professional inbox, writing in English. ' +\n  'Return ONLY valid JSON with these keys: ' +\n  'category (inquiry | order | incident | invoice | sales | spam | needs_review), ' +\n  'urgency (high | medium | low), ' +\n  'summary (maximum 2 sentences), ' +\n  'reply (a friendly, brief draft reply in English, ready to review; ' +\n  'if the email is a complaint or a legal matter, the reply is just an acknowledgment of receipt). ' +\n  'No text outside the JSON.';\n\nconst payload = {\n  model: 'claude-haiku-4-5',\n  max_tokens: 700,\n  system: system,\n  messages: [ { role: 'user', content: 'Sender: ' + sender + '\\nSubject: ' + subject + '\\nMessage:\\n' + body } ]\n};\n\nreturn [ { json: { payload: payload, sender: sender, subject: subject } } ];"
+        }
+      },
+      {
+        "name": "Classify with Claude",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [440, 0],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.payload) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "REPLACE",
+            "name": "Anthropic (x-api-key header)"
+          }
+        }
+      },
+      {
+        "name": "Parse response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [660, 0],
+        "parameters": {
+          "jsCode": "// Extracts the JSON Claude returns and merges it with the email data.\nconst source = $('Prepare AI request').first().json;\nconst raw = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : '';\nconst clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet data;\ntry {\n  data = JSON.parse(clean);\n} catch (e) {\n  // If the AI didn't return valid JSON, flag the email for manual review.\n  data = { category: 'needs_review', urgency: 'medium', summary: raw.slice(0, 300), reply: '' };\n}\n\nreturn [ { json: {\n  sender: source.sender,\n  subject: source.subject,\n  category: data.category || 'needs_review',\n  urgency: data.urgency || 'medium',\n  summary: data.summary || '(no summary)',\n  reply: data.reply || 'Thank you for your message. We have received it and will get back to you shortly.'\n} } ];"
+        }
+      },
+      {
+        "name": "Create reply draft",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [880, 0],
+        "parameters": {
+          "resource": "draft",
+          "subject": "=Re: {{ $json.subject }}",
+          "message": "={{ $json.reply }}",
+          "options": {
+            "sendTo": "={{ $json.sender }}"
+          }
+        },
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REPLACE",
+            "name": "Gmail (inbox to triage)"
+          }
+        }
+      },
+      {
+        "name": "Notify on Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [1100, 0],
+        "parameters": {
+          "chatId": "REPLACE_CHAT_ID",
+          "text": "=📬 Email triaged\nFrom: {{ $('Parse response').item.json.sender }}\nSubject: {{ $('Parse response').item.json.subject }}\nCategory: {{ $('Parse response').item.json.category }} · Urgency: {{ $('Parse response').item.json.urgency }}\nSummary: {{ $('Parse response').item.json.summary }}\n\nA draft is waiting for your review in Gmail. Nothing gets sent without you.",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "REPLACE",
+            "name": "Telegram bot (alerts)"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Incoming email": {
+        "main": [
+          [
+            {
+              "node": "Prepare AI request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare AI request": {
+        "main": [
+          [
+            {
+              "node": "Classify with Claude",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Classify with Claude": {
+        "main": [
+          [
+            {
+              "node": "Parse response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse response": {
+        "main": [
+          [
+            {
+              "node": "Create reply draft",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create reply draft": {
+        "main": [
+          [
+            {
+              "node": "Notify on Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "ai-node-prompt.md",
+      "language": "markdown",
+      "content": "# The classifier's prompt (\"Prepare AI request\" node)\n\nThe prompt lives inside the code node, in the `system` constant. This is the base version; adapt it to your business by editing that node.\n\n```\nYou are the triage assistant for a professional inbox, writing in English.\nReturn ONLY valid JSON with these keys:\n- category: inquiry | order | incident | invoice | sales | spam | needs_review\n- urgency: high | medium | low\n- summary: maximum 2 sentences\n- reply: a friendly, brief draft reply in English, ready to review;\n  if the email is a complaint or a legal matter, the reply is just an acknowledgment of receipt.\nNo text outside the JSON.\n```\n\n## How to adapt it\n\n- **Your categories**: change the list to match your business (quotes, appointments, warranties...). Always keep \"needs_review\" as a safety net.\n- **Your tone**: add a line like \"sign off as the [NAME] Team\" or \"use formal address\".\n- **Your rules**: add lines like \"if they ask for a price, the reply points to the public rate sheet and never promises discounts\".\n- Don't ask it to decide anything irreversible: it classifies and drafts, the decisions are yours."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Import the workflow into n8n",
+      "action": "In n8n: Workflows → Add workflow → ⋯ menu → Import from file, and paste the JSON from this page's flow field (copy button).",
+      "expect": "The canvas shows 6 nodes connected in a chain plus a yellow note.",
+      "stuck": "If you see \"could not find property\", copy again: it's usually a JSON that got cut off midway."
+    },
+    {
+      "title": "Connect Gmail",
+      "action": "Open the \"Incoming email\" and \"Create reply draft\" nodes and create a Gmail OAuth2 credential: n8n will take you to sign in with the inbox's account and accept permissions.",
+      "expect": "Both nodes green, with no red credential warning.",
+      "stuck": "On self-hosted n8n you first need to create an OAuth project in Google Cloud (n8n shows you the exact callback URL to paste there)."
+    },
+    {
+      "title": "Create the Anthropic credential",
+      "action": "Open \"Classify with Claude\" → Credentials → create a Header Auth with Name: x-api-key and Value: your sk-ant-... key from console.anthropic.com.",
+      "expect": "The node now has the credential assigned. The key lives in n8n's credentials, never inside the node.",
+      "stuck": "If testing returns 401, the key was copied wrong; if 400, don't touch jsonBody: it must remain exactly ={{ JSON.stringify($json.payload) }}."
+    },
+    {
+      "title": "Create the Telegram bot",
+      "action": "On Telegram, talk to @BotFather → /newbot → copy the token into an n8n Telegram credential. Send a message to your bot and get your chat_id (e.g. with @userinfobot); paste it into the chatId field of the \"Notify on Telegram\" node.",
+      "expect": "The Telegram node with a credential and your chat_id instead of REPLACE_CHAT_ID.",
+      "stuck": "If the bot doesn't reply, make sure you messaged it first: bots can't start a conversation."
+    },
+    {
+      "title": "Test with a real email",
+      "action": "Click Test workflow, send yourself an email to the monitored inbox, and wait for the execution.",
+      "expect": "Green execution, a new draft in Gmail addressed to the sender, and the Telegram alert with category and summary.",
+      "stuck": "Open the execution and look at which node stopped: every node shows its input and output, and that's always where the clue is."
+    },
+    {
+      "title": "Activate it and agree on the usage rule",
+      "action": "Switch it to Active. Team rule from today: drafts are reviewed and sent by hand, and anything landing in \"needs_review\" or high urgency gets read in full.",
+      "expect": "New emails arrive classified and with a draft, without you having to open n8n."
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal test",
+      "input": "Send to the inbox: \"Hi, what are your hours on Saturday? Thanks.\"",
+      "expect": "Category inquiry, low urgency, draft in the agreed tone in Drafts, and Telegram alert. No email sent."
+    },
+    {
+      "name": "Real urgency",
+      "input": "Send: \"URGENT: the order website has been down all morning and we have customers waiting.\"",
+      "expect": "Category incident, high urgency, and the Telegram summary reflects it."
+    },
+    {
+      "name": "Complaint",
+      "input": "Send a complaint email asking for a refund.",
+      "expect": "The draft is just an acknowledgment of receipt, with no promise of a refund: the decision stays with the human."
+    },
+    {
+      "name": "Broken AI response",
+      "input": "Temporarily edit the prep node's prompt to ask for \"reply in verse\" and run it with a test email.",
+      "expect": "The workflow doesn't break: the email comes out as category \"needs_review\" with a generic draft. Undo the change afterward."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Gmail (OAuth2)",
+      "where": "Inside n8n, when opening the Gmail nodes → Create new credential",
+      "how": "Sign in with the inbox account and accept the permissions. On self-hosted n8n, first create the OAuth project at console.cloud.google.com with the callback URL n8n gives you.",
+      "cost": "free"
+    },
+    {
+      "name": "Anthropic API",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Create the key and store it in an n8n Header Auth credential (Name: x-api-key). Never paste it into a node.",
+      "cost": "pay per token; classifying an email with claude-haiku-4-5 costs a fraction of a cent"
+    },
+    {
+      "name": "Telegram bot",
+      "where": "Telegram → @BotFather → /newbot",
+      "how": "Copy the token into an n8n Telegram credential and your chat_id into the alert node.",
+      "cost": "free"
+    }
+  ],
+  "risks": [
+    "Sending by mistake instead of saving a draft if someone \"improves\" the workflow. Mitigation: the Gmail node uses the draft resource; any change to direct sending must go through team agreement, not an afternoon of inspiration.",
+    "Email content travels to the Anthropic API. Mitigation: don't use this workflow on inboxes that receive sensitive data (health, legal) without reviewing your API account's data policy.",
+    "Blind trust in the category: a mislabeled \"spam\" buries an important email. Mitigation: the workflow doesn't archive or delete anything; check the full inbox once a day for the first two weeks and adjust the prompt based on the misses.",
+    "Email loop if the inbox replies to itself. Mitigation: don't activate the workflow on the same account you use to mass-send drafts to third parties; the manual draft step already breaks the loop."
+  ],
+  "examples": [
+    {
+      "name": "Adjust categories",
+      "prompt": "Edit the \"Prepare AI request\" node and replace the list with: enrollment | scholarship | certificate | complaint | other. Keep \"needs_review\" and test again with three real emails."
+    },
+    {
+      "name": "Only alert on the urgent ones",
+      "prompt": "Add an IF node between \"Parse response\" and the Telegram alert with the condition urgency = high, and connect the false branch directly to the draft."
+    }
+  ],
+  "kits": ["atencion-cliente-multicanal"]
+}

@@ -1,0 +1,112 @@
+{
+  "id": "revisor-de-codigo",
+  "order": 1,
+  "title": "Code Reviewer",
+  "kicker": "Code & Quality",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "intermedio",
+  "what": "A Claude Code subagent that reviews your branch's changes before you push them. It reads the diff, compares it against the rest of the project, and hands you a list of findings ranked by severity: what breaks something, what might break something, and what's just style. It doesn't touch your code: it reports, you decide. It's the review of a senior teammate, available at any hour and with no waiting for someone to have time.",
+  "forWho": "For anyone coding with Claude Code and pushing changes with no one else looking at them, or for small teams where code review happens late and poorly. It pays off from day one if you work solo: it's the second opinion you don't have.",
+  "tools": ["claude-code", "github"],
+  "capabilities": [
+    "Reviews your branch's diff against main and classifies each finding by severity (CRITICAL, HIGH, MEDIUM, LOW)",
+    "Detects logic errors, uncovered edge cases, and regressions against the code that already existed",
+    "Checks that the changes follow the project's own conventions, not its own",
+    "Cites file and line for every finding, with a concrete fix proposal",
+    "Ends with a clear verdict: ready to push, push with reservations, or don't push"
+  ],
+  "limits": [
+    "Doesn't modify code: it only reads and reports. You apply the fix, or ask for it later in a separate request",
+    "Doesn't run tests or launch the application: its review is static, over the code's text",
+    "Doesn't replace human review on security, payments, or personal-data changes: there it's a first filter, not the last",
+    "Doesn't review what's outside the diff: if the problem lives in a file you didn't touch, it may not see it"
+  ],
+  "files": [
+    {
+      "name": "revisor-de-codigo.md",
+      "language": "markdown",
+      "content": "---\nname: revisor-de-codigo\ndescription: Reviews the current branch's diff and returns findings classified by severity, with file, line, and a proposed fix. Use it before committing or opening a pull request.\ntools: Read, Grep, Glob, Bash\n---\n\nYou are a senior code reviewer. Your job is to review changes, not write them. You never modify files: you read, analyze, and return a report. You speak plainly, straight to the point, no filler.\n\n## Process, in this order\n\n1. **Get the diff.** Run `git diff main...HEAD` (or `git diff HEAD` if there are no new commits). If the diff is empty, say so and stop: there's nothing to review.\n2. **Get your bearings.** Before opining, read the complete files the diff touches, not just the changed lines. A change can be correct in its own three lines and break a function that calls it fifty lines below.\n3. **Learn the house rules.** Look at two or three neighboring files of the same type to pick up the project's real conventions: how things are named, how errors are handled, what libraries are used. Judge against those conventions, not your own taste.\n4. **Review looking, in this order, for:** logic errors and edge cases (nulls, empty lists, zero, accented text); regressions (something that used to work and the change breaks); error-handling mistakes (swallowed exceptions, unlogged errors); obvious performance problems (queries inside loops, repeated reads); and finally style and readability.\n5. **Classify each finding** with an exact severity:\n   - **CRITICAL**: breaks existing functionality, loses data, or opens a security hole. Blocks the push.\n   - **HIGH**: a logic error or edge case that will fail with real data. Must be fixed before pushing.\n   - **MEDIUM**: works, but is fragile or goes against the project's conventions. Fix soon.\n   - **LOW**: style, names, comments. Optional.\n6. **Write the report** in the format below. If you're torn between two severities, pick the higher one and say why you were torn.\n\n## Non-negotiable criteria\n\n- Every finding cites file and line. A finding without a location doesn't count.\n- Every finding includes a concrete fix proposal, with code if it helps.\n- You don't invent problems to look thorough. If the diff is clean, the report says so and gives a one-line compliment, no filler.\n- You don't repeat the same finding in ten places: report it once and list the other locations.\n- Maximum 12 findings. If there are more, report the 12 most serious and say how many are left.\n\n## Output format\n\n```\n## Review of [branch] — [n] files, [n] findings\n\n### CRITICAL\n- `file.py:42` — [what happens and why it's serious]. Fix: [proposal].\n\n### HIGH\n...\n\n### MEDIUM / LOW\n...\n\n## Verdict\n[READY TO PUSH | PUSH WITH RESERVATIONS | DO NOT PUSH] — [one-sentence justification]\n```\n\nIf a section is empty, omit it. Always end with the verdict."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Create the agents folder in your project",
+      "action": "In the root of your project, create the .claude/agents/ folder if it doesn't exist: mkdir -p .claude/agents",
+      "expect": "The .claude/agents folder exists inside your project."
+    },
+    {
+      "title": "Copy the agent file",
+      "action": "Create the file .claude/agents/revisor-de-codigo.md and paste in the full content of the file above, including the three dashes at the start and end of the header block.",
+      "expect": "The file exists and starts with --- followed by name: revisor-de-codigo.",
+      "stuck": "If Claude Code doesn't detect the agent, check that the YAML header has the three dashes on their own line and that the file is in .claude/agents/, not just .claude/."
+    },
+    {
+      "title": "Restart Claude Code in the project",
+      "action": "Close the Claude Code session and reopen it in the project folder. Agents load at startup.",
+      "expect": "Typing /agents in Claude Code, revisor-de-codigo appears in the list."
+    },
+    {
+      "title": "Make a change and ask for a review",
+      "action": "Modify any file in the project and write in Claude Code: \"Use the revisor-de-codigo subagent to review my changes.\"",
+      "expect": "A report with findings by severity and a final verdict. If you haven't changed anything, it'll tell you the diff is empty.",
+      "stuck": "If it reviews the whole project instead of the diff, tell it: \"review only the git diff, not the whole project.\""
+    },
+    {
+      "title": "Make it a habit",
+      "action": "From now on, before each important commit, invoke the reviewer. If you want Claude to do it on its own, add this line to your CLAUDE.md: \"Before committing, always run the revisor-de-codigo subagent.\"",
+      "expect": "Claude launches the review without you asking every time."
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal run",
+      "input": "Change a function to return null in a case that used to return an empty list, and ask for a review of the diff.",
+      "expect": "It detects the contract change as HIGH or CRITICAL, cites file and line, and proposes keeping the empty list or adapting the function's callers."
+    },
+    {
+      "name": "Clean diff",
+      "input": "Ask for a review without having changed anything.",
+      "expect": "It responds that the diff is empty and doesn't invent findings."
+    },
+    {
+      "name": "Change with a secret",
+      "input": "Add a line with API_KEY = \"sk-test-1234567890abcdef\" to a file and ask for a review.",
+      "expect": "It flags it as CRITICAL for a secret in the code and proposes moving it to an environment variable. Delete it afterward: it was just for testing."
+    },
+    {
+      "name": "Verdict present",
+      "input": "Any review.",
+      "expect": "The report always ends with READY TO PUSH, PUSH WITH RESERVATIONS, or DO NOT PUSH and a one-sentence justification."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Anthropic subscription or API for Claude Code",
+      "where": "claude.ai (Pro/Max plan) or console.anthropic.com → API Keys",
+      "how": "Claude Code works with your claude.ai session or with an API key. If you use a key, store it as ANTHROPIC_API_KEY in your environment; never paste it into a project file.",
+      "cost": "Included in Claude's paid plan; via API you pay per token, a typical review costs cents"
+    }
+  ],
+  "risks": [
+    "False sense of security: a READY TO PUSH verdict guarantees nothing. Mitigation: on payments, security, or personal-data code, human review in addition to the agent, always.",
+    "The agent reads your code, which travels out to the Anthropic API. Mitigation: don't use it on repositories with plaintext customer data or contractual confidentiality restrictions without reviewing your plan's data policy.",
+    "An excess of LOW findings burying the serious ones. Mitigation: the prompt caps it at 12 findings; if there's still noise, ask it for \"only CRITICAL and HIGH.\"",
+    "Expensive reviews on huge diffs. Mitigation: review by small branches; if the diff goes over a thousand lines, break the work into chunks."
+  ],
+  "examples": [
+    {
+      "name": "Before a commit",
+      "prompt": "Use the revisor-de-codigo subagent to review my pending changes before committing."
+    },
+    {
+      "name": "Review a specific branch",
+      "prompt": "Use the revisor-de-codigo subagent to review the diff of the feature/facturas branch against main."
+    },
+    {
+      "name": "Only the serious ones",
+      "prompt": "Use the revisor-de-codigo subagent on my diff, but report only the CRITICAL and HIGH findings."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion"]
+}

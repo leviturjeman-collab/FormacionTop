@@ -1,0 +1,316 @@
+{
+  "id": "agente-resumen-semanal",
+  "order": 12,
+  "title": "Agente de resumen semanal",
+  "kicker": "Automatización",
+  "platform": "n8n",
+  "platformLabel": "n8n",
+  "level": "intermedio",
+  "what": "Un flujo de n8n que elimina el reporte de los viernes: a la hora que elijas, lee la hoja de Google Sheets donde tu equipo registra la actividad (casos, ventas, incidencias, horas), se la pasa a Claude para que redacte un resumen ejecutivo en español con cifras y puntos de atención, y deja ese resumen como borrador de correo en Gmail dirigido a quien deba recibirlo. Tú lo abres, lo repasas, corriges lo que haga falta y lo envías. La parte mecánica desaparece; la responsabilidad de lo que se afirma sigue siendo tuya.",
+  "forWho": "Para quien monta cada semana el mismo informe copiando de una hoja de cálculo: coordinadores, responsables de operaciones, administración. Compensa si el reporte te lleva más de media hora semanal y tus datos ya viven en una hoja.",
+  "tools": ["n8n", "sheets", "claude", "gmail"],
+  "capabilities": [
+    "Se dispara solo cada viernes a la hora configurada, sin que nadie se acuerde",
+    "Lee las filas de la hoja de registro y las compacta para el análisis (hasta 200 filas recientes)",
+    "Redacta con claude-sonnet-5 un resumen ejecutivo: qué pasó, cifras clave, comparación cualitativa y puntos de atención",
+    "Deja el resultado como borrador en Gmail con destinatario y asunto puestos: revisar y enviar, dos clics",
+    "Indica en el propio correo cuántas filas se analizaron, para que el lector sepa de dónde sale"
+  ],
+  "limits": [
+    "No envía el correo: lo deja en borradores. El resumen sale firmado por ti, así que lo apruebas tú",
+    "No verifica los datos de la hoja: si el registro está mal, el resumen estará bien redactado y mal informado",
+    "No calcula métricas exactas complejas: redacta a partir de las filas; para cuadros de mando con números auditables usa una hoja de cálculo o un panel",
+    "No debe recibir columnas con datos personales sensibles: resume actividad, no expedientes de personas"
+  ],
+  "flow": {
+    "name": "Agente de resumen semanal (Sheets → IA → borrador)",
+    "nodes": [
+      {
+        "name": "Nota del flujo",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-380, -220],
+        "parameters": {
+          "content": "## Resumen semanal con freno humano\nViernes 16:00 → leer Google Sheets → Claude redacta → borrador en Gmail.\n\nAntes de activar: 1) credencial de Google Sheets y el ID de tu hoja, 2) credencial httpHeaderAuth con la clave de Anthropic (cabecera x-api-key), 3) credencial de Gmail y el correo del destinatario.\n\nEl correo NUNCA se envía solo: queda en Borradores hasta que tú lo apruebes.",
+          "height": 300,
+          "width": 340
+        }
+      },
+      {
+        "name": "Cada viernes por la tarde",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "weeks",
+                "triggerAtDay": [5],
+                "triggerAtHour": 16
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "Leer hoja de registro",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [220, 0],
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "REEMPLAZAR_ID_DEL_DOCUMENTO",
+            "mode": "id"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "REEMPLAZAR_NOMBRE_DE_PESTANA",
+            "mode": "name"
+          },
+          "options": {}
+        },
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "REEMPLAZAR",
+            "name": "Google Sheets (registro)"
+          }
+        }
+      },
+      {
+        "name": "Compactar filas",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [440, 0],
+        "parameters": {
+          "jsCode": "// Junta todas las filas de la hoja en un solo texto para la IA.\nconst filas = $input.all().map(function (item) { return item.json; });\n\n// Limite prudente: las 200 filas mas recientes (ajustalo a tu hoja).\nconst recorte = filas.slice(-200);\nconst lineas = recorte.map(function (f) { return JSON.stringify(f); }).join('\\n');\n\nconst sistema = 'Eres analista de operaciones y redactas en espanol, con tuteo profesional. ' +\n  'A partir de las filas de registro que te paso, escribe el resumen semanal para el equipo: ' +\n  '1) que ha pasado esta semana en 3-4 frases; ' +\n  '2) las cifras clave que se deduzcan de las filas (totales, repartos), citando de que columna salen; ' +\n  '3) puntos de atencion: maximo 3, solo si los datos los sostienen; ' +\n  '4) que conviene mirar la semana que viene. ' +\n  'Prohibido inventar datos que no esten en las filas. Si algo no se puede saber con estos datos, dilo. ' +\n  'Formato: texto plano de correo, sin markdown, maximo 300 palabras.';\n\nconst payload = {\n  model: 'claude-sonnet-5',\n  max_tokens: 1200,\n  system: sistema,\n  messages: [ { role: 'user', content: 'Filas del registro (una por linea, en JSON):\\n' + lineas } ]\n};\n\nreturn [ { json: { payload: payload, totalFilas: filas.length } } ];"
+        }
+      },
+      {
+        "name": "Redactar con Claude",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [660, 0],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.payload) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "REEMPLAZAR",
+            "name": "Anthropic (cabecera x-api-key)"
+          }
+        }
+      },
+      {
+        "name": "Extraer resumen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [880, 0],
+        "parameters": {
+          "jsCode": "// Recoge el texto redactado y el numero de filas analizadas.\nconst bruto = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : 'La IA no devolvio texto. Revisa la ejecucion en n8n.';\nconst total = $('Compactar filas').first().json.totalFilas;\n\nreturn [ { json: { resumen: bruto.trim(), totalFilas: total } } ];"
+        }
+      },
+      {
+        "name": "Borrador del correo semanal",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [1100, 0],
+        "parameters": {
+          "resource": "draft",
+          "subject": "=Resumen semanal — {{ $now.format('dd/MM/yyyy') }}",
+          "message": "=Resumen generado a partir de {{ $json.totalFilas }} filas de la hoja de registro.\n\n{{ $json.resumen }}\n\n---\nBorrador generado automáticamente. Revísalo y corrígelo antes de enviarlo: lo que afirme sale con tu firma.",
+          "options": {
+            "sendTo": "REEMPLAZAR_CORREO_DESTINATARIO"
+          }
+        },
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REEMPLAZAR",
+            "name": "Gmail (cuenta que envia el resumen)"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cada viernes por la tarde": {
+        "main": [
+          [
+            {
+              "node": "Leer hoja de registro",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer hoja de registro": {
+        "main": [
+          [
+            {
+              "node": "Compactar filas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compactar filas": {
+        "main": [
+          [
+            {
+              "node": "Redactar con Claude",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Redactar con Claude": {
+        "main": [
+          [
+            {
+              "node": "Extraer resumen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extraer resumen": {
+        "main": [
+          [
+            {
+              "node": "Borrador del correo semanal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "prompt-del-nodo-ia.md",
+      "language": "markdown",
+      "content": "# Prompt del redactor (nodo «Compactar filas»)\n\nEl prompt vive en la constante `sistema` de ese nodo. Versión base:\n\n```\nEres analista de operaciones y redactas en español, con tuteo profesional.\nA partir de las filas de registro que te paso, escribe el resumen semanal para el equipo:\n1) qué ha pasado esta semana en 3-4 frases;\n2) las cifras clave que se deduzcan de las filas, citando de qué columna salen;\n3) puntos de atención: máximo 3, solo si los datos los sostienen;\n4) qué conviene mirar la semana que viene.\nProhibido inventar datos que no estén en las filas. Si algo no se puede saber con estos datos, dilo.\nFormato: texto plano de correo, sin markdown, máximo 300 palabras.\n```\n\n## Cómo adaptarlo\n\n- **Tu audiencia**: si va a dirección, pide «tono ejecutivo, sin tecnicismos»; si va al equipo, «tono cercano».\n- **Tus secciones**: sustituye las 4 secciones por las de tu informe de siempre; a la gente le gusta reconocer la estructura.\n- **Tus definiciones**: si «caso cerrado» significa algo concreto en tu hoja, defínelo en el prompt para que no lo interprete a su manera.\n- **La regla de oro se queda**: «prohibido inventar datos» no se toca. Un resumen bonito con cifras inventadas es el peor resultado posible."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Prepara la hoja de registro",
+      "action": "Asegúrate de que tu hoja de Google Sheets tiene la primera fila con nombres de columna claros (fecha, tipo, estado, importe...) y una fila por evento. Copia el ID del documento (el churro entre /d/ y /edit de la URL).",
+      "expect": "Una hoja con cabeceras limpias y su ID copiado."
+    },
+    {
+      "title": "Importa el flujo",
+      "action": "En n8n: Workflows → Add workflow → ⋯ → Import from file, pegando el JSON del campo flow.",
+      "expect": "6 nodos en cadena más la nota amarilla."
+    },
+    {
+      "title": "Conecta Google Sheets",
+      "action": "Abre «Leer hoja de registro», crea la credencial Google Sheets OAuth2 (inicia sesión y acepta permisos) y sustituye REEMPLAZAR_ID_DEL_DOCUMENTO y el nombre de la pestaña por los tuyos.",
+      "expect": "Ejecutando el nodo suelto ves tus filas como items de n8n.",
+      "stuck": "Si devuelve vacío, el nombre de la pestaña no coincide exactamente (mayúsculas y espacios cuentan)."
+    },
+    {
+      "title": "Crea la credencial de Anthropic",
+      "action": "Abre «Redactar con Claude» → Credentials → Header Auth con Name: x-api-key y Value: tu clave de console.anthropic.com.",
+      "expect": "Nodo con credencial asignada y sin claves escritas en él."
+    },
+    {
+      "title": "Conecta Gmail y pon el destinatario",
+      "action": "Abre «Borrador del correo semanal», crea la credencial Gmail OAuth2 de la cuenta que firma el resumen y cambia REEMPLAZAR_CORREO_DESTINATARIO por el correo real (puede ser el tuyo para empezar).",
+      "expect": "Nodo en verde con destinatario puesto."
+    },
+    {
+      "title": "Genera un resumen de prueba",
+      "action": "Pulsa Test workflow y espera: leerá la hoja, llamará a Claude y creará el borrador.",
+      "expect": "Un borrador en Gmail con asunto «Resumen semanal — [fecha]», el número de filas analizadas y el resumen. Compara dos cifras del texto contra tu hoja.",
+      "stuck": "Si el resumen cita columnas raras, renombra las cabeceras de la hoja a nombres humanos: la IA lee literalmente lo que hay."
+    },
+    {
+      "title": "Activa y ajusta la hora",
+      "action": "Pon Active. Si quieres otro día u hora, edita el nodo «Cada viernes por la tarde» (día 5 = viernes; la hora va en horario del servidor de n8n, compruébalo con la primera ejecución real).",
+      "expect": "Cada viernes aparece el borrador solo; tú lo revisas y lo envías."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "Test workflow con una hoja que tenga 20-50 filas reales de actividad.",
+      "expect": "Borrador con resumen fiel: cifras que cuadran con la hoja y máximo 3 puntos de atención."
+    },
+    {
+      "name": "Hoja floja",
+      "input": "Ejecuta con una hoja de solo 3 filas.",
+      "expect": "El resumen no infla conclusiones: dice que hay pocos datos para valorar tendencias."
+    },
+    {
+      "name": "Sin envío automático",
+      "input": "Tras cualquier ejecución, revisa la carpeta Enviados de Gmail.",
+      "expect": "Vacía de resúmenes: todo está en Borradores. Si algo se envió solo, el nodo de Gmail ya no es resource draft: revísalo."
+    },
+    {
+      "name": "Cifra trazable",
+      "input": "Pregunta a alguien del equipo si el resumen le cuadra con su semana.",
+      "expect": "Las afirmaciones del texto se pueden localizar en filas concretas de la hoja; si algo no, ajusta el prompt para exigir citar columnas."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Google Sheets (OAuth2)",
+      "where": "Dentro de n8n, al abrir el nodo de Sheets → Create new credential",
+      "how": "Inicia sesión con la cuenta que ve la hoja y acepta permisos. En n8n autoalojado, crea antes el proyecto OAuth en Google Cloud con la callback que n8n indica.",
+      "cost": "gratis"
+    },
+    {
+      "name": "API de Anthropic",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Clave en una credencial Header Auth de n8n (Name: x-api-key). Nunca dentro de un nodo.",
+      "cost": "de pago por tokens; un resumen semanal con claude-sonnet-5 cuesta unos pocos céntimos"
+    },
+    {
+      "name": "Gmail (OAuth2)",
+      "where": "Dentro de n8n, al abrir el nodo de Gmail",
+      "how": "Sesión de la cuenta que firmará los resúmenes, con permisos aceptados.",
+      "cost": "gratis"
+    }
+  ],
+  "risks": [
+    "Resumen convincente sobre datos malos: la hoja desactualizada produce informes falsos con buena prosa. Mitigación: el correo indica cuántas filas se analizaron; si el número baja de lo normal, desconfía y revisa la hoja.",
+    "Cifras alucinadas por la IA. Mitigación: el prompt prohíbe inventar y pide citar columnas; tu revisión del borrador es el control final, por eso no se envía solo.",
+    "Datos personales de la hoja viajando a la API. Mitigación: registra actividad con códigos o iniciales, no con expedientes completos de personas.",
+    "Enviar sin leer porque «siempre está bien». Mitigación: el día que dejes de leerlo, quítale tu firma; un informe que nadie revisa no debería firmarlo nadie."
+  ],
+  "examples": [
+    {
+      "name": "Cambiar de día y audiencia",
+      "prompt": "Edita el disparador a lunes 8:00 (día 1, hora 8) y cambia en el prompt la audiencia a «dirección, tono ejecutivo, máximo 150 palabras»."
+    },
+    {
+      "name": "Dos hojas, un resumen",
+      "prompt": "Duplica el nodo de Sheets para leer también la pestaña de incidencias, junta ambos con un nodo Merge y ajusta el prompt para que distinga los dos registros."
+    }
+  ],
+  "kits": ["crm-reporting-institucional"]
+}

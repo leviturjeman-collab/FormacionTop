@@ -3,6 +3,7 @@ import { BookOpen, ChevronRight, Search } from 'lucide-react'
 import type { GlossaryEntry } from '../types'
 import { useCourse } from '../course'
 import { href } from '../router'
+import { useLocale } from '../i18n'
 
 const LETTERS = ['#', ...'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('')]
 
@@ -18,6 +19,7 @@ type Entry = GlossaryEntry
  */
 export default function Indice({ letter }: { letter?: string }) {
   const course = useCourse()
+  const locale = useLocale()
   const active = letter?.toUpperCase()
   const [open, setOpen] = useState<string | null>(null)
   const [query, setQuery] = useState('')
@@ -46,20 +48,25 @@ export default function Indice({ letter }: { letter?: string }) {
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker"><BookOpen size={12} /> Diccionario de la academia</span>
-        <h1>Las palabras que frenan el proyecto</h1>
+        <span className="st-kicker"><BookOpen size={12} /> {locale === 'en' ? 'Academy dictionary' : 'Diccionario de la academia'}</span>
+        <h1>{locale === 'en' ? 'The words that stall the project' : 'Las palabras que frenan el proyecto'}</h1>
         <p>
-          Aquí se explica el vocabulario técnico en lenguaje normal: qué significa, con qué se confunde y
-          cuándo te afecta. Busca una palabra, o entra por su letra. Son {entries.length} palabras: usa el buscador, es más rápido.
+          {locale === 'en' ? (
+            <>Technical vocabulary explained in plain language: what it means, what it gets confused with and
+            when it affects you. Search for a word, or go in by its letter. There are {entries.length} words: the search box is faster.</>
+          ) : (
+            <>Aquí se explica el vocabulario técnico en lenguaje normal: qué significa, con qué se confunde y
+            cuándo te afecta. Busca una palabra, o entra por su letra. Son {entries.length} palabras: usa el buscador, es más rápido.</>
+          )}
         </p>
       </div>
 
-      <label className="st-dictionary-search"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Busca localhost, portapapeles, tokens, API…" aria-label="Buscar una palabra" /></label>
+      <label className="st-dictionary-search"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={locale === 'en' ? 'Search localhost, clipboard, tokens, API…' : 'Busca localhost, portapapeles, tokens, API…'} aria-label={locale === 'en' ? 'Search a word' : 'Buscar una palabra'} /></label>
 
-      <div className="st-dictionary-note"><strong>{entries.length} palabras disponibles.</strong><span>Las nuevas palabras que aparecen en las guías se incorporan aquí para que no tengas que aprenderlas de memoria.</span></div>
+      <div className="st-dictionary-note"><strong>{entries.length} {locale === 'en' ? 'words available.' : 'palabras disponibles.'}</strong><span>{locale === 'en' ? 'New words that appear in the guides are added here so you don\'t have to memorize them.' : 'Las nuevas palabras que aparecen en las guías se incorporan aquí para que no tengas que aprenderlas de memoria.'}</span></div>
 
-      <nav className="st-alphabet" aria-label="Navegación alfabética">
-        <a className={active ? '' : 'off'} href={href({ name: 'indice' })}>Inicio</a>
+      <nav className="st-alphabet" aria-label={locale === 'en' ? 'Alphabet navigation' : 'Navegación alfabética'}>
+        <a className={active ? '' : 'off'} href={href({ name: 'indice' })}>{locale === 'en' ? 'Home' : 'Inicio'}</a>
         {LETTERS.map((item) => (
           <a
             key={item}
@@ -88,14 +95,15 @@ export default function Indice({ letter }: { letter?: string }) {
       ))}
 
       {active && !groups.has(active) && !query && (
-        <p className="st-empty">No hay conceptos indexados bajo la letra «{active}».</p>
+        <p className="st-empty">{locale === 'en' ? <>No concepts indexed under the letter "{active}".</> : <>No hay conceptos indexados bajo la letra «{active}».</>}</p>
       )}
-      {query && !groups.size && <p className="st-empty">No encuentro «{query}». Prueba con una palabra más corta o con “local”.</p>}
+      {query && !groups.size && <p className="st-empty">{locale === 'en' ? <>Can't find "{query}". Try a shorter word or "local".</> : <>No encuentro «{query}». Prueba con una palabra más corta o con "local".</>}</p>}
     </div>
   )
 }
 
 function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle: () => void }) {
+  const locale = useLocale()
   const hasDetail = Boolean(entry.long || entry.analogy || entry.confusion || entry.seeAlso?.length || entry.lessons.length)
 
   return (
@@ -112,21 +120,21 @@ function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle
 
           {entry.analogy && (
             <p className="st-term-note st-term-analogy">
-              <b>Como si dijéramos</b>
+              <b>{locale === 'en' ? "It's like saying" : 'Como si dijéramos'}</b>
               {entry.analogy}
             </p>
           )}
 
           {entry.confusion && (
             <p className="st-term-note st-term-confusion">
-              <b>No lo confundas</b>
+              <b>{locale === 'en' ? "Don't confuse it with" : 'No lo confundas'}</b>
               {entry.confusion}
             </p>
           )}
 
           {(entry.seeAlso?.length ?? 0) > 0 && (
             <div className="st-term-links">
-              <span>Ver también</span>
+              <span>{locale === 'en' ? 'See also' : 'Ver también'}</span>
               <div>
                 {(entry.seeAlso || []).map((related) => (
                   <a key={related} href={href({ name: 'indice', letter: related[0].toUpperCase() })}>
@@ -139,7 +147,7 @@ function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle
 
           {entry.lessons.length > 0 && (
             <div className="st-term-links">
-              <span>Se explica en</span>
+              <span>{locale === 'en' ? 'Explained in' : 'Se explica en'}</span>
               <div>
                 {entry.lessons.map((lesson) => (
                   <a key={lesson.slug} href={href({ name: 'leccion', slug: lesson.slug })}>

@@ -1,0 +1,113 @@
+{
+  "id": "generador-de-tests",
+  "order": 2,
+  "title": "Test Generator",
+  "kicker": "Code & Quality",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "intermedio",
+  "what": "A Claude Code subagent that writes tests for the code you point it at. It first studies how your project already tests things (framework, folders, style) and then generates cases covering the happy path, edge cases, and errors. It runs the tests it writes and doesn't call the job done until they pass. It hands you ready-to-use test files and a summary of what each one covers and what it left out.",
+  "forWho": "For anyone with untested code who dreads getting started, or who writes tests but always the same three. It pays off on any project that already works and that you're scared to touch: tests are what turns that fear into a concrete warning.",
+  "tools": ["claude-code", "python", "node"],
+  "capabilities": [
+    "Detects the project's test framework (pytest, vitest, jest...) and writes in that style, not its own",
+    "Generates happy-path cases, edge cases (empty, null, zero, accented characters) and expected-error cases",
+    "Runs the tests it writes and fixes them until they truly pass",
+    "Flags with a comment tests that fail due to a real bug in the code, instead of rigging them to pass",
+    "Summarizes what's covered and what isn't, so you know what's missing"
+  ],
+  "limits": [
+    "Doesn't touch production code: if a test exposes a bug, it documents it and tells you, it doesn't fix it on its own",
+    "Doesn't invent the code's intent: if a function is ambiguous, it asks what the correct behavior is before locking it into a test",
+    "Doesn't generate GUI or browser end-to-end tests: it stays at unit and light integration level",
+    "Doesn't guarantee total coverage: it prioritizes what hurts most if it breaks, and tells you what it left out"
+  ],
+  "files": [
+    {
+      "name": "generador-de-tests.md",
+      "language": "markdown",
+      "content": "---\nname: generador-de-tests\ndescription: Writes tests for the given code following the project's framework and style, runs them until they pass, and reports the coverage achieved. Use it when a function, module, or change is left without tests.\ntools: Read, Grep, Glob, Bash, Write, Edit\n---\n\nYou are an engineer specialized in writing tests. You write tests, not production code: the project's source files are never touched under any circumstance. You speak clearly and directly.\n\n## Process, in this order\n\n1. **Discover how testing works here.** Find the tests folder, the config file (pytest.ini, pyproject.toml, vitest.config, package.json...) and read two or three existing tests. Copy their conventions: names, structure, fixtures, assertions. If the project has no tests at all, choose the language's standard framework (pytest for Python, vitest for Vite projects, jest for classic Node) and say so explicitly in your summary.\n2. **Read the entire code to be tested**, including the functions it calls. Note: possible inputs, outputs, errors it throws, side effects (files, network, database).\n3. **Design the cases before writing.** For each public function: a happy-path case with realistic data, the applicable edge cases (empty list, empty string, zero, negative, null, text with accented characters), and error cases (invalid input should throw the documented exception, not a different one). External effects (network, database, clock) are isolated with mocks or doubles; a unit test never depends on the internet.\n4. **Write the tests** in the right folder and with the project's naming pattern. Each test checks exactly one thing and its name says what: test_returns_empty_when_no_invoices is better than test_case_3.\n5. **Run them.** Launch the project's runner only against your new files. If a test fails because the test is wrong, fix it and repeat. If it fails because the CODE has a bug, don't rig the test: mark it as an expected failure (xfail, test.fails, or the framework's mechanism) with a BUG comment explaining what should happen, and report it in the summary.\n6. **Close with the summary** in the format below.\n\n## Non-negotiable criteria\n\n- A test that can't fail isn't a test: no trivial assertions like assert True or expect(x).toBeDefined() as the only check.\n- Zero dependency between tests: each one sets up and cleans up its own state. Execution order shouldn't matter.\n- Realistic test data, in the domain's own language when applicable: \"Márquez, S.L.\" finds more bugs than \"foo\".\n- If you need to lock in an ambiguous behavior, ask before writing the test. A test that locks in the wrong behavior is worse than no test.\n\n## Output format\n\n```\n## Tests generated\n\n- [path/to/test_file.py] — [n] tests: [one line on what it covers]\n\n## Run results\n[n] pass · [n] fail due to a code bug (marked) · command used\n\n## Bugs found\n- [file:line] — [what it does today] vs [what it should do]\n\n## What's left uncovered\n- [gap and why]\n```\n\nIf you found no bugs, say \"None\" in that section. Don't delete it: its absence is information."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Create the agents folder",
+      "action": "In the root of your project: mkdir -p .claude/agents",
+      "expect": "The .claude/agents folder exists."
+    },
+    {
+      "title": "Copy the agent file",
+      "action": "Create .claude/agents/generador-de-tests.md and paste the full content of the file above, including its --- header.",
+      "expect": "The file starts with --- and name: generador-de-tests.",
+      "stuck": "If the agent doesn't show up, check there are no spaces before the three dashes on the first line."
+    },
+    {
+      "title": "Check that your project can run tests",
+      "action": "Run your project's runner by hand (pytest, npm test...). The agent will use it; if it doesn't work for you, it won't work for it either.",
+      "expect": "The runner starts up, even if there are no tests yet.",
+      "stuck": "If you don't have a runner installed, ask Claude Code first: \"install and configure pytest in this project\" (or vitest/jest)."
+    },
+    {
+      "title": "Restart Claude Code",
+      "action": "Close and reopen Claude Code in the project folder so it loads the agent.",
+      "expect": "You see generador-de-tests in the list with /agents."
+    },
+    {
+      "title": "Ask it for tests on something small",
+      "action": "Write: \"Use the generador-de-tests subagent to write tests for [path/to/file].\" Start with a file of pure functions, no network or database.",
+      "expect": "New test files, a green run, and a summary of what's covered and what's pending.",
+      "stuck": "If tests fail due to missing dependencies, install them with the project's package manager and ask it to retry."
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal run",
+      "input": "Ask it for tests on a function that calculates an invoice total with tax.",
+      "expect": "Happy-path tests, zero amount, negative amounts (expected error), and rounding. All pass when run."
+    },
+    {
+      "name": "Function with a bug",
+      "input": "Ask it for tests on a function that divides without checking for zero.",
+      "expect": "It writes the zero-case test, detects that it blows up, marks it as an expected failure with a BUG comment, and lists it under \"Bugs found\" without touching the function."
+    },
+    {
+      "name": "Respects the style",
+      "input": "In a project already using pytest with fixtures, ask it for tests on a new module.",
+      "expect": "It uses pytest and fixtures like the existing tests, not unittest or another style."
+    },
+    {
+      "name": "Ambiguous behavior",
+      "input": "Ask it for tests on a function whose behavior with empty input isn't clear.",
+      "expect": "It asks what should happen with empty input before locking it into a test."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Anthropic subscription or API for Claude Code",
+      "where": "claude.ai (Pro/Max plan) or console.anthropic.com → API Keys",
+      "how": "Claude Code uses your claude.ai session or a key in ANTHROPIC_API_KEY. Never in a repo file.",
+      "cost": "Included in the paid plan; via API, cents per test-generation session"
+    }
+  ],
+  "risks": [
+    "Tests that lock in incorrect behavior as if it were correct. Mitigation: read the names of the generated tests and confirm they describe what you want the code to do.",
+    "Fake coverage: lots of trivial tests that never fail. Mitigation: the prompt forbids it; still, open two or three tests at random and deliberately break the code to see if any of them catches it.",
+    "The agent runs commands on your machine (the test runner). Mitigation: review what command it's about to run; on third-party or freshly cloned projects, run it in a container.",
+    "Tests that depend on network or the clock and fail intermittently. Mitigation: the prompt requires mocks; if you see a flaky test, ask it to isolate the dependency."
+  ],
+  "examples": [
+    {
+      "name": "A specific file",
+      "prompt": "Use the generador-de-tests subagent to write tests for src/servicios/facturas.py."
+    },
+    {
+      "name": "Only what changed",
+      "prompt": "Use the generador-de-tests subagent to cover with tests the functions I've touched on this branch."
+    },
+    {
+      "name": "Raise coverage where it hurts",
+      "prompt": "Use the generador-de-tests subagent: find the project's most critical module without tests and cover it."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion"]
+}

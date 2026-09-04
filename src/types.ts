@@ -429,7 +429,7 @@ export interface ToolPage {
   totalCount?: number
   /** Límite de lecciones visibles por herramienta. */
   maxLessons?: number
-  /** Las 20 lecciones escritas a mano de esta herramienta, si ya las tiene. */
+  /** Las lecciones escritas a mano de esta herramienta, si ya las tiene. */
   itinerary?: { id: string; slot?: number; title: string; minutes: number }[]
   lessonSlugs: string[]
   stageIds: string[]
@@ -755,6 +755,67 @@ export interface InstitutionalKit {
   deliverables: string[]
 }
 
+/* --- Agentes listos para usar ---------------------------------------- */
+
+export type AgentPlatform = 'claude-code' | 'gpt' | 'n8n' | 'api'
+
+export interface AgentFile {
+  name: string
+  language: string
+  /** El contenido completo, listo para copiar tal cual. */
+  content: string
+}
+
+export interface AgentSetupStep {
+  title: string
+  action: string
+  expect: string
+  stuck?: string
+}
+
+export interface AgentTestCase {
+  name: string
+  input: string
+  expect: string
+}
+
+export interface AgentCredential {
+  name: string
+  where: string
+  how: string
+  cost: string
+}
+
+export interface AgentExample {
+  name: string
+  prompt: string
+}
+
+/** Un agente completo: configuración, instalación, prueba y límites. */
+export interface ReadyAgent {
+  id: string
+  order?: number
+  title: string
+  kicker: string
+  platform: AgentPlatform
+  platformLabel: string
+  level: LevelId
+  what: string
+  forWho: string
+  tools: string[]
+  capabilities: string[]
+  limits: string[]
+  files: AgentFile[]
+  setup: AgentSetupStep[]
+  test: AgentTestCase[]
+  credentials: AgentCredential[]
+  risks: string[]
+  examples?: AgentExample[]
+  /** Solo agentes de n8n: el flujo importable. */
+  flow?: Record<string, unknown>
+  kits?: string[]
+}
+
 /** Una pregunta de alumno, con su respuesta y la leccion que la desarrolla. */
 export interface FaqItem {
   q: string
@@ -776,6 +837,8 @@ export interface FaqGroup {
 export interface Course {
   generatedAt: string
   vaultName: string
+  /** Idioma de este curso generado: 'es' o 'en'. */
+  locale?: 'es' | 'en'
   levels: LevelMeta[]
   kinds: Record<string, { label: string; hint: string }>
   sections: SectionMeta[]
@@ -796,6 +859,7 @@ export interface Course {
     quizQuestions: number
     blocks: number
     interactivePieces: number
+    agents?: number
   }
   stages: Stage[]
   categories: Category[]
@@ -805,6 +869,7 @@ export interface Course {
   guides: Guide[]
   curso: CursoLesson[]
   kits: InstitutionalKit[]
+  agents: ReadyAgent[]
   preguntas: FaqGroup[]
   toolPages: ToolPage[]
   glossaryIndex: GlossaryEntry[]

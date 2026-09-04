@@ -1,0 +1,255 @@
+{
+  "id": "productizacion-negocio",
+  "title": "Productization and Business",
+  "subtitle": "You leave here with the price, the scope, and the demo for your first paid job",
+  "minutes": 60,
+  "slides": [
+    {
+      "kind": "portada",
+      "title": "Productization and Business",
+      "text": "Today we put a price on what you already know how to do.",
+      "notes": "Open with the promise out loud: no new tool today, today there are three numbers, a proposal, and a demo that doesn't depend on the client's wifi. Ask by show of hands who's ever sent someone a quote. If almost nobody raises a hand, even better: by the end of the hour they'll write their first one."
+    },
+    {
+      "kind": "idea",
+      "title": "Nobody buys AI. They buy hours",
+      "text": "The client isn't paying for a model. They're paying to get ten hours a month of their staff's time back.",
+      "items": [
+        "Your demo impresses them for thirty seconds",
+        "Your invoice hurts them all month long",
+        "Between the two there's a subtraction",
+        "That subtraction is today's class"
+      ],
+      "notes": "This is where almost everyone stumbles: they show the tool working and expect the client to connect the dots themselves. They don't. Tell the typical meeting story where you show something brilliant, the client nods happily, and then never calls back: they liked it, but never learned which line on their bill goes down because of you."
+    },
+    {
+      "kind": "pregunta",
+      "title": "What do you sell an accounting firm?",
+      "text": "Four sentences for the same tool. Only one sells.",
+      "items": [
+        "An AI-powered chatbot",
+        "An automatic incoming-email classifier",
+        "Ten hours of admin time back every month",
+        "Access to the latest technology on the market"
+      ],
+      "notes": "Have them vote by show of hands before you say anything. c) is the only one the client understands without translation; the others describe how you do it, not what they gain. Rule for the rest of their lives: if your sales sentence has a word the client would have to look up online, it's not your sales sentence."
+    },
+    {
+      "kind": "caso",
+      "title": "Gestoría Arriaga, Zaragoza, three people",
+      "text": "420 emails a month classified by hand. Fourteen hours. €252 of salary every month.",
+      "items": [
+        "By hand: 14.0 hours a month",
+        "With the tool: 3.5 hours a month",
+        "Measured accuracy: 11 out of 12 emails correct",
+        "Net savings: €143.94 a month",
+        "€900 implementation: paid back in 6.3 months"
+      ],
+      "notes": "Stress two details. One: those 3.5 hours already include 1.2 hours of fixing the tool's own mistakes, because a case study that doesn't subtract its mistakes is advertising. Two: 11 of 12, not 12 of 12; anyone who's ever worked with software distrusts a perfect score. Ask the room which of the five numbers they'd put in the proposal email's subject line."
+    },
+    {
+      "kind": "idea",
+      "title": "Price is defended with a subtraction",
+      "text": "Three numbers, that's it: net monthly savings, months to break even, first-year balance.",
+      "items": [
+        "€189 of hours saved per month",
+        "Minus €45 of maintenance",
+        "Minus €0.06 of model billing",
+        "Net savings: €143.94 a month",
+        "First year: €827.28 in the client's favor"
+      ],
+      "notes": "Subtracting your own costs in front of the client is what sets you apart from someone selling smoke. Nobody believes a gross saving; everyone believes a saving that already has your invoice taken out of it. Have them copy the three numbers in their notebook: net savings, months to break even, and twelve-month balance."
+    },
+    {
+      "kind": "codigo",
+      "title": "Every number in one file",
+      "text": "If a number lives in two places, sooner or later one of them will be wrong.",
+      "code": "{\n  \"cliente\": \"Gestoria Arriaga (Zaragoza, 3 people)\",\n  \"correos_al_mes\": 420,\n  \"minutos_a_mano_por_correo\": 2.0,\n  \"segundos_revision_por_correo\": 20,\n  \"minutos_corregir_un_fallo\": 2.0,\n  \"coste_hora_admin_eur\": 18.0,\n  \"precio_implantacion_eur\": 900,\n  \"precio_mantenimiento_mes_eur\": 45,\n  \"acierto_prometido\": 0.85,\n  \"plazo_semanas\": 3\n}",
+      "notes": "This is a JSON file: labels with their value, nothing more, and it reads without knowing how to program. The classic mistake is the report says 12 hours, the proposal says 10, and you say 14 in the meeting; that's the end of your credibility and it doesn't come back. With the numbers in one place, change 420 to 600 and the whole proposal recalculates itself. Warning: JSON doesn't allow trailing commas or comments, and it complains."
+    },
+    {
+      "kind": "codigo",
+      "title": "From accuracy to euros",
+      "text": "Twelve lines. This is everything behind the figure you show off.",
+      "code": "# how_much_it_saves.py - turns accuracy into hours and euros.\nEMAILS = 420          # counted in their inbox, not estimated\nMIN_BY_HAND = 2.0     # timed with the person who does it\nSEC_REVIEW = 20        # reviewing what the tool proposes\nMIN_FIX = 2.0          # fixing each of the tool's mistakes\nEUR_HOUR = 18.0        # real cost of one admin hour\nACCURACY = 11 / 12     # 11 of 12 emails, labeled by hand\n\nhours_by_hand = EMAILS * MIN_BY_HAND / 60\nhours_review = EMAILS * SEC_REVIEW / 3600\nhours_fix = EMAILS * (1 - ACCURACY) * MIN_FIX / 60\nhours_saved = hours_by_hand - hours_review - hours_fix\n\nprint(round(hours_by_hand, 1), \"h/month by hand\")\nprint(round(hours_saved, 1), \"h saved =\", round(hours_saved * EUR_HOUR, 2), \"EUR/month\")",
+      "notes": "Read the first seven lines out loud: they're measured data, not made up, and that's the only reason the final figure holds up. Running it gives \"14.0 h/month by hand\" and \"10.5 h saved = 189.0 EUR/month\". Point at the hours_fix line: it's the one almost nobody writes and the one that makes everything else believable."
+    },
+    {
+      "kind": "pregunta",
+      "title": "How much do you charge for this?",
+      "text": "10.5 hours a month recovered. Three weeks of your work.",
+      "items": [
+        "€300, so it doesn't scare them off",
+        "€900 plus €45/month maintenance",
+        "€3,000, since it's a custom system",
+        "20% of whatever it saves each year"
+      ],
+      "notes": "Have them vote and defend their choice in one sentence. b) is the real case: it pays back in 6.3 months and leaves €827 in the client's favor the first year. a) condemns you, because the cheap project gets the same support calls as the expensive one. d) sounds elegant and is a nightmare: you end up arguing every month over how much it really saved."
+    },
+    {
+      "kind": "lista",
+      "title": "Three ways to charge the same thing",
+      "text": "The pricing model depends on how much you know before starting.",
+      "items": [
+        "Fixed price when the deliverable is clear",
+        "Hour bucket when you need to explore",
+        "Monthly fee to maintain what's already delivered",
+        "Entry audit to get to know each other risk-free",
+        "By phases when the system is large"
+      ],
+      "notes": "The rule is simple: fixed price only when you can write in one line what you're delivering. If you can't, it's an hour bucket or an audit, never fixed price with your fingers crossed. Ask the room what they'd use for \"I want to automate customer support\": that's an hour bucket dressed up as a fixed price, and that's where money gets lost."
+    },
+    {
+      "kind": "lista",
+      "title": "What goes inside a proposal",
+      "text": "Five sections in two pages. Not one more.",
+      "items": [
+        "Problem and goal, with the client's own figures",
+        "Scope: which systems, which data, which access",
+        "Out of scope: the most important list",
+        "Price, timeline, and what they have to provide",
+        "How the result is measured and who approves it"
+      ],
+      "notes": "Have them copy these five sections: they're the skeleton of every proposal they'll write. The one almost nobody includes is the fourth, \"what they provide\": access, a named point of contact, and sample data. Without that written down, any delay ends up being your fault."
+    },
+    {
+      "kind": "idea",
+      "title": "Out of scope: write it or you'll pay for it",
+      "text": "Whatever you don't write that you won't do, you'll end up doing for free.",
+      "items": [
+        "Does not include connecting their customer software",
+        "Does not include replying to emails without human review",
+        "Does not include migrating 2019's history",
+        "Does not include training beyond two hours",
+        "Does not include support outside business hours"
+      ],
+      "notes": "Tell the pattern: you deliver the classifier and a week later comes \"while we're at it, have it reply automatically\". If it isn't written down, you always lose that argument. Practical trick: have them write out-of-scope before scope, because it comes out much faster and it clarifies what they're selling in the process."
+    },
+    {
+      "kind": "idea",
+      "title": "The demo works in airplane mode",
+      "text": "You save the model's answers and replay them. No network, no cost, identical every time.",
+      "items": [
+        "The client's wifi will fail. Count on it",
+        "Answers saved to disk: zero network, zero euros",
+        "Same result every run, no surprises",
+        "Three minutes, timed and rehearsed twice"
+      ],
+      "notes": "Tell the scene: meeting room, guest wifi with no password, and your demo hanging on the internet. Meeting over. Saving the answers and replaying them also removes the gamble of the model answering differently right in front of the client. And it's free, which matters when you run the demo twenty times."
+    },
+    {
+      "kind": "pregunta",
+      "title": "What if the model gets it wrong?",
+      "text": "You've measured 91.7% accuracy. What do you write in the proposal?",
+      "items": [
+        "That it's always right, it sounds better",
+        "Nothing, it barely fails anyway",
+        "85%, and I show the mistake in the demo",
+        "95%, and we'll tune it as we go"
+      ],
+      "notes": "c), and explain why: you promise below what you measured to have margin on a bad day, and showing the failing email yourself disarms the skeptic in the room before they open their mouth. Always add who reviews the mistakes and in how long. Promising 100% is the fastest way to lose a client in month two."
+    },
+    {
+      "kind": "lista",
+      "title": "What you can't promise",
+      "text": "This is where clients are lost and fines are earned. Read it twice.",
+      "items": [
+        "Nothing that sends customer emails without review",
+        "Nothing that deletes data: that doesn't undo",
+        "Personal data to the model without a signed contract",
+        "Accuracy you haven't measured with their own data",
+        "Keeping their data on your laptop in the meantime"
+      ],
+      "notes": "Two serious warnings, say them slowly. One: sending, publishing, and deleting are actions with no undo, so always keep a person clicking the button, at minimum during the entire first month. Two: if you process personal data of their customers, you need a signed data-processing agreement, and everything you show in demos or a portfolio must be anonymized. A real name in your case study is a complaint waiting its turn."
+    },
+    {
+      "kind": "lista",
+      "title": "What it costs you",
+      "text": "The API is the door your program uses to talk to the model. Pay-per-use.",
+      "items": [
+        "The whole case: €0.06 of model usage a month",
+        "API minimum top-up: $5, no free plan",
+        "Claude's website is free, but it doesn't automate",
+        "An automation tool in its cloud: about €20/month",
+        "That same tool on your own computer: €0"
+      ],
+      "notes": "The AI-bill scare almost never materializes: six cents a month with a small model for 420 emails. What does cost money are subscriptions piling up unnoticed; n8n's cloud runs about €20/month and the version you install yourself is free. Warning: never leave the API key written inside a project file, because files get copied and pushed, and the bill would be yours."
+    },
+    {
+      "kind": "lista",
+      "title": "Client red flags",
+      "text": "Five signs this project is going to go sideways.",
+      "items": [
+        "Wants everything automated and doesn't know what",
+        "No named person responsible",
+        "Urgency with no date and no real reason",
+        "Won't let you see the data, but demands guarantees",
+        "Won't accept a human reviewing anything"
+      ],
+      "notes": "Tell a story of your own that went badly, even if it stings: it's the moment the room learns the most. These five signs don't mean \"don't take it\", they mean \"short audit first, then talk\". Ask how many have already been in a meeting with three of the five at once."
+    },
+    {
+      "kind": "idea",
+      "title": "Start with a €300 audit",
+      "text": "Two days, a report with figures, zero risk for either side.",
+      "items": [
+        "You look at the process and count the real volume",
+        "You deliver a report with hours and euros",
+        "If there's no case, you say so. And get paid",
+        "If there is, the proposal is already written"
+      ],
+      "notes": "It's the best way in when nobody knows you: €300 is an amount a business owner signs off on without asking anyone's permission. It pays you to measure, which is exactly what you need to price the big project without making anything up. And telling them there's no case builds more trust than any sale would."
+    },
+    {
+      "kind": "lista",
+      "title": "The kit you deliver",
+      "text": "Without these pieces you ran an experiment, not a delivery.",
+      "items": [
+        "Instructions someone who wasn't there can follow",
+        "Three-minute demo that starts with no internet",
+        "Report with genuinely measured figures",
+        "Proposal with scope, price, and out of scope",
+        "How to revoke your access when you're done"
+      ],
+      "notes": "The last point always surprises people and builds the most trust: you explain yourself how to remove the permissions they gave you. The other four are what separates someone who knows AI from someone who gets paid for it. All of this fits in a compressed folder under 100 kB that you send by email."
+    },
+    {
+      "kind": "idea",
+      "title": "Your portfolio is three cases",
+      "text": "A case study: problem, what you did, measured figures, and what went wrong.",
+      "items": [
+        "Client and data anonymized, always",
+        "Measured figures, never estimated",
+        "Includes what failed and how you fixed it",
+        "Demo that starts with you not even there"
+      ],
+      "notes": "Three cases with figures are worth more than ten certificates, and this works equally for finding clients or finding a job. The what-went-wrong section is what makes people believe you: nobody experienced buys a project with no scares. If you don't have a client yet, your first case is an acquaintance's business, genuinely measured, at zero cost."
+    },
+    {
+      "kind": "lista",
+      "title": "What that €45 a month covers",
+      "text": "Maintenance gets defined, or it turns into infinite free support.",
+      "items": [
+        "Keeping it working if their email provider changes",
+        "One review of the figures per month",
+        "Two hours of small tweaks",
+        "48-business-hour response",
+        "Doesn't cover new features: that's phase two"
+      ],
+      "notes": "Without this written down, maintenance turns into working for free over WhatsApp for two years. The two hours of tweaks are the buffer: small changes fit, a new feature doesn't. Ask what they'd do if the client requests something that's clearly phase two; the right answer is a one-line quote, not a favor."
+    },
+    {
+      "kind": "cierre",
+      "title": "What you're taking away and doing tomorrow",
+      "text": "A proposal stands on three numbers and a list of what you won't do.",
+      "items": [
+        "Always translate into hours and euros",
+        "Measure before promising, and promise below that",
+        "Out of scope is worth more than scope",
+        "This week: time an acquaintance's process",
+        "Write their €300 audit on one page"
+      ],
+      "notes": "Close by asking for a concrete commitment: a real business name, written down now in the notebook, along with the process they'll time this week. Remind them a stopwatch and a spreadsheet are enough for the first measurement, at zero cost. The next session opens with everyone reading their three numbers out loud."
+    }
+  ]
+}

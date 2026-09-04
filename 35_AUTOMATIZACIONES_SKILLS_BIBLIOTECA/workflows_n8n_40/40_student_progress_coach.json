@@ -1,66 +1,470 @@
 {
-  "name": "40 Student Progress Coach",
+  "name": "40 · Coach de progreso de alumnos",
   "nodes": [
     {
       "parameters": {
-        "path": "40-student-progress-coach",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 40 · Coach de alumnos\n\nCada lunes a las 09:00 lee la pestaña \"Alumnos\" (columnas: nombre, telefono, modulo_actual, progreso_pct, dias_sin_actividad), detecta rezagados y redacta un mensaje personalizado con IA.\n\nFRENO HUMANO: el tutor recibe TODOS los mensajes por Gmail y debe pulsar Aprobar antes de que salga ningún WhatsApp.",
+        "width": 500,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_207",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"40 Student Progress Coach\",\n    category: \"educacion\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "content": "## WhatsApp Business Cloud\n\nNecesitas cuenta de Meta Business + app con el producto WhatsApp: copia el token y el Phone Number ID en la credencial y en el nodo. Los teléfonos van sin \"+\" (ej. 34600000000).\n\nFuera de la ventana de 24 h Meta exige plantillas aprobadas.",
+        "width": 420,
+        "height": 240
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_208",
+      "name": "Nota de WhatsApp",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "nodo_209",
+      "name": "Cada lunes a las 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Alumnos"
+        },
+        "options": {}
+      },
+      "id": "nodo_210",
+      "name": "Leer hoja de alumnos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        360
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Cada fila de la hoja \"Alumnos\" llega como un item:\n// nombre, telefono, modulo_actual, progreso_pct, dias_sin_actividad.\nconst fila = $json;\nconst completo = Boolean(fila.nombre && fila.telefono && fila.modulo_actual);\nconst progreso = Number(fila.progreso_pct || 0);\nconst dias = Number(fila.dias_sin_actividad || 0);\nconst necesita = completo && (progreso < 50 || dias >= 7);\nlet peticion_ia = null;\nif (necesita) {\n  const sistema = [\n    'Eres el coach de una formación online de IA. Escribes en español, con tuteo, tono cercano y concreto.',\n    'Redacta UN único mensaje de WhatsApp de máximo 300 caracteres para animar al alumno a retomar el curso.',\n    'Menciona su módulo actual y propón un siguiente paso pequeño. Sin promesas, sin presión, sin datos inventados.',\n    'Devuelve solo el texto del mensaje.'\n  ].join('\\n');\n  peticion_ia = {\n    model: 'claude-opus-5',\n    max_tokens: 300,\n    system: sistema,\n    messages: [\n      { role: 'user', content: 'Alumno: ' + fila.nombre + '. Módulo actual: ' + fila.modulo_actual + '. Progreso: ' + progreso + ' %. Días sin actividad: ' + dias + '.' }\n    ]\n  };\n}\nreturn {\n  json: {\n    nombre: String(fila.nombre || ''),\n    telefono: String(fila.telefono || ''),\n    modulo_actual: String(fila.modulo_actual || ''),\n    progreso_pct: progreso,\n    dias_sin_actividad: dias,\n    completo: completo,\n    necesita_apoyo: necesita,\n    peticion_ia: peticion_ia\n  }\n};"
+      },
+      "id": "nodo_211",
+      "name": "Evaluar progreso",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        440,
+        360
       ]
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_026",
+              "leftValue": "={{ $json.completo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond_027",
+              "leftValue": "={{ $json.necesita_apoyo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
-      "id": "respond",
-      "name": "Respond",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "id": "nodo_212",
+      "name": "¿Ficha completa y necesita apoyo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_ia) }}",
+        "options": {}
+      },
+      "id": "nodo_213",
+      "name": "Redactar ánimo con Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const respuestas = $input.all();\nconst mensajes = [];\nfor (let i = 0; i < respuestas.length; i++) {\n  const alumno = $('Evaluar progreso').itemMatching(i).json;\n  const bloques = respuestas[i].json.content || [];\n  const texto = bloques\n    .filter(function (b) { return b.type === 'text'; })\n    .map(function (b) { return b.text; })\n    .join(' ')\n    .trim()\n    .slice(0, 500);\n  mensajes.push({ nombre: alumno.nombre, telefono: alumno.telefono, modulo_actual: alumno.modulo_actual, mensaje: texto });\n}\nconst resumen = mensajes\n  .map(function (m) { return '- ' + m.nombre + ' (' + m.telefono + '): ' + m.mensaje; })\n  .join('\\n');\nreturn [ { json: { total: mensajes.length, resumen: resumen, mensajes: mensajes } } ];"
+      },
+      "id": "nodo_214",
+      "name": "Componer mensajes y resumen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendAndWait",
+        "sendTo": "REEMPLAZAR_tutor@ejemplo.com",
+        "subject": "=[Aprobar] {{ $json.total }} mensajes de ánimo a alumnos",
+        "message": "=El coach automático propone enviar estos mensajes por WhatsApp:\n\n{{ $json.resumen }}\n\nPulsa Aprobar para enviarlos o Rechazar para descartarlos.",
+        "responseType": "approval",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "id": "nodo_215",
+      "name": "Aprobación del tutor",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1320,
+        260
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_028",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_216",
+      "name": "¿Aprobado por el tutor?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const mensajes = $('Componer mensajes y resumen').first().json.mensajes || [];\nreturn mensajes.map(function (m) {\n  return { json: { nombre: m.nombre, telefono: m.telefono, modulo_actual: m.modulo_actual, mensaje: m.mensaje, enviado_en: new Date().toISOString() } };\n});"
+      },
+      "id": "nodo_217",
+      "name": "Expandir mensajes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Envios"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_218",
+      "name": "Registrar envíos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1980,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumberId": "REEMPLAZAR_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $json.telefono }}",
+        "textBody": "={{ $json.mensaje }}",
+        "additionalFields": {}
+      },
+      "id": "nodo_219",
+      "name": "Enviar WhatsApp al alumno",
+      "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        2200,
+        160
+      ],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REEMPLAZAR",
+          "name": "WhatsApp Business Cloud"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "nodo_220",
+      "name": "Alumnos omitidos",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        500
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "nodo_221",
+      "name": "Envío descartado",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        380
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Cada lunes a las 09:00": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Leer hoja de alumnos",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Leer hoja de alumnos": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "Evaluar progreso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar progreso": {
+      "main": [
+        [
+          {
+            "node": "¿Ficha completa y necesita apoyo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Ficha completa y necesita apoyo?": {
+      "main": [
+        [
+          {
+            "node": "Redactar ánimo con Claude",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alumnos omitidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redactar ánimo con Claude": {
+      "main": [
+        [
+          {
+            "node": "Componer mensajes y resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Componer mensajes y resumen": {
+      "main": [
+        [
+          {
+            "node": "Aprobación del tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprobación del tutor": {
+      "main": [
+        [
+          {
+            "node": "¿Aprobado por el tutor?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Aprobado por el tutor?": {
+      "main": [
+        [
+          {
+            "node": "Expandir mensajes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Envío descartado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir mensajes": {
+      "main": [
+        [
+          {
+            "node": "Registrar envíos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar envíos": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp al alumno",
             "type": "main",
             "index": 0
           }
@@ -70,28 +474,5 @@
   },
   "settings": {
     "executionOrder": "v1"
-  },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "educacion",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
-        }
-      }
-    ]
   }
 }

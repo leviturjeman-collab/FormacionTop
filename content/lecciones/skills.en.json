@@ -1,0 +1,179 @@
+{
+  "id": "skills",
+  "number": 29,
+  "stageId": "agentes",
+  "title": "Skills: procedures that trigger themselves",
+  "promise": "You'll have a skill of your own written, uploaded, and firing on its own when you type a normal sentence, with no need to name it, and you'll know how to diagnose in two minutes why a skill isn't activating.",
+  "minutes": 25,
+  "why": "Rubén Pardo does bathroom renovations in Getafe, and all his quotes carry the same things: measurements, materials, labor hours, sales tax, a 30% deposit, and fifteen days of validity. Every time he opened a conversation with the AI, he'd paste the same 900 words of instructions. One Tuesday in March he forgot to paste them, and Mrs. Ortega's quote went out with no validity clause. Three weeks later tile prices went up, and he ate that $370 himself. The problem wasn't that the AI was clumsy. It was that his procedure lived in his head and in a copy-paste he sometimes forgot. A skill is exactly that: pulling the procedure out of your head, writing it into a file, and having the AI pull it out of the drawer on its own when needed.",
+  "theory": [
+    {
+      "title": "What a skill is, no mystery",
+      "text": "A skill is a folder with a text file inside it. That file is called SKILL.md and contains a procedure of yours written in plain English: when to use it, what data is needed, the steps in order, how you know it came out right, and what's never done. There's no code, no programming, nothing to install on your computer. It's literally the manual you'd hand someone starting work with you on Monday. The difference from handing it to a person is that the AI doesn't read it in full every morning: it's stored and only opens it when the conversation is about that. That's why the title says \"trigger themselves\": you don't call the skill, you write what you'd write anyway, and the skill steps in on its own. And that's also the part that fails when it fails, because \"stepping in on its own\" is a decision the model makes, not a rule that always holds.",
+      "analogy": "Think of a restaurant kitchen with two hundred recipe cards in a filing cabinet. The cook doesn't have all two hundred memorized: he reads the tabs on the cards, pulls the one that says \"seafood paella, 4 people,\" and follows that. The whole system depends on what's written on the tab. If a tab says \"assorted rice dishes,\" that card sits there forever unused.",
+      "example": "Rubén's skill is called bathroom-quote-getafe. It's a folder with that name and a 120-line SKILL.md file inside. It took him 40 minutes to write with AI's help. He's used it for eight months and hasn't sent a quote without the fifteen-day validity clause since."
+    },
+    {
+      "title": "The underlying trick: only the label gets read",
+      "text": "Here's the whole mechanism, and understanding it saves you weeks of shooting in the dark. When you open a conversation, the AI doesn't load your skills in full. It loads only two lines from each one: the name and the description. That summary for each skill runs about 60 words; the full file might run 600 to 1,500. With twelve skills installed, the AI always has around 700 words of labels in front of it. The 12,000 words of procedures stay in the drawer. When you write something, the model compares what you wrote against those labels, decides one fits, and only then opens the full file and reads it. This is called progressive loading and it isn't a technical detail: it's the reason you can have thirty saved procedures without clogging anything up. And it has a consequence worth stating plainly: at the moment of deciding, the model hasn't read your procedure, only the description. Your procedure can be perfect and useless anyway.",
+      "analogy": "It's a storage room with closed boxes. Nobody opens a box to check if it's the right one: they read the outside labels and open one. A box with the best tool in the world inside and the label \"stuff\" never gets opened.",
+      "example": "If instead of a subscription you pay per use through the API (the direct connection that bills each message separately), the difference is also money: dragging along 12,000 words of procedures costs about 4 or 5 cents per message. On a hundred-message day that's about $5. With progressive loading you only pay that during the stretch you're really using the procedure."
+    },
+    {
+      "title": "The description: the line that decides whether you exist",
+      "text": "A description that works says three things, in this order: what it does, when to use it, and when not to. The \"when to use it\" part is what almost everyone writes wrong. They write it with manual language, not the words they actually type on a busy Tuesday. You don't write \"generate a quote per procedure\"; you write \"how much does the bathroom come out to for the Ortega job.\" If that sentence doesn't resemble anything in your description, the skill doesn't open. The \"when not to use it\" part does the opposite job, and it's just as necessary once you have more than two skills. Without exclusions, the quote one also fires when you're talking about invoices, and answers with the wrong format. Write it in third person, as if describing the skill to an outsider, and pack in the proper nouns and specific words of your trade: tile, grout, plumbing, shower tray, deposit, sales tax. Keep it under 1,024 characters, which is about 150 words, so there's plenty of room to be specific. And don't be afraid of repeating synonyms: every word you add is one more door it can come through.",
+      "example": "Bad: \"Helps make quotes.\" Okay: \"Generates renovation quotes.\" Good: \"Writes bathroom renovation quotes for Pardo Renovations (Getafe), with materials and labor breakdown, sales tax, a 30% deposit, and fifteen days of validity. Use when the user asks for a quote, an estimate, a price, a cost, or 'how much would it be' for a client, or when they mention square footage of tile, shower tray, grout, plumbing, or labor hours. Do not use for already-issued invoices, supplier orders, complaints, or warranty claims.\""
+    },
+    {
+      "title": "What goes inside the file",
+      "text": "The file has two parts. Right at the top, between two lines of three dashes, go only the name and the description: that's the header, the box's label. Below it goes the procedure in Markdown, which is writing normally using hashes for headings and dashes for lists. The structure that holds up best under real use has seven blocks: when to use this, what data I need before starting, the numbered steps, quality criteria, mistakes I've already made, limits that never get crossed, and one complete example of input and output. The block people skip and later miss is the one about the data needed. If you don't say \"if you don't give me the square footage, ask me, don't estimate it,\" the AI estimates it. And it hands you a quote with made-up numbers that look reasonable. The limits block is what protects you: \"don't send anything, always leave it as draft,\" \"don't change prices from the list,\" \"don't promise timelines that aren't written here.\" And the complete example is worth more than twenty sentences of explanation, because it shows the output format without having to describe it. Keep the file under about 300 lines: when it swells past that, it's a sign there are two procedures fighting inside it, and it's time to split it into two skills.",
+      "example": "Rubén's limits block has four lines: don't apply discounts above 5% without asking; don't use material prices that aren't on the list below; don't send the quote, always leave it as a draft for him to review; if the client asks for work outside Getafe or neighboring towns, warn about a travel surcharge and ask which one."
+    },
+    {
+      "title": "Skill, project instructions, or saved prompt",
+      "text": "The three look similar and get used in different moments, and choosing wrong is the most common cause of this turning into a mess. Project instructions are that text box where you write how you want the AI to behave in a specific project. They're always on: they're good for what applies to 100% of conversations, like your tone, your language, or your company's name. A saved prompt is a text you paste when you remember: good for something you do now and then and don't mind invoking by hand. A skill is for what you do many times, always the same way, but not in every conversation. The practical rule: if it's one thing and always applies, instructions; if it's twelve things and each applies sometimes, skills; if it's a one-off afternoon thing, a prompt and that's it. Stuffing twelve procedures into project instructions is handing it a twelve-page brick before every sentence you write. And that's not just expensive: it dilutes. What you just asked for competes with eleven procedures that had nothing to do with it.",
+      "analogy": "Project instructions are the sign hanging on the workshop wall that everyone always sees. A saved prompt is the note you carry in your pocket and pull out when you remember. A skill is the folder in the filing cabinet with a well-written tab: nobody looks at it until it's needed, and then it shows up on its own."
+    },
+    {
+      "title": "When it doesn't fire: the three failures and how to diagnose them",
+      "text": "Failure one, the most common: the skill never fires, and the cause is almost always the description, not the procedure. The test is cheap. Open a new conversation, paste in just your skills' descriptions plus ten real sentences of yours, and ask which one it would pick for each. In thirty seconds you see which sentences go orphaned. Failure two: it fires when it shouldn't, and it answers you with a quote where you asked for an invoice. That's fixed by adding \"do not use for\" with the specific cases sneaking through. Failure three, the trickiest: you have two skills with overlapping descriptions, and the model picks one of the two without you knowing which. So one day it works and another it doesn't. If this happens to you, put the two descriptions together, read them in a row, and ask yourself whether you yourself would know which to pick; if it's not clear to you, it isn't to it either. And a truth worth swallowing early: activation is a judgment call, not a switch, and there's no guaranteed \"if the user writes X, run Y\" at 100%. If a specific task absolutely has to fire, you can name the skill by hand in your message; it always works and it's not cheating.",
+      "example": "Rubén discovered with that test that his first description said \"full renovation quote\" while, in real life, what he wrote was \"how much do I charge.\" He added that literal phrase to the description and the skill went from firing three times out of ten to firing ten out of ten."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Pull the procedure you repeat most out of your head",
+      "where": "In the Claude or ChatGPT app, in a new conversation",
+      "action": "Before writing any file, pick a procedure: something you do at least once a week, always the same steps, and that's a pain to repeat. Quotes, replies to bad reviews, product listings, meeting summaries, replies to the same type of email. Pick the one you did the most this month, not the flashiest one. Then paste the prompt below, swapping in the brackets, and answer the questions one at a time, with real numbers. This step decides the quality of everything else: if you answer generically here, the skill will come out generic.",
+      "prompt": "You're a process consultant and you're going to interview me. I want to turn something I always do the same way into a written procedure: [DESCRIBE IN ONE SENTENCE WHAT YOU DO].\n\nAsk me questions one at a time, starting with the first, and don't move to the next until I've answered. I need you to pull out of me:\n1. What data I need in front of me before starting, and what I do if something's missing.\n2. The exact steps, in order, as I really do them.\n3. The fixed numbers and facts I always use: prices, percentages, deadlines, names, clauses.\n4. How I know it came out well: what I check before considering it done.\n5. The three mistakes I've made most often doing this.\n6. What should never be done in this procedure.\n7. The exact sentences I'd start asking you this with on a normal, busy day. Give me five, literal, in my own words.\n\nOnce you have it all, write me the procedure in numbered steps and separately mark, in a list, any gaps where I didn't give you a specific fact. Don't fill in those gaps by making anything up.",
+      "expect": "A ten- or fifteen-minute conversation ending in a numbered procedure you recognize as yours, plus a short list of gaps to fill in. If reading it you think \"this could apply to anyone,\" you're not done.",
+      "stuck": "If it throws all seven questions at once, reply \"one at a time please, start with the first.\" If your answers come out vague, you're giving it too little: instead of \"I make a quote,\" say \"I take the bathroom measurements, calculate square footage of tile at $26 a square foot, add twelve hours of labor at $38 an hour, apply sales tax.\""
+    },
+    {
+      "title": "Turn that procedure into the SKILL.md file",
+      "where": "In the same app conversation",
+      "action": "With the procedure already written, ask it to convert it into the file's format. Paste the prompt below right after. What it gives back is a block of text starting with three dashes, followed by two lines (name and description), three more dashes, and below that the procedure with headings. Don't copy anything yet: first read it in full and check the numbers are yours and it hasn't added steps you don't actually take.",
+      "prompt": "Convert the previous procedure into a SKILL.md file using the Agent Skills format.\n\nRequired format:\n- Start with a line of three dashes. Below it, only two fields: name and description. Below that, another line of three dashes. Nothing else in that header.\n- name: lowercase, words separated by hyphens, no accents or special characters, 64 characters max.\n- description: third person, under 1,024 characters, and has to say three things in a row: what it does, when to use it (including literally the five sentences in my own words I gave you before), and when NOT to use it, with specific cases.\n- Below that, the body in Markdown with these sections in this order: When to Use This Skill / Data I Need Before Starting / Step-by-Step Procedure / Quality Criteria / Common Mistakes / Limits That Don't Get Crossed / Complete Example of Input and Output.\n- 300 lines max. Written in the imperative, concrete, no filler adjectives.\n- If you're missing a fact of mine (a price, a deadline, a name), do NOT make it up: leave it as [PENDING: what's missing] and list them all at the end of the message, outside the file.\n\nGive me the whole file inside a code block, ready to copy as one piece.",
+      "expect": "A code block starting with three dashes and containing the seven sections. Below it, outside the block, a list of what facts it's missing. If there's no [PENDING] at all, be suspicious: check whether it made up a price or deadline.",
+      "stuck": "If it puts more than name and description into the header, tell it \"the header can only have name and description, remove the rest.\" If the file comes out over 600 lines, ask it to trim it to 300 by cutting explanations and keeping instructions."
+    },
+    {
+      "title": "Rewrite the description yourself, the piece that decides",
+      "where": "In the app, on the file you just generated",
+      "action": "Don't accept the description as-is. Read it and check, one by one: does it say what it does? Does it say when to use it with the words you actually type, not manual language? Does it say when NOT to use it, with specific cases? If any of the three fails, rewrite it. Ask for alternatives with the prompt below, pick the one that sounds most like how you actually talk, and cut and paste it into the file replacing the previous one. You can mix pieces from two.",
+      "prompt": "This is my skill's current description:\n\n[PASTE THE FULL description LINE HERE]\n\nWrite me five distinct alternatives. Each has to say what it does, when to use it, and when not to, in third person and under 1,024 characters. Vary the angle: one focused more on the result it produces, one on the words the user would type, one on the type of document, one on the moment in the workflow it appears, one shorter and terser.\n\nFor each of the five, also give me:\n- Three real sentences that would trigger it.\n- Three similar sentences that should NOT trigger it.\n\nAnd at the end, tell me which of the five would fail most often in real life, and why. Be tough, don't just agree with me.",
+      "expect": "Five descriptions with their trigger examples, and a final verdict pointing out the weakest one. Your final description should contain at least three words you actually use day to day and at least two specific exclusions.",
+      "stuck": "If all five sound the same, your procedure is defined too abstractly. Go back and add proper nouns: your city, your company, your products, your percentages. A description with no specific names almost never triggers well."
+    },
+    {
+      "title": "Test the description before installing anything",
+      "where": "In the app, in a NEW, empty conversation",
+      "action": "This is the cheap dry run that saves you 90% of the problems, and it's done without uploading a file anywhere. Open a completely new conversation, paste the prompt below with your description and ten real sentences of yours (pull them from your email, your work WhatsApp, or what you wrote last week). What you're simulating is exactly the decision the AI is going to make: read the label and choose. If it fails here, it fails in production too.",
+      "prompt": "I'm going to give you a skill's description. You don't have it installed: I want you to decide as if you did, reading ONLY that description and nothing else.\n\nDESCRIPTION:\n[PASTE YOUR DESCRIPTION HERE]\n\nSENTENCES:\n1. [a real sentence of yours]\n2. [a real sentence of yours]\n3. [a real sentence of yours]\n4. [a real sentence of yours]\n5. [a real sentence of yours]\n6. [a real sentence of yours]\n7. [a similar sentence that should NOT trigger it]\n8. [another that should NOT trigger it]\n9. [a short, hurried sentence, like a phone text]\n10. [a sentence that only mentions the topic in passing]\n\nFor each sentence tell me: TRIGGERS or DOESN'T TRIGGER, and one line why. Don't give me the ideal answer or try to look good: tell me what you'd really do reading only that description. At the end, tell me what words the description is missing so the sentences you got wrong would have been right.",
+      "expect": "Sentences 1 through 6 as TRIGGERS, 7 and 8 as DOESN'T TRIGGER, and a list of missing words. If number 9 (the short, hurried one) comes out DOESN'T TRIGGER, you have work to do: that's the one you'll actually write in real life.",
+      "stuck": "If everything comes out TRIGGERS, including the ones that shouldn't, you're missing exclusions: add \"Do not use for...\" with those two exact cases and rerun the test. If almost everything comes out DOESN'T TRIGGER, add the literal words from the sentences it got wrong into the description and rerun it. Repeating this test three times is normal and takes two minutes."
+    },
+    {
+      "title": "Create the folder, the file, and the .zip",
+      "where": "On your computer, in File Explorer (Windows) or Finder (Mac)",
+      "action": "Go to the Desktop and create a new folder with the exact same name you put in name: lowercase, hyphens, no accents. For example bathroom-quote-getafe. Go inside and create the file. On Windows, open Notepad and paste the entire file's contents (without the code block's quote marks, but WITH the three-dash lines). Press File, then \"Save as,\" and navigate to that folder. Here's the part that always trips people up: in the \"Type\" dropdown pick \"All files (*.*),\" type the name SKILL.md exactly, and for \"Encoding\" pick UTF-8. If you leave \"Text document\" in the dropdown, Windows will save a SKILL.md.txt that doesn't work. On Mac use TextEdit and before typing press Format, \"Make Plain Text.\" Then go back, right-click the folder, and choose \"Compress\" (Mac) or \"Send to, Compressed folder\" (Windows).",
+      "expect": "A file called bathroom-quote-getafe.zip on your Desktop, a few kilobytes. To check the file inside is right: double-click the .zip, go into the folder, and check the file is named exactly SKILL.md. On Windows, if you don't see extensions, open File Explorer, go to the \"View\" tab, and check \"File name extensions.\"",
+      "stuck": "If you see SKILL.md.txt, right-click it, \"Rename,\" remove the trailing .txt, and accept the warning that pops up. If accented or special characters show up as odd symbols when opened, you saved it with the wrong encoding: go back to \"Save as\" and pick UTF-8. If your procedure has no special characters or sensitive data, you can also skip this whole task and paste the SKILL.md text at the start of a conversation. It works, but you'll have to remember to paste it every time, which is exactly what we came here to avoid."
+    },
+    {
+      "title": "Upload the skill to your account and turn it on",
+      "where": "In the Claude app, on your computer (this can't be done from mobile)",
+      "action": "Click your initial or photo in the bottom left corner and go into \"Settings.\" Look for the \"Capabilities\" section and inside it, \"Skills.\" You'll see a list with some that come built in for making Word docs, spreadsheets, and PDFs. Click the \"Upload skill\" button, choose the .zip on your Desktop, and wait a few seconds. Once it shows up in the list, check the toggle to its right is on. If you're using Claude Code instead of the app, the equivalent is leaving the folder (uncompressed) inside a folder called .claude/skills in your project. To create a folder starting with a dot on Windows, type the name with a dot at the end too, .claude., and Windows removes it on its own when you confirm.",
+      "expect": "Your skill in the list, with its name, its description underneath, and the toggle blue. Clicking it should let you read the content you uploaded.",
+      "stuck": "If you can't find the \"Skills\" section, it's usually one of two things. Either your plan doesn't include it: the free plan doesn't have it, and Claude Pro is about $20 a month. Or code execution is turned off on that same Capabilities screen, which is what skills depend on. Turn it on and check again. If it rejects your .zip, it's almost always because you compressed the loose SKILL.md file instead of the folder containing it: it has to be the whole folder."
+    },
+    {
+      "title": "Test it without naming it, the real test",
+      "where": "In the Claude app, in a new conversation",
+      "action": "Open a completely new conversation. Don't say \"use my skill,\" don't say the file's name, don't give context. Type exactly the sentence you'd write on a busy Tuesday, the short one, the one from the previous task. For example: \"how much for Mrs. Ortega's bathroom, 6 square meters of tile and a shower tray.\" And see what happens. The app tells you when it uses a skill: you'll see a line above the response indicating it loaded it, with its name.",
+      "expect": "The notice that it used your skill, and an answer with your format, your numbers, and your clauses, without you explaining anything. If it also asks you for a missing piece of data instead of making it up, your \"data I need\" block is well written.",
+      "stuck": "If it answers without using the skill, don't touch the procedure: the problem is always the description. Go to the next task. If it uses it but the result isn't what you expected, then it is the file's body: usually the complete input-and-output example at the end is missing."
+    },
+    {
+      "title": "Break it on purpose and fix the description",
+      "where": "In the app, two fresh conversations in a row",
+      "action": "Run two hostile tests. First: write something that should NOT trigger it but sounds a lot like it (\"send the invoice to the Ortega job\") and check it doesn't fire. Second: write the same thing as the previous task but with different words, the ones you'd use on a different day. Whenever either fails, use the prompt below to diagnose, fix the description in your file on your computer, recompress the folder, and upload it again from Settings. If the app lets you, replace the previous one; if not, delete the old one first so you don't end up with two nearly identical skills fighting each other, which is the hardest failure to spot afterward.",
+      "prompt": "I have a skill installed with this description:\n\n[PASTE THE DESCRIPTION]\n\nI wrote it this sentence and it didn't trigger (or it triggered when it shouldn't have):\n\n[PASTE THE SENTENCE]\n\nDiagnose it like this, in this order, don't skip any:\n1. What words in my sentence should have connected with the description and didn't.\n2. Whether the problem is a missing trigger or an excess exclusion.\n3. The corrected description, whole, ready to copy, with the minimum change needed. Don't rewrite it top to bottom: change only what's needed and tell me in one line what you changed.\n4. Five more sentences, different from the ones I gave you, that should now trigger it, for me to test.",
+      "expect": "The invoice sentence NOT triggering the skill, and the variants of the good sentence triggering it. After uploading the corrected version, repeat both tests in new conversations: old conversations don't reload skills.",
+      "stuck": "If after two rounds it still won't fire with a specific sentence, put that literal sentence into the description, in quotes, in the \"use when the user says...\" part. It's ugly and it works. And if some day you need it to fire no matter what, name the skill in your message: \"use bathroom-quote-getafe for this.\""
+    },
+    {
+      "title": "Save the copy and decide what's next",
+      "where": "On your computer and in your head",
+      "action": "Copy the skill's folder wherever you keep your work stuff, inside a folder called skills. Add the date to the end of the .zip you uploaded's name, like bathroom-quote-getafe-2026-03.zip. You can't edit the version uploaded in the app directly there: if you ever want to change it and you've lost the file, you'll have to write it again. Then make a list of the next three procedures you repeat, ranked by how many times you did them this month. Write only each one's description, not the body. Read all three in a row: if you're unsure which you'd pick for a given sentence, they overlap and need separating before writing anything else.",
+      "expect": "A skills folder with at least one procedure inside and three written descriptions that don't overlap. Each should mention something the other two don't.",
+      "stuck": "If the three descriptions sound too similar, they're probably not three skills but one with three variants: merge them into a single procedure with three paths inside. It's better to have one well-labeled 200-line skill than three 70-line ones that step on each other."
+    }
+  ],
+  "matters": [
+    "The description is the only thing read to decide, and that's why it's where you need to invest your time. Ignoring it comes with an especially cruel punishment: the skill exists, shows up in the list, the toggle is on, and it never fires. You think you're covered and keep sending quotes with no validity clause. A perfect procedure with a vague label is a procedure that doesn't exist.",
+    "Testing with your real words, not manual language. The trap is that when you test your own skill you write nicely, because you're in test mode, and it always works that way. On a busy Tuesday you write \"what do I charge Ortega\" and it doesn't fire. Pull your test sentences from your sent email or your work WhatsApp, literally, typos included.",
+    "One skill per procedure, and descriptions that don't overlap. Two similar labels is the failure that'll steal the most time from you, because it doesn't fail consistently: it fails one day and not the next, and you spend weeks thinking the AI \"is being weird.\" Before writing your third skill, read all three descriptions in a row and check you yourself would know which to pick.",
+    "A skill is instructions the AI is going to follow with whatever permissions you've given it. Installing a skill someone gave you without reading the whole SKILL.md is the same as running a stranger's program. And in your own, write the limits inside: don't send anything, always leave a draft, don't change prices from the list, don't promise timelines that aren't written down. Whatever you don't put there, the model will decide on its own the day it's missing a piece of data."
+  ],
+  "ignore": [
+    "Putting scripts inside a skill (program files that run on their own). The format allows it and it's powerful for certain cases, but a plain-text procedure covers virtually everything you'll need to write this year. When the day comes that you need it, you'll know, because the step you want automated will always be the same calculation.",
+    "The allowed-tools field and fine-grained per-skill permissions. It's for limiting what each procedure can touch, and it makes sense when working on a team or with sensitive data. Working solo and reviewing what comes out, limits written in plain English inside the file give you nearly the same protection with a tenth of the hassle.",
+    "Catalogs of skills made by other people and sharing them with a team. Installing someone else's skills before you've written one of your own is like copying notes for a class you never attended: they work until they don't, and then you don't even know where to start reading them. Write two of your own first, that way you'll know how to read other people's."
+  ],
+  "canDo": [
+    "Write you the whole SKILL.md, header and all seven sections, once you tell it your procedure out loud and out of order. That part, the most tedious one, gets solved in ten minutes of conversation.",
+    "Simulate the activation decision before you install anything: give it a description and ten sentences, and it tells you which would trigger it and why. It's the most useful diagnostic tool you have and it costs nothing.",
+    "Detect overlaps between several descriptions and tell you which sentences would fall into no-man's-land. Paste it three or four descriptions together and ask which ones overlap.",
+    "Find the gaps in your procedure: the steps you take for granted because you've done them for ten years and never wrote down. Ask it to flag what you haven't told it instead of filling it in, and they come out on the first try."
+  ],
+  "cantDo": [
+    "Guarantee a skill activates. It's a judgment call about what you wrote, not a switch that fires on a keyword. You'll get it right 90% of the time with a well-worked description, and for the remaining 10% you name the skill by hand and you're set.",
+    "Know your facts. Your prices, your deadlines, your clauses, and your company's name aren't stored anywhere unless you write them into the file. Whatever you don't put in, it'll make up with stunning confidence: a sales tax that's wrong, a thirty-day validity you never actually give.",
+    "Upload the skill to your account or activate it for you. Creating the folder, saving the file, compressing it, and flipping the toggle are on you. It can give you perfect content and that's where its part ends.",
+    "Run itself with no conversation happening. A skill doesn't fire at eight in the morning or when an email arrives: it fires when you write something that matches. Things happening on their own with no chat involved is a different tool and a different lesson."
+  ],
+  "words": [
+    [
+      "Skill",
+      "A folder with a procedure of yours written inside, that the AI opens on its own when the conversation is about that topic. It's not a program: it's text, written in plain English."
+    ],
+    [
+      "SKILL.md",
+      "The exact name the text file inside that folder has to have. All caps, ending in .md, and nothing else tacked on."
+    ],
+    [
+      "Header",
+      "The two lines at the top of the file, enclosed between two three-dash lines, where only the name and description go. It's the only part that always gets read; the rest sleeps."
+    ],
+    [
+      "Description",
+      "The header's sentence that says what the procedure does, when to use it, and when not to. It's what decides whether the file opens or stays in the drawer forever."
+    ],
+    [
+      "Markdown",
+      "A way of writing text where you put hashes before headings and dashes before lists, and that's it. It reads fine even if nobody formats it."
+    ],
+    [
+      "Progressive loading",
+      "Only each procedure's label getting read until one is needed, and then that whole one opening. It's what lets you keep thirty saved without clogging anything."
+    ],
+    [
+      "Context window",
+      "Everything the AI has in front of it at a given moment: your conversation, your files, and your procedures' labels. It has a maximum size, and the more you fill it with irrelevant stuff, the worse it answers what you just asked."
+    ],
+    [
+      "Trigger",
+      "A word or phrase from what you actually write that makes a procedure open. The more you put into the description, the more doors it has."
+    ],
+    [
+      "Project instructions",
+      "The text box where you write how you want the AI to behave in all of a project's conversations. It's always on, which is both its advantage and its problem."
+    ],
+    [
+      "Compressed folder",
+      "A file ending in .zip that packs a whole folder into a single package so it can be uploaded at once. Created with a right-click."
+    ]
+  ],
+  "next": "Write the next two skills on your list using only tasks 1 through 4 of this lesson, and don't upload either until all three descriptions pass the ten-sentence test without overlapping each other."
+}

@@ -1,0 +1,420 @@
+{
+  "id": "n8n-01",
+  "tool": "n8n",
+  "slot": 1,
+  "number": 201,
+  "stageId": "automatizacion",
+  "title": "What n8n is and what problem of yours it solves",
+  "promise": "With one of your actual processes in front of you, you'll know whether n8n saves you real hours or is going to complicate your life, and you'll have the first automation you're going to build written on a card, with its trigger, its filter, and its actions.",
+  "minutes": 25,
+  "why": "Rocio runs the admin side of a home renovation company. Every morning she opens her email, checks accepted quotes, copies the name and amount into a spreadsheet, creates a folder in Drive named after the client, and pings the site manager on WhatsApp. That's eleven minutes per quote, and four to eight come in a day. That's an hour a day copying things from one window to another, and the day she skips a step, the job starts with no folder. She doesn't need artificial intelligence: she needs those four steps to happen on their own every time an email arrives with a specific word in the subject.",
+  "theory": [
+    {
+      "title": "An intern who watches one thing and does others",
+      "text": "n8n is a program where you draw a process by connecting boxes. One box watches something (an email arriving, it being eight in the morning, someone filling out a form) and the following ones do things (create a row, send a message, call another program). Once you turn it on, that happens on its own, without you, twenty-four hours a day. You don't need to code to build the first ones: you drag boxes and fill in fields.",
+      "analogy": "An obsessive intern who only knows how to do one thing, but does it exactly the same way a thousand times, at three in the morning and in the middle of a heat wave.",
+      "visual": {
+        "kind": "canvas",
+        "title": "Rocio's flow, as it looks on screen",
+        "caption": "Click each box: you'll see what it does, what it receives, and what it returns.",
+        "nodes": [
+          {
+            "kind": "Trigger",
+            "label": "An email arrives",
+            "note": "subject: QUOTE ACCEPTED",
+            "role": "trigger",
+            "does": "Watches the inbox and starts the flow the moment an email arrives that meets the condition. It's the only box that decides WHEN everything else happens.",
+            "input": "Nothing: it's the start. It watches on its own.",
+            "output": "A whole email: sender, subject, body, and attachments.",
+            "breaks": "The subject is written differently (\"we accept the quote\") and nothing fires. Nobody finds out it didn't trigger."
+          },
+          {
+            "kind": "Filter",
+            "label": "Is it from a customer?",
+            "note": "cuts internal ones and tests",
+            "role": "filter",
+            "does": "Only lets through what should continue. It sits here, before any action, because whatever passes this box is about to touch real things.",
+            "input": "The email that came in.",
+            "output": "The same email, or nothing if it doesn't qualify.",
+            "breaks": "If you compare with \"is exactly equal to\" instead of \"contains,\" one extra space cuts everything off."
+          },
+          {
+            "kind": "Action",
+            "label": "Create the row",
+            "note": "quotes sheet",
+            "role": "action",
+            "does": "Adds a row at the end of the sheet with the name, amount, and date pulled from the email.",
+            "input": "The filtered email.",
+            "output": "The created row, with its number.",
+            "breaks": "If the email had no amount, it writes a row with the field blank and nobody sees it until billing time."
+          },
+          {
+            "kind": "Action",
+            "label": "Create the folder",
+            "note": "in Drive, named after the client",
+            "role": "action",
+            "does": "Creates the job's folder. Depends on the previous step, since it uses the already-cleaned-up name.",
+            "input": "The client's details.",
+            "output": "The folder and its link.",
+            "breaks": "Two quotes from the same client create two identical folders if nobody checks first whether one already exists."
+          },
+          {
+            "kind": "Alert",
+            "label": "Notify the site manager",
+            "note": "WhatsApp",
+            "role": "action",
+            "does": "Sends the message with the name, address, and the link to the folder.",
+            "input": "Everything above, combined.",
+            "output": "The message sent.",
+            "breaks": "If this box fails, the row and folder ALREADY exist. The job is half-done and someone needs to know."
+          }
+        ]
+      }
+    },
+    {
+      "title": "The hard part is never the happy path",
+      "text": "Building the case where everything goes right takes twenty minutes. What separates an automation that runs for six months from one you have to shut down within a week is three other questions: what happens if incomplete data arrives, what happens if the same case comes in twice, and what happens if the service on the other end is down. An automation with no answer to those three isn't finished, it's just started.",
+      "example": "Rocio's email sometimes arrives with no amount, because the client accepts by writing just \"sounds good\" and nothing more. If the flow doesn't account for that, it writes a row with the amount blank and nobody finds out until billing.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "The three cases that decide whether this holds up",
+        "caption": "Same flow, three different days. Watch how many tokens come out of each step.",
+        "steps": [
+          {
+            "label": "Normal day",
+            "does": "Six emails come in and four are from clients",
+            "in": 6,
+            "out": 4,
+            "why": "The pretty case, the only one almost everyone tests. Four in, four out, it all checks out."
+          },
+          {
+            "label": "Testing day",
+            "does": "Two of the emails are internal and say \"test\"",
+            "in": 6,
+            "out": 4,
+            "why": "The filter does its job and cuts two. Without that filter, two fake folders would have been created and the site manager would've gotten two pointless alerts."
+          },
+          {
+            "label": "Email with no amount",
+            "does": "The client just replies \"sounds good\"",
+            "in": 1,
+            "out": 1,
+            "why": "Here's the problem: the record gets created anyway, with the amount blank. The flow doesn't fail, but it leaves incomplete data nobody looks at until billing."
+          },
+          {
+            "label": "The same email twice",
+            "does": "Someone marks it as unread",
+            "in": 1,
+            "out": 2,
+            "why": "One in, two out: duplicate row, duplicate folder, and two alerts. It's the most common failure and doesn't get fixed by looking: it gets fixed by checking before creating."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Most useful automations don't have AI inside them",
+      "text": "This surprises everyone. Copying a fact from one place to another, alerting someone, creating a folder, or checking whether a number exceeds a limit are fixed rules: the computer does them perfectly and for free. AI comes in only when something needs interpreting that doesn't fit into a rule: understanding an email written in free-form language, summarizing, sorting by tone, or pulling facts out of messy text.",
+      "analogy": "You don't hire a certified translator to seal envelopes. AI is expensive and makes mistakes; use it where a rule can't reach."
+    },
+    {
+      "title": "n8n versus the simpler drag-and-drop tools",
+      "text": "Zapier and Make are websites where you connect applications with nothing to install, and they work great for four steps between two well-known apps. n8n wins in three situations: when you need real logic (loops, chained conditions, handling lists), when volume blows up the bill on the others because they charge per task, and when the data can't leave your own server. In exchange it asks for more thought up front.",
+      "example": "A flow that goes through 500 rows and calls an API for each one is 500 tasks on Zapier. On n8n installed on your own server, it's 500 loop passes and costs nothing.",
+      "visual": {
+        "kind": "decision",
+        "title": "n8n or something simpler?",
+        "caption": "Answer with your case in front of you. The answer changes the price and the work.",
+        "question": "Does your process need to repeat something for every item in a list?",
+        "branches": [
+          {
+            "answer": "No: it's four steps between two apps",
+            "then": "Zapier or Make suit you perfectly",
+            "why": "For a linear, low-volume flow, they're faster to set up and you don't have to maintain anything. Switching to n8n later means rebuilding a flow, not rebuilding your work.",
+            "cost": "From about $20/month"
+          },
+          {
+            "answer": "Yes, and the lists are dozens or hundreds long",
+            "then": "n8n, by a wide margin",
+            "why": "On Zapier every item in the list counts as a billable task. A flow that goes through 500 rows is 500 tasks there and a single run here.",
+            "cost": "Free, self-installed"
+          },
+          {
+            "answer": "I don't know yet",
+            "then": "Start on your own computer",
+            "why": "n8n installed on your laptop is free, commits you to nothing, and lets you build and test throughout the whole course. The day you're sure, you export a file and move it.",
+            "cost": "Zero"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Two ways to have it, and the difference matters",
+      "text": "You can use n8n's cloud, paying a monthly fee, and not worry about anything; or install it yourself on your computer or a server, free, and take care of maintaining it. The cloud is the sensible choice to start with and for small clients. Self-hosting makes sense when volume is high or when you're handling data that can't sit on someone else's server, like medical records or payroll.",
+      "analogy": "Renting a van with insurance included, or buying one. The second is cheaper if you use it every day and have somewhere to park it."
+    },
+    {
+      "title": "The beginner's mistake is starting with the tool",
+      "text": "People open n8n and start dragging boxes around to see what comes out. That ends up as a pretty flow that solves nothing, because what it needed to solve was never written down. The order that works is backward: first you write in plain English what process you want off your plate, how many times it happens, who does it today, and how you'll know tomorrow that it worked. Only then do you open n8n.",
+      "example": "Rocio wrote: \"when an email arrives with QUOTE ACCEPTED in the subject, I want a row in the sheet, a folder in Drive, and an alert to the site manager.\" Four lines. That's the whole flow, already designed."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Pick the process, and pick a boring one",
+      "where": "On paper or in a notepad",
+      "action": "Write down three things you do by hand that repeat. Then cross out the ones that happen only once or twice a month: they're not worth it. From what's left, keep the most boring and mechanical one, not the most interesting. Your first automation needs to be easy to verify, not impressive.",
+      "expect": "A chosen process, happening at least three times a week, that you currently do by hand.",
+      "stuck": "If nothing comes to mind, check your browser history from this week: whatever you've opened twenty times in a row is a candidate."
+    },
+    {
+      "title": "Write the trigger with clockwork precision",
+      "where": "On the same paper",
+      "action": "Complete this sentence leaving nothing vague: \"this needs to start when ___.\" If you wrote \"when an email arrives,\" that doesn't count: from whom, with what in the subject, to which inbox? The vaguer the trigger, the more times it'll fire when it shouldn't.",
+      "expect": "A sentence so specific someone else could check whether it's met or not, without asking you anything.",
+      "stuck": "If there's no clear moment that triggers it, maybe it's not an automation: maybe it's something reviewed once a day at a fixed time. That counts too and is easier."
+    },
+    {
+      "title": "Write the filter: what must NEVER go through",
+      "where": "On the same paper",
+      "action": "Write down the cases that meet the trigger but should NOT proceed: internal emails from your own company, tests, zero amounts, messages containing the word \"test.\" This section is what'll save you on the first day of real use, and it's the one everyone skips.",
+      "expect": "At least two written conditions for cases that need cutting off right at the start.",
+      "stuck": "Think of which email or form would embarrass you if it triggered a message to a customer. That's what needs filtering."
+    },
+    {
+      "title": "Write the actions in order, in plain English",
+      "where": "On the same paper",
+      "action": "One line per action, the way you'd tell a new coworker. \"Create a row with the name, amount, and date.\" \"Create a folder with the client's name.\" \"Send a message to the site manager with the name and address.\" No node names, no jargon: that comes later.",
+      "expect": "Two to five lines. If you end up with eight, you have two different automations and should split them.",
+      "stuck": "If you're unsure of the order, ask which action needs the previous one's result. That sorts it on its own."
+    },
+    {
+      "title": "Write how you'll know tomorrow it worked",
+      "where": "On the same paper",
+      "action": "A specific, observable check, the kind done in under a minute. \"There's a new row in the sheet AND a message in the chat, with the same name in both places.\" If you can't write this sentence, the process isn't clear enough yet, and building it will be a disaster.",
+      "expect": "A sentence you can check tomorrow morning without opening n8n.",
+      "stuck": "If your check is \"it works,\" that doesn't count. It has to say what specific thing exists afterward that didn't exist before."
+    },
+    {
+      "title": "Count how much doing it by hand costs you today",
+      "where": "On the same paper",
+      "action": "Minutes per time, multiplied by times a month. Write down the number. This figure decides two things: whether it's worth automating and how much you can spend building it. A two-minute process that happens three times a month doesn't get automated, it just gets done.",
+      "expect": "A number of hours per month. If it's under one hour, choose a different process: the first one needs to clearly pay off.",
+      "stuck": "Time yourself next time you do it. People always underestimate."
+    },
+    {
+      "title": "Decide where n8n is going to live",
+      "where": "At n8n.io, in the pricing section",
+      "action": "Look at the two paths: the paid cloud and the self-installed version. Using what you wrote down in step 6 (how many times a month) and what data the process handles, pick one and write why on your paper. Data as of August 2026, check it yourself since it changes.",
+      "expect": "A written decision, with its reason in one line.",
+      "stuck": "If you're unsure and don't handle sensitive data, start with the cloud. Switching later just means exporting some files, not redoing anything."
+    },
+    {
+      "title": "Check if it's already been done",
+      "where": "At n8n.io/workflows",
+      "action": "This is the public library of automations people share. Search for two or three words from your process in English (gmail sheets, invoice slack, form notion). Open two that look similar and look at the boxes they use. Don't copy them yet: look at how what you want to do has been solved.",
+      "expect": "Two examples opened and the feeling of \"ah, that's it.\" That's exactly the goal.",
+      "stuck": "If you find nothing similar, try searching just the names of the apps you use, without describing the process."
+    },
+    {
+      "title": "Give your card to an AI and let it attack it",
+      "where": "In ChatGPT or Claude",
+      "action": "Paste the prompt below with your card filled in. Don't ask it to build the flow: ask it to find the holes. It will.",
+      "prompt": "Act as someone who's spent years building automations and has seen a lot fail. I'm giving you the card for the first automation I want to build in n8n. Don't build anything for me and don't encourage me: I want you to attack it.\n\nMY CARD:\nTrigger: [PASTE IT]\nFilters: [PASTE THEM]\nActions: [PASTE THEM]\nHow I'll know it works: [PASTE IT]\nHow many times a month: [NUMBER]\n\nAnswer me in this order. One: tell me what real cases will make this misbehave, and be specific to my case, not generic: what happens if incomplete data arrives, if the same case comes in twice, if the other service is down, if someone writes with unusual characters, or if a case arrives at three in the morning. Two: tell me what's missing from my filters, meaning which cases will trigger this when they shouldn't. Three: tell me exactly where this could get stuck halfway, and what would be done versus not done, because I want to know if that leaves something inconsistent. Four: tell me whether any of my actions needs to check something before running, to avoid duplicating. Five: tell me whether what I want to do deserves n8n or is easier to solve another way, even without automating. Six: tell me what personal data passes through here and what that implies. And if you think my card is fine, tell me that too instead of inventing problems.",
+      "expect": "A list of holes you hadn't seen. Add them to your paper: they're part of the design, not criticism.",
+      "stuck": "If it tells you everything's fine, push back: \"give me three specific cases where this fails.\""
+    },
+    {
+      "title": "Finalize the card and save it",
+      "where": "On the paper, now cleaned up",
+      "action": "Rewrite the card with what you learned in step 9: trigger, filters, actions, check, what happens if it fails halfway, and how many times a month. Half a page. Save it somewhere you'll find it: it's what you'll build in the next lessons, and it's the only explanation you'll have six months from now for why it's built this way.",
+      "expect": "A half-page card that someone else could read and build without asking you anything.",
+      "stuck": "If the card runs two pages, you've bundled two automations. Separate them and build the simplest one first."
+    }
+  ],
+  "errors": [
+    {
+      "message": "I built the flow and it never triggers",
+      "means": "Almost always the trigger isn't what you thought. Many triggers only see what happens AFTER the flow is turned on, and others check every few minutes instead of instantly.",
+      "fix": "First check whether anything shows up in the execution history, even as filtered out: if not even that shows up, the problem is the trigger, not the steps. And trigger the case yourself after turning it on, not before."
+    },
+    {
+      "message": "It runs on cases that shouldn't have qualified",
+      "means": "You're missing a filter, or the filter compares badly. The classic one: comparing text with \"is exactly equal to\" when people write with different capitalization or an extra space.",
+      "fix": "Put a filter right after the trigger, before any action, and use \"contains\" instead of \"is exactly equal to\" when comparing text written by people."
+    },
+    {
+      "message": "It does things twice: two rows, two messages",
+      "means": "The trigger has seen the same case twice. Happens when an email gets marked unread, when a row gets edited after being created, or when a webhook retries.",
+      "fix": "Before creating anything, check whether it already exists by a unique fact (the email, the order number) and continue only if you don't find it. Covered in detail in lesson 39."
+    },
+    {
+      "message": "It works when I test it but fails with real cases",
+      "means": "Your tests use well-formed data. Reality brings empty fields, extremely long text, and cases you never imagined.",
+      "fix": "Deliberately test with the incomplete case, the duplicate case, and the case with unusual characters and emoji. Covered in lesson 44, and it's the difference between a flow that holds up and one you have to shut down."
+    },
+    {
+      "message": "I wrote the card but building it looks nothing like it",
+      "means": "The card was written in terms of tools (\"a Gmail node\") instead of process terms (\"when an email arrives from a client\").",
+      "fix": "Rewrite the card in plain English, the way you'd tell a new coworker. Specific boxes get chosen afterward, and sometimes the right box isn't the one you imagined."
+    },
+    {
+      "message": "I automated something and now it takes longer than before",
+      "means": "You've automated a process you did three times a month, or one that changes every week and needs the flow constantly retouched.",
+      "fix": "Go back to step 6's number. If it doesn't reach an hour a month saved, shut it off with no regrets and pick a different process. Automating something that constantly changes is double the work."
+    }
+  ],
+  "matters": [
+    "Writing the card BEFORE opening n8n. It's the difference between building something that solves a problem and building something pretty nobody uses. And the card isn't paperwork: it's what you'll read six months from now when you don't remember why it's built this way.",
+    "The filter right at the start, always. Without it, on the first day of real use you'll send real messages to real people over cases that shouldn't have gone through. It's the most expensive mistake and the easiest to prevent.",
+    "Choosing a process that happens several times a week. Automating something monthly doesn't pay off the work of building it, and on top of that, by the time it happens again you won't remember how it worked.",
+    "Knowing how much personal data flows through the flow. A customer's name, email, and phone number circulating through four different services is something to decide deliberately, not discover afterward."
+  ],
+  "ignore": [
+    "AI nodes during the first few weeks. Most automations that really save you time are fixed rules, and they're free, instant, and never wrong. AI comes in when a rule can't reach.",
+    "Installing n8n on your own server before having a working flow. It's a whole afternoon of work to solve a problem you don't have yet. The cloud or your own computer is more than enough to learn.",
+    "The thousand integrations on the node list. You'll use six or seven: a trigger, a filter, a spreadsheet, a chat, an email, and a generic API call. That covers 90% of what gets paid for in the real world."
+  ],
+  "canDo": [
+    "Repeat a mechanical process exactly the same way, a thousand times, at any hour, without getting tired or skipping a step because that day was busy.",
+    "Take a fact from one place and carry it to four others at once, keeping them all in sync without anyone having to remember to update the second one.",
+    "Watch something continuously and alert only when what matters to you happens, which is very different from having someone staring at a screen.",
+    "Act as glue between programs that don't talk to each other, even when one of them is an old company program nobody wants to touch."
+  ],
+  "cantDo": [
+    "Understand your business. If a quote over ten thousand dollars needs the boss's approval, it won't infer that: you have to tell it, in those words, and set it as an explicit condition.",
+    "Fix a badly designed process. If the manual process is a mess, automating it gives you a faster, harder-to-stop mess. Sort it out first, then automate.",
+    "Guess what to do when something odd happens. Faced with a case you didn't account for, it either stops or does something dumb with total confidence. What it does in that situation is your decision when you build it.",
+    "Maintain itself. Apps change, credentials expire, APIs get updated. A flow is like a car: it runs for a very long time, but someone has to give it a checkup."
+  ],
+  "words": [
+    [
+      "Workflow",
+      "The whole diagram: the set of connected boxes that solves a process. One workflow, one process."
+    ],
+    [
+      "Node",
+      "Each box. One does a single thing: watch, decide, transform, or act on an application."
+    ],
+    [
+      "Trigger",
+      "The box at the start, the one that watches. Only one per flow, and it decides when everything else starts."
+    ],
+    [
+      "Execution",
+      "Every time the flow runs. These get saved in a list with what went in and out of each box."
+    ],
+    [
+      "Item",
+      "Each element traveling between boxes: an email, a row, an order. The same step can receive one or five hundred."
+    ],
+    [
+      "Credential",
+      "The saved details n8n uses to get into Gmail, Drive, or wherever, on your behalf."
+    ],
+    [
+      "Webhook",
+      "An address of yours that another program sends a notification to when something happens. Flips the script on checking every minute."
+    ],
+    [
+      "Cloud",
+      "Using n8n on their servers, paying a fee, with nothing to install and nothing to maintain."
+    ],
+    [
+      "Self-hosted",
+      "Installing it yourself on your computer or a server. Free as a license, and maintenance is on you."
+    ],
+    [
+      "Activate",
+      "The switch that makes the flow run on its own. A tested but inactive flow does absolutely nothing."
+    ]
+  ],
+  "next": "Take the card you wrote and save it somewhere you'll find it tomorrow. In the next lesson you decide in two minutes whether n8n is really the tool for you or whether your case is solved faster with Zapier or Make, and from lesson 03 the actual building begins.",
+  "pieces": [
+    {
+      "kind": "beforeafter",
+      "title": "Rocio's morning, before and after",
+      "caption": "The same workday, with and without the flow built.",
+      "beforeLabel": "Now, by hand",
+      "afterLabel": "With the flow",
+      "rows": [
+        {
+          "before": "Opens email and hunts for accepted quotes",
+          "after": "The email triggers the flow on its own, as it arrives"
+        },
+        {
+          "before": "Copies name and amount to the sheet, one at a time",
+          "after": "The row appears in the sheet with the data already filled in"
+        },
+        {
+          "before": "Creates the Drive folder and names it by hand",
+          "after": "The folder gets created with the client's name"
+        },
+        {
+          "before": "Texts the site manager on WhatsApp",
+          "after": "The alert goes out with the address and link inside"
+        },
+        {
+          "before": "When rushed, a step gets skipped and the job starts with no folder",
+          "after": "All four steps always happen, or none do, and you find out"
+        }
+      ],
+      "gain": "Eleven minutes per quote, six a day: about twenty hours a month."
+    },
+    {
+      "kind": "cases",
+      "title": "Test your card against the three cases",
+      "caption": "Before building anything, check what your automation would do in each one.",
+      "cases": [
+        {
+          "id": "happy",
+          "label": "Happy case",
+          "hint": "Everything arrives complete and well-formed",
+          "parts": [
+            {
+              "type": "p",
+              "text": "It's the one everyone tests and the only one that usually works on the first try. If your card only accounts for this one, it isn't finished: it's just started."
+            }
+          ]
+        },
+        {
+          "id": "ambiguous",
+          "label": "Ambiguous case",
+          "hint": "A fact is missing, or arrives oddly",
+          "parts": [
+            {
+              "type": "p",
+              "text": "The client accepts without stating the amount, the name comes with accents and quotation marks, the message arrives split across three loose lines. Decide now what the flow should do: create the record with the gap blank, stop, or alert someone?"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Which field can be missing and still be valid",
+                "Which field, if missing, forces a stop",
+                "Who gets alerted when it stops"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "broken",
+          "label": "Broken case",
+          "hint": "The same case comes in twice, or the service is down",
+          "parts": [
+            {
+              "type": "p",
+              "text": "The email gets marked unread and comes back in. Or Drive doesn't respond for ten minutes. This is where it gets decided whether your automation can be trusted."
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Does the row get duplicated? Does the folder?",
+                "If it breaks at step 3 of 4, what's left done?",
+                "Does anyone find out, or does it fail silently?"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

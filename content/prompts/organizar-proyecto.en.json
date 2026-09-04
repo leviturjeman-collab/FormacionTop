@@ -1,0 +1,135 @@
+{
+  "id": "organizar-proyecto",
+  "title": "Have the AI organize your project and tell you what's next",
+  "intro": "You have an idea in your head and no clue where to start. These prompts turn that idea into an ordered task list, with a time estimate that doesn't lie to you, and a concrete next step for when you sit down at the computer. Use them before building anything, and come back to them any time you get stuck.",
+  "model": "Any of them work here since it's all text and thinking, but if your plan is going to be long and you want to paste the full project description into every message, reach for Claude, which handles long texts better; ChatGPT is fine for everyday use, and Gemini if your project lives inside Google.",
+  "prompts": [
+    {
+      "name": "The project profile (the text you'll paste everywhere)",
+      "when": "The very first one, before asking the AI for anything else. Ten minutes here saves you weeks of going in circles.",
+      "prompt": "You're a technical project manager who works with people who have never coded. Today you don't need to solve anything: you need to understand me and get my project written down clearly.\n\nMy idea is: [DESCRIBE YOUR IDEA IN THREE OR FOUR SENTENCES, THE WAY YOU'D TELL A FRIEND OVER COFFEE].\nWho it's for: [WHO'S GOING TO USE IT].\nWhat I want to happen once it works: [THE SPECIFIC RESULT YOU'RE AFTER].\nMy level: I've never coded and don't plan to learn; all the code will come from an AI, ready-made, and I just copy and paste where I'm told.\nTime available: [HOURS PER WEEK] hours a week.\nMoney I can spend: [AMOUNT] a month at most.\n\nBefore writing anything, ask me at most six questions, one at a time, waiting for my answer between questions. No technical questions: ask me about what the project does and for whom, never about how it's built underneath.\n\nOnce I've answered them, write me a PROJECT PROFILE under 400 words with these sections: what it is, who it's for, what it absolutely has to do, what's left out for now, what tools it'd be built with, and how much that would cost a month. Write it as a single continuous block of text I can copy and paste as-is at the start of other conversations. No jargon; if you have to use a technical word, explain it in parentheses the first time. If I haven't told you something and it isn't critical, decide for yourself and write ASSUMED next to it so I can see it.",
+      "fill": [
+        ["[DESCRIBE YOUR IDEA IN THREE OR FOUR SENTENCES, THE WAY YOU'D TELL A FRIEND OVER COFFEE]", "Your idea in plain language, no embellishment. Real example: a website where my salon clients can book their own appointment, see the open slots for the week, and get a reminder the day before."],
+        ["[WHO'S GOING TO USE IT]", "Specific people, not categories. Example: women 30 to 60 in my neighborhood, who currently message me on WhatsApp at all hours."],
+        ["[THE SPECIFIC RESULT YOU'RE AFTER]", "How you'll know it worked. Example: 70% of bookings happen on their own and I stop answering messages while I'm dyeing someone's hair."],
+        ["[HOURS PER WEEK]", "Be honest, not optimistic. Example: 5, almost all on Sunday afternoons."],
+        ["[AMOUNT]", "Your real monthly cap. Example: $20."]
+      ],
+      "expect": "Six short questions, one after another, and at the end a one-page text that describes your project better than you had it in your own head.",
+      "next": "Copy that profile and save it somewhere (Notes app, Google Docs, an email to yourself). It's your profile, and you'll paste it at the start of almost every prompt that follows."
+    },
+    {
+      "name": "The complete task list",
+      "when": "Right after getting the profile, when you want to know what this actually involves and stop imagining it.",
+      "prompt": "You're a technical project manager. You work for me and I've never coded: I don't know what a terminal is (that black screen with text) and don't want to know. Anything that needs coding will be written for me by an AI and I just copy and paste.\n\nHere's my project:\n[PASTE YOUR PROJECT PROFILE HERE]\n\nI want the complete task list to take it from where it is today, which is an idea, to actually running with real users. Give it to me as a table with these columns: number, task name in plain language, exactly what needs to happen, who does it (me by hand, the AI writes it for me, or something needs to be paid for and hired), and how I'll know that task is done.\n\nRules you can't skip: no task can take more than two hours, and if something does, split it into several. No vague tasks like set up the environment or configure the database: tell me what opens, where I click, and what's done once it's finished. Also include the boring tasks everyone forgets: creating accounts, picking a name, buying the domain, writing the copy, testing it with a real person, and publishing it.\n\nAt the end tell me how many tasks there are in total, how many I can do without depending on anyone, and how many need someone outside to respond first. If you're missing information to describe a task, don't make it up: write MISSING DATA and tell me what you need from me.",
+      "fill": [
+        ["[PASTE YOUR PROJECT PROFILE HERE]", "The text from the previous prompt, pasted in full. Example: it's a booking site for a neighborhood hair salon, clients see the open slots..."]
+      ],
+      "expect": "A table of 25 to 60 tasks, each one small enough to fit in an afternoon, including the boring ones.",
+      "next": "Read it all without stressing: it's normal for it to look scary. Don't start with the first one yet; move on to the ordering prompt, which decides what comes before what."
+    },
+    {
+      "name": "The order to do it in",
+      "when": "When you have the list in front of you and don't know where to dig in without making a mess.",
+      "prompt": "You're a technical project manager and you talk to me as if I know nothing about computers, because I genuinely don't.\n\nProject: [PASTE YOUR PROJECT PROFILE HERE]\nTask list: [PASTE THE TASK LIST YOU GAVE ME EARLIER]\n\nOrder these tasks so I can do them one after another without getting stuck. Group them into phases and give each phase a name that says what I achieve by finishing it, for example: Phase 2, the site is now viewable from mobile. Within each phase, number the tasks in the exact order they need to happen.\n\nFor each task, tell me what other task it depends on, or write doesn't depend on anything if it can be done at any point. Flag with the word BLOCKING the tasks that, if left undone, hold up everything else: I want those first. Flag with the word WAITING the ones that depend on third parties and take days on their own even if I do nothing, like buying a domain, identity verification, or app store reviews, because those need to be kicked off as early as possible even if their turn hasn't come yet.\n\nFinish with the three tasks I should do this very week and why those and not others. And if the natural order I'd have come up with myself has a serious flaw, tell me in two sentences before the table, don't soften it.",
+      "fill": [
+        ["[PASTE YOUR PROJECT PROFILE HERE]", "Your profile, in full again. The AI remembers nothing if you open a new conversation."],
+        ["[PASTE THE TASK LIST YOU GAVE ME EARLIER]", "The table from the previous prompt. If it's very long, paste only the number and task name columns."]
+      ],
+      "expect": "Three to five named phases, the tasks numbered within each, and a handful of BLOCKING and WAITING labels scattered around.",
+      "next": "Look at the ones flagged WAITING and kick them off today even if their turn hasn't come: that time gets consumed by someone else, not you."
+    },
+    {
+      "name": "The bare minimum that's already useful",
+      "when": "When the list has given you a scare with how long it is and you're tempted to give up.",
+      "prompt": "You're a tough, in-a-hurry product manager. Your job today is to cut, not to add. Every item you remove is a win.\n\nProject: [PASTE YOUR PROJECT PROFILE HERE]\nTask list: [PASTE THE TASK LIST HERE]\n\nI want to know what the smallest version of this is that's already genuinely useful to someone. Not a nice-looking prototype to show off in a meeting: something a real person can use start to finish that solves their problem, even if it's crude and ugly.\n\nGive me three things. First, the short list of what DOES belong in that version, with one sentence per item explaining why it falls apart without it. Second, the list of what STAYS OUT and, next to each item, the manual workaround I can use in the meantime; for example, instead of coding payments, take payment by bank transfer for the first month. Third, tell me the exact moment I'll know that minimal version has worked: what a user has to do for it to count as having been worth it.\n\nBe ruthless: if something can be done by hand for the first few weeks, it's out. If you think I'm kidding myself and my minimal version is still huge, say so plainly. Finish with a single sentence starting with Version 1 is: that fits in a text message.",
+      "fill": [
+        ["[PASTE YOUR PROJECT PROFILE HERE]", "Your complete profile."],
+        ["[PASTE THE TASK LIST HERE]", "The task list, ordered or not. If you already have the phases, paste the phases."]
+      ],
+      "expect": "A short list of essentials, another of what stays out with its manual workaround next to it, and a final sentence summing up your version 1.",
+      "next": "Paste that final sentence into your project profile, replacing whatever you had before. From now on, anything not in version 1 gets shelved without argument."
+    },
+    {
+      "name": "How long this really takes",
+      "when": "Before promising anyone a date, and above all before promising yourself one.",
+      "prompt": "You're a project manager who has watched a lot of estimates fail, including your own, and no longer believes optimistic timelines.\n\nProject: [PASTE YOUR PROJECT PROFILE HERE]\nTasks ordered by phase: [PASTE THE ORDERED PLAN HERE]\nMy real situation: I can put in [HOURS PER WEEK] hours a week, in sessions of [LENGTH OF EACH SESSION], and I've never coded; all the code comes ready-made from an AI and I copy and paste it.\n\nEstimate how long this takes. Don't give me loose hours: tell me how many work sessions each phase needs and how many weeks that translates to at my actual pace. Give me three scenarios: if everything goes smoothly, the likely case, and if it goes sideways. Explain in one sentence what's different between the good scenario and the bad one.\n\nAlso count the time that isn't typing: reading, deciding, waiting for a vendor to reply, fixing what breaks, testing it again. Since I've never coded, apply extra margin to the tasks where beginners typically get stuck, and tell me explicitly which those are so I can see them coming.\n\nFinish with two things: a realistic date to have the minimum version running, counting from [TODAY'S DATE], and the single task that, if delayed, drags all the others with it.",
+      "fill": [
+        ["[PASTE YOUR PROJECT PROFILE HERE]", "Your profile."],
+        ["[PASTE THE ORDERED PLAN HERE]", "The phases with numbered tasks from the ordering prompt."],
+        ["[HOURS PER WEEK]", "The hours you'll actually put in, not the ones you'd like to. Example: 4."],
+        ["[LENGTH OF EACH SESSION]", "What your sessions look like. Example: two two-hour blocks, Tuesday and Sunday evenings."],
+        ["[TODAY'S DATE]", "Today's date, written out. Example: August 19, 2026."]
+      ],
+      "expect": "A number of sessions per phase, three scenarios with weeks attached, a specific date, and the name of the task that could sink the schedule.",
+      "next": "Take the middle scenario and add a third to it: that's your real deadline. If the resulting date doesn't work for you, go back to the minimum-version prompt and trim more."
+    },
+    {
+      "name": "I'm lost: give me the next concrete step",
+      "when": "When you sit down at the computer, look at the plan, and don't know what to touch. This is the rescue prompt and you'll use it more than any other.",
+      "prompt": "I'm lost and need you to tell me exactly what to do right now. A single step.\n\nProject: [PASTE YOUR PROJECT PROFILE HERE]\nWhat's already done: [WHAT YOU'VE ALREADY ACCOMPLISHED]\nThe last thing I tried: [THE LAST THING YOU DID AND HOW IT WENT]\nTime I have right now: [MINUTES OR HOURS YOU HAVE].\n\nDon't give me a plan. Don't give me options to choose from. Give me ONE step, the one that gets me closest to having something working, and that fits in the time I have.\n\nWrite it with this structure. One, the goal of the step in one sentence, no technical words. Two, exact instructions, numbered, telling me what to open, where to click, and what to type, as if you were dictating it over the phone to someone who's never done this. Three, if code needs to be pasted, give it to me written out in full and tell me which file or box it goes in, exactly where to paste it, and what button to save with after; don't ask me to write any code. Four, how I'll know it worked: what I should see on screen, in those exact words. Five, what to do if it doesn't work, with the two most common failures and their fix.\n\nIf you're missing information to give me that step, ask me one single thing and wait for my answer. Don't jump ahead to the next step: once I finish this one, I'll come back and tell you how it went.",
+      "fill": [
+        ["[PASTE YOUR PROJECT PROFILE HERE]", "Your profile. If you're still in the same conversation, writing \"the usual project\" is enough."],
+        ["[WHAT YOU'VE ALREADY ACCOMPLISHED]", "What's working today, even if it's very little. Example: I have the account created and a blank page that's already live online."],
+        ["[THE LAST THING YOU DID AND HOW IT WENT]", "Exactly what happened, error included. Example: I pasted the code you gave me and got red text saying module not found."],
+        ["[MINUTES OR HOURS YOU HAVE]", "Your actual amount of time. Example: 40 minutes before dinner."]
+      ],
+      "expect": "A single numbered step, with the code already written if needed, and a sentence like: you'll know it worked when you see...",
+      "next": "Do it and come back to report how it went, even if it went badly. With the result in hand, ask for the next step with this same prompt."
+    },
+    {
+      "name": "The decisions you can't dodge (and what they cost)",
+      "when": "Early on, when the AI starts throwing tool names at you and you have no idea which to pick.",
+      "prompt": "You're a technical advisor I'm paying to save me headaches, not to show me a catalog of options.\n\nProject: [PASTE YOUR PROJECT PROFILE HERE]\nBudget: at most [AMOUNT] a month.\n\nGive me the list of decisions I absolutely have to make before I start building: where the site or app lives, where the data is stored, whether people need to sign up and how, how payments work if there are any, what name and domain, and anything else that applies to my specific case.\n\nFor each decision, give me four things: the option you recommend and why, in one sentence; the reasonable alternative in case that one doesn't work for me; the monthly cost, noting free-up-to-what-point if there's a free plan; and a label of EASY TO CHANGE or HARD TO CHANGE based on how costly it'd be to reverse six months from now.\n\nWrite the word WARNING in front of anything paid upfront, anything non-refundable, and anything that permanently deletes data with no recovery when canceled.\n\nFinish by adding up the total monthly cost of your recommendation and telling me which line I'd cut first if I ran out of money. No lists of twenty tools for me to choose from: you choose and commit. And flag which prices might be out of date so I can confirm them on the vendor's site before paying anything.",
+      "fill": [
+        ["[PASTE YOUR PROJECT PROFILE HERE]", "Your complete profile."],
+        ["[AMOUNT]", "Your monthly cap. Example: $15."]
+      ],
+      "expect": "Six to ten decisions, each with its recommendation, its monthly cost, and its label on whether it can be undone.",
+      "next": "Only note down the decisions marked HARD TO CHANGE, into your profile. Leave the easy ones for when their turn comes. And before paying, check the price on the vendor's site: the AI gets pricing wrong, and some annual contracts aren't refundable."
+    },
+    {
+      "name": "What's going to go wrong (said before, not after)",
+      "when": "Once the plan is settled and right before you start building.",
+      "prompt": "Let's do an uncomfortable exercise. Imagine three months have passed and this project has failed: either it's not finished, or it's finished and nobody uses it.\n\nProject: [PASTE YOUR PROJECT PROFILE HERE]\nPlan and phases: [PASTE THE ORDERED PLAN HERE]\n\nWrite the explanation of why it failed, as if it had already happened and you were telling me in hindsight. Give me the seven most likely causes, ranked from most to least likely, keeping in mind that I've never coded, that I'm working alone, and that I only have loose stretches of time between other obligations.\n\nSplit the causes into three groups. The ones that depend on me: I get bored, I get stuck, I leave it half-finished, I change my mind midway. The technical ones: something doesn't work, it breaks right when I try to publish it, the AI gives me something I don't understand and can't fix. And the outside ones: nobody wants it, a vendor raises its price, a platform changes its rules.\n\nFor each cause, tell me the early warning sign, meaning what I'll notice two weeks before the problem gets big. And give me one concrete action I can take this week to keep that cause from ever happening, in a single sentence, doable in under an hour.\n\nFinish by telling me which of the seven worries you most in my specific case and why.",
+      "fill": [
+        ["[PASTE YOUR PROJECT PROFILE HERE]", "Your profile."],
+        ["[PASTE THE ORDERED PLAN HERE]", "The phases with their tasks. If you don't have it handy, the phase names alone are enough."]
+      ],
+      "expect": "Seven ranked causes of failure, each with its warning sign and an under-an-hour action to prevent it.",
+      "next": "Add the two or three cheapest actions straight into this week's task list. And note the early warning signs somewhere you'll see them often: they're your alarm."
+    },
+    {
+      "name": "Updating the plan when reality contradicts it",
+      "when": "Once a week, or the day something goes sideways and the plan stops matching what's actually happening.",
+      "prompt": "You're my project manager and it's review time. Be honest with me, don't flatter me or congratulate me for things I haven't done.\n\nProject: [PASTE YOUR PROJECT PROFILE HERE]\nOriginal plan: [PASTE THE PLAN WITH PHASES HERE]\nWhat I've finished since the last review: [WHAT YOU'VE FINISHED]\nWhat I haven't done and why: [WHAT'S FALLEN BEHIND AND THE REAL REASON]\nWhat took much longer than expected: [WHERE YOU GOT STUCK]\n\nTell me three things. First, where I really stand against the plan: an approximate percentage and weeks ahead or behind, no sugarcoating. Second, what needs to change in the plan: tasks that no longer make sense and get dropped, new tasks that showed up and weren't planned for, and tasks that need to be split into smaller pieces because they're blocking me. Third, the updated plan for the next two weeks, with tasks in order, without loading in more work than fits in [HOURS PER WEEK] hours a week.\n\nIf from what I've told you it sounds like I'm headed toward abandoning the project, say so directly and propose the trimmed-down version that I would actually finish. And if anything that's blocking me could be solved by the AI writing it out for me in full, flag it and tell me exactly what to ask for, with the request already written so I can copy it.",
+      "fill": [
+        ["[PASTE YOUR PROJECT PROFILE HERE]", "Your profile."],
+        ["[PASTE THE PLAN WITH PHASES HERE]", "The ordered plan. If you've been changing it, paste the latest version, not the original."],
+        ["[WHAT YOU'VE FINISHED]", "What's done, however little. Example: tasks 1 through 4 of phase 1, and half of task 5."],
+        ["[WHAT'S FALLEN BEHIND AND THE REAL REASON]", "The real reason, even if it's just that you didn't feel like it. Example: task 6, because I kept putting it off out of laziness."],
+        ["[WHERE YOU GOT STUCK]", "What ate your time. Example: three hours fighting to get photos to display right on mobile."],
+        ["[HOURS PER WEEK]", "Your real hours, adjusted to what's actually happened these past weeks, not what you planned. Example: 3."]
+      ],
+      "expect": "An unfiltered read on where you stand, a list of changes to the plan, and a concrete plan for the next fourteen days.",
+      "next": "Replace your old plan with the new one and throw the old one out. A plan that no longer matches reality is useless: it only makes you feel bad."
+    }
+  ],
+  "canDo": [
+    "Turn a vague idea into a concrete task list, ordered and organized into phases that make sense.",
+    "Tell you what the bare minimum is that's already useful to someone and what you can shelve without sinking the project.",
+    "Get you unstuck with a single next step, click-by-click instructions, and the code already written.",
+    "Rearrange the plan when reality drifts, without you having to redo it from scratch yourself."
+  ],
+  "cantDo": [
+    "It doesn't know your actual pace: its estimates run optimistic, so add a third to whatever it tells you.",
+    "It doesn't know if anyone's interested in your idea. You only find that out by showing it to actual people.",
+    "It doesn't remember last week's conversation. If you don't paste in the project profile, it makes your project up.",
+    "It has no idea you've been stuck for four days or that you've given up: if you don't tell it, it'll keep handing you the pretty plan."
+  ],
+  "tips": [
+    "Always paste the project profile at the start of the message, even when it's a hassle. A prompt with the profile and one without get very different quality answers.",
+    "Add this line to any of these prompts: before answering, ask me whatever you need, one at a time. It costs two extra minutes and the answer improves enormously.",
+    "Ban big tasks with this line: no task can take more than two hours, and if it does, split it. Giant tasks are the number one reason people give up."
+  ]
+}

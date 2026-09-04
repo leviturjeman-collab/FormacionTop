@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, Columns2, Sparkles, ThumbsDown, X } from 'lucide-react'
 import type { PromptLabPiece } from '../types'
+import { useLocale } from '../i18n'
 
 /**
  * Laboratorio de prompts.
@@ -10,6 +11,7 @@ import type { PromptLabPiece } from '../types'
  * no hay llamada a ninguna API ni hace falta ninguna clave.
  */
 export default function PromptLab({ piece }: { piece: PromptLabPiece }) {
+  const locale = useLocale()
   const [view, setView] = useState<'weak' | 'strong' | 'both'>('weak')
 
   const panel = (variant: 'weak' | 'strong') => {
@@ -25,12 +27,12 @@ export default function PromptLab({ piece }: { piece: PromptLabPiece }) {
         </header>
 
         <section className="st-lab-block">
-          <h6>Lo que se escribe</h6>
+          <h6>{locale === 'en' ? 'What is written' : 'Lo que se escribe'}</h6>
           <pre className="st-lab-prompt">{data.prompt}</pre>
         </section>
 
         <section className="st-lab-block">
-          <h6>Lo que devuelve</h6>
+          <h6>{locale === 'en' ? 'What it returns' : 'Lo que devuelve'}</h6>
           <pre className="st-lab-response">{data.response}</pre>
         </section>
 
@@ -53,7 +55,7 @@ export default function PromptLab({ piece }: { piece: PromptLabPiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <div className="st-piece-actions" role="tablist" aria-label="Comparación de prompts">
+        <div className="st-piece-actions" role="tablist" aria-label={locale === 'en' ? 'Prompt comparison' : 'Comparación de prompts'}>
           <button type="button" role="tab" aria-selected={view === 'weak'} className={`st-btn-ghost${view === 'weak' ? ' on' : ''}`} onClick={() => setView('weak')}>
             {piece.weak.label}
           </button>
@@ -62,7 +64,7 @@ export default function PromptLab({ piece }: { piece: PromptLabPiece }) {
           </button>
           <button type="button" role="tab" aria-selected={view === 'both'} className={`st-btn-ghost${view === 'both' ? ' on' : ''}`} onClick={() => setView('both')}>
             <Columns2 size={15} />
-            Comparar
+            {locale === 'en' ? 'Compare' : 'Comparar'}
           </button>
         </div>
       </header>

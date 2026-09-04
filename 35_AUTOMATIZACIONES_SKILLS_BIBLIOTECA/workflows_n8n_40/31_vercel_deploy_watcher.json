@@ -1,68 +1,334 @@
 {
-  "name": "31 Vercel Deploy Watcher",
+  "name": "31 · Vigilante de deploys de Vercel",
   "nodes": [
+    {
+      "parameters": {
+        "content": "## 31 · Vigilante de Vercel\n\n1. Crea un token en vercel.com → Account Settings → Tokens.\n2. Credencial Header Auth: nombre \"Authorization\", valor \"Bearer TU_TOKEN\".\n3. Si usas un equipo, añade ?teamId=... a la URL.\n4. Configura el canal de Slack y la hoja de Google Sheets.\n\nRevisa cada 15 minutos los últimos 20 deploys.",
+        "width": 460,
+        "height": 260
+      },
+      "id": "nodo_111",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        40
+      ]
+    },
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "field": "hours",
-              "hoursInterval": 24
+              "field": "minutes",
+              "minutesInterval": 15
             }
           ]
         }
       },
-      "id": "trigger",
-      "name": "Schedule",
+      "id": "nodo_112",
+      "name": "Cada 15 minutos",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.2,
       "position": [
         0,
-        0
+        340
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"31 Vercel Deploy Watcher\",\n    category: \"devops\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "method": "GET",
+        "url": "https://api.vercel.com/v6/deployments",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_113",
+      "name": "Consultar deploys de Vercel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Vercel (Authorization: Bearer)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cuerpo = $input.first().json || {};\nconst lista = cuerpo.deployments || [];\nconst VENTANA_MS = 1000 * 60 * 30; // solo deploys de la última media hora\nconst ahora = Date.now();\nconst fallidos = lista\n  .filter(function (d) {\n    const estado = d.state || d.readyState || '';\n    return estado === 'ERROR' && ahora - (d.createdAt || 0) < VENTANA_MS;\n  })\n  .map(function (d) {\n    return {\n      proyecto: d.name || 'sin-nombre',\n      url: d.url || '',\n      creado: d.createdAt ? new Date(d.createdAt).toISOString() : ''\n    };\n  });\nconst salida = {\n  api_ok: Array.isArray(cuerpo.deployments),\n  hay_fallos: fallidos.length > 0,\n  total_revisados: lista.length,\n  total_fallidos: fallidos.length,\n  detalle_fallidos: fallidos.map(function (f) { return f.proyecto + ' (' + f.url + ')'; }).join(' | '),\n  revisado_en: new Date().toISOString()\n};\nreturn [ { json: salida } ];"
+      },
+      "id": "nodo_114",
+      "name": "Evaluar deploys",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        440,
+        340
       ]
     },
     {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_014",
+              "leftValue": "={{ $json.api_ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_115",
+      "name": "¿Respuesta de API válida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_015",
+              "leftValue": "={{ $json.hay_fallos }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_116",
+      "name": "¿Hay deploys fallidos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Deploys"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_117",
+      "name": "Registrar incidencia",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        140
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#deploys"
+        },
+        "text": "=:rotating_light: Deploy fallido en Vercel\n\nProyectos afectados ({{ $json.total_fallidos }}): {{ $json.detalle_fallidos }}\nRevisado a las: {{ $json.revisado_en }}",
+        "otherOptions": {}
+      },
+      "id": "nodo_118",
+      "name": "Alertar en Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        140
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack Bot"
+        }
+      }
+    },
+    {
       "parameters": {},
-      "id": "respond",
-      "name": "Fin",
+      "id": "nodo_119",
+      "name": "Todo en verde",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        1100,
+        360
       ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#deploys"
+        },
+        "text": "=El vigilante de Vercel no pudo leer la API (token caducado o sin permisos). Revisa la credencial en n8n.",
+        "otherOptions": {}
+      },
+      "id": "nodo_120",
+      "name": "Avisar fallo de configuración",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        460
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack Bot"
+        }
+      }
     }
   ],
   "connections": {
-    "Schedule": {
+    "Cada 15 minutos": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Consultar deploys de Vercel",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Consultar deploys de Vercel": {
       "main": [
         [
           {
-            "node": "Fin",
+            "node": "Evaluar deploys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar deploys": {
+      "main": [
+        [
+          {
+            "node": "¿Respuesta de API válida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Respuesta de API válida?": {
+      "main": [
+        [
+          {
+            "node": "¿Hay deploys fallidos?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar fallo de configuración",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay deploys fallidos?": {
+      "main": [
+        [
+          {
+            "node": "Registrar incidencia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Todo en verde",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar incidencia": {
+      "main": [
+        [
+          {
+            "node": "Alertar en Slack",
             "type": "main",
             "index": 0
           }
@@ -71,23 +337,6 @@
     }
   },
   "settings": {
-    "executionOrder": "v1",
-    "timezone": "Europe/Madrid"
-  },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "devops",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Schedule": [
-      {
-        "referencia": "PRUEBA-0001",
-        "nombre": "Caso de ejemplo",
-        "email": "prueba@ejemplo.es",
-        "mensaje": "Texto de prueba para ver el flujo funcionando.",
-        "fecha": "2026-09-01"
-      }
-    ]
+    "executionOrder": "v1"
   }
 }

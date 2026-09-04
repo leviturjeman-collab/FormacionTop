@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CircleCheck, TriangleAlert } from 'lucide-react'
 import type { Block } from '../types'
 import { Code } from './Parts'
+import { useLocale } from '../i18n'
 
 const KEY = 'academia.sistema'
 
@@ -22,6 +23,7 @@ function detectOs(): string {
  * de comprobación y los fallos típicos con su arreglo.
  */
 export default function Install({ block }: { block: Block }) {
+  const locale = useLocale()
   const [os, setOs] = useState(detectOs)
   const variants = block.variants || []
 
@@ -35,7 +37,7 @@ export default function Install({ block }: { block: Block }) {
       <h3>{block.title}</h3>
       {block.text && <p>{block.text}</p>}
 
-      <div className="st-os-tabs" role="tablist" aria-label="Sistema operativo">
+      <div className="st-os-tabs" role="tablist" aria-label={locale === 'en' ? 'Operating system' : 'Sistema operativo'}>
         {variants.map((item) => (
           <button
             key={item.os}
@@ -56,7 +58,7 @@ export default function Install({ block }: { block: Block }) {
       {block.verify && (
         <p className="st-install-verify">
           <CircleCheck size={12} />
-          <span><b>Está bien si:</b> {block.verify}</span>
+          <span><b>{locale === 'en' ? "It's working if:" : 'Está bien si:'}</b> {block.verify}</span>
         </p>
       )}
 
@@ -69,7 +71,7 @@ export default function Install({ block }: { block: Block }) {
 
       {block.fails && block.fails.length > 0 && (
         <div className="st-install-fails">
-          <strong>Si algo falla</strong>
+          <strong>{locale === 'en' ? 'If something fails' : 'Si algo falla'}</strong>
           <dl>
             {block.fails.map(([problem, fix]) => (
               <div key={problem}>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import type { Part } from '../types'
+import { useLocale } from '../i18n'
 
 /**
  * Contenido de una sección, con su forma real.
@@ -10,6 +11,7 @@ import type { Part } from '../types'
  */
 
 export function Code({ code, lang }: { code: string; lang?: string }) {
+  const locale = useLocale()
   const [copied, setCopied] = useState(false)
   return (
     <div className="st-code">
@@ -27,7 +29,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
         }}
       >
         {copied ? <Check size={11} /> : <Copy size={11} />}
-        {copied ? 'Copiado' : 'Copiar'}
+        {copied ? (locale === 'en' ? 'Copied' : 'Copiado') : (locale === 'en' ? 'Copy' : 'Copiar')}
       </button>
       <pre><code>{code}</code></pre>
     </div>

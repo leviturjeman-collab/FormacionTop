@@ -1,0 +1,122 @@
+{
+  "id": "extractor-de-datos-de-documentos-api",
+  "order": 14,
+  "title": "Extractor de datos de documentos",
+  "kicker": "Agentes por código",
+  "platform": "api",
+  "platformLabel": "API (código)",
+  "level": "avanzado",
+  "what": "Un script en Python que lee un documento de texto (una factura exportada, un albarán, un correo largo, un contrato) y saca de él los datos estructurados que le pidas: emisor, fecha, importes, conceptos, referencias. Usa la API de Anthropic con esquema forzado, así que la salida es siempre un JSON con los mismos campos, y cada dato viene acompañado del fragmento literal del documento de donde salió, para que puedas verificarlo sin releer el documento entero. Los campos que no aparecen en el documento vuelven como null, nunca inventados.",
+  "forWho": "Para quien pica datos de documentos a mano hacia una hoja o un sistema: administración, contabilidad, logística. Compensa a partir de un rato diario de picar; con decenas de documentos al día es transformador.",
+  "tools": ["python", "claude"],
+  "capabilities": [
+    "Extrae los campos que definas de cualquier documento de texto, con esquema garantizado por la API",
+    "Devuelve junto a cada dato la cita literal del documento de donde lo sacó, para verificación rápida",
+    "Responde null en los campos que el documento no trae: prohibido rellenar por intuición",
+    "Valida lo extraído tras la llamada (formato de fecha, números) y degrada a null lo que no cuadra, avisando por stderr",
+    "Procesa un fichero o una carpeta entera, generando un JSON por documento"
+  ],
+  "limits": [
+    "No lee PDF ni imágenes directamente: trabaja sobre texto plano; convierte antes (pdftotext, copiar y pegar, OCR) o pide la versión con soporte PDF como ampliación",
+    "No garantiza el 100 %: extrae bien la gran mayoría, pero el circuito debe asumir errores; por eso existen las citas y la verificación",
+    "No debe ser el único control en datos que mueven dinero: un importe extraído se comprueba contra la cita antes de contabilizarse",
+    "No mantiene memoria entre documentos: cada uno se procesa aislado"
+  ],
+  "files": [
+    {
+      "name": "extractor.py",
+      "language": "python",
+      "content": "#!/usr/bin/env python3\n\"\"\"Extractor de datos estructurados de documentos de texto (API de Anthropic).\n\nUso:\n  python extractor.py factura.txt\n  python extractor.py --carpeta ./documentos --salida ./extraidos\n\nRequisitos:\n  pip install anthropic\n  export ANTHROPIC_API_KEY=\"tu-clave\"\n\nTrabaja sobre .txt. Si tienes PDF, conviértelo antes (p. ej. pdftotext factura.pdf).\n\"\"\"\n\nimport argparse\nimport json\nimport os\nimport re\nimport sys\nfrom pathlib import Path\n\ntry:\n    import anthropic\nexcept ImportError:\n    sys.exit(\"Falta el SDK de Anthropic. Instálalo con: pip install anthropic\")\n\n# ── Configuración: define AQUÍ qué extraes ──────────────────────────────\n\nMODELO = \"claude-haiku-4-5\"  # extraer campos es tarea de modelo pequeño\nMAX_CARACTERES = 60000\n\nSISTEMA = (\n    \"Eres un extractor de datos de documentos administrativos en español. \"\n    \"Extrae EXCLUSIVAMENTE lo que el documento dice, llamando a la herramienta. \"\n    \"Regla de oro: si un campo no aparece en el documento, devuélvelo como null. \"\n    \"Nunca deduzcas, calcules ni completes datos que no estén escritos. \"\n    \"En cada campo con valor, la cita es el fragmento literal del documento \"\n    \"del que lo has sacado.\"\n)\n\n# Cada campo lleva su cita. Adapta propiedades y required a tus documentos.\nCAMPO_CON_CITA = lambda tipo, descripcion: {\n    \"type\": \"object\",\n    \"properties\": {\n        \"valor\": {\"type\": [tipo, \"null\"], \"description\": descripcion},\n        \"cita\": {\n            \"type\": [\"string\", \"null\"],\n            \"description\": \"Fragmento literal del documento de donde sale el valor.\",\n        },\n    },\n    \"required\": [\"valor\", \"cita\"],\n    \"additionalProperties\": False,\n}\n\nHERRAMIENTA = {\n    \"name\": \"registrar_datos\",\n    \"description\": \"Registra los datos extraídos del documento.\",\n    \"strict\": True,\n    \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"tipo_documento\": {\n                \"type\": \"string\",\n                \"enum\": [\"factura\", \"albaran\", \"presupuesto\", \"contrato\", \"otro\"],\n            },\n            \"emisor\": CAMPO_CON_CITA(\"string\", \"Nombre de quien emite el documento\"),\n            \"nif\": CAMPO_CON_CITA(\"string\", \"NIF/CIF del emisor tal como figura\"),\n            \"fecha\": CAMPO_CON_CITA(\"string\", \"Fecha del documento en formato AAAA-MM-DD\"),\n            \"numero\": CAMPO_CON_CITA(\"string\", \"Número o referencia del documento\"),\n            \"importe_total\": CAMPO_CON_CITA(\"number\", \"Importe total con impuestos, en euros\"),\n            \"conceptos\": {\n                \"type\": \"array\",\n                \"description\": \"Líneas o conceptos principales del documento.\",\n                \"items\": {\n                    \"type\": \"object\",\n                    \"properties\": {\n                        \"descripcion\": {\"type\": \"string\"},\n                        \"importe\": {\"type\": [\"number\", \"null\"]},\n                    },\n                    \"required\": [\"descripcion\", \"importe\"],\n                    \"additionalProperties\": False,\n                },\n            },\n        },\n        \"required\": [\n            \"tipo_documento\",\n            \"emisor\",\n            \"nif\",\n            \"fecha\",\n            \"numero\",\n            \"importe_total\",\n            \"conceptos\",\n        ],\n        \"additionalProperties\": False,\n    },\n}\n\n# ── Validación posterior: la IA propone, el código comprueba ───────────\n\n\ndef validar(datos: dict, nombre: str) -> dict:\n    \"\"\"Comprueba formatos y degrada a null lo que no cuadre, avisando.\"\"\"\n    fecha = datos.get(\"fecha\", {}).get(\"valor\")\n    if fecha is not None and not re.fullmatch(r\"\\d{4}-\\d{2}-\\d{2}\", str(fecha)):\n        print(f\"AVISO [{nombre}]: fecha '{fecha}' sin formato AAAA-MM-DD; se anula.\", file=sys.stderr)\n        datos[\"fecha\"][\"valor\"] = None\n    total = datos.get(\"importe_total\", {}).get(\"valor\")\n    if total is not None and (not isinstance(total, (int, float)) or total < 0):\n        print(f\"AVISO [{nombre}]: importe_total '{total}' no válido; se anula.\", file=sys.stderr)\n        datos[\"importe_total\"][\"valor\"] = None\n    return datos\n\n\ndef extraer(client: \"anthropic.Anthropic\", texto: str, nombre: str) -> dict:\n    respuesta = client.messages.create(\n        model=MODELO,\n        max_tokens=2048,\n        system=SISTEMA,\n        tools=[HERRAMIENTA],\n        tool_choice={\"type\": \"tool\", \"name\": \"registrar_datos\"},\n        messages=[{\"role\": \"user\", \"content\": f\"Documento «{nombre}»:\\n\\n{texto}\"}],\n    )\n    for bloque in respuesta.content:\n        if bloque.type == \"tool_use\" and bloque.name == \"registrar_datos\":\n            return validar(dict(bloque.input), nombre)\n    raise RuntimeError(\"La API no devolvió la extracción esperada.\")\n\n\ndef procesar_fichero(client, ruta: Path, salida: Path | None) -> bool:\n    try:\n        texto = ruta.read_text(encoding=\"utf-8\", errors=\"replace\").strip()\n    except OSError as e:\n        print(f\"ERROR: no puedo leer {ruta}: {e}\", file=sys.stderr)\n        return False\n    if not texto:\n        print(f\"AVISO: {ruta} está vacío; lo salto.\", file=sys.stderr)\n        return False\n    if len(texto) > MAX_CARACTERES:\n        print(f\"AVISO: {ruta} recortado a {MAX_CARACTERES} caracteres.\", file=sys.stderr)\n        texto = texto[:MAX_CARACTERES]\n\n    try:\n        datos = extraer(client, texto, ruta.name)\n    except anthropic.AuthenticationError:\n        sys.exit(\"Clave de API inválida o revocada. Revisa ANTHROPIC_API_KEY.\")\n    except anthropic.RateLimitError:\n        print(f\"ERROR: límite de peticiones en {ruta.name}; reintenta más tarde.\", file=sys.stderr)\n        return False\n    except anthropic.APIStatusError as e:\n        print(f\"ERROR de la API ({e.status_code}) en {ruta.name}: {e.message}\", file=sys.stderr)\n        return False\n    except anthropic.APIConnectionError:\n        sys.exit(\"No hay conexión con la API. Revisa tu red y reintenta.\")\n\n    datos[\"_documento\"] = ruta.name\n    resultado = json.dumps(datos, ensure_ascii=False, indent=2)\n    if salida:\n        salida.mkdir(parents=True, exist_ok=True)\n        destino = salida / (ruta.stem + \".json\")\n        destino.write_text(resultado + \"\\n\", encoding=\"utf-8\")\n        print(f\"OK {ruta.name} → {destino}\")\n    else:\n        print(resultado)\n    return True\n\n\ndef main() -> None:\n    parser = argparse.ArgumentParser(description=\"Extrae datos estructurados de documentos .txt\")\n    parser.add_argument(\"fichero\", nargs=\"?\", help=\"Documento de texto a procesar\")\n    parser.add_argument(\"--carpeta\", help=\"Procesa todos los .txt de una carpeta\")\n    parser.add_argument(\"--salida\", help=\"Carpeta donde dejar los .json (uno por documento)\")\n    args = parser.parse_args()\n\n    if not os.environ.get(\"ANTHROPIC_API_KEY\"):\n        sys.exit(\n            \"Falta la variable de entorno ANTHROPIC_API_KEY.\\n\"\n            \"Crea la clave en console.anthropic.com y expórtala antes de ejecutar.\"\n        )\n\n    client = anthropic.Anthropic()\n    salida = Path(args.salida) if args.salida else None\n\n    if args.carpeta:\n        ficheros = sorted(Path(args.carpeta).glob(\"*.txt\"))\n        if not ficheros:\n            sys.exit(f\"No hay .txt en {args.carpeta}.\")\n        correctos = sum(procesar_fichero(client, f, salida) for f in ficheros)\n        print(f\"\\nProcesados {correctos} de {len(ficheros)} documentos.\", file=sys.stderr)\n        sys.exit(0 if correctos == len(ficheros) else 1)\n\n    if not args.fichero:\n        sys.exit(\"Indica un fichero o usa --carpeta. Mira --help.\")\n    ok = procesar_fichero(client, Path(args.fichero), salida)\n    sys.exit(0 if ok else 1)\n\n\nif __name__ == \"__main__\":\n    main()\n"
+    },
+    {
+      "name": "README.md",
+      "language": "markdown",
+      "content": "# Extractor de datos de documentos\n\nSaca datos estructurados (emisor, fecha, número, importes, conceptos) de documentos de texto, con cita literal de cada dato y `null` obligatorio cuando el dato no existe.\n\n## Instalación\n\n```bash\npip install anthropic\nexport ANTHROPIC_API_KEY=\"tu-clave\"\n```\n\n## Uso\n\n```bash\n# Un documento, resultado por pantalla\npython extractor.py factura.txt\n\n# Una carpeta entera, un JSON por documento\npython extractor.py --carpeta ./documentos --salida ./extraidos\n```\n\nSalida por documento (siempre la misma forma):\n\n```json\n{\n  \"tipo_documento\": \"factura\",\n  \"emisor\": {\"valor\": \"Talleres Márquez S.L.\", \"cita\": \"TALLERES MÁRQUEZ S.L.\"},\n  \"nif\": {\"valor\": \"B12345678\", \"cita\": \"CIF: B12345678\"},\n  \"fecha\": {\"valor\": \"2025-03-14\", \"cita\": \"Fecha: 14/03/2025\"},\n  \"numero\": {\"valor\": \"F-2025-0231\", \"cita\": \"Factura nº F-2025-0231\"},\n  \"importe_total\": {\"valor\": 847.0, \"cita\": \"TOTAL: 847,00 €\"},\n  \"conceptos\": [{\"descripcion\": \"Cambio de embrague\", \"importe\": 700.0}],\n  \"_documento\": \"factura.txt\"\n}\n```\n\n## Tengo PDF, no txt\n\nConvierte primero: `pdftotext factura.pdf factura.txt` (paquete poppler-utils), o abre el PDF y copia el texto. Si el PDF es un escaneo (imagen), necesitas OCR antes; y si quieres saltarte la conversión, pide a Claude Code que adapte el script para enviar el PDF directamente como documento a la API.\n\n## Adáptalo a tus documentos\n\nLos campos viven en `HERRAMIENTA` (con el ayudante `CAMPO_CON_CITA`) y las comprobaciones en `validar()`. Añade los tuyos: vencimiento, IBAN, dirección de entrega... Cada campo nuevo con su descripción concreta: es lo que más mejora la extracción.\n\n## El circuito de verificación (no te lo saltes)\n\n1. La IA extrae con cita.\n2. `validar()` comprueba formatos por código.\n3. **Una persona coteja valor contra cita** antes de que el dato mueva dinero.\n\nCon 20 documentos reales, mide: campos correctos, campos en null que estaban y campos inventados (los graves). Si hay inventados, endurece el `SISTEMA` y vuelve a medir antes de usarlo en serio."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Prepara el entorno",
+      "action": "pip install anthropic (Python 3.10 o superior, por el uso de Path | None).",
+      "expect": "python -c \"import anthropic\" sin errores.",
+      "stuck": "Con Python 3.9, cambia en el script «Path | None» por «Optional[Path]» e importa Optional de typing."
+    },
+    {
+      "title": "Exporta tu clave",
+      "action": "export ANTHROPIC_API_KEY=\"sk-ant-...\" con la clave creada en console.anthropic.com.",
+      "expect": "echo $ANTHROPIC_API_KEY la muestra."
+    },
+    {
+      "title": "Guarda el script y consigue un .txt de prueba",
+      "action": "Copia extractor.py a tu carpeta de trabajo. Convierte una factura real: pdftotext factura.pdf factura.txt, o copia el texto a mano.",
+      "expect": "Un fichero factura.txt legible con cat."
+    },
+    {
+      "title": "Primera extracción",
+      "action": "python extractor.py factura.txt",
+      "expect": "El JSON con los campos rellenos, cada uno con su cita, y null en lo que la factura no diga.",
+      "stuck": "Si medio documento sale null, mira el .txt: las conversiones de PDF a veces destrozan las tablas; prueba con pdftotext -layout."
+    },
+    {
+      "title": "Ajusta los campos a tus documentos",
+      "action": "Edita HERRAMIENTA para añadir o quitar campos (vencimiento, IBAN...) y añade su comprobación en validar() si tiene formato fijo.",
+      "expect": "El JSON trae exactamente los campos que tu proceso necesita."
+    },
+    {
+      "title": "Procesa en lote y verifica",
+      "action": "python extractor.py --carpeta ./documentos --salida ./extraidos con 10-20 documentos reales, y coteja valor contra cita en cada uno.",
+      "expect": "Una medida real de acierto y cero campos inventados. Solo entonces conéctalo a tu hoja o sistema."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "Una factura convertida a texto con emisor, fecha, número y total claros.",
+      "expect": "Todos los campos con valor y cita literal correcta; conceptos con sus importes."
+    },
+    {
+      "name": "Documento incompleto",
+      "input": "Un albarán sin importes.",
+      "expect": "tipo_documento albaran, importe_total con valor null y cita null, sin importes inventados."
+    },
+    {
+      "name": "Fecha rara",
+      "input": "Un documento con fecha «14 de marzo del 25».",
+      "expect": "O la fecha normalizada correcta 2025-03-14 con su cita, o null con AVISO por stderr; nunca una fecha inventada distinta."
+    },
+    {
+      "name": "Lote con un fichero vacío",
+      "input": "Una carpeta con 3 documentos, uno de ellos vacío.",
+      "expect": "Procesa los 2 buenos, avisa del vacío por stderr y termina con código de salida 1 por el incompleto."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "API de Anthropic",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Clave en la variable de entorno ANTHROPIC_API_KEY, nunca en el script ni en el repo.",
+      "cost": "de pago por tokens; extraer un documento normal con claude-haiku-4-5 cuesta décimas de céntimo"
+    }
+  ],
+  "risks": [
+    "Un importe mal extraído que acaba contabilizado. Mitigación: el cotejo valor-cita por una persona es parte del circuito, no un adorno; para pagos, doble comprobación.",
+    "Documentos con datos personales o fiscales viajando a la API. Mitigación: revisa la política de retención de tu cuenta y no proceses lo que tu normativa no permita sacar de casa.",
+    "Confianza creciente y verificación decreciente con el tiempo. Mitigación: mantén un muestreo fijo (por ejemplo, verificar 1 de cada 10) para siempre, y todo si mueve dinero.",
+    "Conversiones PDF→texto que destrozan tablas y descuadran importes. Mitigación: prueba pdftotext -layout y valida el total contra la suma de conceptos en tu código o tu hoja."
+  ],
+  "examples": [
+    {
+      "name": "Documento suelto",
+      "prompt": "python extractor.py albaran-2025-114.txt"
+    },
+    {
+      "name": "Lote del mes",
+      "prompt": "python extractor.py --carpeta ./facturas-marzo --salida ./extraidos && ls extraidos/"
+    },
+    {
+      "name": "Ampliar con Claude Code",
+      "prompt": "Partiendo de extractor.py, añade un volcado final a CSV con una fila por documento (emisor, fecha, numero, importe_total) y una columna aviso cuando algún campo esté en null."
+    }
+  ],
+  "kits": ["rag-documental", "crm-reporting-institucional"]
+}

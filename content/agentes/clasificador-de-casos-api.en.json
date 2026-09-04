@@ -1,0 +1,123 @@
+{
+  "id": "clasificador-de-casos-api",
+  "order": 13,
+  "title": "Case Classifier via API",
+  "kicker": "Agents by code",
+  "platform": "api",
+  "platformLabel": "API (code)",
+  "level": "intermedio",
+  "what": "A Python script that classifies free text (an email, a support ticket, a form message) into your business's categories using the Anthropic API with structured output: instead of asking the AI to \"reply in JSON\" and hoping for the best, the script forces it to fill in a fixed schema with category, urgency, confidence, and reason. The result is always valid JSON with the same fields, ready to drop into your database, your spreadsheet, or your next process. It's the \"labeler\" piece that shows up in almost every serious AI pipeline.",
+  "forWho": "For anyone who already writes some Python (or leans on Claude Code) and wants reliable classification inside their own systems, without depending on n8n or a UI. It pays off from dozens of cases a day: it's fast, cheap, and programmable.",
+  "tools": ["python", "claude"],
+  "capabilities": [
+    "Classifies any text into your categories with claude-haiku-4-5, fast and at a fraction of a cent",
+    "Always returns the same JSON: category, urgency, confidence, reason — enforced by schema, not by promises",
+    "Flags cases as \"needs_review\" when confidence falls below the threshold you set",
+    "Works as an argument, from a file, or chained with pipes (cat case.txt | python classifier.py)",
+    "Handles real production errors: bad key, rate limits, network down, with clear messages and exit codes"
+  ],
+  "limits": [
+    "Doesn't decide what to do with the case: it labels. Actions (reply, assign, escalate) belong to your system and your people",
+    "Doesn't learn from corrections on its own: if it fails on a type of case, the fix is adjusting categories or descriptions in the script",
+    "Not for decisions with legal effects on people (terminations, benefits, sanctions): automatic classification has no place there, not even as a filter",
+    "For texts longer than roughly 3,000 words, trim or chunk them first: the script warns but doesn't chunk for you"
+  ],
+  "files": [
+    {
+      "name": "classifier.py",
+      "language": "python",
+      "content": "#!/usr/bin/env python3\n\"\"\"Case classifier with structured output (Anthropic API).\n\nUsage:\n  python classifier.py \"case text\"\n  python classifier.py --file case.txt\n  cat case.txt | python classifier.py\n\nRequirements:\n  pip install anthropic\n  export ANTHROPIC_API_KEY=\"your-key\"   (Windows: set ANTHROPIC_API_KEY=...)\n\"\"\"\n\nimport argparse\nimport json\nimport os\nimport sys\n\ntry:\n    import anthropic\nexcept ImportError:\n    sys.exit(\"Missing the Anthropic SDK. Install it with: pip install anthropic\")\n\n# ── Configuration: adapt this to your business ──────────────────────────\n\nMODEL = \"claude-haiku-4-5\"  # classification is a job for a small, cheap model\n\nCATEGORIES = [\"inquiry\", \"order\", \"incident\", \"invoice\", \"complaint\", \"other\"]\nCONFIDENCE_THRESHOLD = 0.7  # below this, the case is flagged for human review\nMAX_CHARACTERS = 12000  # ~3,000 words; above this, we warn\n\nSYSTEM = (\n    \"You are a case classifier for a business, working in English. \"\n    \"Read the text and classify it by calling the tool. \"\n    \"If the text doesn't clearly fit any category, use 'other' \"\n    \"with low confidence. The reason must quote words from the text itself.\"\n)\n\n# The tool with a strict schema: the API guarantees the response\n# validates against this schema. No broken JSON, no surprise fields.\nTOOL = {\n    \"name\": \"classify_case\",\n    \"description\": \"Records the classification of the analyzed case.\",\n    \"strict\": True,\n    \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"category\": {\"type\": \"string\", \"enum\": CATEGORIES},\n            \"urgency\": {\"type\": \"string\", \"enum\": [\"high\", \"medium\", \"low\"]},\n            \"confidence\": {\n                \"type\": \"number\",\n                \"minimum\": 0,\n                \"maximum\": 1,\n                \"description\": \"Confidence of the classification, from 0 to 1.\",\n            },\n            \"reason\": {\n                \"type\": \"string\",\n                \"description\": \"One sentence quoting the text that justifies the category.\",\n            },\n        },\n        \"required\": [\"category\", \"urgency\", \"confidence\", \"reason\"],\n        \"additionalProperties\": False,\n    },\n}\n\n# ── Logic ─────────────────────────────────────────────────────────────\n\n\ndef classify(client: \"anthropic.Anthropic\", text: str) -> dict:\n    \"\"\"Calls the API forcing tool use and returns the resulting dict.\"\"\"\n    response = client.messages.create(\n        model=MODEL,\n        max_tokens=512,\n        system=SYSTEM,\n        tools=[TOOL],\n        tool_choice={\"type\": \"tool\", \"name\": \"classify_case\"},\n        messages=[{\"role\": \"user\", \"content\": text}],\n    )\n    for block in response.content:\n        if block.type == \"tool_use\" and block.name == \"classify_case\":\n            return dict(block.input)\n    raise RuntimeError(\"The API did not return the expected classification.\")\n\n\ndef read_input(args: argparse.Namespace) -> str:\n    if args.file:\n        try:\n            with open(args.file, encoding=\"utf-8\") as f:\n                return f.read()\n        except OSError as e:\n            sys.exit(f\"Can't read the file: {e}\")\n    if args.text:\n        return args.text\n    if not sys.stdin.isatty():\n        return sys.stdin.read()\n    sys.exit(\"Give me some text: as an argument, with --file, or via stdin. See --help.\")\n\n\ndef main() -> None:\n    parser = argparse.ArgumentParser(description=\"Classifies a free-text case.\")\n    parser.add_argument(\"text\", nargs=\"?\", help=\"Text of the case to classify\")\n    parser.add_argument(\"--file\", help=\"Path to a text file containing the case\")\n    args = parser.parse_args()\n\n    if not os.environ.get(\"ANTHROPIC_API_KEY\"):\n        sys.exit(\n            \"Missing the ANTHROPIC_API_KEY environment variable.\\n\"\n            \"Create the key at console.anthropic.com and export it before running.\"\n        )\n\n    text = read_input(args).strip()\n    if not text:\n        sys.exit(\"The text is empty: nothing to classify.\")\n    if len(text) > MAX_CHARACTERS:\n        print(\n            f\"WARNING: {len(text)} characters; trimming to {MAX_CHARACTERS}.\",\n            file=sys.stderr,\n        )\n        text = text[:MAX_CHARACTERS]\n\n    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from the environment\n\n    try:\n        result = classify(client, text)\n    except anthropic.AuthenticationError:\n        sys.exit(\"Invalid or revoked API key. Check ANTHROPIC_API_KEY.\")\n    except anthropic.RateLimitError:\n        sys.exit(\"Rate limit reached. Wait a minute and try again.\")\n    except anthropic.APIStatusError as e:\n        sys.exit(f\"API error ({e.status_code}): {e.message}\")\n    except anthropic.APIConnectionError:\n        sys.exit(\"No connection to the API. Check your network and try again.\")\n\n    # Confidence brake: anything doubtful is flagged for human review.\n    result[\"needs_human_review\"] = result[\"confidence\"] < CONFIDENCE_THRESHOLD\n\n    print(json.dumps(result, ensure_ascii=False, indent=2))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+    },
+    {
+      "name": "README.md",
+      "language": "markdown",
+      "content": "# Case Classifier via API\n\nClassifies free text (emails, tickets, form submissions) into your categories and ALWAYS returns the same JSON, guaranteed by schema.\n\n## Installation\n\n```bash\npip install anthropic\nexport ANTHROPIC_API_KEY=\"your-key\"   # Windows (PowerShell): $env:ANTHROPIC_API_KEY=\"your-key\"\n```\n\n## Usage\n\n```bash\npython classifier.py \"Order 4412 never arrived and I need it by tomorrow\"\npython classifier.py --file case.txt\ncat case.txt | python classifier.py\n```\n\nOutput (always these fields):\n\n```json\n{\n  \"category\": \"incident\",\n  \"urgency\": \"high\",\n  \"confidence\": 0.93,\n  \"reason\": \"Reports an undelivered order ('order 4412 never arrived') with an immediate deadline.\",\n  \"needs_human_review\": false\n}\n```\n\n## Adapt it to your business\n\n- **Categories**: edit the `CATEGORIES` list and describe any nuances in `SYSTEM` (\"'invoice' includes requests for corrected invoices\"). Always keep a catch-all category like `other`.\n- **Threshold**: `CONFIDENCE_THRESHOLD` sets when a case goes to human review. Start at 0.7 and tune it by measuring against real cases.\n- **Model**: `claude-haiku-4-5` classifies well and cheaply. Don't upgrade the model without having measured that you need to.\n\n## How to fit it into your system\n\nThe script prints JSON to stdout and uses exit codes (0 = ok, nonzero = error), so it chains with anything: a cron job reading a mailbox, an endpoint receiving form submissions, a loop over a CSV. For high volume, batch the calls or look at the Batch API (50% cheaper for non-urgent work).\n\n## Measure before you trust it\n\nBefore connecting it to anything serious: run it against 30 real cases already classified by a person and count how many match. Below 90% on your important categories, adjust the descriptions and repeat. Without that measurement, you don't have a classifier: you have a hope."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Set up the environment",
+      "action": "With Python 3.9 or newer installed: pip install anthropic",
+      "expect": "The install finishes with no errors; python -c \"import anthropic\" doesn't complain.",
+      "stuck": "If pip doesn't exist, install Python from python.org and check \"Add to PATH\"."
+    },
+    {
+      "title": "Create and export your key",
+      "action": "At console.anthropic.com → API Keys, create a key and export it: export ANTHROPIC_API_KEY=\"sk-ant-...\" (or put it in a .env your system loads).",
+      "expect": "echo $ANTHROPIC_API_KEY shows the key in your terminal.",
+      "stuck": "The key is only shown once when created; if you lost it, create a new one and revoke the old one."
+    },
+    {
+      "title": "Save the script",
+      "action": "Copy classifier.py into a folder in your project, as-is.",
+      "expect": "python classifier.py --help shows the help text."
+    },
+    {
+      "title": "First classification",
+      "action": "Run: python classifier.py \"Hi, are you open on Saturday afternoon?\"",
+      "expect": "A JSON with category inquiry, low urgency, high confidence, and needs_human_review as false.",
+      "stuck": "If it says the key is missing, you exported it in a different terminal: repeat it in the one you're using."
+    },
+    {
+      "title": "Set your categories",
+      "action": "Edit CATEGORIES and the SYSTEM text with your business's real categories and their nuances.",
+      "expect": "Three real cases of yours come out correctly classified."
+    },
+    {
+      "title": "Measure with 30 real cases",
+      "action": "Gather 30 cases already classified by a person, run them through the script, and count matches per category.",
+      "expect": "A real accuracy percentage. At 90% or higher on the important categories, you can connect it to your pipeline with the needs_human_review brake active."
+    }
+  ],
+  "test": [
+    {
+      "name": "Normal test",
+      "input": "python classifier.py \"Order 4412 never arrived and I need it by tomorrow\"",
+      "expect": "category incident (or order, depending on your definitions), high urgency, reason quoting the text, valid JSON."
+    },
+    {
+      "name": "Ambiguous case",
+      "input": "python classifier.py \"I'm writing about that thing from the other day, you know\"",
+      "expect": "category other with low confidence and needs_human_review as true."
+    },
+    {
+      "name": "No key",
+      "input": "Run it in a terminal with no ANTHROPIC_API_KEY set.",
+      "expect": "A clear message that the variable is missing, no ugly Python traceback, and a nonzero exit code."
+    },
+    {
+      "name": "Empty input",
+      "input": "python classifier.py \"\"",
+      "expect": "A warning that there's nothing to classify; no API call is spent."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Anthropic API",
+      "where": "console.anthropic.com → API Keys",
+      "how": "Create the key and store it in the ANTHROPIC_API_KEY environment variable (or in a .env excluded from version control). Never write it into the script.",
+      "cost": "pay per token; classifying a case with claude-haiku-4-5 costs a fraction of a cent, and 1,000 cases around one dollar"
+    }
+  ],
+  "risks": [
+    "Leaked key from committing the script with the key inside. Mitigation: the key lives only in the environment; add .env to .gitignore and revoke any key that ever touched a repo.",
+    "Trusting the classifier without having measured it. Mitigation: the 30-case step isn't optional; repeat it every time you change categories or model.",
+    "Text with personal data traveling to the API. Mitigation: if your cases carry sensitive data, anonymize before calling and review your account's retention policy.",
+    "Automating actions directly off the label with no brake. Mitigation: use the needs_human_review field; irreversible actions require a person even at 0.99 confidence."
+  ],
+  "examples": [
+    {
+      "name": "Direct use",
+      "prompt": "python classifier.py \"Hi, the March invoice has the tax calculated wrong, can you reissue it?\""
+    },
+    {
+      "name": "In a loop over files",
+      "prompt": "for f in cases/*.txt; do python classifier.py --file \"$f\" > \"outputs/$(basename $f .txt).json\"; done"
+    },
+    {
+      "name": "Ask Claude Code",
+      "prompt": "Take classifier.py as a base and adapt it to read cases from a CSV with id and text columns, and write a CSV with id, category, urgency, and needs_human_review."
+    }
+  ],
+  "kits": ["atencion-cliente-multicanal", "agentes-codigo-produccion"]
+}

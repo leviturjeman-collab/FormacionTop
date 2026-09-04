@@ -1,0 +1,282 @@
+{
+  "id": "agente-alertas-operativas",
+  "order": 11,
+  "title": "Agente de alertas operativas",
+  "kicker": "Automatización",
+  "platform": "n8n",
+  "platformLabel": "n8n",
+  "level": "basico",
+  "what": "Un flujo de n8n que hace de vigilante: cada hora consulta el estado de un servicio o de una API de tu negocio (tu web, tu sistema de pedidos, un contador de casos pendientes), compara lo que ve con los umbrales que tú defines y, si algo se sale de lo normal, te manda una alerta por Telegram con el motivo exacto. Si todo está bien, no molesta. Convierte el «¿estará todo funcionando?» en un canal que solo habla cuando hay algo que mirar.",
+  "forWho": "Para quien es responsable de que algo siga funcionando (una web, una cola de pedidos, un buzón con SLA) y hoy se entera de los problemas cuando llama un cliente. Compensa desde el primer susto que te ahorra: montarlo lleva una hora.",
+  "tools": ["n8n", "telegram", "python"],
+  "capabilities": [
+    "Consulta cada hora (o al ritmo que configures) la URL de estado de tu servicio",
+    "Evalúa umbrales que tú escribes en un nodo de código: estado distinto de ok, más de N casos pendientes, lo que definas",
+    "Manda alerta por Telegram solo cuando hay incidencia, con el motivo concreto y la hora de la revisión",
+    "Guarda silencio cuando todo está bien: cero ruido, cada aviso significa algo",
+    "Deja registro de cada revisión en el historial de ejecuciones de n8n, para reconstruir cuándo empezó un problema"
+  ],
+  "limits": [
+    "No arregla nada: avisa. La intervención sobre el sistema vigilado es humana",
+    "No sustituye una monitorización profesional con guardias y escalado: es el primer peldaño, suficiente para negocios pequeños",
+    "No detecta lo que la URL consultada no cuenta: si tu API de estado miente, el vigilante miente con ella",
+    "Si el propio n8n está caído, no hay vigilancia: para servicios críticos añade un segundo vigilante externo"
+  ],
+  "flow": {
+    "name": "Agente de alertas operativas (vigilancia horaria)",
+    "nodes": [
+      {
+        "name": "Nota del flujo",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [-380, -220],
+        "parameters": {
+          "content": "## Vigilante horario con alerta por Telegram\nSchedule → consultar tu servicio → evaluar umbrales → si hay incidencia, Telegram; si no, silencio.\n\nAntes de activar: 1) cambia la URL del nodo «Consultar servicio» por la de tu API o página de estado, 2) ajusta los umbrales en «Evaluar umbrales», 3) credencial del bot de Telegram y tu chat_id.\n\nEste flujo solo avisa: nunca toca el sistema vigilado.",
+          "height": 300,
+          "width": 340
+        }
+      },
+      {
+        "name": "Cada hora",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "Consultar servicio",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [220, 0],
+        "parameters": {
+          "method": "GET",
+          "url": "https://REEMPLAZAR-tu-servicio.ejemplo/api/estado",
+          "options": {
+            "timeout": 15000
+          }
+        }
+      },
+      {
+        "name": "Evaluar umbrales",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [440, 0],
+        "parameters": {
+          "jsCode": "// AQUI defines que es una incidencia. Ajusta estas reglas a tu servicio.\n// $json es la respuesta de tu API de estado.\nconst datos = $json || {};\nconst problemas = [];\n\n// Regla 1: el campo estado debe valer 'ok'.\nif (datos.estado && datos.estado !== 'ok') {\n  problemas.push('El servicio responde estado \"' + datos.estado + '\"');\n}\n\n// Regla 2: demasiados casos pendientes (cambia el umbral 20 por el tuyo).\nconst pendientes = Number(datos.pendientes || 0);\nif (pendientes > 20) {\n  problemas.push('Hay ' + pendientes + ' casos pendientes (umbral: 20)');\n}\n\n// Regla 3 (ejemplo, borra o adapta): respuesta vacia = sospechoso.\nif (Object.keys(datos).length === 0) {\n  problemas.push('La API de estado respondio vacia');\n}\n\nreturn [ { json: {\n  alerta: problemas.length > 0,\n  motivo: problemas.join(' · ') || 'sin incidencias',\n  revisado: new Date().toISOString()\n} } ];"
+        }
+      },
+      {
+        "name": "¿Hay incidencia?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [660, 0],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cond-alerta",
+                "leftValue": "={{ $json.alerta }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      },
+      {
+        "name": "Alerta por Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [880, -100],
+        "parameters": {
+          "chatId": "REEMPLAZAR_CHAT_ID",
+          "text": "=🚨 Alerta operativa\nMotivo: {{ $json.motivo }}\nRevisado: {{ $json.revisado }}\n\nEntra en n8n y mira la ejecución antes de actuar: el detalle completo está en el nodo «Consultar servicio».",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "REEMPLAZAR",
+            "name": "Bot de Telegram (alertas)"
+          }
+        }
+      },
+      {
+        "name": "Sin incidencias",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [880, 120],
+        "parameters": {}
+      }
+    ],
+    "connections": {
+      "Cada hora": {
+        "main": [
+          [
+            {
+              "node": "Consultar servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consultar servicio": {
+        "main": [
+          [
+            {
+              "node": "Evaluar umbrales",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Evaluar umbrales": {
+        "main": [
+          [
+            {
+              "node": "¿Hay incidencia?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "¿Hay incidencia?": {
+        "main": [
+          [
+            {
+              "node": "Alerta por Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Sin incidencias",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "umbrales-de-ejemplo.md",
+      "language": "markdown",
+      "content": "# Ideas de umbrales para el nodo «Evaluar umbrales»\n\nEl nodo de código es tuyo: cada `if` que añades es una regla de vigilancia. Patrones que funcionan bien:\n\n## Web viva\nSi vigilas una página normal (no una API), en el nodo «Consultar servicio» añade en Options → Response → «Include Response Headers and Status» y comprueba:\n```js\nconst codigo = Number($json.statusCode || 0);\nif (codigo !== 200) {\n  problemas.push('La web responde codigo ' + codigo);\n}\n```\n\n## Cola que crece\n```js\nconst enCola = Number(datos.en_cola || 0);\nif (enCola > 50) {\n  problemas.push('Cola de trabajos en ' + enCola + ' (umbral: 50)');\n}\n```\n\n## Dato viejo (el sistema dejó de actualizar)\n```js\nconst ultimo = new Date(datos.ultima_actualizacion || 0).getTime();\nconst horas = (Date.now() - ultimo) / 3600000;\nif (horas > 2) {\n  problemas.push('Sin actualizaciones desde hace ' + horas.toFixed(1) + ' horas');\n}\n```\n\n## Consejos\n- Empieza con UN umbral y súbele la exigencia cuando lleve una semana sin falsas alarmas.\n- Cada alerta debe decir el valor y el umbral: «hay 34 (umbral: 20)» permite decidir desde el móvil.\n- Si un umbral salta cada día y nadie actúa, o sobra el umbral o falta la acción: arregla una de las dos."
+    }
+  ],
+  "setup": [
+    {
+      "title": "Importa el flujo",
+      "action": "En n8n: Workflows → Add workflow → ⋯ → Import from file, y pega el JSON del campo flow.",
+      "expect": "6 nodos y una nota: disparador, consulta, evaluación, IF y las dos salidas."
+    },
+    {
+      "title": "Apunta el vigilante a tu servicio",
+      "action": "Abre «Consultar servicio» y cambia la URL por la de tu API o página de estado. Si no tienes una, empieza vigilando tu propia web pública.",
+      "expect": "Al ejecutar el nodo suelto (Execute step), ves la respuesta real de tu servicio.",
+      "stuck": "Si tu API pide clave, configura Authentication → Generic Credential Type → Header Auth y guarda la clave en una credencial, no en la URL."
+    },
+    {
+      "title": "Define tus umbrales",
+      "action": "Abre «Evaluar umbrales» y adapta los if a los campos reales que devuelve tu servicio (mira la salida del paso anterior). Borra las reglas de ejemplo que no apliquen.",
+      "expect": "Ejecutando el nodo ves alerta: true o false con un motivo coherente.",
+      "stuck": "El fichero umbrales-de-ejemplo.md de esta página trae patrones listos para copiar."
+    },
+    {
+      "title": "Conecta Telegram",
+      "action": "Crea el bot con @BotFather (/newbot), guarda el token como credencial Telegram en n8n, escribe un primer mensaje a tu bot y pon tu chat_id en el nodo «Alerta por Telegram».",
+      "expect": "Ejecutando el nodo de Telegram a mano te llega un mensaje de prueba.",
+      "stuck": "Sin ese primer mensaje tuyo al bot, Telegram no le deja escribirte: es su norma antispam."
+    },
+    {
+      "title": "Fuerza una alerta de prueba",
+      "action": "Baja temporalmente un umbral hasta un valor que sepas que se supera (p. ej. pendientes > 0) y ejecuta el flujo entero con Test workflow.",
+      "expect": "Alerta en Telegram con el motivo y la hora. Devuelve el umbral a su valor real después.",
+      "stuck": "Si no llega, abre la ejecución: si el IF mandó el item por la rama falsa, tu condición de prueba no se cumplió de verdad."
+    },
+    {
+      "title": "Activa y ajusta el ritmo",
+      "action": "Pon el flujo en Active. Si tu servicio es delicado, baja el intervalo en «Cada hora» (mínimo razonable: 5-10 minutos); si es tranquilo, súbelo a 2-4 horas.",
+      "expect": "El historial de ejecuciones muestra revisiones periódicas y Telegram solo suena con incidencias."
+    }
+  ],
+  "test": [
+    {
+      "name": "Prueba normal",
+      "input": "Ejecuta Test workflow con el servicio funcionando y umbrales reales.",
+      "expect": "Ejecución en verde que termina en «Sin incidencias». Ningún mensaje de Telegram."
+    },
+    {
+      "name": "Incidencia simulada",
+      "input": "Cambia temporalmente la URL por una que no existe (p. ej. añade /caida) y ejecuta.",
+      "expect": "El flujo detecta el fallo (respuesta vacía o error) y llega la alerta con el motivo. Restaura la URL."
+    },
+    {
+      "name": "Umbral superado",
+      "input": "Baja el umbral de pendientes a 0 y ejecuta con datos reales.",
+      "expect": "Alerta con el valor real y el umbral: «Hay N casos pendientes (umbral: 0)»."
+    },
+    {
+      "name": "Silencio cuando toca",
+      "input": "Déjalo activo un día completo sin incidencias.",
+      "expect": "Ejecuciones cada hora en el historial y cero mensajes: el canal solo habla cuando hay algo."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Bot de Telegram",
+      "where": "Telegram → @BotFather → /newbot",
+      "how": "Copia el token en una credencial Telegram de n8n; consigue tu chat_id (p. ej. con @userinfobot) y pégalo en el nodo de alerta.",
+      "cost": "gratis"
+    },
+    {
+      "name": "Clave de tu API vigilada (solo si la pide)",
+      "where": "El panel del servicio que vigilas",
+      "how": "Guárdala como credencial Header Auth de n8n en el nodo «Consultar servicio»; nunca en la URL ni en el código.",
+      "cost": "depende del servicio; vigilar tu propia web es gratis"
+    }
+  ],
+  "risks": [
+    "Falsas alarmas que entrenan al equipo a ignorar el canal. Mitigación: umbrales realistas, y regla fija: cada alerta o se actúa o se ajusta el umbral; ignorar no es opción.",
+    "Falsa tranquilidad: el vigilante solo ve lo que la URL cuenta. Mitigación: revisa una vez al mes que la API de estado refleja la realidad (tira un servicio en pruebas y comprueba que salta).",
+    "Vigilante caído sin que nadie lo sepa (n8n parado). Mitigación: mira el historial de ejecuciones cada lunes; para lo crítico, añade un segundo control externo tipo uptime gratuito.",
+    "Exponer una clave de API en la URL. Mitigación: las claves van siempre en credenciales de n8n; si una acabó en una URL compartida, revócala."
+  ],
+  "examples": [
+    {
+      "name": "Vigilar tu web",
+      "prompt": "Cambia la URL a https://tuempresa.com, activa en Options la inclusión del código de estado y usa el umbral de «web viva» del fichero de ejemplos."
+    },
+    {
+      "name": "Segundo destinatario",
+      "prompt": "Duplica el nodo «Alerta por Telegram», ponle el chat_id de tu compañero de guardia y conéctalo también a la rama verdadera del IF."
+    }
+  ],
+  "kits": ["crm-reporting-institucional"]
+}

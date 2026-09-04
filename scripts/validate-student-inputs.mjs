@@ -65,14 +65,16 @@ for (const file of await files(srcDir)) {
   }
 }
 
-const coursePath = path.join(projectDir, 'public', 'course.json')
-try {
-  const courseText = await fs.readFile(coursePath, 'utf8')
-  for (const pattern of forbiddenText) {
-    if (pattern.test(courseText)) problems.push(`public/course.json contiene texto de resultado prohibido: ${pattern}`)
+for (const courseFile of ['course.json', 'course.en.json']) {
+  const coursePath = path.join(projectDir, 'public', courseFile)
+  try {
+    const courseText = await fs.readFile(coursePath, 'utf8')
+    for (const pattern of forbiddenText) {
+      if (pattern.test(courseText)) problems.push(`public/${courseFile} contiene texto de resultado prohibido: ${pattern}`)
+    }
+  } catch {
+    problems.push(`No se pudo leer public/${courseFile} para validar textos de alumno.`)
   }
-} catch {
-  problems.push('No se pudo leer public/course.json para validar textos de alumno.')
 }
 
 if (problems.length) {

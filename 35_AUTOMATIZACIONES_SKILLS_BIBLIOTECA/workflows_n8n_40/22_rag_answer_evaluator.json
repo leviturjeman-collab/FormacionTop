@@ -1,66 +1,295 @@
 {
-  "name": "22 RAG Answer Evaluator",
+  "name": "22 · Evaluador de respuestas RAG",
   "nodes": [
     {
       "parameters": {
-        "path": "22-rag-answer-evaluator",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 22 · Juez RAG\n\n1. Crea la credencial Header Auth con nombre de cabecera x-api-key y tu clave de Anthropic.\n2. Asigna la credencial de Google Sheets y el ID de tu hoja (pestaña \"Evaluaciones\").\n\nEl juez devuelve fidelidad, relevancia, alucinación y nota global.",
+        "width": 420,
+        "height": 240
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_012",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        40
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"22 RAG Answer Evaluator\",\n    category: \"rag\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-22-eval-respuesta",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_013",
+      "name": "Respuesta a evaluar",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['pregunta', 'respuesta', 'contexto'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst salida = {\n  pregunta: String(b.pregunta || '').trim(),\n  respuesta: String(b.respuesta || '').trim(),\n  contexto: String(b.contexto || '').trim().slice(0, 12000),\n  faltan: faltan,\n  valido: faltan.length === 0\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_014",
+      "name": "Validar entrada",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_002",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_015",
+      "name": "¿Entrada completa?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const instrucciones = [\n  'Eres un evaluador estricto de sistemas RAG.',\n  'Puntúa la RESPUESTA de 0 a 10 en fidelidad al CONTEXTO y en relevancia frente a la PREGUNTA.',\n  'Marca alucinacion=true si la respuesta afirma algo que NO está en el contexto.',\n  'Responde SOLO con JSON válido con esta forma exacta:',\n  '{ \"fidelidad\": 0, \"relevancia\": 0, \"alucinacion\": false, \"nota_global\": 0, \"comentario\": \"...\" }'\n].join('\\n');\nconst usuario = 'PREGUNTA:\\n' + $json.pregunta + '\\n\\nCONTEXTO:\\n' + $json.contexto + '\\n\\nRESPUESTA A EVALUAR:\\n' + $json.respuesta;\nconst peticion_ia = {\n  model: 'claude-opus-5',\n  max_tokens: 1024,\n  system: instrucciones,\n  messages: [\n    { role: 'user', content: usuario }\n  ]\n};\nreturn { json: { peticion_ia: peticion_ia } };"
+      },
+      "id": "nodo_016",
+      "name": "Preparar petición al juez",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_ia) }}",
+        "options": {}
+      },
+      "id": "nodo_017",
+      "name": "Llamar a Claude (juez)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n');\nlet veredicto;\ntry {\n  const inicio = texto.indexOf('{');\n  const fin = texto.lastIndexOf('}');\n  veredicto = JSON.parse(texto.slice(inicio, fin + 1));\n} catch (e) {\n  veredicto = { fidelidad: null, relevancia: null, alucinacion: null, nota_global: null, comentario: 'respuesta_no_json: ' + texto.slice(0, 300) };\n}\nconst origen = $('Validar entrada').item.json;\nconst salida = {\n  pregunta: origen.pregunta,\n  fidelidad: veredicto.fidelidad,\n  relevancia: veredicto.relevancia,\n  alucinacion: veredicto.alucinacion,\n  nota_global: veredicto.nota_global,\n  comentario: veredicto.comentario || '',\n  evaluado_en: new Date().toISOString()\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_018",
+      "name": "Parsear veredicto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Evaluaciones"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_019",
+      "name": "Registrar evaluación",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1320,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, veredicto: $json } }}",
+        "options": {}
+      },
+      "id": "nodo_020",
+      "name": "Responder veredicto",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        240
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_021",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Respuesta a evaluar": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar entrada",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar entrada": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Entrada completa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Entrada completa?": {
+      "main": [
+        [
+          {
+            "node": "Preparar petición al juez",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar petición al juez": {
+      "main": [
+        [
+          {
+            "node": "Llamar a Claude (juez)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llamar a Claude (juez)": {
+      "main": [
+        [
+          {
+            "node": "Parsear veredicto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear veredicto": {
+      "main": [
+        [
+          {
+            "node": "Registrar evaluación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar evaluación": {
+      "main": [
+        [
+          {
+            "node": "Responder veredicto",
             "type": "main",
             "index": 0
           }
@@ -71,13 +300,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "rag",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Respuesta a evaluar": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +309,9 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "pregunta": "¿Cuántas fases tiene el alta de un alumno?",
+          "respuesta": "El alta tiene tres fases: registro, activación y acceso al primer módulo.",
+          "contexto": "El proceso de alta de un alumno tiene tres fases: registro, activación de la cuenta y acceso al primer módulo."
         }
       }
     ]

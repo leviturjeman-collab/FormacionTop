@@ -37,16 +37,18 @@ function canUseLocalCourseFallback() {
   return ['localhost', '127.0.0.1'].includes(window.location.hostname)
 }
 
-async function fetchPrivateCourse() {
-  const response = await fetch(`${import.meta.env.BASE_URL}api/course`, { cache: 'no-cache' })
+async function fetchPrivateCourse(locale: 'es' | 'en') {
+  const suffix = locale === 'en' ? '?locale=en' : ''
+  const response = await fetch(`${import.meta.env.BASE_URL}api/course${suffix}`, { cache: 'no-cache' })
   if (response.ok) return response
   if (canUseLocalCourseFallback() && response.status === 404) {
-    return fetch(`${import.meta.env.BASE_URL}course.json`, { cache: 'no-cache' })
+    const file = locale === 'en' ? 'course.en.json' : 'course.json'
+    return fetch(`${import.meta.env.BASE_URL}${file}`, { cache: 'no-cache' })
   }
   return response
 }
 
-export function useCourseLoader(enabled = true): LoadState {
+export function useCourseLoader(enabled = true, locale: 'es' | 'en' = 'es'): LoadState {
   const [state, setState] = useState<LoadState>({ course: null, error: null })
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export function useCourseLoader(enabled = true): LoadState {
     let cancelled = false
     // no-cache: el curso se regenera desde el vault con frecuencia y el
     // nombre del archivo no cambia, así que se revalida siempre.
-    fetchPrivateCourse()
+    fetchPrivateCourse(locale)
       .then((response) => {
         if (!response.ok) throw new Error(`El servidor respondió ${response.status}`)
         return response.json()
@@ -78,7 +80,7 @@ export function useCourseLoader(enabled = true): LoadState {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [enabled, locale])
 
   return state
 }

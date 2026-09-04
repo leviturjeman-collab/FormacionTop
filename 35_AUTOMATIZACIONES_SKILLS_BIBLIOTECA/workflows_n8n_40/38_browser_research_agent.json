@@ -1,66 +1,332 @@
 {
-  "name": "38 Browser Research Agent",
+  "name": "38 · Agente de investigación web",
   "nodes": [
     {
       "parameters": {
-        "path": "38-browser-research-agent",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 38 · Investigador web\n\nUsa la búsqueda web integrada de la API de Anthropic (herramienta web_search, máx. 3 búsquedas por encargo): no necesitas otro buscador.\n\nEl informe se guarda en Sheets y se deja como BORRADOR en Gmail para que lo revises antes de reenviarlo a nadie. La búsqueda web tiene coste adicional por uso: COMPROBAR EN LA WEB OFICIAL.",
+        "width": 500,
+        "height": 260
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo_185",
+      "name": "Nota de configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        -40,
+        40
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"38 Browser Research Agent\",\n    category: \"research\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "httpMethod": "POST",
+        "path": "wf-38-investigar",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo_186",
+      "name": "Encargo de investigación",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst faltan = [];\nif (b.tema === undefined || b.tema === null || String(b.tema).trim() === '') {\n  faltan.push('tema');\n}\nconst salida = {\n  tema: String(b.tema || '').trim().slice(0, 500),\n  solicitante: String(b.solicitante || 'anónimo').trim(),\n  faltan: faltan,\n  valido: faltan.length === 0\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_187",
+      "name": "Validar encargo",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_024",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo_188",
+      "name": "¿Encargo completo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const sistema = [\n  'Eres un investigador riguroso. Escribes en español.',\n  'Usa la herramienta de búsqueda web para documentarte antes de responder.',\n  'Estructura: contexto, hallazgos clave (con la fuente entre paréntesis), y una conclusión prudente.',\n  'Si las fuentes se contradicen, dilo. No inventes datos ni URLs.'\n].join('\\n');\nconst peticion_ia = {\n  model: 'claude-opus-5',\n  max_tokens: 4096,\n  system: sistema,\n  tools: [\n    { type: 'web_search_20260209', name: 'web_search', max_uses: 3 }\n  ],\n  messages: [\n    { role: 'user', content: 'Investiga y redacta un informe breve sobre: ' + $json.tema }\n  ]\n};\nreturn { json: { peticion_ia: peticion_ia } };"
+      },
+      "id": "nodo_189",
+      "name": "Preparar investigación",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.peticion_ia) }}",
+        "options": {}
+      },
+      "id": "nodo_190",
+      "name": "Investigar con Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const bloques = $json.content || [];\nconst informe = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n')\n  .trim();\nconst fuentes = [];\nfor (const bloque of bloques) {\n  if (bloque.type === 'web_search_tool_result' && Array.isArray(bloque.content)) {\n    for (const r of bloque.content) {\n      if (r && r.url && fuentes.indexOf(r.url) === -1) {\n        fuentes.push(r.url);\n      }\n    }\n  }\n}\nconst origen = $('Validar encargo').item.json;\nconst salida = {\n  tema: origen.tema,\n  solicitante: origen.solicitante,\n  informe: informe,\n  fuentes: fuentes.join('\\n'),\n  total_fuentes: fuentes.length,\n  generado_en: new Date().toISOString()\n};\nreturn { json: salida };"
+      },
+      "id": "nodo_191",
+      "name": "Extraer informe",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Investigaciones"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo_192",
+      "name": "Registrar informe",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1320,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "=[Borrador] Informe: {{ $json.tema }}",
+        "emailType": "text",
+        "message": "=Informe generado automáticamente para {{ $json.solicitante }}. Revísalo y contrasta las fuentes antes de compartirlo.\n\n{{ $json.informe }}\n\nFUENTES ({{ $json.total_fuentes }}):\n{{ $json.fuentes }}",
+        "options": {
+          "sendTo": "REEMPLAZAR_tu_correo@ejemplo.com"
+        }
+      },
+      "id": "nodo_193",
+      "name": "Borrador del informe",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1540,
+        240
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, tema: $('Extraer informe').first().json.tema, informe: $('Extraer informe').first().json.informe, fuentes: $('Extraer informe').first().json.total_fuentes } }}",
+        "options": {}
+      },
+      "id": "nodo_194",
+      "name": "Responder informe",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        240
       ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={{ { ok: false, error: 'faltan_campos', faltan: $json.faltan } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond",
-      "name": "Respond",
+      "id": "nodo_195",
+      "name": "Responder incompleto",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        560,
-        0
+        660,
+        460
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Encargo de investigación": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Validar encargo",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Validar encargo": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Encargo completo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Encargo completo?": {
+      "main": [
+        [
+          {
+            "node": "Preparar investigación",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar investigación": {
+      "main": [
+        [
+          {
+            "node": "Investigar con Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Investigar con Claude": {
+      "main": [
+        [
+          {
+            "node": "Extraer informe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer informe": {
+      "main": [
+        [
+          {
+            "node": "Registrar informe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar informe": {
+      "main": [
+        [
+          {
+            "node": "Borrador del informe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Borrador del informe": {
+      "main": [
+        [
+          {
+            "node": "Responder informe",
             "type": "main",
             "index": 0
           }
@@ -71,13 +337,8 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "meta": {
-    "academy": "AI Professional Academy",
-    "category": "research",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
   "pinData": {
-    "Webhook": [
+    "Encargo de investigación": [
       {
         "headers": {
           "content-type": "application/json"
@@ -85,11 +346,8 @@
         "params": {},
         "query": {},
         "body": {
-          "referencia": "PRUEBA-0001",
-          "nombre": "Caso de ejemplo",
-          "email": "prueba@ejemplo.es",
-          "mensaje": "Texto de prueba para ver el flujo funcionando.",
-          "fecha": "2026-09-01"
+          "tema": "Novedades de n8n en 2026 para equipos de formación",
+          "solicitante": "equipo-contenido"
         }
       }
     ]

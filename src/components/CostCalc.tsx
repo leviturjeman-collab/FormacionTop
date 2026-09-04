@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import type { CostCalcPiece } from '../types'
+import { useLocale } from '../i18n'
 
 /**
  * Calculadora de coste por tokens.
@@ -10,12 +11,19 @@ import type { CostCalcPiece } from '../types'
  * la lección: sirven para entender la ESTRUCTURA del gasto, no para presupuestar.
  */
 
-const fmt = (value: number) =>
+const fmtEs = (value: number) =>
   value < 1
     ? `${(value * 100).toFixed(1).replace('.', ',')} céntimos`
     : `${value.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 
+const fmtEn = (value: number) =>
+  value < 1
+    ? `${(value * 100).toFixed(1)} cents`
+    : `€${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
 export default function CostCalc({ piece }: { piece: CostCalcPiece }) {
+  const locale = useLocale()
+  const fmt = locale === 'en' ? fmtEn : fmtEs
   const [modelId, setModelId] = useState(piece.models[1]?.id || piece.models[0].id)
   const [callsPerDay, setCalls] = useState(200)
   const [inputTokens, setInput] = useState(1200)
@@ -57,7 +65,7 @@ export default function CostCalc({ piece }: { piece: CostCalcPiece }) {
     <label className="st-calc-row">
       <span>{label}</span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => setter(Number(event.target.value))} />
-      <b>{value.toLocaleString('es-ES')}{suffix}</b>
+      <b>{value.toLocaleString(locale === 'en' ? 'en-US' : 'es-ES')}{suffix}</b>
     </label>
   )
 
@@ -68,46 +76,55 @@ export default function CostCalc({ piece }: { piece: CostCalcPiece }) {
           <h4>{piece.title}</h4>
           <p>{piece.caption}</p>
         </div>
-        <span className="st-piece-badge">Precios de {piece.priceDate}</span>
+        <span className="st-piece-badge">{locale === 'en' ? `Prices as of ${piece.priceDate}` : `Precios de ${piece.priceDate}`}</span>
       </header>
 
       <div className="st-calc">
         <div className="st-calc-controls">
           <label className="st-calc-row">
-            <span>Modelo</span>
+            <span>{locale === 'en' ? 'Model' : 'Modelo'}</span>
             <select value={modelId} onChange={(event) => setModelId(event.target.value)}>
               {piece.models.map((item) => (
                 <option key={item.id} value={item.id}>{item.label}</option>
               ))}
             </select>
-            <b>{model.input} € / M entrada</b>
+            <b>{locale === 'en' ? `€${model.input} / M input` : `${model.input} € / M entrada`}</b>
           </label>
 
-          {slider('Llamadas al día', callsPerDay, setCalls, 10, 5000, 10, '')}
-          {slider('Tokens de entrada', inputTokens, setInput, 100, 20000, 100, '')}
-          {slider('Tokens de salida', outputTokens, setOutput, 50, 4000, 50, '')}
-          {slider('Contexto cacheado', cached, setCached, 0, 90, 5, ' %')}
-          {slider('Reintentos y errores', retryRate, setRetries, 0, 40, 1, ' %')}
+          {slider(locale === 'en' ? 'Calls per day' : 'Llamadas al día', callsPerDay, setCalls, 10, 5000, 10, '')}
+          {slider(locale === 'en' ? 'Input tokens' : 'Tokens de entrada', inputTokens, setInput, 100, 20000, 100, '')}
+          {slider(locale === 'en' ? 'Output tokens' : 'Tokens de salida', outputTokens, setOutput, 50, 4000, 50, '')}
+          {slider(locale === 'en' ? 'Cached context' : 'Contexto cacheado', cached, setCached, 0, 90, 5, ' %')}
+          {slider(locale === 'en' ? 'Retries and errors' : 'Reintentos y errores', retryRate, setRetries, 0, 40, 1, ' %')}
         </div>
 
         <div className="st-calc-out">
           <div className="st-calc-big">
             <strong>{fmt(result.monthly)}</strong>
-            <span>al mes, con {Math.round(result.monthlyCalls).toLocaleString('es-ES')} llamadas</span>
+            <span>
+              {locale === 'en'
+                ? `per month, with ${Math.round(result.monthlyCalls).toLocaleString('en-US')} calls`
+                : `al mes, con ${Math.round(result.monthlyCalls).toLocaleString('es-ES')} llamadas`}
+            </span>
           </div>
 
           <dl className="st-stat-list">
-            <div><dt>Por llamada</dt><dd>{fmt(result.perCall)}</dd></div>
-            <div><dt>Al año</dt><dd>{fmt(result.monthly * 12)}</dd></div>
-            <div><dt>Se va en reintentos</dt><dd>{fmt(result.wastedOnRetries)}</dd></div>
-            <div><dt>Ahorras con caché</dt><dd>{fmt(result.savedByCache)}</dd></div>
+            <div><dt>{locale === 'en' ? 'Per call' : 'Por llamada'}</dt><dd>{fmt(result.perCall)}</dd></div>
+            <div><dt>{locale === 'en' ? 'Per year' : 'Al año'}</dt><dd>{fmt(result.monthly * 12)}</dd></div>
+            <div><dt>{locale === 'en' ? 'Lost on retries' : 'Se va en reintentos'}</dt><dd>{fmt(result.wastedOnRetries)}</dd></div>
+            <div><dt>{locale === 'en' ? 'Saved with cache' : 'Ahorras con caché'}</dt><dd>{fmt(result.savedByCache)}</dd></div>
           </dl>
 
           {model.id !== cheapest.id && (
             <p className="st-calc-hint">
               <AlertTriangle size={11} />
-              Con <b>{cheapest.label}</b> esta misma carga costaría bastante menos. La pregunta no es cuál es mejor:
-              es si tu tarea necesita de verdad {model.label}.
+              {locale === 'en' ? (
+                <>With <b>{cheapest.label}</b> this same load would cost noticeably less. The question isn't which is better:
+                it's whether your task really needs {model.label}.</>
+              ) : (
+                <>Con <b>{cheapest.label}</b> esta misma carga costaría bastante menos. La pregunta no es cuál es mejor:
+                es si tu tarea necesita de verdad {model.label}.</>
+              )}
             </p>
           )}
         </div>

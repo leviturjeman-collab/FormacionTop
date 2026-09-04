@@ -1,353 +1,86 @@
-# 22 RAG Answer Evaluator
+# 22 · Evaluador de respuestas RAG
 
-## Objetivo
+## Qué hace
 
-Automatizacion n8n para el area **rag**. Esta plantilla es didactica: debe importarse, probarse con payload ficticio y adaptarse antes de produccion.
+Actúa de "juez" de tu sistema RAG: recibe por webhook una pregunta, el contexto que recuperó tu buscador y la respuesta que generó tu bot, y le pide a Claude que puntúe de 0 a 10 la fidelidad al contexto y la relevancia, marcando además si hay alucinación (afirmaciones que no están en el contexto). El veredicto se guarda en Google Sheets y se devuelve al llamante.
 
-## Entrada esperada
+Sirve para medir tu RAG de forma continua: cada respuesta que evalúes deja una fila con nota, y puedes ver si una nueva versión del prompt mejora o empeora.
 
-JSON con datos del proceso: usuario, email si aplica, descripcion, prioridad, fuente y consentimiento cuando haya datos personales.
+## Antes de empezar
 
-## Salida esperada
+- **Gratis**: n8n self-hosted y Google Sheets.
+- **De pago**: la API de Anthropic (se cobra por tokens; cada evaluación son 1-2 céntimos con textos normales).
+- Ten pensado de dónde saldrán pregunta/contexto/respuesta: normalmente tu propio bot los reenvía aquí tras responder al usuario.
 
-JSON enriquecido con estado, categoria, decision, evidencia y siguiente accion.
+## Credenciales paso a paso
 
-## Caso feliz
+### Anthropic API (Header Auth) — para los nodos que llaman a Claude
 
-Payload completo, credenciales configuradas y salida validada.
+1. Entra en https://console.anthropic.com con tu cuenta, ve a **API Keys** y pulsa **Create Key**. Copia la clave (empieza por `sk-ant-`): solo se muestra una vez.
+2. En n8n: **Credentials → Add credential → Header Auth**.
+3. En **Name** (nombre de la cabecera) escribe exactamente `x-api-key`. En **Value** pega tu clave.
+4. Guarda la credencial como "Anthropic API (x-api-key)" y selecciónala en el nodo HTTP que llama a Claude (viene marcado con id REEMPLAZAR).
 
-## Caso roto
+El nodo ya envía la cabecera `anthropic-version` por ti; no tienes que añadir nada más.
 
-Campo obligatorio ausente, credencial falsa, API rate limit, dato sensible sin consentimiento o accion que requiere aprobacion humana.
+### Google Sheets (OAuth2)
 
-## Reparacion
+1. En n8n: **Credentials → Add credential → Google Sheets OAuth2 API**. En n8n Cloud basta con pulsar **Sign in with Google** y aceptar los permisos.
+2. Si tu n8n es self-hosted: crea un proyecto en https://console.cloud.google.com, habilita la **Google Sheets API**, configura la pantalla de consentimiento y crea una credencial **ID de cliente OAuth** (aplicación web) usando la *Redirect URI* que te muestra n8n. Copia el Client ID y el Client Secret en la credencial de n8n y conéctate.
+3. Crea una hoja de cálculo en https://sheets.google.com y copia su **ID de documento**: es el tramo largo de la URL entre `/d/` y `/edit`.
+4. En cada nodo de Google Sheets del flujo, pega ese ID donde pone `REEMPLAZAR_ID_DOCUMENTO` y comprueba que el nombre de la pestaña coincide con el indicado en la guía (créala si no existe; los encabezados se crean solos en el primer append).
 
-Validar schema, anadir nodo de aprobacion humana, separar secrets, registrar logs y documentar rollback.
+## Cómo importar
 
-## Rubrica
+1. Descarga `22_rag_answer_evaluator.json` de esta carpeta.
+2. En n8n: **Workflows → Add workflow → ⋯ → Import from File** y elige el JSON.
+3. Abre los nodos que salgan con aviso y selecciona en cada uno la credencial que creaste (los bloques de credenciales vienen con id `REEMPLAZAR` a propósito: nunca compartimos claves dentro del JSON).
+4. Sustituye todos los valores `REEMPLAZAR_...` (correos, chat_id, ID de la hoja de cálculo...).
+5. Pulsa **Execute workflow** para probarlo en modo test
+6. Cuando el caso de prueba funcione, activa el flujo (interruptor **Active**). Recuerda: en test la URL del webhook es `/webhook-test/...` y en producción `/webhook/...`.
 
-- 1: importa pero no se entiende.
-- 2: funciona con payload feliz.
-- 3: maneja caso roto.
-- 4: incluye logs, permisos y defensa.
+## Nodo a nodo
 
-<!-- IMPLEMENTACION_DETALLADA_2026_08_18 -->
+- **Respuesta a evaluar (webhook)** — POST en `wf-22-eval-respuesta` con pregunta, respuesta y contexto en el body.
+- **Validar entrada (code)** — comprueba los tres campos obligatorios, recorta el contexto a 12 000 caracteres y marca `valido`.
+- **¿Entrada completa? (if)** — false → respuesta 400 con los campos que faltan.
+- **Preparar petición al juez (code)** — monta el prompt de evaluación con instrucciones de responder SOLO JSON.
+- **Llamar a Claude (juez) (httpRequest)** — POST a api.anthropic.com/v1/messages con la credencial Header Auth.
+- **Parsear veredicto (code)** — extrae el JSON de la respuesta (con try/catch: si el modelo no devuelve JSON, lo marca como error sin romper el flujo).
+- **Registrar evaluación (googleSheets)** — fila en la pestaña "Evaluaciones" con notas y comentario.
+- **Responder veredicto (respondToWebhook)** — devuelve el veredicto completo al llamante.
+- **Responder incompleto (respondToWebhook)** — error 400 en la rama de incompletos.
 
-# Implementacion detallada - 22 Rag Answer Evaluator
+## Pruébalo
 
-## Para que sirve
-
-Esta automatizacion sirve para convertir un proceso repetible de **proceso** en un flujo observable. No esta pensada como magia ni como sustituto de criterio humano: su funcion es recibir una entrada, validarla, aplicar reglas o asistencia IA cuando tenga sentido, producir una salida estructurada y dejar evidencia de lo ocurrido.
-
-En una empresa o proyecto real, este tipo de workflow ayuda a reducir trabajo manual, estandarizar decisiones, evitar olvidos y detectar casos que requieren revision humana. La clave es no automatizar todo desde el primer dia. Primero se automatiza la parte estable: recibir datos, comprobar formato, clasificar, registrar y responder. Despues se agregan integraciones externas, CRM, emails, Slack, bases de datos o modelos LLM.
-
-## Cuando usarla
-
-Usala cuando el proceso cumpla estas condiciones:
-
-- Ocurre varias veces por semana.
-- Tiene entradas reconocibles.
-- Produce una salida que puede definirse.
-- Tiene errores frecuentes que se pueden detectar.
-- Se puede probar con datos ficticios.
-- No requiere una decision sensible sin revision humana.
-
-No la uses si el proceso cambia cada vez, si depende de informacion privada sin consentimiento, si no hay criterio de exito o si una ejecucion incorrecta puede causar dano financiero, legal o reputacional sin aprobacion.
-
-## Requisitos
-
-- n8n Cloud o n8n self-hosted.
-- Conocer la diferencia entre trigger, node, input, output y execution.
-- Dataset o payload ficticio.
-- Variables de entorno o credenciales separadas.
-- Una cuenta de destino si se conecta con CRM, email, Slack, GitHub u otra API.
-- Checklist de privacidad si aparecen datos personales.
-
-## Implementacion paso a paso en n8n
-
-1. Importar el JSON del workflow desde esta carpeta.
-2. Abrir el workflow en n8n y revisar todos los nodes antes de activarlo.
-3. Configurar credenciales ficticias o de prueba.
-4. Revisar el trigger: webhook, schedule, manual trigger o evento externo.
-5. Abrir cada node y comprobar que entrada espera.
-6. Ejecutar con payload correcto.
-7. Revisar input/output node por node.
-8. Ejecutar con payload roto.
-9. Anadir validaciones antes de cualquier accion externa.
-10. Anadir aprobacion humana si el workflow envia emails, modifica CRM, publica contenido, crea tickets o toca datos sensibles.
-11. Documentar rollback.
-12. Activar solo despues de probar preview/caso ficticio.
-
-## Variables y credenciales
-
-Crear `.env.example` o nota de credenciales con nombres, no valores reales:
-
+**1. Caso normal** (espera nota alta y alucinacion=false):
 ```bash
-N8N_WEBHOOK_URL=replace_me
-CRM_API_KEY=replace_me_server_only
-SLACK_BOT_TOKEN=replace_me_server_only
-OPENAI_API_KEY=replace_me_server_only
-DATABASE_URL=replace_me_server_only
+curl -X POST https://TU-N8N/webhook-test/wf-22-eval-respuesta \
+  -H "Content-Type: application/json" \
+  -d '{"pregunta":"¿Cuántas fases tiene el alta?","contexto":"El alta tiene tres fases: registro, activación y primer módulo.","respuesta":"Tres: registro, activación y acceso al primer módulo."}'
 ```
 
-Nunca guardar claves reales dentro del JSON exportado. Si el workflow se comparte con alumnos, limpiar credenciales y usar placeholders.
+**2. Caso incompleto**: quita `contexto` del body → espera 400 con `faltan: ["contexto"]`.
 
-## Caso feliz
+**3. Caso duplicado**: manda dos veces la misma evaluación. Obtendrás dos filas (y pagarás dos veces los tokens). Ejercicio: añade un hash de la pregunta+respuesta y descarta repetidos consultando la hoja.
 
-El caso feliz debe usar un payload completo. Por ejemplo:
+**4. Caso extremo (alucinación)**: mismo contexto pero `"respuesta":"El alta tiene cinco fases y cuesta 99 €"` → espera `alucinacion: true` y fidelidad baja. Si el juez no lo pilla, endurece las instrucciones del nodo "Preparar petición al juez".
 
-```json
-{"email":"demo@example.com","need":"automatizar seguimiento","source":"formulario","consent":true}
-```
+## Errores típicos
 
-Resultado esperado:
+- **401 `authentication_error` en el nodo de Claude**: la cabecera de la credencial no se llama exactamente `x-api-key` o la clave está mal copiada.
+- **`respuesta_no_json` en el comentario**: el modelo respondió con texto alrededor del JSON. El parseo busca el primer `{` y el último `}`; si aun así falla, baja la temperatura del prompt (pide "SOLO JSON" al principio).
+- **429 `rate_limit_error`**: estás evaluando en ráfaga. Espacia las llamadas o pide más cuota en la consola de Anthropic.
+- **La fila del Sheets sale con columnas desordenadas**: el mapeo es automático (autoMapInputData): usa como encabezados los nombres de campo de la primera ejecución y no los cambies después.
 
-- El workflow se ejecuta sin errores.
-- Cada node recibe y devuelve datos comprensibles.
-- La salida incluye estado, categoria y siguiente accion.
-- No se ejecuta ninguna accion sensible sin control.
-- Queda evidencia en executions/logs.
+## Coste estimado
 
-## Caso ambiguo
+- **n8n**: gratis si lo alojas tú (self-hosted); n8n Cloud es de pago por suscripción — COMPROBAR EN LA WEB OFICIAL (n8n.io/pricing).
+- **API de Anthropic (Claude Opus 5)**: de pago por tokens, referencia 5 USD por millón de tokens de entrada y 25 USD por millón de salida — COMPROBAR EN LA WEB OFICIAL (anthropic.com/pricing).
+- **Google Sheets / Gmail**: gratis con una cuenta de Google normal dentro de los límites de uso.
 
-Payload ambiguo:
+Orientativo: una evaluación con ~1 500 tokens de entrada y ~200 de salida ronda 0,01-0,02 USD con Claude Opus 5. Para abaratar evaluaciones masivas puedes usar un modelo más pequeño — COMPROBAR EN LA WEB OFICIAL.
 
-```json
-{"message":"quiero mejorar ventas"}
-```
+## Aviso legal
 
-Resultado profesional esperado: no inventar. El workflow debe marcar `needs_review`, pedir mas datos o enviar a revision humana. Si usa LLM, el prompt debe indicar que no rellene campos desconocidos.
-
-## Caso roto
-
-Ejemplos de ruptura controlada:
-
-- Falta `email`.
-- `consent` es `false`.
-- La API key es invalida.
-- El CRM devuelve `401` o `403`.
-- El proveedor devuelve `429`.
-- El payload cambia de estructura.
-- La tool intenta ejecutar una accion no permitida.
-
-## Reparacion
-
-Documentar:
-
-```markdown
-Sintoma:
-Causa probable:
-Evidencia:
-Cambio realizado:
-Prevencion:
-Rollback:
-```
-
-La reparacion minima suele ser anadir un node de validacion, normalizar campos, capturar errores, limitar retries, pedir aprobacion humana o separar mejor credenciales.
-
-## Produccion
-
-Antes de activar en produccion:
-
-- Probar minimo 10 payloads.
-- Revisar logs.
-- Definir responsable humano.
-- Configurar alertas.
-- Medir coste si usa LLM.
-- Documentar como desactivar el workflow.
-- Guardar version exportada.
-- Escribir fecha de revision.
-
-## Defensa de 3 minutos
-
-El alumno debe explicar: que problema resuelve, que datos entran, que nodes se ejecutan, que salida produce, que fallo provoco, como lo reparo, que permisos usa y que riesgo queda.
-
-<!-- IMPLEMENTACION_AMPLIADA_PROCESO_2026_08_18 -->
-
-## Implementacion operativa ampliada
-
-### 1. Problema que resuelve
-
-**22 Rag Answer Evaluator** resuelve un problema recurrente: convertir una tarea manual, ambigua o repetitiva en un proceso que pueda ejecutarse con el mismo criterio cada vez. En formacion, esta pieza sirve para que el alumno deje de pensar en "usar IA" como una conversacion suelta y empiece a pensar en sistemas: entrada, validacion, transformacion, salida, evidencia, revision y mejora.
-
-En un contexto real, esta automatizacion puede ahorrar tiempo, reducir errores, acelerar respuesta a clientes o crear una base de conocimiento operativa. Pero su valor depende de que se implemente con limites. Si se conecta a datos reales sin consentimiento, si ejecuta acciones externas sin aprobacion o si no deja logs, la automatizacion no es profesional aunque funcione en demo.
-
-### 2. Donde encaja en un proceso
-
-El flujo recomendado es:
-
-```text
-Entrada -> Validacion -> Normalizacion -> Decision -> Accion -> Registro -> Revision humana si aplica
-```
-
-La entrada puede ser un webhook, CSV, formulario, email, ticket, issue, transcripcion, factura o documento. La validacion comprueba que no falten campos. La normalizacion convierte nombres, fechas, importes o textos a formato estable. La decision puede ser una regla, un LLM o una combinacion. La accion puede ser responder, crear tarea, actualizar CRM, enviar alerta o guardar en base de datos. El registro permite auditar. La revision humana protege acciones sensibles.
-
-### 3. Preparacion antes de implementar
-
-Antes de tocar herramientas, crear una ficha:
-
-```markdown
-Objetivo:
-Usuario:
-Entrada:
-Salida esperada:
-Campos obligatorios:
-Datos sensibles:
-Herramientas:
-Credenciales:
-Caso feliz:
-Caso ambiguo:
-Caso roto:
-Rollback:
-```
-
-Esta ficha evita improvisar. Tambien ayuda a decidir si conviene hacerlo con n8n, script, API, GitHub Actions, backend, skill o proceso manual. La mejor herramienta es la minima que permite repetir, verificar y explicar.
-
-### 4. Implementacion local
-
-Si esta pieza es codigo, implementarla primero localmente con datos ficticios. No conectar APIs reales hasta comprobar formato.
-
-Pasos:
-
-1. Crear carpeta de prueba.
-2. Copiar el archivo o plantilla.
-3. Crear `.env.example`.
-4. Crear un payload ficticio correcto.
-5. Crear un payload roto.
-6. Ejecutar la pieza.
-7. Guardar output.
-8. Anadir manejo de errores.
-9. Documentar que variables necesita.
-10. Preparar una version para clase.
-
-Ejemplo de payload correcto:
-
-```json
-{"id":"demo-001","email":"demo@example.com","need":"automatizar seguimiento","consent":true}
-```
-
-Ejemplo de payload roto:
-
-```json
-{"need":"automatizar seguimiento"}
-```
-
-### 5. Integracion con n8n
-
-Para llevarlo a n8n:
-
-1. Crear Webhook node.
-2. Pegar el payload correcto.
-3. Anadir Code node o HTTP Request node.
-4. Validar campos obligatorios.
-5. Si falta algo, devolver `needs_review`.
-6. Si esta completo, continuar a la accion.
-7. Antes de enviar emails o modificar sistemas, anadir aprobacion humana.
-8. Responder con JSON claro.
-
-Salida recomendada:
-
-```json
-{
-  "status":"processed",
-  "category":"demo",
-  "next_action":"review_or_send",
-  "requires_human_approval":true,
-  "evidence":"execution_id_or_log_url"
-}
-```
-
-### 6. Integracion con API o backend
-
-Si se convierte en endpoint:
-
-- Usar `POST` para entradas que modifican estado.
-- Validar JSON antes de procesar.
-- No aceptar campos desconocidos sin revisar.
-- Registrar `request_id`.
-- Devolver errores legibles.
-- Separar secretos del frontend.
-
-Ejemplo de respuesta de error:
-
-```json
-{"ok":false,"error":"missing_required_field","field":"email","action":"send_to_review"}
-```
-
-### 7. Seguridad y permisos
-
-Checklist minimo:
-
-- No usar datos reales en clase.
-- No guardar API keys en archivos.
-- No publicar `.env`.
-- Usar scopes minimos.
-- Registrar acciones.
-- Anadir aprobacion humana para side effects.
-- Preparar rollback.
-- Rotar claves si se filtran.
-
-Side effects son acciones que cambian el mundo: enviar email, actualizar CRM, cobrar, borrar, publicar, crear tickets, modificar base de datos o contactar usuarios. Esas acciones requieren mas control que una simple clasificacion.
-
-### 8. Pruebas necesarias
-
-Probar minimo:
-
-| Caso | Entrada | Resultado esperado |
-|---|---|---|
-| Feliz | payload completo | `processed` |
-| Ambiguo | datos incompletos | `needs_review` |
-| Roto | formato incorrecto | error controlado |
-| Seguridad | dato sensible | redaccion o bloqueo |
-| Coste | batch grande | limite o aviso |
-
-Si usa LLM, anadir evals:
-
-```json
-{"input":"lead sin email","expected":"pedir email","fail_if":"inventa email"}
-```
-
-### 9. Produccion
-
-Antes de produccion:
-
-- Revisar logs.
-- Medir coste.
-- Probar 10 casos.
-- Documentar propietario.
-- Preparar alerta.
-- Exportar version.
-- Definir rollback.
-- Crear README de entrega.
-
-Una automatizacion profesional debe poder apagarse sin romper el negocio. Si nadie sabe desactivarla, no esta lista.
-
-### 10. Como explicarlo al alumno
-
-El alumno debe poder responder:
-
-- Que automatiza.
-- Que no automatiza.
-- Que datos necesita.
-- Que herramienta usa.
-- Que riesgo evita.
-- Que fallo provoco.
-- Que evidencia guardo.
-- Que haria en version 2.
-
-La defensa no debe sonar teorica. Debe sonar como alguien que ha ejecutado, roto y reparado el proceso.
-
-### 11. Variantes utiles
-
-Variantes para ampliar:
-
-- Version manual en checklist.
-- Version n8n visual.
-- Version codigo local.
-- Version API.
-- Version con base de datos.
-- Version con LLM.
-- Version con aprobacion humana.
-- Version con observabilidad.
-
-Cada variante debe mantener el mismo criterio: entrada clara, salida verificable y fallo controlado.
+Material didáctico de la formación: impórtalo, pruébalo con datos ficticios y adáptalo antes de usarlo con datos o sistemas reales. Las salidas de los modelos de IA pueden contener errores: mantén siempre revisión humana antes de cualquier acción irreversible. Revisa los términos de servicio y precios vigentes de cada proveedor (Anthropic, OpenAI, Google, Meta, Slack, GitHub, Vercel, Supabase) antes de usarlos en producción. Si el flujo trata datos personales, necesitas base legal (RGPD), información al interesado y un registro de tratamiento; consulta a tu asesor legal. El autor no se hace responsable del uso que hagas de esta plantilla.

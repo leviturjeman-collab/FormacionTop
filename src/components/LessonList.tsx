@@ -5,12 +5,14 @@ import { useCourse } from '../course'
 import { href } from '../router'
 import { useStudent } from '../store'
 import { ToolDots } from './Brand'
+import { useLocale } from '../i18n'
 
 const SHORT: Record<LevelId, string> = { basico: 'B', intermedio: 'I', avanzado: 'A' }
 const ALL: LevelId[] = ['basico', 'intermedio', 'avanzado']
 
 /** Fila de lección, en el formato de lista del diseño original. */
 export function LessonRow({ lesson, level, showCategory = true }: { lesson: Lesson; level: LevelId; showCategory?: boolean }) {
+  const locale = useLocale()
   const course = useCourse()
   const student = useStudent()
   const done = student.lessons[lesson.slug]?.done || []
@@ -26,7 +28,7 @@ export function LessonRow({ lesson, level, showCategory = true }: { lesson: Less
       </span>
 
       <div>
-        <small className={esFicha ? 'es-ficha' : ''}>{esFicha ? 'Ficha' : lesson.kindLabel}</small>
+        <small className={esFicha ? 'es-ficha' : ''}>{esFicha ? (locale === 'en' ? 'Reference' : 'Ficha') : lesson.kindLabel}</small>
         <strong>{lesson.title}</strong>
         <p>{content.headline}</p>
       </div>
@@ -59,13 +61,20 @@ export function LessonRow({ lesson, level, showCategory = true }: { lesson: Less
 const TANDA = 20
 
 export default function LessonList({ lessons, level, showCategory = true }: { lessons: Lesson[]; level: LevelId; showCategory?: boolean }) {
+  const locale = useLocale()
   /* Un área puede traer 103 lecciones y una carpeta 124. Pintarlas todas
    * convierte la página en un scroll interminable, así que se enseñan de
    * veinte en veinte. */
   const [cuantas, setCuantas] = useState(TANDA)
 
   if (!lessons.length) {
-    return <p className="st-empty">Ninguna lección coincide con estos filtros. Quita alguno para ver más.</p>
+    return (
+      <p className="st-empty">
+        {locale === 'en'
+          ? 'No lesson matches these filters. Remove one to see more.'
+          : 'Ninguna lección coincide con estos filtros. Quita alguno para ver más.'}
+      </p>
+    )
   }
 
   const visibles = lessons.slice(0, cuantas)
@@ -80,7 +89,9 @@ export default function LessonList({ lessons, level, showCategory = true }: { le
       </div>
       {quedan > 0 && (
         <button type="button" className="st-lesson-mas" onClick={() => setCuantas((valor) => valor + TANDA)}>
-          Ver {Math.min(TANDA, quedan)} lecciones más · quedan {quedan}
+          {locale === 'en'
+            ? `Show ${Math.min(TANDA, quedan)} more lessons · ${quedan} left`
+            : `Ver ${Math.min(TANDA, quedan)} lecciones más · quedan ${quedan}`}
         </button>
       )}
     </>

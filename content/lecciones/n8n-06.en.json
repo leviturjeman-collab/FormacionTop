@@ -1,0 +1,414 @@
+{
+  "id": "n8n-06",
+  "tool": "n8n",
+  "slot": 6,
+  "number": 206,
+  "stageId": "automatizacion",
+  "title": "Your first automation in fifteen minutes",
+  "promise": "You'll have a real flow running on its own. Every morning at nine it'll check a Google Sheet. If there are new pending rows, it'll email you. Small on purpose, but real: activated, with its filter, and checked with your own eyes the next day.",
+  "minutes": 35,
+  "why": "Most people's first automation dies of ambition. They try to build their entire company's process on day one. They get stuck on the Gmail credential an hour and a half in. And they give up feeling like this isn't for them. The first one has to be small, useful, and yours. The one in this lesson is chosen by thousands of people as their first for a reason. It touches a real sheet and a real email. It gets built in fifteen minutes if the credentials are ready. And the next morning an email a machine wrote on its own wakes you up. That email changes how you believe in what you're learning.",
+  "theory": [
+    {
+      "title": "Why this one and not yours (yet)",
+      "text": "The process from lesson 01 is still the destination, but it has too many pieces to be the first one: several services, several steps, edge cases. The first automation has a different goal: make the WHOLE circuit work once, start to finish. A real trigger, a real credential, a filter, an action, and the activate switch on. With the whole circuit done once, your real process becomes adding pieces to something you already know how to build, not starting from zero.",
+      "analogy": "Nobody learns to drive by moving house. You go around the block first, and the move happens the following week.",
+      "visual": {
+        "kind": "canvas",
+        "title": "Today's flow, whole",
+        "caption": "Four boxes. Click each one to see what it does and how it breaks.",
+        "nodes": [
+          {
+            "kind": "Trigger",
+            "label": "Every day at 9:00",
+            "note": "Schedule Trigger",
+            "role": "trigger",
+            "does": "Starts the flow every day at the same time. It's not watching anything: it's an alarm clock.",
+            "input": "Nothing. Just the configured time.",
+            "output": "An empty item that fires the starting gun.",
+            "breaks": "If the timezone is set to UTC, it fires at 7 or 8 Spanish time. You fixed this in lesson 03; today you check it."
+          },
+          {
+            "kind": "Action",
+            "label": "Read the sheet",
+            "note": "Google Sheets",
+            "role": "action",
+            "does": "Reads every row in your pending tasks sheet.",
+            "input": "The alarm's starting gun.",
+            "output": "A list: one item per row, with its columns as fields.",
+            "breaks": "If the sheet isn't shared with the credential, it throws a 404: to the robot, a sheet it can't see doesn't exist."
+          },
+          {
+            "kind": "Filter",
+            "label": "Is it pending?",
+            "note": "Filter",
+            "role": "filter",
+            "does": "Lets through only rows whose status is pending.",
+            "input": "Every row in the sheet.",
+            "output": "Only the pending ones. It could be none, and that's fine.",
+            "breaks": "Comparing with \"exact match\" when someone in the sheet wrote \"Pending\" with a capital letter: zero results, all green."
+          },
+          {
+            "kind": "Action",
+            "label": "Email me",
+            "note": "Gmail",
+            "role": "action",
+            "does": "Writes an email with the list of pending items and sends it to you.",
+            "input": "The pending rows.",
+            "output": "The sent email.",
+            "breaks": "Without a control, it sends one email PER row. Five pending, five emails. Today you learn to combine them into one."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Credentials: the toll you only pay once",
+      "text": "Connecting Google the first time is the most tedious step in all of n8n, and it's where people give up. Don't let it catch you off guard: you have to go through some Google screens, grant permissions, and come back. It's ten minutes the first time and zero the times after, because the credential stays saved and every Google box reuses it. The classic mistake is trying to rush through it: do it calmly once and never think about it again.",
+      "example": "In n8n's cloud, connecting Google is clicking a button and accepting. Installed on your computer, the first time it asks you to create keys in Google's console: it's a screen-by-screen procedure, not a knowledge test. Task 2 walks you through the path for your case.",
+      "visual": {
+        "kind": "decision",
+        "title": "Connecting Google: your path depends on where your n8n is",
+        "caption": "Both end up in the same place: a saved credential that gets reused forever.",
+        "question": "Where is your n8n?",
+        "branches": [
+          {
+            "answer": "In n8n's cloud",
+            "then": "The short path: one button",
+            "why": "You click \"Sign in with Google\" when creating the credential, choose your account, accept the permissions, and you're done. n8n is already registered with Google, so there's nothing to create.",
+            "cost": "Two minutes"
+          },
+          {
+            "answer": "Installed on my computer",
+            "then": "The long path: creating your own keys in Google, once",
+            "why": "Google requires knowing which program is asking for access. You have to go into console.cloud.google.com, create a project, enable the Sheets API and the Gmail API, and create OAuth credentials with the callback address n8n shows you on screen. It's following screens, not programming.",
+            "cost": "Ten minutes the first time, zero after that"
+          },
+          {
+            "answer": "I'm stuck halfway through the long path",
+            "then": "Don't give up here: this is the exact spot where everyone gets stuck",
+            "why": "Copy the whole error message and paste it to the AI with the word n8n in front. 90% of getting stuck comes from a mistyped callback address or APIs not enabled, and both get fixed in a minute once you know which one it is.",
+            "cost": "Five more minutes, not a whole afternoon"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Reading a sheet means receiving a list",
+      "text": "When the Sheets box reads your sheet, it doesn't return \"the sheet\": it returns one item per row, with the columns turned into fields. If your sheet has twelve rows, twelve items travel over the arrow. You saw this in the abstract in the previous lesson; today it becomes practical. The filter is going to look at each item separately. And the final email has to combine them: otherwise you'll get twelve emails.",
+      "example": "Your sheet: | task | status | date |. The box returns items like {task: \"Call Marta\", status: \"pending\", date: \"2026-08-25\"}. The field names are EXACTLY the row 1 headers in your sheet: that's why row 1 gets written in lowercase and without accents.",
+      "visual": {
+        "kind": "dataflow",
+        "title": "From sheet to email: count the items",
+        "caption": "Twelve rows in the sheet. Watch how many items travel over each stretch.",
+        "steps": [
+          {
+            "label": "The alarm",
+            "does": "Goes off at 9:00",
+            "in": 1,
+            "out": 1,
+            "why": "The trigger produces a single empty item: the outgoing signal."
+          },
+          {
+            "label": "Read the sheet",
+            "does": "Twelve rows, twelve items",
+            "in": 1,
+            "out": 12,
+            "why": "The signal goes in and twelve come out: one per row. This is the \"I receive a list\" moment you saw in the theory."
+          },
+          {
+            "label": "The filter",
+            "does": "Only the pending ones",
+            "in": 12,
+            "out": 3,
+            "why": "Out of twelve, three are pending. If zero came out, the flow would end here in green, and that would be correct: there's nothing to notify."
+          },
+          {
+            "label": "Combine and send",
+            "does": "ONE email with the three",
+            "in": 3,
+            "out": 1,
+            "why": "Without combining, that would be three emails. Task 7 teaches you the setting that combines the list into a single message: it's the difference between a useful alert and your own robot's spam."
+          }
+        ]
+      }
+    },
+    {
+      "title": "The filter goes before the expense and before the noise",
+      "text": "Today's filter looks like a small thing: letting through the pending rows. But it sets the habit that applies to everything. The filter goes as high up as possible, right after fetching the data. That way, what doesn't matter doesn't cost calls or generate noise. And the condition is written thinking about how real people write things. \"pending,\" \"Pending,\" and \"PENDING \" with a trailing space are the same thing to a person. To a machine, they're three different things.",
+      "analogy": "The bouncer stands at the door, not at the bar. When someone shouldn't get in, it's better if they never get in at all.",
+      "visual": {
+        "kind": "beforeafter",
+        "title": "The condition, written by a human and written well",
+        "caption": "The difference between a filter that works for one day and one that always works.",
+        "beforeLabel": "Fragile",
+        "afterLabel": "Robust",
+        "rows": [
+          {
+            "before": "status is exactly equal to \"pending\"",
+            "after": "status, lowercased and trimmed, contains \"pending\""
+          },
+          {
+            "before": "Breaks if someone writes \"Pending\"",
+            "after": "Doesn't matter how it's written"
+          },
+          {
+            "before": "Breaks with an invisible trailing space",
+            "after": "Spaces get trimmed before comparing"
+          },
+          {
+            "before": "Zero results and nobody knows why",
+            "after": "Same results no matter who wrote it"
+          }
+        ],
+        "gain": "Half the \"my filter isn't working\" posts on forums are this. You already know it before it happens to you."
+      }
+    },
+    {
+      "title": "Activating is the real exam",
+      "text": "Today you don't finish when the flow works after pressing the button: you finish when it works WITHOUT you. That means activating it, closing the browser, and checking tomorrow that the email arrived on its own. That one-day wait is part of the lesson. And the check the day after that too. Most flows that fail don't fail on day one. They fail on day three, when something changes that nobody was watching.",
+      "example": "Set yourself a note for the day after tomorrow: \"did the 9 o'clock email arrive?\" If one day it doesn't, you already know where to look: the executions list. If the flow didn't even start, it's an activation or timezone problem. If it started and found no rows, that's normal. If it started and blew up, the red execution shows you where."
+    },
+    {
+      "title": "What you just learned without noticing",
+      "text": "This small flow contains, in miniature, everything that comes next. A trigger that doesn't depend on you. A saved, reusable credential. A read that returns a list. A filter that protects. An action that combines and delivers. And the activate switch on. The next thirty lessons are this same circuit with more powerful pieces. If you've made it to the end today, you're no longer someone \"watching n8n tutorials\": you have an automation in production.",
+      "analogy": "The lap around the block is done. The move, with this same car, starts in the next lesson."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set up the sheet in two minutes",
+      "where": "At sheets.google.com",
+      "action": "Create a new sheet called \"pending\". In row 1, type three lowercase headers with no accents: task, status, date. Add four rows of made-up data and set two with status pending and two with status done. Rename the bottom tab to \"tasks\".",
+      "expect": "A sheet with four rows of data and clean headers in row 1.",
+      "stuck": "The row 1 headers are going to be the field names in n8n. If you put accents or spaces in them, you'll be dragging that along through the whole flow."
+    },
+    {
+      "title": "Create the Google Sheets credential",
+      "where": "In n8n: Credentials → Add credential → Google Sheets",
+      "action": "Follow your path from the theory: in the cloud it's the Google button; installed on your computer it's the Google console procedure. Take your time with it. When it's done, the credential shows up with a name and a connected mark.",
+      "expect": "The credential saved and verified. You're going to reuse it in every flow that touches Google from now on.",
+      "stuck": "The typical snag on the long path is the callback address, the return address back to n8n. Copy EXACTLY what n8n shows on the credential screen. Paste it into the Google console without changing a single letter."
+    },
+    {
+      "title": "Build the alarm clock",
+      "where": "New flow → first step → search \"Schedule\"",
+      "action": "Choose Schedule Trigger and configure it: every day, at 9:00. Double-check the timezone: in the flow's settings it should say Europe/Madrid, which you set up in lesson 03.",
+      "expect": "The alarm box on the canvas, set to 9:00.",
+      "stuck": "If running it for testing does nothing, that's normal: the real alarm only goes off at its scheduled time. To test, use the run button, which fires it by hand."
+    },
+    {
+      "title": "Connect the sheet read",
+      "where": "The + after the alarm → Google Sheets",
+      "action": "Operation: read rows (Get Rows / Read). Choose your credential, your \"pending\" document, and the \"tasks\" tab. Run the flow and open the box: in the right-hand column your four rows should show up turned into four items.",
+      "expect": "Four items with the fields task, status, and date, with the exact names from your row 1.",
+      "stuck": "If it throws a 404 or \"not found\": the credential can't see that sheet. Check that you chose the document from the dropdown (not by pasting an address) and that the credential's account is the sheet's owner."
+    },
+    {
+      "title": "Set up the robust filter",
+      "where": "The + after Sheets → search \"Filter\"",
+      "action": "Condition: the status field contains pending. Make it robust like in the theory: look for the option to ignore case, or convert the field to lowercase first. Run it and count: out of four items, two should come out.",
+      "expect": "The number 2 on the filter's output arrow.",
+      "stuck": "Getting zero? Open the filter and look at its left column: check letter by letter how the status field's real value is written in your rows. The difference will be there: a capital letter or a space."
+    },
+    {
+      "title": "Combine the rows into a single message",
+      "where": "The + after the filter",
+      "action": "This is the setting that avoids spam: you need to convert the N items into a single piece of text. The simplest way: a code box or an aggregation box (search \"Aggregate\") that combines the tasks into a list. If you use Aggregate: group all the items and keep the task field as a list.",
+      "expect": "ONE single item on the output arrow, with the pending tasks combined.",
+      "stuck": "If this trips you up, here's a legitimate shortcut: in the Gmail node from the next task, some versions have an option to run only once (Execute Once). Turn it on and send only the summary from the first item. Less elegant, it works, and you'll refine it in lesson 21."
+    },
+    {
+      "title": "Build the email",
+      "where": "The + at the end → Gmail → Send",
+      "action": "Create the Gmail credential (same path as the Sheets one, and if it's the same Google account, faster). To: your own email. Subject: \"Today's pending tasks\". Body: the task list from the previous step, using the field selector, not typing it by hand. Run the whole flow.",
+      "expect": "An email in your inbox, right now, with your two pending tasks inside.",
+      "stuck": "If the email arrives empty, open the Gmail box and look at its left column: did the list arrive? If it didn't, the problem is in step 6, not Gmail. Search backward from there."
+    },
+    {
+      "title": "Rehearse the \"nothing pending\" case",
+      "where": "In your Google sheet",
+      "action": "Change the two pending rows to status done and run the flow again. It should finish green WITHOUT sending an email: the filter cuts everything and there's nothing to alert about. This isn't a failure: it's the correct behavior, and seeing it once saves you from hunting for a nonexistent bug the day it happens for real.",
+      "expect": "Green execution, zero items after the filter, no email.",
+      "stuck": "If you get an empty email, the Gmail node is running even though no items arrive. Check that it's connected AFTER the filter, not in parallel."
+    },
+    {
+      "title": "Activate and close",
+      "where": "The switch top right",
+      "action": "Set a row back to pending. Save, flip the activate switch, and close the browser completely. That's it for today: the real test is tomorrow at 9:01.",
+      "expect": "The flow shows up as active in your flows list.",
+      "stuck": "If your n8n runs on your computer, the computer needs to be on at 9:00. If it's going to be off, change the alarm time to one when it'll be on: the lesson is the same."
+    },
+    {
+      "title": "Tomorrow's check and the day after's",
+      "where": "In your inbox, tomorrow at 9:01",
+      "action": "Tomorrow: check that the email arrived on its own and look in the executions list for the 9:00 line, opened by the system and not by you. The day after: repeat. If one day it doesn't arrive, apply the diagnosis from the theory: didn't even start, started with no rows, or blew up?",
+      "expect": "Two emails on two mornings, without you touching anything. Your first automation in production.",
+      "stuck": "Didn't arrive and the 9:00 execution doesn't even show up? Timezone or flow not activated. Shows up green with no email? There was nothing pending, or the filter is cutting too much. Shows up red? Open it: the red box tells you where."
+    }
+  ],
+  "errors": [
+    {
+      "message": "Google: Access blocked / This app isn't verified",
+      "means": "You're on the long path (n8n on your computer) and your Google project is in testing mode, so Google stops you with a warning screen.",
+      "fix": "On that screen click \"Advanced\" and then \"Go to [your project] (unsafe)\": it's your own project, not someone else's app. And in the Google console, add your own email as a test user of the project."
+    },
+    {
+      "message": "404 - The requested URL was not found / Requested entity was not found",
+      "means": "The credential can't see the sheet. To the robot, a sheet it can't see doesn't exist.",
+      "fix": "Choose the document from the box's dropdown, not by pasting the address. If you're using a service account, share the sheet with its email (the one ending in .iam.gserviceaccount.com) with editor permission."
+    },
+    {
+      "message": "The redirect URI in the request does not match",
+      "means": "The classic long-path issue: the callback address you set in the Google console isn't exactly what n8n showed you.",
+      "fix": "Copy the OAuth Redirect URL again from n8n's credential screen. Paste it into the Google console as-is: no extra trailing slash, and with https, not http. Save and try again."
+    },
+    {
+      "message": "I get five emails instead of one",
+      "means": "The Gmail node runs once for every item it receives. Five pending, five emails.",
+      "fix": "Combine the items before the email (Aggregate, task 6) or turn on the run-once option in the Gmail node. It's n8n's per-item behavior: useful almost always, spam here."
+    },
+    {
+      "message": "The flow fired at 7:00 instead of 9:00",
+      "means": "The timezone is set to UTC (universal time, without the Spanish offset) at some level: either the flow's or the installation's.",
+      "fix": "Flow settings → timezone → Europe/Madrid. If it's still off, it's the installation level: in Docker, the two startup variables from lesson 04."
+    },
+    {
+      "message": "The filter lets zero rows through and there are pending ones in the sheet",
+      "means": "The condition compares with \"exact match\" and the sheet has it written differently: capital letter, trailing space, or accent.",
+      "fix": "Open the filter and look at its left column at the field's REAL value, letter by letter. Change the condition to \"contains\" on the lowercased text. It's the robust filter lesson in practice."
+    },
+    {
+      "message": "The email arrived yesterday and not today",
+      "means": "Something changed between yesterday and today: the flow got deactivated, the credential expired, or there simply was nothing pending.",
+      "fix": "Executions list, always. No 9:00 line? The flow isn't active or the timezone shifted. Green line with zero after the filter? There was nothing to alert about: correct. Red line? Open it and the red box takes you to the reason."
+    },
+    {
+      "message": "My computer was off at 9:00",
+      "means": "n8n runs on your computer and it didn't exist at that hour. The alarm didn't go off and there's no line in the history.",
+      "fix": "It's not a failure: it's the limitation of having it on your laptop, which you saw in lesson 03. Change the time to one when it'll be on, or this is your first real reason to move to the cloud or a server (lesson 46)."
+    }
+  ],
+  "matters": [
+    "Setting up the credentials calmly, once. It's the entry toll for everything that follows: from today on, connecting Google in any flow is just picking it from a list.",
+    "Counting the items on each arrow after running it. Twelve from the sheet, two after the filter, one going to the email. If you know how to count that, you know how to debug any flow.",
+    "The empty-case rehearsal. A flow that finishes green doing nothing is correct when there's nothing to do, and having seen it once saves you from hunting for a bug that doesn't exist.",
+    "The day-after-tomorrow check. Flows don't usually fail on day one: they fail on day three. The calendar note is part of the flow, not an extra."
+  ],
+  "ignore": [
+    "Making the email pretty. Today it's plain text with a list. Formatting with tables and colors exists and isn't for today: circuit first, polish later.",
+    "The other time triggers (advanced cron, intervals, expressions). Every day at a set time covers 80% of real cases and is the only one you need this week.",
+    "Wiring in your real process. The temptation once you see this working is to plug in your case from lesson 01 right away. Wait three lessons: you're missing two pieces (writing without duplicating and expressions) that will make it much easier."
+  ],
+  "canDo": [
+    "Wake itself up every morning at the exact time and do its round without you existing, including the Saturday you're at the beach.",
+    "Reuse the Google credential you created today in every future flow: the toll is already paid.",
+    "Finish green doing nothing when there's nothing to do, which is exactly correct.",
+    "Leave you a log of every morning in the executions list, so the day something fails you know whether it didn't start, started empty, or blew up."
+  ],
+  "cantDo": [
+    "Go off with the computer turned off, if your n8n lives on your laptop. An alarm needs to be plugged in.",
+    "Guess that \"Pending\" and \"pending \" are the same thing. You taught it that with the robust filter; without that, they're different things.",
+    "Warn you that the credential has expired. One day Google asks you to renew the permission, the flow fails, and you find out if you check (or once you build the error flow, in lesson 38).",
+    "Combine the rows into one email on its own initiative. By default it runs once per item: five pending would be five emails. Combining them is on you."
+  ],
+  "words": [
+    [
+      "Schedule Trigger",
+      "The alarm clock: starts the flow at the times you tell it, without watching anything else."
+    ],
+    [
+      "OAuth credential",
+      "The permission you give n8n to act on your Google account. You set it up once and reuse it forever."
+    ],
+    [
+      "Callback / Redirect URL",
+      "The return address in the handshake with Google. The classic long-path snag: copy it as-is, without changing anything."
+    ],
+    [
+      "Get Rows",
+      "The operation that reads rows from a sheet. Returns one item per row, with row 1's headers as field names."
+    ],
+    [
+      "Filter",
+      "The box that cuts: lets through only what meets the condition. Zero results is also a result."
+    ],
+    [
+      "Contains / Exact match",
+      "The two ways to compare text. With text written by people, you almost always want \"contains,\" lowercased."
+    ],
+    [
+      "Aggregate",
+      "The box that combines several items into one. It's what turns five emails into one email with five lines."
+    ],
+    [
+      "Execute Once",
+      "A node's option to run just once even if several items arrive. Today's legitimate shortcut."
+    ],
+    [
+      "Production",
+      "When something works on its own, with real data, without you watching. Your flow today, starting tomorrow at 9:00."
+    ],
+    [
+      "Empty case",
+      "The run where there's nothing to do and the flow finishes green without acting. Correct, not a failure."
+    ]
+  ],
+  "pieces": [
+    {
+      "kind": "timeline",
+      "title": "Tomorrow at 9:00: what'll happen without you",
+      "caption": "The execution you'll see in the history the day after tomorrow. You already know how to read it.",
+      "note": "Notice: almost all the time is waiting on Google, not computing. And the only step that could hurt is the last one.",
+      "steps": [
+        {
+          "label": "The alarm goes off",
+          "ms": 5,
+          "risk": "low",
+          "detail": "9:00:00. The flow starts on its own. You're asleep."
+        },
+        {
+          "label": "Reads the sheet",
+          "ms": 740,
+          "risk": "low",
+          "detail": "Google takes almost a second to return the rows. Normal: that's network.",
+          "fails": "If the credential expired, this shows red and the diagnosis takes a minute."
+        },
+        {
+          "label": "Filters pending items",
+          "ms": 10,
+          "risk": "low",
+          "detail": "Of your rows, only the pending ones remain. Instant: it isn't calling anyone.",
+          "fails": "Zero pending = green flow, no email. Correct."
+        },
+        {
+          "label": "Combines the list",
+          "ms": 8,
+          "risk": "low",
+          "detail": "The N items get turned into a single piece of text."
+        },
+        {
+          "label": "Sends the email",
+          "ms": 920,
+          "risk": "medium",
+          "detail": "Gmail accepts the message and by 9:00:02 it's in your inbox.",
+          "fails": "If it fails here, the read and the filter already happened: nothing is lost, it retries tomorrow."
+        }
+      ]
+    },
+    {
+      "kind": "checklist",
+      "title": "Your first automation is in production if",
+      "caption": "Seven checks. The last one is the one almost nobody does and the one that teaches the most.",
+      "items": [
+        "The Google credential stayed saved and reusable",
+        "The flow has a trigger, a read, a filter, and an action: the whole circuit",
+        "The filter is robust: contains + lowercase, not exact match",
+        "You've seen the empty case finish green with no email, and you know that's correct",
+        "The switch is activated and you've checked it in the flows list",
+        "Tomorrow's email arrived on its own and you saw its line in the history",
+        "So did the day after tomorrow's, and if it didn't arrive, you could say which of the three reasons it was"
+      ]
+    }
+  ],
+  "next": "You already have the whole circuit working on its own. Lesson 07 puts a name to everything you just touched — item, expression, credential, webhook — so from here on we can speak precisely, and in 08 you pick a trigger for your real process."
+}

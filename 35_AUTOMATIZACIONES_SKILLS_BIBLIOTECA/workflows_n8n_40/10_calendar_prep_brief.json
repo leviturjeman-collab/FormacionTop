@@ -1,66 +1,325 @@
 {
-  "name": "10 Calendar Prep Brief",
+  "name": "10 · Briefing previo a las reuniones del día",
   "nodes": [
     {
       "parameters": {
-        "path": "10-calendar-prep-brief",
-        "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "content": "## 10 · Briefing del día\n\n1. Credenciales: Google Calendar (OAuth2), Anthropic API, Gmail y Google Sheets.\n2. El briefing se envía POR EMAIL A TI MISMO (cambia REEMPLAZAR@tuempresa.com): no toca a ningún cliente.\n3. Pestaña \"Briefings\" como histórico.\n4. Corre a las 07:00 cada día laborable; ajusta el disparador.",
+        "width": 420,
+        "height": 240
       },
-      "id": "trigger",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
       "position": [
-        0,
-        0
+        40,
+        20
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"10 Calendar Prep Brief\",\n    category: \"productividad\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 7
+            }
+          ]
+        }
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo-002",
+      "name": "Cada día a las 7",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "id",
+          "value": "primary"
+        },
+        "returnAll": true,
+        "options": {
+          "timeMin": "={{ $now.startOf('day').toISO() }}",
+          "timeMax": "={{ $now.endOf('day').toISO() }}",
+          "singleEvents": true
+        }
+      },
+      "id": "nodo-003",
+      "name": "Eventos de hoy",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        260,
+        400
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Calendar (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.summary }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-004",
+      "name": "¿Hay reuniones?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Junta todos los eventos del dia en un solo item.\nconst eventos = $input.all().map((i) => i.json).map((e) => ({\n  titulo: e.summary ?? 'sin titulo',\n  inicio: (e.start && (e.start.dateTime || e.start.date)) || '',\n  asistentes: (e.attendees || []).map((a) => a.email).join(', '),\n  descripcion: String(e.description ?? '').slice(0, 500),\n}));\nreturn [{ json: { total: eventos.length, eventos, fecha: new Date().toISOString().slice(0, 10) } }];"
+      },
+      "id": "nodo-005",
+      "name": "Preparar contexto",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        700,
+        300
       ]
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-5', max_tokens: 2048, system: \"Eres asistente ejecutivo. Escribe en espanol, claro y accionable, en texto plano (sin markdown). Para cada reunion: objetivo probable, 2-3 puntos a preparar y una pregunta inteligente que hacer.\", messages: [{ role: 'user', content: 'Prepara mi briefing para estas reuniones de hoy (' + $json.fecha + '): ' + JSON.stringify($json.eventos) }] }) }}",
+        "options": {}
       },
-      "id": "respond",
-      "name": "Respond",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "id": "nodo-006",
+      "name": "Redactar briefing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Se queda con el bloque de texto de la respuesta de la IA.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst previo = $('Preparar contexto').item.json;\nreturn [{ json: {\n  fecha: previo.fecha,\n  total_reuniones: previo.total,\n  briefing: bloque ? bloque.text : 'La IA no devolvio texto: revisa la ejecucion.',\n} }];"
+      },
+      "id": "nodo-007",
+      "name": "Extraer texto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "REEMPLAZAR@tuempresa.com",
+        "subject": "={{ 'Briefing de reuniones · ' + $json.fecha }}",
+        "emailType": "text",
+        "message": "={{ $json.briefing }}",
+        "options": {}
+      },
+      "id": "nodo-008",
+      "name": "Enviarme el briefing",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1360,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Briefings"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $json.fecha }}",
+            "total_reuniones": "={{ $json.total_reuniones }}",
+            "briefing": "={{ $json.briefing.slice(0, 5000) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-009",
+      "name": "Registrar briefing",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1580,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "nodo-010",
+      "name": "Día sin reuniones",
+      "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        700,
+        520
       ]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Cada día a las 7": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Eventos de hoy",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Eventos de hoy": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "¿Hay reuniones?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay reuniones?": {
+      "main": [
+        [
+          {
+            "node": "Preparar contexto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Día sin reuniones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar contexto": {
+      "main": [
+        [
+          {
+            "node": "Redactar briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redactar briefing": {
+      "main": [
+        [
+          {
+            "node": "Extraer texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer texto": {
+      "main": [
+        [
+          {
+            "node": "Enviarme el briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviarme el briefing": {
+      "main": [
+        [
+          {
+            "node": "Registrar briefing",
             "type": "main",
             "index": 0
           }
@@ -72,26 +331,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "productividad",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "asunto": "Resumen del día",
-          "responsable": "Marta",
-          "email": "marta@ejemplo.es",
-          "pendientes": 3,
-          "fecha": "2026-09-01"
-        }
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

@@ -1,68 +1,437 @@
 {
-  "name": "12 Slack Standup Collector",
+  "name": "12 · Recolector de standup diario en Slack",
   "nodes": [
+    {
+      "parameters": {
+        "content": "## 12 · Standup en Slack\n\n1. Credenciales: Google Sheets, Anthropic API y Slack Bot.\n2. Pestañas: \"Standups\" y \"Standups incompletos\".\n3. Crea un slash command en tu app de Slack (p.ej. /standup) apuntando a la URL de producción del webhook: Slack envía user_name y text.\n4. El resumen diario se publica a las 09:30 en REEMPLAZAR_ID_CANAL.",
+        "width": 440,
+        "height": 260
+      },
+      "id": "nodo-001",
+      "name": "Nota · Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wf-12-standup",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "nodo-002",
+      "name": "Webhook standup",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        40,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "nodo-003",
+      "name": "Confirmar al usuario",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.body.text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-004",
+      "name": "¿Trae texto?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Standups"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $now.toISO() }}",
+            "usuario": "={{ $json.body.user_name || $json.body.usuario || \"desconocido\" }}",
+            "texto": "={{ $json.body.text }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-005",
+      "name": "Registrar standup",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Standups incompletos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $now.toISO() }}",
+            "usuario": "={{ $json.body.user_name || $json.body.usuario || \"desconocido\" }}",
+            "motivo": "standup sin texto"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "nodo-006",
+      "name": "Registrar incompleto",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        520
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "field": "hours",
-              "hoursInterval": 24
+              "field": "days",
+              "triggerAtHour": 9,
+              "triggerAtMinute": 30
             }
           ]
         }
       },
-      "id": "trigger",
-      "name": "Schedule",
+      "id": "nodo-007",
+      "name": "Resumen a las 9:30",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.2,
       "position": [
-        0,
-        0
+        40,
+        700
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Campos que este flujo necesita para poder trabajar.\n// Cambia esta lista por los campos que de verdad te hagan falta a ti.\nconst REQUERIDOS = [\"email\"];\n\n// Un webhook no entrega los datos sueltos: entrega\n// { headers, params, query, body } y lo tuyo va dentro de body.\n// Si el flujo arranca por hora en vez de por webhook, no hay body y\n// los datos vienen tal cual. Esta linea cubre los dos casos.\nconst entrada = $json.body ?? $json;\n\n// Falta un campo si no viene, si viene nulo o si viene en blanco.\n// Comparar solo con '' deja pasar los que no vienen: ese era el fallo.\nconst faltan = REQUERIDOS.filter((campo) => {\n  const valor = entrada[campo];\n  return valor === undefined || valor === null || String(valor).trim() === '';\n});\n\nreturn [{\n  json: {\n    ...entrada,\n    workflow: \"12 Slack Standup Collector\",\n    category: \"productividad\",\n    faltan,\n    status: faltan.length > 0 ? 'needs_review' : 'processed',\n    checked_at: new Date().toISOString(),\n  },\n}];"
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Standups"
+        },
+        "options": {}
       },
-      "id": "process",
-      "name": "Validate process and enrich",
+      "id": "nodo-008",
+      "name": "Leer standups",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        260,
+        700
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filtra los standups de hoy y monta el contexto.\nconst hoy = new Date().toISOString().slice(0, 10);\nconst filas = $input.all().map((i) => i.json).filter((f) => String(f.fecha ?? '').startsWith(hoy));\nreturn [{ json: {\n  hay_standups: filas.length > 0,\n  total: filas.length,\n  standups: filas.map((f) => ({ usuario: f.usuario, texto: f.texto })),\n  fecha: hoy,\n} }];"
+      },
+      "id": "nodo-009",
+      "name": "Preparar resumen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        280,
-        0
+        480,
+        700
       ]
     },
     {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.hay_standups }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nodo-010",
+      "name": "¿Hay standups hoy?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-opus-5', max_tokens: 1024, system: \"Eres scrum master. Resume standups diarios en espanol, texto plano: avances por persona (1 linea cada una), bloqueos destacados y riesgos. Maximo 15 lineas.\", messages: [{ role: 'user', content: 'Resume los standups del ' + $json.fecha + ': ' + JSON.stringify($json.standups) }] }) }}",
+        "options": {}
+      },
+      "id": "nodo-011",
+      "name": "Resumir standups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        620
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_CANAL"
+        },
+        "text": "={{ 'STANDUP ' + $('Preparar resumen').item.json.fecha + ' (' + $('Preparar resumen').item.json.total + ' personas)\\n\\n' + ((($json.content || []).find((b) => b.type === 'text') || {}).text || 'La IA no devolvio texto') }}",
+        "otherOptions": {}
+      },
+      "id": "nodo-012",
+      "name": "Publicar resumen",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1140,
+        620
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack Bot"
+        }
+      }
+    },
+    {
       "parameters": {},
-      "id": "respond",
-      "name": "Fin",
+      "id": "nodo-013",
+      "name": "Sin standups hoy",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        920,
+        820
       ]
     }
   ],
   "connections": {
-    "Schedule": {
+    "Webhook standup": {
       "main": [
         [
           {
-            "node": "Validate process and enrich",
+            "node": "Confirmar al usuario",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate process and enrich": {
+    "Confirmar al usuario": {
       "main": [
         [
           {
-            "node": "Fin",
+            "node": "¿Trae texto?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Trae texto?": {
+      "main": [
+        [
+          {
+            "node": "Registrar standup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar incompleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumen a las 9:30": {
+      "main": [
+        [
+          {
+            "node": "Leer standups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer standups": {
+      "main": [
+        [
+          {
+            "node": "Preparar resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar resumen": {
+      "main": [
+        [
+          {
+            "node": "¿Hay standups hoy?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay standups hoy?": {
+      "main": [
+        [
+          {
+            "node": "Resumir standups",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sin standups hoy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumir standups": {
+      "main": [
+        [
+          {
+            "node": "Publicar resumen",
             "type": "main",
             "index": 0
           }
@@ -71,23 +440,9 @@
     }
   },
   "settings": {
-    "executionOrder": "v1",
-    "timezone": "Europe/Madrid"
+    "executionOrder": "v1"
   },
   "meta": {
-    "academy": "AI Professional Academy",
-    "category": "productividad",
-    "case_roto": "campo obligatorio ausente, credencial falsa o accion sin aprobacion"
-  },
-  "pinData": {
-    "Schedule": [
-      {
-        "asunto": "Resumen del día",
-        "responsable": "Marta",
-        "email": "marta@ejemplo.es",
-        "pendientes": 3,
-        "fecha": "2026-09-01"
-      }
-    ]
+    "academy": "AI Professional Academy"
   }
 }

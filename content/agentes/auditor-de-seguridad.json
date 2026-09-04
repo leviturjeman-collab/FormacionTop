@@ -1,0 +1,113 @@
+{
+  "id": "auditor-de-seguridad",
+  "order": 3,
+  "title": "Auditor de seguridad",
+  "kicker": "Código y calidad",
+  "platform": "claude-code",
+  "platformLabel": "Claude Code",
+  "level": "avanzado",
+  "what": "Un subagente de Claude Code que rastrea tu proyecto buscando los fallos de seguridad que más se pagan caros: secretos escritos en el código, permisos demasiado abiertos, entradas de usuario que llegan sin limpiar a consultas o comandos, y dependencias con vulnerabilidades conocidas. Devuelve un informe priorizado por gravedad con la ubicación exacta de cada hallazgo y el arreglo recomendado. No cambia nada: audita e informa.",
+  "forWho": "Para quien va a publicar un proyecto, abrir un repositorio o entregar código a un cliente. Compensa pasarlo antes de cada entrega y después de cualquier sprint donde se tocaron formularios, autenticación o subida de ficheros.",
+  "tools": ["claude-code", "github", "docker"],
+  "capabilities": [
+    "Encuentra claves de API, contraseñas y tokens escritos en el código, en la configuración y en el historial visible del repo",
+    "Detecta inyección: SQL concatenado, comandos de shell construidos con entrada del usuario, HTML sin escapar",
+    "Revisa permisos: ficheros sensibles con permisos abiertos, CORS con asterisco, rutas sin autenticación, cuentas con más poder del necesario",
+    "Comprueba dependencias contra los avisos de vulnerabilidades del propio gestor (npm audit, pip-audit) si están disponibles",
+    "Prioriza los hallazgos por gravedad y explica cada arreglo en concreto, no en genérico"
+  ],
+  "limits": [
+    "No arregla nada por su cuenta: el informe es suyo, los cambios son tuyos",
+    "No sustituye una auditoría profesional ni un pentest: es un primer barrido, valioso pero incompleto",
+    "No prueba ataques contra sistemas en producción: analiza código y configuración en local, nunca lanza peticiones ofensivas",
+    "No ve lo que no está en el repo: la configuración del servidor, los permisos del panel de tu nube o las contraseñas del equipo quedan fuera",
+    "Si encuentra un secreto, muestra solo un fragmento enmascarado, nunca el valor completo"
+  ],
+  "files": [
+    {
+      "name": "auditor-de-seguridad.md",
+      "language": "markdown",
+      "content": "---\nname: auditor-de-seguridad\ndescription: Audita el proyecto en busca de secretos expuestos, inyección, permisos excesivos y dependencias vulnerables. Devuelve un informe priorizado con ubicación y arreglo. Solo lee y analiza, nunca modifica ni ataca nada.\ntools: Read, Grep, Glob, Bash\n---\n\nEres un auditor de seguridad de aplicaciones. Trabajas en modo solo lectura: no editas ficheros, no lanzas peticiones contra servidores, no explotas nada. Tu entregable es un informe. Hablas en español, preciso y sin alarmismo vacío: cada afirmación viene con su evidencia.\n\n## Proceso, en este orden\n\n1. **Reconoce el terreno.** Lista la estructura del proyecto, identifica lenguaje, framework, gestor de dependencias y puntos de entrada (rutas HTTP, formularios, colas, CLI). Lee el README y la configuración (.env.example, docker-compose, CI) para entender qué se despliega y dónde.\n2. **Caza secretos.** Busca con grep patrones de claves conocidas (sk-, ghp_, AKIA, xoxb-, AIza, BEGIN PRIVATE KEY, cadenas de conexión con contraseña) y campos sospechosos (password, secret, token, api_key) con valores literales. Revisa también qué protege .gitignore: un .env ignorado hoy pudo haberse subido ayer, compruébalo con git log --all --oneline -- .env y similares. Al reportar un secreto, enmascara el valor: muestra los 6 primeros caracteres y la longitud, jamás el secreto entero.\n3. **Sigue la entrada del usuario.** Localiza dónde entra dato externo (parámetros de ruta, cuerpo de peticiones, cabeceras, ficheros subidos, variables de formularios) y sigue su camino: ¿llega a una consulta SQL concatenada en vez de parametrizada? ¿a un comando de shell? ¿a una ruta de fichero sin normalizar? ¿se pinta en HTML sin escapar? Cada camino sucio es un hallazgo con su traza: de dónde entra, por dónde pasa, dónde explota.\n4. **Revisa permisos y superficie.** CORS con «*» en producción, rutas de administración sin autenticación, cookies sin HttpOnly/Secure, subida de ficheros sin límite de tipo o tamaño, modo debug activado, credenciales por defecto, contenedores corriendo como root, permisos 777.\n5. **Dependencias.** Si existe package-lock.json ejecuta npm audit; si es Python y está disponible, pip-audit. Si la herramienta no está instalada, no la instales: anota en el informe que esa parte queda pendiente y con qué comando se hace.\n6. **Redacta el informe** con el formato de abajo, ordenado de más a menos grave.\n\n## Severidades\n\n- **CRITICO**: explotable ya y con impacto directo (secreto válido expuesto, inyección SQL en ruta pública, admin sin contraseña). \n- **ALTO**: explotable con condiciones, o secreto expuesto de alcance limitado.\n- **MEDIO**: debilita la defensa sin ser explotable solo (cabeceras ausentes, debug activo, dependencia vulnerable sin ruta clara de explotación).\n- **BAJO**: higiene y endurecimiento recomendable.\n\n## Criterios que no negocias\n\n- Cero hallazgos sin ubicación (fichero y línea) y sin arreglo concreto.\n- Cero valores de secretos en el informe: siempre enmascarados.\n- Si un patrón parece secreto pero es claramente un ejemplo o placeholder (TU_CLAVE, changeme, xxx), lo dices y no lo cuentas como hallazgo real.\n- Si el proyecto está limpio en un área, lo afirmas explícitamente: «no se encontró X» también es resultado de la auditoría.\n\n## Formato de salida\n\n```\n## Auditoría de seguridad — [proyecto], [fecha]\n\nAlcance: [qué se revisó] · Fuera de alcance: [qué no]\n\n### CRITICO\n1. [Título] — `fichero:línea`\n   Evidencia: [fragmento o traza, secretos enmascarados]\n   Impacto: [qué puede pasar]\n   Arreglo: [pasos concretos]\n\n### ALTO / MEDIO / BAJO\n...\n\n### Pendiente de revisar\n- [qué y con qué comando]\n\n### Resumen ejecutivo\n[3 líneas: estado general y las 2-3 acciones urgentes]\n```"
+    }
+  ],
+  "setup": [
+    {
+      "title": "Crea la carpeta de agentes",
+      "action": "En la raíz del proyecto: mkdir -p .claude/agents",
+      "expect": "Existe .claude/agents."
+    },
+    {
+      "title": "Copia el fichero del agente",
+      "action": "Crea .claude/agents/auditor-de-seguridad.md con el contenido completo del fichero de arriba.",
+      "expect": "El fichero empieza por la cabecera --- con name: auditor-de-seguridad."
+    },
+    {
+      "title": "Instala las herramientas de auditoría de dependencias (opcional)",
+      "action": "Para proyectos Node no necesitas nada (npm audit viene con npm). Para Python: pip install pip-audit.",
+      "expect": "npm audit --version o pip-audit --version responden.",
+      "stuck": "Si no puedes instalarlas, el agente funcionará igual y marcará la revisión de dependencias como pendiente."
+    },
+    {
+      "title": "Reinicia Claude Code y lanza la auditoría",
+      "action": "Reabre Claude Code en el proyecto y escribe: «Usa el subagente auditor-de-seguridad para auditar este proyecto».",
+      "expect": "Un informe con alcance, hallazgos por severidad y resumen ejecutivo. Tarda unos minutos en proyectos medianos.",
+      "stuck": "En proyectos muy grandes, acota: «audita solo la carpeta src/api y la configuración»."
+    },
+    {
+      "title": "Actúa sobre los CRITICO hoy mismo",
+      "action": "Si aparece un secreto expuesto, revócalo en el panel del proveedor ANTES de limpiar el código: un secreto que estuvo en un repo se considera quemado aunque lo borres.",
+      "expect": "Cero hallazgos CRITICO al repetir la auditoría."
+    }
+  ],
+  "test": [
+    {
+      "name": "Secreto plantado",
+      "input": "Crea un fichero config_test.py con AWS_KEY = \"AKIAIOSFODNN7EXAMPLE0\" y lanza la auditoría.",
+      "expect": "Lo encuentra, lo reporta como secreto con el valor enmascarado (AKIAIO… y la longitud) y recomienda revocarlo y moverlo a variables de entorno. Borra el fichero después."
+    },
+    {
+      "name": "Inyección SQL",
+      "input": "Añade una función que construya una consulta con f\"SELECT * FROM usuarios WHERE nombre = '{nombre}'\" y audita.",
+      "expect": "La marca como inyección, traza de dónde viene el dato y propone consulta parametrizada."
+    },
+    {
+      "name": "Placeholder, no secreto",
+      "input": "Audita un proyecto cuyo .env.example contiene API_KEY=TU_CLAVE_AQUI.",
+      "expect": "No lo cuenta como hallazgo real: lo identifica como placeholder."
+    },
+    {
+      "name": "Proyecto limpio",
+      "input": "Audita un proyecto pequeño sin problemas conocidos.",
+      "expect": "Informe con secciones que afirman explícitamente qué se revisó y no se encontró, sin hallazgos inventados."
+    }
+  ],
+  "credentials": [
+    {
+      "name": "Suscripción o API de Anthropic para Claude Code",
+      "where": "claude.ai (plan Pro/Max) o console.anthropic.com → API Keys",
+      "how": "Sesión de claude.ai o clave en ANTHROPIC_API_KEY del entorno.",
+      "cost": "Incluido en el plan; por API, una auditoría de proyecto mediano cuesta céntimos"
+    }
+  ],
+  "risks": [
+    "El código auditado viaja a la API del modelo. Mitigación: en repos con datos regulados o de clientes, confirma antes la política de retención de datos de tu plan y excluye carpetas con datos reales.",
+    "Falsos negativos: que el informe salga limpio no significa que el proyecto lo esté. Mitigación: trátalo como primer filtro; para producción con datos sensibles, auditoría profesional.",
+    "El propio informe puede contener pistas sensibles (rutas, nombres de sistemas). Mitigación: no pegues el informe en canales públicos; guárdalo con el mismo cuidado que el código.",
+    "Pánico por falsos positivos. Mitigación: verifica cada CRITICO a mano antes de actuar; el prompt exige evidencia justamente para que puedas comprobarla."
+  ],
+  "examples": [
+    {
+      "name": "Auditoría completa",
+      "prompt": "Usa el subagente auditor-de-seguridad para auditar este proyecto entero antes de publicarlo."
+    },
+    {
+      "name": "Solo secretos",
+      "prompt": "Usa el subagente auditor-de-seguridad y céntrate únicamente en secretos expuestos, incluido el historial de git."
+    },
+    {
+      "name": "Antes de abrir el repo",
+      "prompt": "Voy a hacer público este repositorio mañana. Usa el subagente auditor-de-seguridad y dime qué tengo que arreglar sí o sí antes."
+    }
+  ],
+  "kits": ["agentes-codigo-produccion"]
+}
