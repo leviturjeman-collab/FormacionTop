@@ -21,6 +21,7 @@ export interface LessonProgress {
 }
 
 export interface StudentState {
+  id?: string
   name: string
   /** Modo profesor: muestra el guion de clase y el acceso a presentar. */
   teacher: boolean
@@ -30,6 +31,7 @@ export interface StudentState {
   project?: ProjectProfile
   /** Idioma de la interfaz y del contenido: 'es' o 'en'. */
   locale?: 'es' | 'en'
+  access?: 'guest' | 'learner' | 'admin'
 }
 
 export interface ProjectProfile {
@@ -102,6 +104,23 @@ export const store = {
 
   setLocale(locale: 'es' | 'en') {
     commit({ ...state, locale })
+  },
+
+  enter(profile: { id?: string; name: string; preferredLevel?: LevelId; locale?: 'es' | 'en'; teacher?: boolean; access: 'learner' | 'admin'; project?: ProjectProfile }) {
+    commit({
+      ...state,
+      id: profile.id,
+      name: profile.name,
+      teacher: Boolean(profile.teacher),
+      preferredLevel: profile.preferredLevel || state.preferredLevel,
+      locale: profile.locale || state.locale,
+      access: profile.access,
+      project: profile.project || state.project,
+    })
+  },
+
+  logout() {
+    commit({ ...EMPTY, locale: state.locale })
   },
 
   toggleTeacher() {

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, BookMarked, Bot, Boxes, Compass, Globe, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { BookOpen, BookMarked, Bot, Boxes, Compass, Globe, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, LogOut, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson, LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
 import { store, useStudent } from './store'
 import { LOCALES, useLocale, useT } from './i18n'
+import { supabase } from './supabase'
 import Inicio from './pages/Inicio'
 import MiProyecto from './pages/MiProyecto'
 import Leccion from './pages/Leccion'
@@ -334,8 +335,95 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
           <Presentation size={12} />
           {teacher ? t('sidebar.modoProfesor') : t('sidebar.modoAlumno')}
         </button>
+        <button
+          type="button"
+          className="st-project-switch danger"
+          onClick={() => store.logout()}
+          title={locale === 'en' ? 'Exit this profile' : 'Salir de este perfil'}
+        >
+          <LogOut size={12} />
+          {locale === 'en' ? 'Exit' : 'Salir'}
+        </button>
       </div>
     </header>
+  )
+}
+
+function AccessGate() {
+  const locale = useLocale()
+  const [pin, setPin] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function enter(event: FormEvent) {
+    event.preventDefault()
+    const value = pin.trim()
+    if (!value) return
+    setError('')
+    if (value === '5555') {
+      store.enter({ name: 'Levi', teacher: true, access: 'admin', preferredLevel: 'intermedio', locale })
+      return
+    }
+    if (!supabase) {
+      setError(locale === 'en' ? 'Student PINs need Supabase configured.' : 'Los PINs de alumnos necesitan Supabase configurado.')
+      return
+    }
+    setBusy(true)
+    const { data, error: rpcError } = await supabase.rpc('verify_learner_pin', { learner_pin: value })
+    setBusy(false)
+    const learner = Array.isArray(data) ? data[0] : null
+    if (rpcError || !learner) {
+      setError(locale === 'en' ? 'That PIN is not active.' : 'Ese PIN no está activo.')
+      return
+    }
+    store.enter({
+      id: learner.id,
+      name: learner.name,
+      teacher: false,
+      access: 'learner',
+      preferredLevel: learner.level || 'basico',
+      locale: learner.locale || locale,
+      project: {
+        name: learner.goal || '',
+        goal: learner.goal || '',
+        audience: '',
+        problem: '',
+        outcome: '',
+        tools: learner.tools || '',
+        updatedAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  return (
+    <div className="st-access">
+      <section className="st-access-card">
+        <div className="st-access-head">
+          <span className="st-kicker"><KeyRound size={12} /> {locale === 'en' ? 'Private academy' : 'Academia privada'}</span>
+          <LanguageSwitch compact />
+        </div>
+        <h1>{locale === 'en' ? 'Enter with your PIN' : 'Entra con tu PIN'}</h1>
+        <p>{locale === 'en' ? 'Use the PIN your teacher gave you. Admin access uses the teacher PIN.' : 'Usa el PIN que te ha dado tu profesor. El acceso admin usa el PIN de profesor.'}</p>
+        <form onSubmit={enter} className="st-access-form">
+          <label>
+            <span>{locale === 'en' ? 'Student or admin PIN' : 'PIN de alumno o administrador'}</span>
+            <input
+              value={pin}
+              onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 8))}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="••••••"
+              autoFocus
+            />
+          </label>
+          <button type="submit" className="st-btn" disabled={busy || pin.trim().length < 4}>
+            <KeyRound size={14} />
+            {busy ? (locale === 'en' ? 'Checking...' : 'Comprobando...') : (locale === 'en' ? 'Unlock training' : 'Desbloquear formación')}
+          </button>
+          {error && <small className="st-access-error">{error}</small>}
+        </form>
+      </section>
+    </div>
   )
 }
 
@@ -372,6 +460,7 @@ function Shell() {
   const course = useCourse()
   const locale = useLocale()
   const t = useT()
+  const student = useStudent()
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -480,6 +569,7 @@ function Shell() {
   // Las presentaciones ocupan la pantalla entera: sin barra lateral ni cabecera.
   if (route.name === 'presentar') return <Presentar slug={route.slug} level={route.level} />
   if (route.name === 'deck') return <Deck deckId={route.deckId} />
+  if (!student.access && !student.teacher) return <AccessGate />
 
   return (
     <div className="student-app">

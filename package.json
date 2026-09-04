@@ -4,13 +4,13 @@
   "version": "4.0.0",
   "type": "module",
   "scripts": {
-    "index": "node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs && LOCALE=en node scripts/build-content-index.mjs",
+    "index": "node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs && cross-env LOCALE=en node scripts/build-content-index.mjs",
     "index:es": "node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs",
-    "index:en": "LOCALE=en node scripts/build-content-index.mjs",
+    "index:en": "cross-env LOCALE=en node scripts/build-content-index.mjs",
     "dev": "npm run index && vite",
     "build": "npm run index && tsc -b && vite build",
     "preview": "vite preview",
-    "validate": "npm run index && node scripts/validate-content.mjs",
+    "validate": "npm run index && node scripts/validate-content.mjs && node scripts/validate-student-ui.mjs",
     "test:automations": "node scripts/validate-workflows.mjs && node scripts/validate-tool-automation-guides.mjs",
     "test": "npm run validate && npm run test:automations && tsc -b && vite build"
   },
@@ -19,6 +19,7 @@
     "@fontsource/inter": "^5.3.0",
     "@fontsource/inter-tight": "^5.3.0",
     "@fontsource/manrope": "^5.2.5",
+    "@supabase/supabase-js": "^2.115.0",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -29,6 +30,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "cross-env": "^10.1.0",
     "playwright-core": "^1.62.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.3"

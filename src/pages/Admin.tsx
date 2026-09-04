@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, Clipboard, KeyRound, Plus, Trash2 } from 'lucide-react'
 import { useCourse } from '../course'
 import { useLocale, useT } from '../i18n'
+import { hasSupabase, supabase } from '../supabase'
 
 const KEY = 'academia.admin.alumnos.v1'
 
@@ -14,6 +15,7 @@ type LearnerPin = {
   tools: string
   notes: string
   createdAt: string
+  synced?: boolean
 }
 
 const EMPTY = { name: '', goal: '', tools: '', notes: '', level: 'basico' }
@@ -38,9 +40,12 @@ export default function Admin() {
   const [pins, setPins] = useState<LearnerPin[]>(() => readPins())
   const [draft, setDraft] = useState(EMPTY)
   const [copied, setCopied] = useState<string | null>(null)
+  const [adminPin, setAdminPin] = useState('')
+  const [syncing, setSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState('')
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(pins))
+    localStorage.setItem(KEY, JSON.stringify(pins.filter((item) => !item.synced || item.pin)))
   }, [pins])
 
   const suggestedTools = useMemo(
@@ -48,12 +53,70 @@ export default function Admin() {
     [course.toolPages],
   )
 
-  function createPin() {
+  async function loadRemote(pin = adminPin) {
+    if (!supabase || !pin.trim()) return
+    setSyncing(true)
+    setSyncMessage('')
+    const { data, error } = await supabase.rpc('list_learners_admin', { admin_pin: pin.trim() })
+    setSyncing(false)
+    if (error) {
+      setSyncMessage(locale === 'en' ? 'Could not load Supabase students. Check the admin PIN and migration.' : 'No se han podido cargar los alumnos de Supabase. Revisa el PIN admin y la migración.')
+      return
+    }
+    setPins((data || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      pin: '',
+      level: item.level,
+      goal: item.goal || '',
+      tools: item.tools || '',
+      notes: item.notes || '',
+      createdAt: item.created_at,
+      synced: true,
+    })))
+    setSyncMessage(locale === 'en' ? 'Students loaded from Supabase.' : 'Alumnos cargados desde Supabase.')
+  }
+
+  async function createPin() {
     if (!draft.name.trim()) return
+    const pin = generatePin()
+    if (supabase && adminPin.trim()) {
+      setSyncing(true)
+      const { data, error } = await supabase.rpc('create_learner_with_pin', {
+        admin_pin: adminPin.trim(),
+        learner_name: draft.name.trim(),
+        learner_pin: pin,
+        learner_level: draft.level,
+        learner_goal: draft.goal.trim(),
+        learner_tools: draft.tools.trim(),
+        learner_notes: draft.notes.trim(),
+        learner_locale: locale,
+        learner_email: null,
+      })
+      setSyncing(false)
+      if (error) {
+        setSyncMessage(locale === 'en' ? 'Could not create the student in Supabase.' : 'No se ha podido crear el alumno en Supabase.')
+        return
+      }
+      setPins((current) => [{
+        id: data.id,
+        name: data.name,
+        pin,
+        level: data.level,
+        goal: data.goal || '',
+        tools: data.tools || '',
+        notes: data.notes || '',
+        createdAt: data.created_at,
+        synced: true,
+      }, ...current])
+      setSyncMessage(locale === 'en' ? 'Student created in Supabase. Copy the PIN now: it is not stored in plain text.' : 'Alumno creado en Supabase. Copia el PIN ahora: no se guarda en texto claro.')
+      setDraft(EMPTY)
+      return
+    }
     setPins((current) => [{
       id: `${Date.now()}-${draft.name}`,
       name: draft.name.trim(),
-      pin: generatePin(),
+      pin,
       level: draft.level,
       goal: draft.goal.trim(),
       tools: draft.tools.trim(),
@@ -67,6 +130,19 @@ export default function Admin() {
     navigator.clipboard?.writeText(value)
     setCopied(id)
     window.setTimeout(() => setCopied(null), 1500)
+  }
+
+  async function deletePin(item: LearnerPin) {
+    if (item.synced && supabase && adminPin.trim()) {
+      setSyncing(true)
+      const { error } = await supabase.rpc('delete_learner_admin', { admin_pin: adminPin.trim(), learner_id: item.id })
+      setSyncing(false)
+      if (error) {
+        setSyncMessage(locale === 'en' ? 'Could not delete the student in Supabase.' : 'No se ha podido borrar el alumno en Supabase.')
+        return
+      }
+    }
+    setPins((current) => current.filter((pin) => pin.id !== item.id))
   }
 
   function exportPins() {
@@ -99,6 +175,24 @@ export default function Admin() {
         </div>
       </section>
 
+      <section className="st-admin-sync">
+        <div>
+          <span className="st-kicker">{hasSupabase ? (locale === 'en' ? 'Supabase connected' : 'Supabase conectado') : (locale === 'en' ? 'Local mode' : 'Modo local')}</span>
+          <h2>{locale === 'en' ? 'Student database' : 'Base de datos de alumnos'}</h2>
+          <p>{hasSupabase
+            ? (locale === 'en' ? 'Enter your admin PIN to load, create and delete students securely through RLS-controlled functions.' : 'Mete tu PIN admin para cargar, crear y borrar alumnos con funciones controladas por RLS.')
+            : (locale === 'en' ? 'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to use the real database.' : 'Añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY para usar la base de datos real.')}</p>
+        </div>
+        <label>
+          <span>{locale === 'en' ? 'Admin PIN' : 'PIN admin'}</span>
+          <input value={adminPin} onChange={(event) => setAdminPin(event.target.value)} inputMode="numeric" placeholder="5555" />
+        </label>
+        <button type="button" className="st-btn-ghost" disabled={!hasSupabase || !adminPin.trim() || syncing} onClick={() => loadRemote()}>
+          {syncing ? (locale === 'en' ? 'Loading...' : 'Cargando...') : (locale === 'en' ? 'Load students' : 'Cargar alumnos')}
+        </button>
+        {syncMessage && <small>{syncMessage}</small>}
+      </section>
+
       <section className="st-admin-grid">
         <div className="st-admin-form">
           <div className="st-section-head">
@@ -117,7 +211,7 @@ export default function Admin() {
             ))}
           </div>
           <label><span>{locale === 'en' ? 'Internal notes' : 'Notas internas'}</span><textarea rows={4} value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} placeholder={locale === 'en' ? 'Restrictions, pace, questions, recommended kit...' : 'Restricciones, ritmo, dudas, kit recomendado...'} /></label>
-          <button type="button" className="st-btn" onClick={createPin} disabled={!draft.name.trim()}><Plus size={13} /> {locale === 'en' ? 'Create PIN' : 'Crear PIN'}</button>
+          <button type="button" className="st-btn" onClick={createPin} disabled={!draft.name.trim() || syncing}><Plus size={13} /> {locale === 'en' ? 'Create PIN' : 'Crear PIN'}</button>
         </div>
 
         <aside className="st-admin-missing">
@@ -151,10 +245,10 @@ export default function Admin() {
                   <strong>{item.name}</strong>
                   <small>{item.goal || (locale === 'en' ? 'Goal pending' : 'Objetivo pendiente')} · {locale === 'en' ? 'level' : 'nivel'} {item.level}</small>
                 </div>
-                <code>{item.pin}</code>
+                <code>{item.pin || (locale === 'en' ? 'Hidden' : 'Oculto')}</code>
                 <span>{item.tools || (locale === 'en' ? 'Tools to be defined' : 'Herramientas por definir')}</span>
-                <button type="button" onClick={() => copy(item.pin, item.id)}>{copied === item.id ? <Check size={13} /> : <Clipboard size={13} />}</button>
-                <button type="button" onClick={() => setPins((current) => current.filter((pin) => pin.id !== item.id))}><Trash2 size={13} /></button>
+                <button type="button" onClick={() => item.pin && copy(item.pin, item.id)} disabled={!item.pin}>{copied === item.id ? <Check size={13} /> : <Clipboard size={13} />}</button>
+                <button type="button" onClick={() => deletePin(item)} disabled={syncing}><Trash2 size={13} /></button>
               </article>
             ))}
           </div>
