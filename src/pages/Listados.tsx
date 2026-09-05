@@ -1,5 +1,3 @@
-import { copyText } from '../downloads'
-import Modal from '../components/Modal'
 import { useState } from 'react'
 import { ArrowRight, Check, ChevronDown, Clipboard, Search, X } from 'lucide-react'
 import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from '../types'
@@ -656,7 +654,7 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
             ))}
           </div>
           {selected && (
-            <Modal label={locale === 'en' ? `Card for ${selected.name}` : `Ficha de ${selected.name}`} onClose={() => setSelected(null)}>
+            <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={locale === 'en' ? `Card for ${selected.name}` : `Ficha de ${selected.name}`}>
               <button type="button" className="st-focus-backdrop" onClick={() => setSelected(null)} aria-label={locale === 'en' ? 'Close' : 'Cerrar'} />
               <article className="st-focus-sheet">
                 <header>
@@ -677,7 +675,7 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
                   {guide.automations?.length ? <button type="button" className="st-btn-ghost" onClick={jumpToAutomations}>{locale === 'en' ? 'See automations' : 'Ver automatizaciones'}</button> : null}
                 </div>
               </article>
-            </Modal>
+            </div>
           )}
         </section>
       ) : null}
@@ -704,7 +702,9 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
 
   function copyPrompt() {
     if (!active?.prompt) return
-    void copyText(active.prompt).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1400) }, () => setCopied(false))
+    navigator.clipboard?.writeText(active.prompt)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1400)
   }
 
   return (
@@ -780,7 +780,7 @@ function AutomationLibrary({ automations, label }: { automations: ToolAutomation
         {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} onOpen={() => setSelected(automation)} />)}
       </div>
       {selected && (
-        <Modal label={locale === 'en' ? `Automation ${selected.name}` : `Automatización ${selected.name}`} onClose={() => setSelected(null)}>
+        <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={locale === 'en' ? `Automation ${selected.name}` : `Automatización ${selected.name}`}>
           <button type="button" className="st-focus-backdrop" onClick={() => setSelected(null)} aria-label={locale === 'en' ? 'Close' : 'Cerrar'} />
           <article className="st-focus-sheet st-focus-sheet-wide">
             <header>
@@ -800,7 +800,7 @@ function AutomationLibrary({ automations, label }: { automations: ToolAutomation
             {selected.code && <div className="st-code"><em>n8n · Code</em><pre><code>{selected.code}</code></pre></div>}
             <div className="st-automation-test"><strong>{locale === 'en' ? 'Test' : 'Prueba'}</strong><p>{selected.test}</p><strong>{locale === 'en' ? 'If it fails' : 'Si falla'}</strong><p>{selected.failure}</p></div>
           </article>
-        </Modal>
+        </div>
       )}
     </section>
   )

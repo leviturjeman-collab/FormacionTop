@@ -16,7 +16,6 @@ export interface Filters {
 
 export type Route =
   | { name: 'inicio' }
-  | { name: 'not-found'; path: string }
   | { name: 'mi-proyecto' }
   | { name: 'ruta' }
   | { name: 'area'; stageId: string; filters: Filters }
@@ -25,8 +24,8 @@ export type Route =
   | { name: 'presentar'; slug: string; level: LevelId }
   | { name: 'proyecto'; stageId: string }
   | { name: 'deck'; deckId: string }
-  | { name: 'prompts'; familyId?: string; promptId?: string }
-  | { name: 'kits'; kitId?: string; tab?: string }
+  | { name: 'prompts'; familyId?: string }
+  | { name: 'kits' }
   | { name: 'agentes'; agentId?: string }
   | { name: 'admin' }
   | { name: 'guia'; guideId?: string }
@@ -35,8 +34,8 @@ export type Route =
   | { name: 'carpeta'; folderId: string; filters: Filters }
   | { name: 'herramientas' }
   | { name: 'herramienta'; toolId: string; filters: Filters }
-  | { name: 'preguntas'; question?: string }
-  | { name: 'indice'; letter?: string; term?: string }
+  | { name: 'preguntas' }
+  | { name: 'indice'; letter?: string }
   | { name: 'buscar'; query: string; filters: Filters }
   | { name: 'progreso' }
 
@@ -66,8 +65,7 @@ export function parseHash(hash: string): Route {
   const clean = hash.replace(/^#\/?/, '')
   const [pathPart, queryPart] = clean.split('?')
   const params = new URLSearchParams(queryPart || '')
-  let segments: string[]
-  try { segments = pathPart.split('/').filter(Boolean).map(decodeURIComponent) } catch { return { name: 'not-found', path: clean } }
+  const segments = pathPart.split('/').filter(Boolean).map(decodeURIComponent)
   const filters = readFilters(params)
 
   switch (segments[0]) {
@@ -99,10 +97,10 @@ export function parseHash(hash: string): Route {
     case 'deck':
       return segments[1] ? { name: 'deck', deckId: segments[1] } : { name: 'ruta' }
     case 'prompts':
-      return { name: 'prompts', familyId: segments[1], promptId: params.get('prompt') || undefined }
+      return { name: 'prompts', familyId: segments[1] }
     case 'kits':
     case 'institucional':
-      return { name: 'kits', kitId: segments[1], tab: params.get('tab') || undefined }
+      return { name: 'kits' }
     case 'agentes':
       return { name: 'agentes', agentId: segments[1] }
     case 'admin':
@@ -121,21 +119,20 @@ export function parseHash(hash: string): Route {
     case 'herramienta':
       return segments[1] ? { name: 'herramienta', toolId: segments[1], filters } : { name: 'herramientas' }
     case 'preguntas':
-      return { name: 'preguntas', question: params.get('q') || undefined }
+      return { name: 'preguntas' }
     case 'indice':
-      return { name: 'indice', letter: segments[1], term: params.get('term') || undefined }
+      return { name: 'indice', letter: segments[1] }
     case 'buscar':
       return { name: 'buscar', query: params.get('q') || '', filters }
     case 'progreso':
       return { name: 'progreso' }
     default:
-      return { name: 'not-found', path: clean }
+      return { name: 'inicio' }
   }
 }
 
 export function href(route: Route): string {
   switch (route.name) {
-    case 'not-found': return '#/' + encodeURIComponent(route.path)
     case 'inicio':
       return '#/'
     case 'mi-proyecto':
@@ -155,9 +152,9 @@ export function href(route: Route): string {
     case 'deck':
       return `#/deck/${encodeURIComponent(route.deckId)}`
     case 'prompts':
-      return (route.familyId ? `#/prompts/${encodeURIComponent(route.familyId)}` : '#/prompts') + (route.promptId ? `?prompt=${encodeURIComponent(route.promptId)}` : '')
+      return route.familyId ? `#/prompts/${encodeURIComponent(route.familyId)}` : '#/prompts'
     case 'kits':
-      return (route.kitId ? `#/kits/${encodeURIComponent(route.kitId)}` : '#/kits') + (route.tab ? `?tab=${encodeURIComponent(route.tab)}` : '')
+      return '#/kits'
     case 'agentes':
       return route.agentId ? `#/agentes/${encodeURIComponent(route.agentId)}` : '#/agentes'
     case 'admin':
@@ -175,9 +172,9 @@ export function href(route: Route): string {
     case 'herramienta':
       return `#/herramienta/${encodeURIComponent(route.toolId)}${writeFilters(route.filters)}`
     case 'preguntas':
-      return '#/preguntas' + (route.question ? `?q=${encodeURIComponent(route.question)}` : '')
+      return '#/preguntas'
     case 'indice':
-      return (route.letter ? `#/indice/${encodeURIComponent(route.letter)}` : '#/indice') + (route.term ? `?term=${encodeURIComponent(route.term)}` : '')
+      return route.letter ? `#/indice/${encodeURIComponent(route.letter)}` : '#/indice'
     case 'buscar': {
       const rest = writeFilters(route.filters).replace(/^\?/, '')
       return `#/buscar?q=${encodeURIComponent(route.query)}${rest ? `&${rest}` : ''}`
@@ -209,7 +206,6 @@ export function useRoute(): Route {
       const next = parseHash(window.location.hash)
       setRoute(next)
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
-      requestAnimationFrame(() => { const heading = document.querySelector<HTMLElement>('main h1, .st-deck h1'); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }) } })
     }
     window.addEventListener('hashchange', onChange)
     return () => window.removeEventListener('hashchange', onChange)

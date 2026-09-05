@@ -788,7 +788,7 @@
         "Test the full cycle by writing to yourself before giving the numbers or the bot to any customer"
       ],
       "flow": {
-        "name": "Kit Atención al cliente multicanal · cola priorizada con aprobación humana",
+        "name": "Multichannel Customer Support Kit · prioritized queue with human approval",
         "nodes": [
           {
             "parameters": {
@@ -812,7 +812,7 @@
                 "name": "WhatsApp Cloud API"
               }
             },
-            "notes": "Exige WhatsApp Business Cloud API de Meta: cuenta de empresa verificada y numero dedicado. No es el WhatsApp del movil."
+            "notes": "Requires Meta's WhatsApp Business Cloud API: a verified business account and a dedicated number. Not the WhatsApp on your phone."
           },
           {
             "parameters": {
@@ -836,12 +836,12 @@
                 "name": "Bot de Telegram"
               }
             },
-            "notes": "El bot se crea gratis con @BotFather en diez minutos. Guarda el token como credencial."
+            "notes": "The bot is created for free with @BotFather in ten minutes. Save the token as a credential."
           },
           {
             "parameters": {
               "httpMethod": "POST",
-              "path": "kit-atencion-cliente-multicanal-formulario",
+              "path": "kit-atencion-cliente-multicanal-formulario-en-en",
               "options": {}
             },
             "id": "a8000000-0000-4000-8000-000000000003",
@@ -910,7 +910,7 @@
               -440,
               300
             ],
-            "notes": "Lo que no trae texto ni forma de responder no entra en la cola. Añade aqui tu honeypot del formulario si lo montas."
+            "notes": "Anything with no text and no way to reply doesn't enter the queue. Add your form honeypot here if you build one."
           },
           {
             "parameters": {
@@ -953,7 +953,7 @@
                 "name": "Anthropic API"
               }
             },
-            "notes": "Credencial Header Auth: nombre x-api-key, valor tu clave. Sustituye TU_NEGOCIO, TUS_TIPOS, TU_POLITICA_URGENCIAS y TUS_DATOS_CIERTOS."
+            "notes": "Header Auth credential: name x-api-key, value your key. Replace TU_NEGOCIO, TUS_TIPOS, TU_POLITICA_URGENCIAS and TUS_DATOS_CIERTOS."
           },
           {
             "parameters": {
@@ -1048,7 +1048,7 @@
                 "value": "CANAL_SOPORTE",
                 "mode": "name"
               },
-              "text": "=:rotating_light: *URGENTE - atender directamente*\n\n*Canal:* {{ $json.canal }}\n*De:* {{ $json.remitente }}\n*Responder a:* {{ $json.ref_respuesta }}\n*Motivo:* {{ $json.motivo }}\n\n*Mensaje:*\n{{ $json.texto.slice(0, 800) }}\n\nSin borrador a proposito: esto lo contesta una persona.",
+              "text": "=:rotating_light: *URGENT - handle directly*\n\n*Channel:* {{ $json.canal }}\n*From:* {{ $json.remitente }}\n*Reply to:* {{ $json.ref_respuesta }}\n*Reason:* {{ $json.motivo }}\n\n*Message:*\n{{ $json.texto.slice(0, 800) }}\n\nNo draft on purpose: a person answers this one.",
               "otherOptions": {}
             },
             "id": "a8000000-0000-4000-8000-00000000000a",
@@ -1065,7 +1065,7 @@
                 "name": "Slack del equipo"
               }
             },
-            "notes": "Lo urgente salta la cola: sin borrador y sin espera. La persona contesta desde el canal original."
+            "notes": "Urgent skips the queue: no draft, no wait. The person replies from the original channel."
           },
           {
             "parameters": {
@@ -1076,7 +1076,7 @@
                 "mode": "name"
               },
               "operation": "sendAndWait",
-              "message": "=*Mensaje para aprobar* ({{ $json.prioridad }})\n\n*Canal:* {{ $json.canal }} · *De:* {{ $json.remitente }}\n*Tipo:* {{ $json.tipo }} · *Motivo:* {{ $json.motivo }}\n\n*El cliente dice:*\n{{ $json.texto.slice(0, 500) }}\n\n*Borrador propuesto:*\n{{ $json.borrador }}\n\nSi el borrador no vale, rechaza y contesta a mano desde el canal original.",
+              "message": "=*Message to approve* ({{ $json.prioridad }})\n\n*Channel:* {{ $json.canal }} · *From:* {{ $json.remitente }}\n*Type:* {{ $json.tipo }} · *Reason:* {{ $json.motivo }}\n\n*The customer says:*\n{{ $json.texto.slice(0, 500) }}\n\n*Proposed draft:*\n{{ $json.borrador }}\n\nIf the draft doesn't work, reject and reply by hand from the original channel.",
               "responseType": "approval",
               "approvalOptions": {
                 "values": {
@@ -1101,7 +1101,7 @@
                 "name": "Slack del equipo"
               }
             },
-            "notes": "Freno humano: nada sale hacia el cliente sin pulsar Aprobar. En WhatsApp, ojo con la ventana de 24 horas si la aprobacion se demora."
+            "notes": "Human brake: nothing goes to the customer without clicking Approve. On WhatsApp, watch the 24-hour window if approval is delayed."
           },
           {
             "parameters": {
@@ -1164,7 +1164,7 @@
               1100,
               440
             ],
-            "notes": "La respuesta sale por donde entro el mensaje. La salida por defecto (correo y formulario) se contesta a mano: conectala a un nodo de Gmail cuando llegues a la fase avanzada."
+            "notes": "The reply goes out through whichever channel it came in on. The default output (email and form) is answered by hand: connect it to a Gmail node once you reach the advanced phase."
           },
           {
             "parameters": {
@@ -1189,7 +1189,7 @@
                 "name": "WhatsApp Cloud API"
               }
             },
-            "notes": "Solo funciona dentro de la ventana de 24 horas desde el ultimo mensaje del cliente. Fuera de ella, Meta exige una plantilla aprobada."
+            "notes": "Only works within the 24-hour window from the customer's last message. Outside it, Meta requires an approved template."
           },
           {
             "parameters": {
@@ -1256,32 +1256,7 @@
                 "name": "Google Sheets de soporte"
               }
             },
-            "notes": "Si la API del modelo falla, el mensaje no se pierde: queda en la cola en estado error para tratarlo a mano."
-          },
-          {
-            "id": "audit-support-email",
-            "name": "Responder formulario por correo",
-            "type": "n8n-nodes-base.gmail",
-            "typeVersion": 2.1,
-            "position": [
-              1900,
-              500
-            ],
-            "parameters": {
-              "resource": "message",
-              "operation": "send",
-              "sendTo": "={{ $('Leer triaje').first().json.ref_respuesta }}",
-              "subject": "Respuesta a su consulta",
-              "emailType": "text",
-              "message": "={{ $('Leer triaje').first().json.borrador }}",
-              "options": {}
-            },
-            "credentials": {
-              "gmailOAuth2": {
-                "id": "REEMPLAZAR",
-                "name": "Gmail soporte"
-              }
-            }
+            "notes": "If the model's API fails, the message isn't lost: it stays in the queue in error status to be handled by hand."
           }
         ],
         "connections": {
@@ -1437,14 +1412,7 @@
                   "index": 0
                 }
               ],
-              [],
-              [
-                {
-                  "node": "Responder formulario por correo",
-                  "type": "main",
-                  "index": 0
-                }
-              ]
+              []
             ]
           }
         },

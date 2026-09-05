@@ -10,7 +10,6 @@ import { store, useLessonProgress, useStudent } from '../store'
 import { BrandMark } from '../components/Brand'
 import Piece from '../components/Piece'
 import { useLocale } from '../i18n'
-import { taskKey } from '../project-workspace'
 
 /**
  * El programa curado: lecciones escritas a mano, en orden.
@@ -46,8 +45,6 @@ function Prompt({ text }: { text: string }) {
   )
 }
 
-const plannedMinutes = (lesson: CursoLesson) => { const timing = lesson as CursoLesson & { readingMinutes?: number; practiceMinutes?: number }; return timing.readingMinutes && timing.practiceMinutes ? timing.readingMinutes + timing.practiceMinutes : lesson.minutes }
-
 const countText = (count: number, singular: string, plural: string) => `${count} ${count === 1 ? singular : plural}`
 
 /* ------------------------------------------------------------------ *
@@ -77,10 +74,12 @@ export function CursoIndice() {
   const sueltas = lecciones.filter((item) => !item.tool)
   const isDone = (item: CursoLesson) => {
     const progress = student.lessons['curso:' + item.id]
-    return Boolean(progress?.done?.includes('intermedio'))
+    const marked = progress?.checks?.intermedio || []
+    if (progress?.done?.includes('intermedio')) return true
+    return item.tasks.length > 0 && marked.length >= item.tasks.length
   }
   const hechas = sueltas.filter(isDone).length
-  const siguienteBase = sueltas.find((item) => !isDone(item))
+  const siguienteBase = sueltas.find((item) => !isDone(item)) || sueltas[0]
   const etapaActual = siguienteBase?.stageId || porAreaPrimera(course)
 
   const porHerramienta = course.toolPages
@@ -132,15 +131,15 @@ export function CursoIndice() {
       <section className="st-program-now">
         <div>
           <span className="st-kicker">{locale === 'en' ? 'What to do now' : 'Qué hago ahora'}</span>
-          <h2>{siguienteBase ? (locale === 'en' ? `Next: ${siguienteBase.title}` : `Siguiente: ${siguienteBase.title}`) : (locale === 'en' ? 'Program complete: review your project' : 'Programa completado: revisa tu proyecto')}</h2>
+          <h2>{siguienteBase ? (locale === 'en' ? `Next: ${siguienteBase.title}` : `Siguiente: ${siguienteBase.title}`) : (locale === 'en' ? 'Start with the first lesson' : 'Empieza por la primera lección')}</h2>
           <p>
             {locale === 'en'
               ? 'Open a lesson, read only the blocks you need, do the checkable tasks and come back to the program. If a tool interests you, open its page from the optional section.'
               : 'Abre una lección, lee solo los bloques que necesites, haz las tareas marcables y vuelve al programa. Si una herramienta te interesa, entra en su ficha desde la zona opcional.'}
           </p>
         </div>
-        <a className="st-btn" href={href(siguienteBase ? { name: 'curso', lessonId: siguienteBase.id } : { name: 'mi-proyecto' })}>
-          {siguienteBase ? (locale === 'en' ? 'Go to the lesson' : 'Ir a la lección') : (locale === 'en' ? 'Review my project' : 'Revisar mi proyecto')}
+        <a className="st-btn" href={href({ name: 'curso', lessonId: siguienteBase?.id || sueltas[0]?.id || '' })}>
+          {locale === 'en' ? 'Go to the lesson' : 'Ir a la lección'}
           <ArrowRight size={13} />
         </a>
       </section>
@@ -208,7 +207,7 @@ export function CursoIndice() {
                     <p>{item.promise}</p>
                   </div>
                   <span className="st-curso-state">{done ? (locale === 'en' ? 'Done' : 'Hecha') : (locale === 'en' ? 'Pending' : 'Pendiente')}</span>
-                  <span className="st-curso-min"><Clock size={11} /> {plannedMinutes(item)}′ {locale === 'en' ? 'est.' : 'aprox.'}</span>
+                  <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
                   <ArrowRight size={14} />
                 </a>
               </li>
@@ -290,7 +289,7 @@ export function CursoIndice() {
                       <strong>{item.title}</strong>
                       <p>{item.promise}</p>
                     </div>
-                    <span className="st-curso-min"><Clock size={11} /> {plannedMinutes(item)}′ {locale === 'en' ? 'est.' : 'aprox.'}</span>
+                    <span className="st-curso-min"><Clock size={11} /> {item.minutes}′</span>
                     <ArrowRight size={14} />
                   </a>
                 </li>
@@ -315,7 +314,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
   const course = useCourse()
   const locale = useLocale()
   const progress = useLessonProgress(`curso:${lessonId}`)
-  const taskIds = progress.tasks?.intermedio || []
+  const hechas = progress.checks.intermedio || []
 
   const lecciones = [...(course.curso || [])].sort((a, b) => a.number - b.number)
   const leccion = lecciones.find((item) => item.id === lessonId) as CursoLesson | undefined
@@ -338,11 +337,9 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
   const anterior = posicion > 0 ? rutaActual[posicion - 1] : null
   const siguiente = posicion >= 0 && posicion < rutaActual.length - 1 ? rutaActual[posicion + 1] : null
   const stage = course.stages.find((item) => item.id === leccion.stageId)
-  const hechas = leccion.tasks.flatMap((task, index) => taskIds.includes(taskKey(task)) ? [index] : [])
   const percent = Math.round((hechas.length / Math.max(1, leccion.tasks.length)) * 100)
   const toolMeta = leccion.tool ? course.toolPages.find((tool) => tool.id === leccion.tool) : null
   const leccionCompleta = progress.done.includes('intermedio')
-  const duration = leccion as CursoLesson & { readingMinutes?: number; practiceMinutes?: number; durationNote?: string }
 
   return (
     <article className="st-lesson">
@@ -356,13 +353,11 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         <h1>{leccion.title}</h1>
         <p className="st-lesson-headline">{leccion.promise}</p>
         <div className="st-lesson-meta">
-          <span><Clock size={11} /> {duration.readingMinutes || leccion.minutes} min {locale === 'en' ? 'estimated reading' : 'lectura estimada'}</span>
-          {duration.practiceMinutes && <span>{duration.practiceMinutes} min {locale === 'en' ? 'practice estimate' : 'práctica estimada'}</span>}
+          <span><Clock size={11} /> {leccion.minutes} min</span>
           <span>{leccion.tasks.length} {locale === 'en' ? 'tasks' : 'tareas'}</span>
           <span>{leccion.theory.length} {locale === 'en' ? 'sections' : 'apartados'}</span>
         </div>
       </header>
-      {duration.durationNote && <p>{duration.durationNote}</p>}
 
       <section className="st-lesson-map">
         <div>
@@ -453,7 +448,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                   <button
                     type="button"
                     className="st-task-tick"
-                    onClick={() => store.toggleTask(`curso:${lessonId}`, 'intermedio', taskKey(task))}
+                    onClick={() => store.toggleCheck(`curso:${lessonId}`, 'intermedio', index)}
                     aria-pressed={hecha}
                     aria-label={hecha ? (locale === 'en' ? 'Mark as pending' : 'Marcar como pendiente') : (locale === 'en' ? 'Mark as done' : 'Marcar como hecha')}
                   >
@@ -499,7 +494,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                       type="button"
                       className={`st-task-ok${hecha ? ' done' : ''}`}
                       onClick={() => {
-                        if (!hecha) store.toggleTask(`curso:${lessonId}`, 'intermedio', taskKey(task))
+                        if (!hecha) store.toggleCheck(`curso:${lessonId}`, 'intermedio', index)
                       }}
                       disabled={hecha}
                     >
@@ -581,22 +576,20 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         <p className="st-curso-next"><ArrowRight size={13} /> <span>{leccion.next}</span></p>
       )}
 
-      <section className="st-block"><h2>{locale === 'en' ? 'Your evidence' : 'Tu evidencia'}</h2><p>{locale === 'en' ? 'Record the result and what you actually checked. Completion is self-reported, not a certification.' : 'Registra el resultado y lo que has comprobado. Completar es una declaración tuya, no una certificación.'}</p><label>{locale === 'en' ? 'Result, link or observations' : 'Resultado, enlace u observaciones'}<textarea aria-label={locale === 'en' ? 'Result, link or observations' : 'Resultado, enlace u observaciones'} value={progress.notes.intermedio?.evidencia || ''} onChange={e => store.setNote(`curso:${lessonId}`, 'intermedio', 'evidencia', e.target.value)} /></label><a href={href({ name: 'mi-proyecto' })}>{locale === 'en' ? 'Open project evidence and reviews' : 'Abrir evidencias y revisiones del proyecto'}</a></section>
       <section className="st-lesson-complete" data-done={leccionCompleta ? 'true' : undefined}>
         <div>
           <span className="st-kicker">{locale === 'en' ? 'Lesson wrap-up' : 'Cierre de la lección'}</span>
           <h2>{leccionCompleta ? (locale === 'en' ? 'Lesson completed' : 'Lección completada') : (locale === 'en' ? 'When you finish, mark the lesson' : 'Cuando termines, marca la lección')}</h2>
           <p>
             {locale === 'en'
-              ? 'Check the tasks and record evidence to close the lesson. This is self-reported completion and does not certify the project.'
-              : 'Marca las tareas y registra evidencia para cerrar la lección. Este cierre es autodeclarado y no certifica el proyecto.'}
+              ? 'Use this button once you finish the whole lesson. It lets Programa mark this piece as done and know where you need to go next.'
+              : 'Usa este botón al terminar toda la lección. Sirve para que el Programa marque esta pieza como hecha y sepa por dónde tienes que seguir.'}
           </p>
         </div>
         <button
           type="button"
           className="st-btn"
           onClick={() => store.toggleDone(`curso:${lessonId}`, 'intermedio')}
-          disabled={!leccionCompleta && (hechas.length !== leccion.tasks.length || !progress.notes.intermedio?.evidencia?.trim())}
           aria-pressed={leccionCompleta}
         >
           {leccionCompleta ? <CheckCircle2 size={15} /> : <Circle size={15} />}

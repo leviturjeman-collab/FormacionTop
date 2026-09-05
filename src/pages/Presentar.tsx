@@ -5,8 +5,6 @@ import { useIndexes } from '../course'
 import { href } from '../router'
 import { buildSlides } from '../teacher'
 import { useLocale } from '../i18n'
-import { taskKey } from '../project-workspace'
-import SlideResponse from '../components/SlideResponse'
 
 /**
  * Vista de presentación.
@@ -22,11 +20,8 @@ export default function Presentar({ slug, level }: { slug: string; level: LevelI
 
   const slides = useMemo(() => (lesson ? buildSlides(lesson, level) : []), [lesson, level])
 
-  useEffect(() => setIndex(0), [slug, level])
-
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.target instanceof Element && event.target.closest('input, textarea, select, button, [contenteditable]')) return
       if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'PageDown') {
         event.preventDefault()
         setIndex((value) => Math.min(slides.length - 1, value + 1))
@@ -52,17 +47,14 @@ export default function Presentar({ slug, level }: { slug: string; level: LevelI
     )
   }
 
-  const slideIndex = Math.max(0, Math.min(index, slides.length - 1))
-  const slide = slides[slideIndex]
-  const question = slide.kind === 'pregunta' ? lesson.levels[level].quiz.find(item => item.prompt === slide.title) : undefined
-  const responseKey = 'presentation:' + slug + ':' + taskKey({ title: slide.title })
+  const slide = slides[index]
 
   return (
     <div className="st-deck">
       <header className="st-deck-bar">
         <span>{lesson.title} · {locale === 'en' ? 'level' : 'nivel'} {level}</span>
         <div>
-          <b>{slideIndex + 1} / {slides.length}</b>
+          <b>{index + 1} / {slides.length}</b>
           <a href={href({ name: 'leccion', slug, level })} aria-label={locale === 'en' ? 'Exit the presentation' : 'Salir de la presentación'}>
             <X size={16} />
           </a>
@@ -72,7 +64,7 @@ export default function Presentar({ slug, level }: { slug: string; level: LevelI
       <section className={`st-slide kind-${slide.kind}`}>
         <h1>{slide.title}</h1>
         {slide.text && <p className="st-slide-text">{slide.text}</p>}
-        {slide.items && !question && (
+        {slide.items && (
           <ul>
             {slide.items.map((item, itemIndex) => (
               <li key={itemIndex}>
@@ -83,19 +75,18 @@ export default function Presentar({ slug, level }: { slug: string; level: LevelI
           </ul>
         )}
         {slide.code && <pre>{slide.code}</pre>}
-        {slide.note && !question && <p className="st-slide-note">{slide.note}</p>}
+        {slide.note && <p className="st-slide-note">{slide.note}</p>}
       </section>
 
-      {['pregunta', 'practica', 'cierre'].includes(slide.kind) && <SlideResponse key={responseKey} storageKey={responseKey} level={level} options={!question && slide.kind === 'pregunta' ? slide.items : undefined} question={question} />}
       <footer className="st-deck-nav">
-        <button type="button" onClick={() => setIndex((value) => Math.max(0, value - 1))} disabled={slideIndex === 0}>
+        <button type="button" onClick={() => setIndex((value) => Math.max(0, value - 1))} disabled={index === 0}>
           <ArrowLeft size={16} /> {locale === 'en' ? 'Previous' : 'Anterior'}
         </button>
-        <i><b style={{ width: `${((slideIndex + 1) / slides.length) * 100}%` }} /></i>
+        <i><b style={{ width: `${((index + 1) / slides.length) * 100}%` }} /></i>
         <button
           type="button"
           onClick={() => setIndex((value) => Math.min(slides.length - 1, value + 1))}
-          disabled={slideIndex === slides.length - 1}
+          disabled={index === slides.length - 1}
         >
           {locale === 'en' ? 'Next' : 'Siguiente'} <ArrowRight size={16} />
         </button>

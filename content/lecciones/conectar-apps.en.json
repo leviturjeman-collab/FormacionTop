@@ -50,8 +50,7 @@
       "action": "Before opening anything, write the sentence: \"When THIS happens, grab THESE FIELDS and do THIS OTHER THING.\" Be unbearably specific. \"When an important email arrives\" doesn't count: \"when an email arrives whose subject contains New order and that comes from orders@myshop.com\" does. If you can't write the sentence, it's not that you're missing technical skill. It's that you don't yet know what you want, and the AI won't guess it for you. Once you have it, paste the prompt below to have it turned into a spec sheet with the exact fields.",
       "prompt": "You're an automation expert who works with people who have never coded before. Your job is to turn a vague idea into a technical spec sheet a beginner can execute.\n\nI want to connect two applications. Here's what I want to happen:\n[WRITE YOUR SENTENCE HERE: when THIS happens, grab THESE FIELDS, and do THIS OTHER THING. With real names of apps, senders, subjects, and sheets.]\n\nGive me a spec sheet with exactly these sections and nothing else:\n\n1) TRIGGER: what specific event kicks it off, and tell me whether the source app can notify on its own the instant it happens or whether I have to go check every X minutes. If checking is needed, recommend how often and why.\n2) DATA: the exact list of fields that need to be pulled from the source, with the name each field has in that application. Mark which ones might come back empty some day.\n3) ACTION: exactly what gets written or sent to the destination, and in what order.\n4) UNIQUE ID: which field tells you whether an item has already been processed, so it's never duplicated.\n5) WHAT HAPPENS IF IT FAILS: the three most likely failures for this specific connection, and how I'd notice each one.\n6) TOOL: tell me whether this can be done with free Google Apps Script or whether I need a paid tool, and why.\n\nDon't write any code yet. Be direct, no fluff.",
       "expect": "A short spec sheet with six sections. What matters most is point 4. If the AI can't find a unique identifier, it'll tell you. That means you're going to get duplicates no matter what, and it needs solving before moving on.",
-      "stuck": "If it hands you back an architecture with databases and message queues, reply: \"this is for a company. I'm one person with a spreadsheet. Give me the smallest version that works with what I already have installed.\" Does it tell you you need paid Zapier for something that only touches Gmail and spreadsheets? Ignore it and move to task 3.",
-      "id": "task-dfa07fd9b2c5"
+      "stuck": "If it hands you back an architecture with databases and message queues, reply: \"this is for a company. I'm one person with a spreadsheet. Give me the smallest version that works with what I already have installed.\" Does it tell you you need paid Zapier for something that only touches Gmail and spreadsheets? Ignore it and move to task 3."
     },
     {
       "title": "Prepare the destination sheet with the final columns",
@@ -59,16 +58,14 @@
       "action": "Create a new sheet and give it a real name, for example \"Web orders 2026.\" At the very bottom, where it says \"Sheet1,\" double-click and rename it \"Orders.\" That name is what the code will use: write it exactly, no weird capitalization or trailing space. In row 1 write the headers that came out of the spec sheet, one per column. Always add one more column at the end called \"Message ID,\" even if you never look at it: it's the one that prevents duplicates. And add another called \"Imported on,\" with the date the row came in. The day something looks off, that column tells you in two seconds whether the problem is from today or has been sitting there three weeks.",
       "prompt": "I'm setting up a Google spreadsheet where rows will write themselves from my emails.\n\nI'm pasting one of those emails below, with the personal data already swapped for made-up info:\n[PASTE A FULL REAL EMAIL HERE: subject and body, swapping names, amounts, and addresses for fake ones]\n\nTell me:\n1) What columns the sheet should have so that email fits in entirely without repeating info. Give me the exact name of each header, short with no odd accents, and the order I'd place them left to right.\n2) What format each column should have: text, number, date, or currency.\n3) Which of those fields ALWAYS come through in this type of email and which might be missing some day.\n4) Which piece of data from this email works as a unique identifier to avoid duplicate rows. If there's none good in the text, say so clearly and propose an alternative.\n5) One extra column I'm forgetting that I'll thank myself for in six months.\n\nDon't write code. Just the column table and the answers. Be direct.",
       "expect": "A sheet with the tab named Orders and one header row. For example: Date | Sender | Subject | Order # | Amount | Message ID | Imported on.",
-      "stuck": "Unsure which columns to add? Open three real emails you're going to process. Note which piece of data from each you'd want in a table. Whatever isn't in all three emails, leave out. A column that's always empty will cost you half an hour hunting a bug that doesn't exist.",
-      "id": "task-4f7f0bb0f8a7"
+      "stuck": "Unsure which columns to add? Open three real emails you're going to process. Note which piece of data from each you'd want in a table. Whatever isn't in all three emails, leave out. A column that's always empty will cost you half an hour hunting a bug that doesn't exist."
     },
     {
       "title": "Open the code editor without leaving the sheet",
       "where": "In your Google spreadsheet, in the top menu",
       "action": "In the menu bar — File, Edit, View, Insert, Format... — click \"Extensions\" and then \"Apps Script.\" A new tab opens with a code editor and a file called Code.gs that comes with an empty function inside. Select everything inside it (Ctrl+A or Cmd+A) and delete it: you're going to paste something else over it. Top left it says \"Untitled project\": click and rename it \"Order importer.\" That's the name you'll see later on the permissions screen. Also in the list of apps with access to your account. There are four icons on the left sidebar you'll use today. They're the code icon, the clock (Triggers), the list (Executions), and the gear.",
       "expect": "A new browser tab and an editor with a dark or light background. The Code.gs file empty, and the project name changed, top left.",
-      "stuck": "If you don't see \"Extensions\" in the menu, you're in Excel or a read-only view, not Google Sheets. If clicking \"Apps Script\" does nothing, it's your pop-up blocker. Check the icon to the right of the address bar and allow pop-ups for docs.google.com.",
-      "id": "task-a9ae7c7af82d"
+      "stuck": "If you don't see \"Extensions\" in the menu, you're in Excel or a read-only view, not Google Sheets. If clicking \"Apps Script\" does nothing, it's your pop-up blocker. Check the icon to the right of the address bar and allow pop-ups for docs.google.com."
     },
     {
       "title": "Dictate the code to the AI and paste it as-is",
@@ -76,16 +73,14 @@
       "action": "Fill in the blanks in the prompt below with the details from your spec sheet and your sheet. The more specific you are about the Gmail search and the column order, the fewer round trips you'll make. Copy the entire response — just the code block, not the explanations — and paste it into the Apps Script editor over the empty file. Then click the floppy disk icon or Ctrl+S to save. Don't run it yet.",
       "prompt": "You're an expert Google Apps Script programmer. You're writing for someone who has never coded and who's going to copy your code as-is, without fully understanding it, so it has to work on the first try and can't depend on anything that needs installing.\n\nI want a script that lives inside my Google spreadsheet and does this:\n\n1) Search my Gmail for messages matching this exact query: [PASTE YOUR SEARCH HERE, e.g.: subject:\"New order\" -label:processed newer_than:7d]\n2) From each message pull these fields: [LIST YOUR FIELDS: date, sender, subject, and whatever needs to be extracted from the body, saying exactly how it appears. E.g.: the order number is the digits after the hash in the subject; the amount is the number that appears after the word Total in the body.]\n3) Write a new row at the end of the tab called [EXACT NAME OF YOUR TAB], with the columns in this exact order: [PASTE YOUR HEADERS SEPARATED BY SLASHES]\n4) Apply the Gmail label \"processed\" to that message as soon as the row is written, creating the label itself the first time if it doesn't exist.\n5) Before writing each row, check that message's ID isn't already in the \"Message ID\" column. If it already is, skip that message without writing anything.\n6) Process at most 20 messages per run, so it doesn't hang.\n7) If a field doesn't appear in the email, write an empty cell and keep going, without stopping the whole process.\n8) Log how many messages it found, how many it wrote, and how many it skipped.\n\nMandatory rules:\n- One single file, one main function called importEmails.\n- No external libraries or advanced Google Cloud services.\n- Use the minimum permissions necessary. If there's a way to do it without permission to delete email, use it.\n- A comment above each block explaining what that part does.\n\nAfter the code, and separately, give me: a) the numbered steps to run it by hand the first time; b) the list of permissions Google will ask for, translated into what they actually mean; c) the three most likely error messages the first time and what to do about each.",
       "expect": "A code block of 30 to 70 lines with comments, pasted into the editor and saved. At the top, in the function dropdown, \"importEmails\" should appear.",
-      "stuck": "Do you get a red error at the bottom when saving, like \"SyntaxError\"? It's almost always that you also copied the triple-backtick line from the code block. Delete it. If the function dropdown shows up empty, the file wasn't saved. Press Ctrl+S again and wait for the \"Unsaved\" notice to disappear.",
-      "id": "task-3ba5470c0ff7"
+      "stuck": "Do you get a red error at the bottom when saving, like \"SyntaxError\"? It's almost always that you also copied the triple-backtick line from the code block. Delete it. If the function dropdown shows up empty, the file wasn't saved. Press Ctrl+S again and wait for the \"Unsaved\" notice to disappear."
     },
     {
       "title": "Get through the permissions screen without backing off",
       "where": "In the Apps Script editor, at the \"Run\" button up top",
       "action": "Check that the dropdown next to it says \"importEmails\" and click \"Run.\" A window opens saying \"Authorization required.\" Click \"Review permissions\" and pick your account, the same one that receives the emails. Here's the screen that's scary: \"Google hasn't verified this app.\" Don't close it. Click \"Advanced\" at the bottom left, then the small link \"Go to Order importer (unsafe).\" Now Google shows you the list of permissions. Actually read it, don't skim it. If your script only reads emails and sends none, nothing about sending on your behalf should appear. If something doesn't add up, close and have the AI redo it with fewer permissions. If it checks out, click \"Allow.\"",
       "expect": "The window closes on its own. A black panel appears below the editor with two lines: \"Execution started\" and \"Execution completed,\" each with a timestamp. If your script logs anything, you'll also see how many emails it found.",
-      "stuck": "If \"Advanced\" doesn't appear, widen your browser window: it hides in narrow windows. If you see \"Access blocked: this app doesn't comply with Google's policy,\" you're on a work or school account. Its admin blocks personal scripts. Ask whoever administers the domain, or do it with your personal Gmail account. If you see \"Error: you do not have permission to call GmailApp.search,\" you authorized with a different Google account than the one you were using. Sign out of all but the right one and run it again.",
-      "id": "task-b9daeeabe05e"
+      "stuck": "If \"Advanced\" doesn't appear, widen your browser window: it hides in narrow windows. If you see \"Access blocked: this app doesn't comply with Google's policy,\" you're on a work or school account. Its admin blocks personal scripts. Ask whoever administers the domain, or do it with your personal Gmail account. If you see \"Error: you do not have permission to call GmailApp.search,\" you authorized with a different Google account than the one you were using. Sign out of all but the right one and run it again."
     },
     {
       "title": "Check the result and trigger the bug on purpose",
@@ -93,24 +88,21 @@
       "action": "Go back to the sheet: rows should have appeared. Count them and compare against the emails in Gmail matching your search. Now trigger the bug: go back to the editor and click \"Run\" again, without changing anything. This is the moment of truth. If the script is built right it shouldn't write a single new row, because the emails already carry the \"processed\" label. If the same rows show up again, the script isn't marking what's processed, and you've got the bug that sinks everyone. Delete the duplicate rows by hand. Go back to the AI with the message in the next section before setting up any trigger. A bug that repeats every ten minutes stops being a bug: it becomes three thousand rows.",
       "prompt": "This script is writing duplicate rows every time I run it. I'm pasting the full code below.\n\nDo this in this order:\n1) Tell me in one sentence why it's duplicating, no jargon.\n2) Fix it with TWO safeguards at once, not one: (a) apply the Gmail label \"processed\" to the message right after writing the row, and have the search exclude that label with -label:processed; (b) before writing, check whether the message's ID is already in the \"Message ID\" column of the sheet, and if it is, skip that message.\n3) Give me back the whole corrected file, ready to paste over the old one. Don't give me just the changed part: I wouldn't know where to put it.\n4) Tell me what I should see in the log when I run it twice in a row to know it's fixed.\n\nHere's my code:\n[PASTE THE WHOLE CODE HERE]",
       "expect": "On the second run, zero new rows. And a log message like \"Found 0 messages\" or \"Found 12, wrote 0, skipped 12.\" That's exactly what you want to see.",
-      "stuck": "If the \"processed\" label doesn't show up in Gmail, look right in Gmail. It's in the left sidebar: click \"More\" to expand the labels below. Does the script write rows but not apply the label? It's almost always because it applies it at the very end and something breaks before it gets there. Have the AI apply it right after writing the row, not after the loop finishes.",
-      "id": "task-c6e5dac901c6"
+      "stuck": "If the \"processed\" label doesn't show up in Gmail, look right in Gmail. It's in the left sidebar: click \"More\" to expand the labels below. Does the script write rows but not apply the label? It's almost always because it applies it at the very end and something breaks before it gets there. Have the AI apply it right after writing the row, not after the loop finishes."
     },
     {
       "title": "Set up the trigger and configure the failure alert",
       "where": "In the Apps Script editor, clock icon on the left sidebar",
       "action": "Click the clock (\"Triggers\") then the blue \"Add Trigger\" button at the bottom right. Fill in: function to run, \"importEmails\"; event source, \"Time-driven\"; type of time-based trigger, \"Minutes timer\"; interval, \"Every 10 minutes.\" And now the thing almost nobody fills in, which is the most important part of the screen: at the bottom there's \"Failure notification settings.\" Set it to \"Notify me immediately.\" Without that, the day this breaks you won't find out. The worst thing about an automation isn't that it fails. It's that it fails silently for three weeks while you assume the orders are in the sheet. Save. Every ten minutes, day and night, even with your computer off.",
       "expect": "A row in the trigger list with the function, \"Minutes timer,\" and \"Every 10 minutes.\" Ten minutes later, in the \"Executions\" tab, a new line with status \"Completed\" and type \"Time-driven.\"",
-      "stuck": "If you see red \"Error\" in \"Executions,\" click it and you'll get the full message. Copy it all and paste it to the AI saying \"here's the error, here's my code, fix it and give me back the whole file.\" If no execution shows up after fifteen minutes, the trigger was saved under a different account. Delete the trigger, check top right which account you're on, and create it again.",
-      "id": "task-f50a22e94817"
+      "stuck": "If you see red \"Error\" in \"Executions,\" click it and you'll get the full message. Copy it all and paste it to the AI saying \"here's the error, here's my code, fix it and give me back the whole file.\" If no execution shows up after fifteen minutes, the trigger was saved under a different account. Delete the trigger, check top right which account you're on, and create it again."
     },
     {
       "title": "Create the Slack doorbell and save it like a password",
       "where": "In your browser, at api.slack.com/apps",
       "action": "Log in with your workspace's Slack account. Click \"Create New App\" and choose \"From scratch.\" Give it a name that'll look good in front of your coworkers, since it'll sign the messages: \"Form Alerts,\" not \"test2.\" Pick the workspace and create it. In the left menu click \"Incoming Webhooks\" and flip the switch at the top to \"On.\" Scroll down and click \"Add New Webhook to Workspace\": it'll ask which channel. Pick a test channel, not the company-wide one. If you don't have one, create #testing before continuing. Copy the address that appears: it starts with https://hooks.slack.com/services/. Save it in your password manager, not in Notepad or an email to yourself. That address is the entire credential.",
       "expect": "A line like https://hooks.slack.com/services/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. And, in the channel you chose, an automatic Slack message saying an integration was added.",
-      "stuck": "If you don't see \"Create New App\" or the button is grayed out, your workspace has app installation restricted. The screen offers you a button to ask an admin for permission. You can't continue until they approve it. If the channel dropdown doesn't show a private channel, it's because you're not a member: join the channel first and reload the page.",
-      "id": "task-d9a15cb4b6da"
+      "stuck": "If you don't see \"Create New App\" or the button is grayed out, your workspace has app installation restricted. The screen offers you a button to ask an admin for permission. You can't continue until they approve it. If the channel dropdown doesn't show a private channel, it's because you're not a member: join the channel first and reload the page."
     },
     {
       "title": "Connect the form to Slack and do a test submission",
@@ -118,16 +110,14 @@
       "action": "Open your form and go to the \"Responses\" tab. Click the green spreadsheet icon to link it to a sheet (if it's already linked, open that sheet). From that sheet, \"Extensions\" and \"Apps Script\" again. Paste the code the prompt below gives you, with your webhook address inside. Then, under the \"Triggers\" clock, add a new one: function \"notifySlack,\" event source \"From spreadsheet,\" event type \"On form submit.\" Save, accept the permissions like before, and fill out the form yourself with fake data: \"Name: test, Email: test@test.com.\" The message should reach Slack before you have time to switch tabs.",
       "prompt": "You're an expert Google Apps Script programmer. You're writing for someone who has never coded before.\n\nI have a Google Form whose responses land in this spreadsheet. I want a message to reach Slack via an incoming webhook every time someone submits the form.\n\nThe form has these questions, in this exact order:\n[LIST YOUR QUESTIONS EXACTLY AS WRITTEN ON THE FORM]\n\nI want the Slack message to look like this:\n[WRITE HOW YOU WANT THE MESSAGE TO READ, using brackets for where each answer goes. E.g.: New trial class booking — [Name] ([Phone]) wants to come on [Preferred day]. Comment: [Comment]]\n\nRequirements:\n- One single function called notifySlack that receives the form event and reads the answers from that specific submission, not from the sheet's last row.\n- The webhook address as a constant at the top of the file, with a comment clearly stating it's a secret and shouldn't be shared.\n- If an answer comes back empty, write \"(not answered)\" instead of leaving an odd gap.\n- Send the message correctly even with accented characters or emojis, without garbled text.\n- If Slack responds with an error, log it with the exact code and text, instead of failing silently.\n- Also add a separate function called testSlack that sends a fixed test message, so I can check the webhook without filling out the form.\n\nAfter the code, tell me step by step which trigger I need to create in Apps Script for this to fire on form submit, with the exact name of each dropdown.",
       "expect": "A message in your Slack channel signed with your app's name. It arrives with the fake data you just typed, in under five seconds. In the editor's \"Executions,\" a \"Completed\" line with type \"On form submit.\"",
-      "stuck": "If the log shows \"returned code 400\" with the word invalid_payload, the message format is built wrong. Paste the full error to the AI and have it redo it. If it shows \"404\" with no_service, the webhook was deleted or the app was uninstalled from the workspace. Go back to api.slack.com/apps and generate another one. If the message lands in a different channel than expected, that's not your mistake. Every webhook is bound to the channel you chose when creating it, and that can't be changed from the code. Create another webhook pointed at the right channel.",
-      "id": "task-9c5597fab905"
+      "stuck": "If the log shows \"returned code 400\" with the word invalid_payload, the message format is built wrong. Paste the full error to the AI and have it redo it. If it shows \"404\" with no_service, the webhook was deleted or the app was uninstalled from the workspace. Go back to api.slack.com/apps and generate another one. If the message lands in a different channel than expected, that's not your mistake. Every webhook is bound to the channel you chose when creating it, and that can't be changed from the code. Create another webhook pointed at the right channel."
     },
     {
       "title": "Write down the off switch before you leave",
       "where": "In a document of yours, and at myaccount.google.com/permissions",
       "action": "Write four lines in a document you'll be able to find six months from now. The four: where the script is (the sheet's link), what trigger it has and how often, which Slack channel it posts to, and how to turn it off. Turning it off means: opening the editor, clock icon, three dots to the right of the trigger, \"Delete trigger.\" And to cut off access to your account entirely, go to myaccount.google.com/permissions. Find your project by the name you gave it and click \"Remove Access.\" Do one more thing: go there now, even if you're not removing anything, and look through the whole list. You'll find apps you gave email access to back in 2019 that you don't even remember. Revoke those.",
       "expect": "A four-line document and your Google account's permissions screen open. Your project shows up in the list with the name you gave it.",
-      "stuck": "If you don't recognize your project's name in the permissions list, you left it as \"Untitled project.\" Go back to the editor, rename it top left, and reload the permissions page. If you accidentally revoke access from the script you just built, you haven't broken anything. The next run will error out: run it by hand once and reauthorize.",
-      "id": "task-4251d5b4106b"
+      "stuck": "If you don't recognize your project's name in the permissions list, you left it as \"Untitled project.\" Go back to the editor, rename it top left, and reload the permissions page. If you accidentally revoke access from the script you just built, you haven't broken anything. The next run will error out: run it by hand once and reauthorize."
     }
   ],
   "matters": [
@@ -154,49 +144,16 @@
     "It can't undo what's already gone out. The 300 duplicate rows get deleted by hand. Messages that slipped into the company-wide channel can be deleted, but the notification already pinged forty phones. That's why you test in a separate sheet and a #testing channel."
   ],
   "words": [
-    [
-      "Trigger",
-      "The event that starts the connection: an email arriving, someone submitting a form, it being nine in the morning. Without it, nothing moves on its own."
-    ],
-    [
-      "Action",
-      "What happens at the end of the connection: writing a row, sending a message, creating a task. It's the visible part, the one you check to know it went well."
-    ],
-    [
-      "Webhook",
-      "A long, secret internet address that works like a doorbell: whoever knows it can send a notification to that app from anywhere. Knowing it is all the permission needed, so it's stored like a password."
-    ],
-    [
-      "Polling",
-      "Going to check every few minutes whether something happened, instead of waiting to be notified. It works just as well, but what happens at 10:01 you don't see until 10:10."
-    ],
-    [
-      "OAuth",
-      "The \"log in with your Google account\" system applied to programs. Instead of giving your password to anyone, you approve a screen. The program is handed a pass you can revoke whenever you want."
-    ],
-    [
-      "Scope",
-      "The specific list of things a program will be able to do with your account: read email, write to your sheets, delete messages. It's what shows on the screen almost nobody reads before accepting."
-    ],
-    [
-      "Idempotent",
-      "Doing it ten times leaves the same result as doing it once. It's the property that stops your sheet from ending up with the same row repeated a hundred and forty times."
-    ],
-    [
-      "Execution log",
-      "The list of every time your automation has run. It shows the time, how long it took, and whether it finished fine or broke. It's what you check, not the sheet, when something doesn't add up."
-    ],
-    [
-      "Apps Script",
-      "The place where a small piece of code lives inside your own Google account. It's attached to a spreadsheet or a form. It's free, nothing to install, and it runs with your computer off."
-    ],
-    [
-      "Quota",
-      "The usage ceiling a company lets you have for free: so many minutes running per day, so many sends per month. Once you cross it, it stops working until the next day, and you're almost never warned beforehand."
-    ]
+    ["Trigger", "The event that starts the connection: an email arriving, someone submitting a form, it being nine in the morning. Without it, nothing moves on its own."],
+    ["Action", "What happens at the end of the connection: writing a row, sending a message, creating a task. It's the visible part, the one you check to know it went well."],
+    ["Webhook", "A long, secret internet address that works like a doorbell: whoever knows it can send a notification to that app from anywhere. Knowing it is all the permission needed, so it's stored like a password."],
+    ["Polling", "Going to check every few minutes whether something happened, instead of waiting to be notified. It works just as well, but what happens at 10:01 you don't see until 10:10."],
+    ["OAuth", "The \"log in with your Google account\" system applied to programs. Instead of giving your password to anyone, you approve a screen. The program is handed a pass you can revoke whenever you want."],
+    ["Scope", "The specific list of things a program will be able to do with your account: read email, write to your sheets, delete messages. It's what shows on the screen almost nobody reads before accepting."],
+    ["Idempotent", "Doing it ten times leaves the same result as doing it once. It's the property that stops your sheet from ending up with the same row repeated a hundred and forty times."],
+    ["Execution log", "The list of every time your automation has run. It shows the time, how long it took, and whether it finished fine or broke. It's what you check, not the sheet, when something doesn't add up."],
+    ["Apps Script", "The place where a small piece of code lives inside your own Google account. It's attached to a spreadsheet or a form. It's free, nothing to install, and it runs with your computer off."],
+    ["Quota", "The usage ceiling a company lets you have for free: so many minutes running per day, so many sends per month. Once you cross it, it stops working until the next day, and you're almost never warned beforehand."]
   ],
-  "next": "Next: Putting AI inside the workflow",
-  "readingMinutes": 9,
-  "practiceMinutes": 100,
-  "durationNote": "Planning estimate: setup, external review and observation periods are additional."
+  "next": "Take the third connection you make by hand every week, write its three-part sentence, and build it yourself with the same prompt, changing only the search and the columns."
 }

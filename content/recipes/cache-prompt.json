@@ -1,19 +1,14 @@
 {
   "id": "cache-prompt",
   "match": "cach[eé]|caching|coste|costes|precio|factura|ahorra|tokens|prompt|instrucciones|manual|repetid",
-  "stages": [
-    "seguridad",
-    "fundamentos"
-  ],
-  "tools": [
-    "python"
-  ],
+  "stages": ["seguridad", "fundamentos"],
+  "tools": ["python"],
   "title": "Cachea el prompt y las respuestas para no pagar dos veces",
   "what": "Guarda el trozo fijo de tus instrucciones en el servidor de Anthropic y las respuestas completas en tu disco, para que la segunda vez no vuelvas a pagarlas.",
   "why": "Cada llamada reenvía el mismo manual entero y lo pagas entero cada vez. Con claude-opus-5, un manual de 2.000 tokens cuesta unos 0,01 $ por llamada: 1.000 llamadas al día son 10 $ diarios solo por repetir lo mismo. El caché de prompt deja ese trozo un 90% más barato (bajas a ~1 $) y el caché local deja las preguntas repetidas en cero. Ojo: la API no tiene plan gratis, se paga por uso desde el primer token.",
   "lang": "python",
   "install": "pip install anthropic",
-  "code": "import hashlib\nimport json\nimport os\nimport pathlib\nimport time\nimport tempfile\n\nimport anthropic\n\n# La clave nunca se escribe dentro del archivo: se lee del entorno del ordenador.\ncliente = anthropic.Anthropic(api_key=os.environ[\"ANTHROPIC_API_KEY\"])\nMODELO = \"claude-opus-5\"\nCACHE_SCOPE = os.environ.get(\"CACHE_SCOPE\", \"local-single-user\")\nCACHE_TTL_SECONDS = int(os.environ.get(\"CACHE_TTL_SECONDS\", \"3600\"))\n\n# El texto largo que repites en TODAS las llamadas: el manual, las normas, el catálogo.\n# Necesita 512 tokens como mínimo (unas 400 palabras) o Anthropic no lo guarda y no avisa.\nINSTRUCCIONES = pathlib.Path(\"manual.txt\").read_text(encoding=\"utf-8\")\n\nCARPETA = pathlib.Path(\"cache_respuestas\")\nCARPETA.mkdir(exist_ok=True)\n\n\ndef ruta_de(pregunta):\n    # Huella digital del trío modelo + instrucciones + pregunta.\n    huella = hashlib.sha256(json.dumps([CACHE_SCOPE, MODELO, INSTRUCCIONES, pregunta], ensure_ascii=False).encode()).hexdigest()\n    return CARPETA / f\"{huella}.json\"\n\n\ndef preguntar(pregunta):\n    archivo = ruta_de(pregunta)\n    if archivo.exists() and time.time() - archivo.stat().st_mtime < CACHE_TTL_SECONDS:\n        print(\"[caché local] respuesta reutilizada, coste 0 euros\")\n        return json.loads(archivo.read_text(encoding=\"utf-8\"))[\"texto\"]\n\n    respuesta = cliente.messages.create(\n        model=MODELO,\n        max_tokens=2000,\n        system=[{\n            \"type\": \"text\",\n            \"text\": INSTRUCCIONES,\n            \"cache_control\": {\"type\": \"ephemeral\"},\n        }],\n        messages=[{\"role\": \"user\", \"content\": pregunta}],\n    )\n    uso = respuesta.usage\n    print(f\"[API] escritos: {uso.cache_creation_input_tokens} | \"\n          f\"leídos de caché: {uso.cache_read_input_tokens} | sin caché: {uso.input_tokens}\")\n\n    texto = \"\".join(b.text for b in respuesta.content if b.type == \"text\")\n    with tempfile.NamedTemporaryFile(\"w\", dir=CARPETA, delete=False, encoding=\"utf-8\") as temp:\n        json.dump({\"texto\": texto}, temp, ensure_ascii=False)\n        temporal = pathlib.Path(temp.name)\n    temporal.replace(archivo)\n    return texto\n\n\nif __name__ == \"__main__\":\n    print(preguntar(\"¿Cuál es el horario de atención al público?\"))\n    print(preguntar(\"¿Se puede aparcar en la puerta?\"))\n    print(preguntar(\"¿Cuál es el horario de atención al público?\"))\n",
+  "code": "import hashlib\nimport json\nimport os\nimport pathlib\n\nimport anthropic\n\n# La clave nunca se escribe dentro del archivo: se lee del entorno del ordenador.\ncliente = anthropic.Anthropic(api_key=os.environ[\"ANTHROPIC_API_KEY\"])\nMODELO = \"claude-opus-5\"\n\n# El texto largo que repites en TODAS las llamadas: el manual, las normas, el catálogo.\n# Necesita 512 tokens como mínimo (unas 400 palabras) o Anthropic no lo guarda y no avisa.\nINSTRUCCIONES = pathlib.Path(\"manual.txt\").read_text(encoding=\"utf-8\")\n\nCARPETA = pathlib.Path(\"cache_respuestas\")\nCARPETA.mkdir(exist_ok=True)\n\n\ndef ruta_de(pregunta):\n    # Huella digital del trío modelo + instrucciones + pregunta.\n    huella = hashlib.sha256((MODELO + INSTRUCCIONES + pregunta).encode()).hexdigest()\n    return CARPETA / f\"{huella}.json\"\n\n\ndef preguntar(pregunta):\n    archivo = ruta_de(pregunta)\n    if archivo.exists():\n        print(\"[caché local] respuesta reutilizada, coste 0 euros\")\n        return json.loads(archivo.read_text(encoding=\"utf-8\"))[\"texto\"]\n\n    respuesta = cliente.messages.create(\n        model=MODELO,\n        max_tokens=2000,\n        system=[{\n            \"type\": \"text\",\n            \"text\": INSTRUCCIONES,\n            \"cache_control\": {\"type\": \"ephemeral\"},\n        }],\n        messages=[{\"role\": \"user\", \"content\": pregunta}],\n    )\n    uso = respuesta.usage\n    print(f\"[API] escritos: {uso.cache_creation_input_tokens} | \"\n          f\"leídos de caché: {uso.cache_read_input_tokens} | sin caché: {uso.input_tokens}\")\n\n    texto = \"\".join(b.text for b in respuesta.content if b.type == \"text\")\n    archivo.write_text(json.dumps({\"texto\": texto}, ensure_ascii=False), encoding=\"utf-8\")\n    return texto\n\n\nif __name__ == \"__main__\":\n    print(preguntar(\"¿Cuál es el horario de atención al público?\"))\n    print(preguntar(\"¿Se puede aparcar en la puerta?\"))\n    print(preguntar(\"¿Cuál es el horario de atención al público?\"))\n",
   "lines": [
     [
       "cliente = anthropic.Anthropic(api_key=os.environ[\"ANTHROPIC_API_KEY\"])",
@@ -22,6 +17,14 @@
     [
       "INSTRUCCIONES = pathlib.Path(\"manual.txt\").read_text(encoding=\"utf-8\")",
       "El texto que se repite vive en un archivo aparte, no incrustado en el código. Así lo edita quien lleva el negocio sin tocar Python, y sobre todo se queda quieto: el caché solo funciona si ese bloque no cambia ni una coma entre llamadas."
+    ],
+    [
+      "huella = hashlib.sha256((MODELO + INSTRUCCIONES + pregunta).encode()).hexdigest()",
+      "El nombre del archivo guardado sale de un resumen matemático (hash) de los tres ingredientes. Si cambias el modelo, corriges el manual o preguntas otra cosa, la huella es distinta y se pide respuesta nueva. Sin meter las instrucciones ahí dentro seguirías sirviendo respuestas basadas en un manual viejo."
+    ],
+    [
+      "if archivo.exists():",
+      "Aquí está el ahorro grande: si esa pregunta exacta ya se hizo, ni se llama a la API. Cero céntimos y respuesta instantánea en vez de esperar diez segundos. En un chat de atención al cliente, la mitad de las preguntas son las mismas cinco."
     ],
     [
       "\"cache_control\": {\"type\": \"ephemeral\"},",
@@ -40,8 +43,8 @@
       "La respuesta llega partida en bloques, no en una cadena suelta. Con Opus 5 el primero suele ser de razonamiento, así que coger respuesta.content[0].text a lo bruto revienta. Nos quedamos solo con los bloques de texto y los pegamos."
     ],
     [
-      "CACHE_SCOPE = os.environ.get(\"CACHE_SCOPE\", \"local-single-user\")",
-      "En un servicio, deriva este ámbito de la identidad/autorización, no de un parámetro libre. Configura TTL según frescura de los datos."
+      "archivo.write_text(json.dumps({\"texto\": texto}, ensure_ascii=False), encoding=\"utf-8\")",
+      "Se guarda después de recibir la respuesta, nunca antes. Aviso serio: esto deja las respuestas en texto plano en tu disco. Si contienen datos de clientes, esa carpeta pasa a ser un fichero de datos personales y hay que protegerla o cifrarla, no dejarla en el escritorio."
     ]
   ],
   "errors": [

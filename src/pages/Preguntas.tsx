@@ -1,12 +1,9 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { ArrowRight, ChevronDown, HelpCircle, Search } from 'lucide-react'
 import { useCourse } from '../course'
 import { href } from '../router'
 import type { FaqItem } from '../types'
 import { useLocale } from '../i18n'
-import { store, useLessonProgress } from '../store'
-import { taskKey } from '../project-workspace'
-import SupportPanel from '../components/SupportPanel'
 
 /**
  * Preguntas frecuentes.
@@ -21,12 +18,8 @@ function normaliza(texto: string) {
   return texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-function Pregunta({ item, selected, onStuck }: { item: FaqItem; selected?: boolean; onStuck: (item: FaqItem) => void }) {
-  const feedbackKey = 'faq:' + taskKey({ title: item.q })
-  const progress = useLessonProgress(feedbackKey)
-  const helpful = progress.notes.intermedio?.helpful
-  const [abierta, setAbierta] = useState(Boolean(selected))
-  useEffect(() => setAbierta(Boolean(selected)), [selected])
+function Pregunta({ item }: { item: FaqItem }) {
+  const [abierta, setAbierta] = useState(false)
   const locale = useLocale()
   return (
     <article className={abierta ? 'st-faq-item on' : 'st-faq-item'}>
@@ -39,9 +32,7 @@ function Pregunta({ item, selected, onStuck }: { item: FaqItem; selected?: boole
       </button>
       {abierta && (
         <div className="st-faq-body">
-          <p>{item.a}</p><a href={href({ name: 'preguntas', question: item.q })}>{locale === 'en' ? 'Link to this answer' : 'Enlace a esta respuesta'}</a>
-          <div className="st-actions"><button type="button" className="st-btn-ghost" aria-pressed={helpful === 'yes'} onClick={() => store.setNote(feedbackKey, 'intermedio', 'helpful', 'yes')}>{locale === 'en' ? 'This answered my question' : 'Esto resolvió mi duda'}</button><button type="button" className="st-btn-ghost" aria-pressed={helpful === 'no'} onClick={() => { store.setNote(feedbackKey, 'intermedio', 'helpful', 'no'); onStuck(item) }}>{locale === 'en' ? 'I am still blocked' : 'Sigo bloqueado'}</button></div>
-          {helpful === 'yes' && <p role="status">{locale === 'en' ? 'Recorded in your progress.' : 'Registrado en tu progreso.'}</p>}
+          <p>{item.a}</p>
           {item.ruta && (
             <a href={item.ruta}>
               {locale === 'en' ? 'See the lesson that explains it' : 'Ver la lección que lo explica'} <ArrowRight size={12} />
@@ -53,13 +44,11 @@ function Pregunta({ item, selected, onStuck }: { item: FaqItem; selected?: boole
   )
 }
 
-export default function Preguntas({ question }: { question?: string }) {
+export default function Preguntas() {
   const course = useCourse()
   const locale = useLocale()
   const grupos = course.preguntas || []
-  const [suggested, setSuggested] = useState<{ subject: string; context: string }>()
-  const [busqueda, setBusqueda] = useState(question || '')
-  useEffect(() => setBusqueda(question || ''), [question])
+  const [busqueda, setBusqueda] = useState('')
 
   const total = useMemo(
     () => grupos.reduce((suma, grupo) => suma + grupo.preguntas.length, 0),
@@ -150,24 +139,23 @@ export default function Preguntas({ question }: { question?: string }) {
           </div>
           <div className="st-faq-lista">
             {grupo.preguntas.map((item) => (
-              <Pregunta selected={question === item.q} key={item.q} item={item} onStuck={item => { setSuggested({ subject: item.q, context: item.ruta || '' }); window.setTimeout(() => document.getElementById('support-panel')?.scrollIntoView({ block: 'start' }), 0) }} />
+              <Pregunta key={item.q} item={item} />
             ))}
           </div>
         </section>
       ))}
 
-      <SupportPanel suggested={suggested} />
       <section className="st-faq-cierre">
         <HelpCircle size={16} />
         <div>
           <strong>{locale === 'en' ? "What if your question isn't here?" : '¿Y si tu duda no está aquí?'}</strong>
           <p>
             {locale === 'en' ? (
-              <>If the explanation does not resolve your case, record what you expected and what happened above. If you're stuck on a
+              <>Almost every doubt answers itself by following the right lesson. If you're stuck on a
               specific step, go back to that lesson and check the "if it gets stuck" section: it's written for
               the typical failure of that step.</>
             ) : (
-              <>Si la explicación no resuelve tu caso, registra arriba lo que esperabas y lo que ocurrió. Si te has atascado en un
+              <>Casi todas las dudas se contestan solas siguiendo la lección que toca. Si te has atascado en un
               paso concreto, vuelve a esa lección y mira el apartado «si se atasca»: está escrito para el fallo
               típico de ese paso.</>
             )}

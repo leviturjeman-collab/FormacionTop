@@ -1,5 +1,4 @@
 import type { InteractivePiece } from '../types'
-import SimulationEvidence from './SimulationEvidence'
 import FlowDiagram from './FlowDiagram'
 import Terminal from './Terminal'
 import PromptLab from './PromptLab'
@@ -24,13 +23,13 @@ import { Canvas, DataFlow, Decision, ScreenMap, BeforeAfter } from './Diagrams'
 export default function Piece({ piece }: { piece: InteractivePiece }) {
   switch (piece.kind) {
     case 'flow': return <FlowDiagram piece={piece} />
-    case 'terminal': return <><Terminal piece={piece} /><SimulationEvidence title={piece.title} /></>
-    case 'promptlab': return <><PromptLab piece={piece} /><SimulationEvidence title={piece.title} /></>
+    case 'terminal': return <Terminal piece={piece} />
+    case 'promptlab': return <PromptLab piece={piece} />
     case 'compare': return <Compare piece={piece} />
     case 'costcalc': return <CostCalc piece={piece} />
     case 'chunking': return <Chunking piece={piece} />
     case 'timeline': return <Timeline piece={piece} />
-    case 'cases': return <><CaseSim piece={piece} /><SimulationEvidence title={piece.title} /></>
+    case 'cases': return <CaseSim piece={piece} />
     case 'anatomy': return <Anatomy piece={piece} />
     case 'pipeline': return <Pipeline piece={piece} />
     case 'filetree': return <FileTree piece={piece} />

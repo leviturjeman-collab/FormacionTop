@@ -16,7 +16,7 @@ const problems = []
 const warnings = []
 const check = (condition, message) => { if (!condition) problems.push(message) }
 
-const course = JSON.parse(await fs.readFile(path.join(publicDir, process.env.LOCALE === 'en' ? 'course.en.json' : 'course.json'), 'utf8'))
+const course = JSON.parse(await fs.readFile(path.join(publicDir, 'course.json'), 'utf8'))
 
 const countWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
 const MANUAL_ONLY_TOOLS = new Set(['wispr-flow'])
@@ -37,7 +37,7 @@ for (const family of course.prompts || []) {
   for (const prompt of family.prompts || []) {
     check(countWords(prompt.prompt) >= 450, `El prompt «${prompt.name}» tiene menos de 450 palabras.`)
     check(/\[[^\]]+\]/.test(prompt.prompt), `El prompt institucional «${prompt.name}» no tiene corchetes rellenables.`)
-    check(/institucional|institutional/i.test(prompt.prompt), `El prompt «${prompt.name}» no está marcado como institucional.`)
+    check(/institucional/i.test(prompt.prompt), `El prompt «${prompt.name}» no está marcado como institucional.`)
   }
 }
 // Nombres de familia sin duplicados visibles («… · Programa» vs «… · Biblioteca anterior»).

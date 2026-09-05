@@ -1,4 +1,3 @@
-import { copyText } from '../downloads'
 import { useState } from 'react'
 import {
   AlertTriangle, Ban, Check, CheckCheck, ClipboardList, Code2, Coins, Copy, FileText,
@@ -48,7 +47,7 @@ function CodeBlock({ code, lang }: { code: string; lang?: string }) {
       <button
         type="button"
         onClick={() => {
-          copyText(code).then(
+          navigator.clipboard?.writeText(code).then(
             () => {
               setCopied(true)
               window.setTimeout(() => setCopied(false), 1600)

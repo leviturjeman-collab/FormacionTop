@@ -1,5 +1,3 @@
-import { writeCourseShards } from './lib/course-shards.mjs'
-import { buildStarterPackages } from './lib/starter-packages.mjs'
 /**
  * Generador del curso.
  *
@@ -25,7 +23,6 @@ import { analyzeSections, isMetaDocument } from './lib/sections.mjs'
 import { completeToolGuide, registerGuides, toolGuideFor } from './lib/toolguides.mjs'
 import { registerRecipes } from './lib/recipes.mjs'
 import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
-import { cleanEditorialBlocks, substantiveWords, classifySource } from './lib/editorial.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
 import { buildCategories, buildGlossaryIndex, categoryKeyFor, sectionFor, SECTIONS } from './lib/categories.mjs'
 import { buildInstitutionalPromptLibrary } from './lib/institutional-prompts.mjs'
@@ -337,20 +334,20 @@ for (const absolute of markdownFiles) {
 
   // Cuánto contenido REAL tiene, ya sin la plantilla repetida. Es lo que decide
   // si esto es una lección de verdad o una ficha de consulta.
-  const sourceBlocks = cleanEditorialBlocks([
-    ...signal.analysis.blocks.map(block => ({ ...block, kind: 'seccion' })),
-    ...Object.values(signal.analysis.cases).map(block => ({ ...block, kind: 'seccion', from: 'vault', icon: 'detalle' })),
-  ])
-  const realWords = substantiveWords(sourceBlocks)
+  const realWords = levels.intermedio.blocks
+    .filter((block) => block.kind === 'seccion')
+    .reduce((sum, block) => sum + (block.parts || []).reduce(
+      (acc, part) => acc + `${part.text || ''} ${(part.items || []).join(' ')}`.split(/\s+/).filter(Boolean).length, 0), 0)
   const assetSources = assetSourcesFor(relativePath)
-  const editorial = classifySource(signal, realWords, assetSources.length)
-  const format = editorial.format
+  // Un archivo ejecutable o importable necesita una lección completa aunque
+  // su documentación sea breve. La longitud del texto no puede ocultar la práctica.
+  const format = realWords < 400 && assetSources.length === 0 ? 'ficha' : 'leccion'
 
   // Una ficha es consulta rápida: se queda con su contenido propio y nada más.
   // Sin instaladores, sin recetas y sin el andamiaje de una lección larga.
   if (format === 'ficha') {
-    const CONSULTA = new Set(['seccion', 'tabla', 'herramientas', 'codigo', 'comandos'])
-    const compacto = [...sourceBlocks, ...cleanEditorialBlocks(levels.intermedio.blocks).filter(block => ['tabla', 'codigo', 'comandos', 'herramientas'].includes(block.kind))]
+    const CONSULTA = new Set(['idea', 'seccion', 'tabla', 'herramientas', 'receta', 'codigo', 'comandos', 'instalar'])
+    const compacto = levels.intermedio.blocks
       .filter((block) => CONSULTA.has(block.kind))
       // Los títulos genéricos de lección no pintan nada en una ficha.
       .filter((block) => !/^(?:lo que vas a construir|referencia de la lecci[oó]n|herramientas de esta pr[aá]ctica)$/i.test(block.title))
@@ -358,12 +355,10 @@ for (const absolute of markdownFiles) {
     for (const level of LEVELS) {
       levels[level] = {
         ...levels[level],
-        headline: title,
-        hook: LOCALE === 'en' ? 'Reference material. Use the source, examples and code as support for a project; this is not a verified guided exercise.' : 'Material de consulta. Usa la fuente, los ejemplos y el código como apoyo para tu proyecto; esta página no constituye una práctica guiada verificada.',
-        blocks: compacto.length ? compacto : [{ kind: 'idea', title: LOCALE === 'en' ? 'Reference pending development' : 'Referencia pendiente de desarrollo', text: LOCALE === 'en' ? 'The source does not yet provide enough specific instructional content. Use the Program or an area project to practise this topic.' : 'La fuente todavía no aporta contenido didáctico específico suficiente. Usa el Programa o un proyecto de área para practicar este tema.' }],
+        headline: `${title}, en una pantalla`,
+        hook: 'Ficha de consulta: lo esencial de este tema, para mirarlo cuando lo necesites.',
+        blocks: compacto,
         objectives: [],
-        practice: { goal: LOCALE === 'en' ? 'Reference material' : 'Material de consulta', steps: [], evidence: '' },
-        checklist: [LOCALE === 'en' ? 'I identified which part of this reference supports my project and what I still need to verify.' : 'He identificado qué parte de esta referencia ayuda a mi proyecto y qué queda por verificar.'],
         pitfalls: [],
         minutes: Math.max(3, Math.round(realWords / 190)),
       }
@@ -421,7 +416,6 @@ for (const absolute of markdownFiles) {
     sourceWords: signal.words,
     realWords,
     format,
-    editorial: { mode: format === 'ficha' ? 'reference' : 'guided', reason: editorial.reason, source: 'generated-from-source' },
     categoryKey: categoryKeyFor(relativePath),
     sectionId: sectionFor(relativePath),
     tools,
@@ -459,9 +453,6 @@ if (await exists(authoredDir)) {
     }
     if (override.interactive) target.interactive = override.interactive
     if (override.title) target.title = override.title
-    if (override.format === 'leccion' || override.format === 'ficha') target.format = override.format
-    else if (LEVELS.every(level => override.levels?.[level]?.practice?.steps?.length && override.levels?.[level]?.objectives?.length)) target.format = 'leccion'
-    target.editorial = { mode: target.format === 'ficha' ? 'reference' : 'guided', reason: 'authored-override', source: 'authored' }
     target.authored = true
     authoredCount += 1
   }
@@ -519,18 +510,10 @@ if (await exists(quizDir)) {
     byCategory.set(id, pack)
   }
 
-  for (const lesson of lessons) {
-    const pack = byCategory.get(lesson.categoryId)
-    if (!pack) continue
-    for (const level of LEVELS) {
-      const questions = (pack[level] || []).map(question => ({ ...question, source: 'categoria' }))
-      const seen = new Set()
-      lesson.levels[level].quiz = [...questions, ...(lesson.levels[level].quiz || [])].filter(q => { if (seen.has(q.prompt)) return false; seen.add(q.prompt); return true }).slice(0, 6)
-      categoryQuizCount += questions.length
-    }
-  }
-  console.log('  Preguntas de categoría activadas: ' + categoryQuizCount)
-
+  // Los quiz quedan fuera del curso: el alumno avanza haciendo tareas.
+  // Los archivos se conservan en content/quiz por si vuelven a hacer falta.
+  categoryQuizCount = 0
+  console.log(`  Preguntas por categoria: ${byCategory.size} archivos en reserva (no se muestran).`)
 }
 
 /* --- Fuera el relleno que se repite -------------------------------- */
@@ -574,7 +557,7 @@ let bloquesDeRellenoFuera = 0
 const rellenoDistinto = new Set()
 for (const lesson of lessons) {
   for (const level of LEVELS) {
-    const antes = cleanEditorialBlocks(lesson.levels[level].blocks || [])
+    const antes = lesson.levels[level].blocks || []
     const despues = antes.filter((bloque) => {
       if (bloque.from !== 'vault') return true
       const huella = huellaDeBloque(bloque)
@@ -778,9 +761,7 @@ const course = {
   lessons,
 }
 
-await buildStarterPackages(vaultDir, generatedDir, course.lessons)
 await fs.writeFile(path.join(publicDir, outputFile), JSON.stringify(course), 'utf8')
-await writeCourseShards(course, publicDir, LOCALE)
 
 console.log(
   `Curso generado: ${lessons.length} lecciones x 3 niveles en ${categories.length} categorias.

@@ -2,7 +2,7 @@
 
 ## Qué hace
 
-Cada día a las 09:00 recorre las URLs de productos de la competencia que tengas en la pestaña "Competidores", descarga cada página, extrae un precio único dentro de los marcadores configurados para ese producto (formato 1.234,56 €) y lo compara con el precio anterior guardado. Si hay cambio, te avisa por Telegram con la variación en %; si no consigue leer el precio, también te avisa para que ajustes la regex. Todo queda en "Historico precios". El flujo solo vigila: cambiar tus precios es decisión tuya.
+Cada día a las 09:00 recorre las URLs de productos de la competencia que tengas en la pestaña "Competidores", descarga cada página, extrae el precio con una expresión regular (formato 1.234,56 €) y lo compara con el precio anterior guardado. Si hay cambio, te avisa por Telegram con la variación en %; si no consigue leer el precio, también te avisa para que ajustes la regex. Todo queda en "Historico precios". El flujo solo vigila: cambiar tus precios es decisión tuya.
 
 ## Antes de empezar
 
@@ -30,7 +30,7 @@ Cada día a las 09:00 recorre las URLs de productos de la competencia que tengas
 1. En n8n ve a **Workflows > ⋯ > Import from File** (o *Import from Clipboard* y pega el contenido del JSON).
 2. Al abrirse el lienzo verás nodos con un triángulo de aviso: son los que salen "en gris" porque les falta credencial. Abre cada uno y selecciona la credencial que creaste en el paso anterior.
 3. Sustituye todos los valores `REEMPLAZAR...` (ID de la hoja, canal, chat, email...).
-   - Pestaña **Competidores** con columnas: competidor, producto, url_producto, precio_anterior (número o formato español), selector_inicio, selector_fin, activo (si|no). Pestaña **Historico precios**.
+   - Pestaña **Competidores** con columnas: competidor, producto, url_producto, precio_anterior (punto decimal, p. ej. 19.90), activo (si|no). Pestaña **Historico precios**.
 4. Ejecuta primero con **Execute Workflow** (modo test) antes de pulsar **Active**.
 
 ## Nodo a nodo
@@ -40,7 +40,7 @@ Cada día a las 09:00 recorre las URLs de productos de la competencia que tengas
 | Cada día a las 9 | Disparador diario | La hora o frecuencia |
 | Leer competidores | Lee Competidores filtrando activo = si | El ID del documento |
 | Descargar página | GET a cada url_producto (respuesta como texto, timeout 15 s) | Añade un header User-Agent en Options si te bloquean |
-| Extraer y comparar precio | Exige un único precio entre selector_inicio y selector_fin y lo compara (corre una vez por producto) | La expresión regular: ajústala al HTML de cada tienda |
+| Extraer y comparar precio | Busca el primer precio "1.234,56 €" en el HTML y lo compara (corre una vez por producto) | La expresión regular: ajústala al HTML de cada tienda |
 | ¿Precio leído? | Separa lecturas correctas de fallos | Nada |
 | ¿Ha cambiado? | Detecta variaciones de al menos 1 céntimo | El umbral (p. ej. solo avisar si >2%) |
 | Avisar cambio de precio | Telegram con antes/ahora y variación % | REEMPLAZAR_CHAT_ID |
@@ -56,7 +56,7 @@ Cada día a las 09:00 recorre las URLs de productos de la competencia que tengas
 3. **Duplicado**
    La misma URL en dos filas → dos comprobaciones y posibles avisos dobles. Mantén una fila por producto.
 4. **Extremo**
-   Una página con varios precios (rebaja + original). Debes ver: rechaza como ambiguo. Configura marcadores literales únicos que rodeen solo el precio del producto correcto.
+   Una página con varios precios (rebaja + original). Debes ver: coge el PRIMERO que aparece en el HTML, que puede no ser el bueno — afina la regex o usa un selector previo al precio.
 
 ## Errores típicos
 
@@ -72,6 +72,3 @@ Cada día a las 09:00 recorre las URLs de productos de la competencia que tengas
 ## Aviso legal
 
 Los precios públicos no son datos personales, pero el scraping puede infringir los términos de uso de la web: revisa robots.txt, no martillees los servidores (1 vez al día basta) y no uses los datos para acuerdos de precios con competidores — la fijación coordinada de precios es ilegal (derecho de competencia).
-
-## Selector obligatorio
-En Competidores añade selector_inicio y selector_fin. Ejemplo de HTML: `<span id="precio-sku123">1.234,56 EUR</span>`; inicio `<span id="precio-sku123">` y fin `</span>`. Debe existir exactamente una apertura y un precio en ese intervalo. Sin selector o ante ambigüedad solo avisa de revisión, sin actualizar la referencia.

@@ -20,8 +20,6 @@ import { ToolStrip } from '../components/Brand'
 import TeacherPanel from '../components/TeacherPanel'
 import Piece from '../components/Piece'
 import { useLocale } from '../i18n'
-import Quiz from '../components/Quiz'
-import { taskKey } from '../project-workspace'
 
 function AssetCode({ asset }: { asset: LessonAsset }) {
   const [copied, setCopied] = useState(false)
@@ -61,7 +59,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
   const progress = useLessonProgress(slug)
 
   const lesson = bySlug.get(slug)
-  const active: LevelId = lesson?.format === 'ficha' ? 'intermedio' : level || student.preferredLevel || 'basico'
+  const active: LevelId = level || student.preferredLevel || 'basico'
 
   useEffect(() => {
     if (lesson) store.visit(slug)
@@ -88,7 +86,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
   const isDone = progress.done.includes(active)
   const checks = progress.checks[active] || []
   // Las tareas comparten almacén con el checklist, desplazadas para no chocar.
-  const taskDone = content.practice.steps.flatMap((task, index) => progress.tasks?.[active]?.includes(taskKey(task)) ? [index] : [])
+  const taskDone = checks.filter((item) => item >= 100).map((item) => item - 100)
 
   /* Anterior y siguiente. Se recorre la categoría, que es el orden natural,
    * pero cuando se acaba (o cuando la categoría tiene una sola lección) se
@@ -117,7 +115,6 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
       <header className="st-lesson-head">
         <span className="st-kicker">{esFicha ? 'Ficha de consulta' : lesson.kindLabel}</span>
         <h1>{lesson.title}</h1>
-        {lesson.downloadPackage && <a className="st-btn-ghost" href={lesson.downloadPackage} download>{locale === 'en' ? 'Download complete starter' : 'Descargar proyecto completo'}</a>}
         <p className="st-lesson-headline">{content.headline}</p>
         <p className="st-lesson-hook">{content.hook}</p>
 
@@ -244,7 +241,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                   <button
                     type="button"
                     className="st-task-tick"
-                    onClick={() => store.toggleTask(slug, active, taskKey(step))}
+                    onClick={() => store.toggleCheck(slug, active, 100 + index)}
                     aria-pressed={hecha}
                     aria-label={hecha ? 'Marcar como pendiente' : 'Marcar como hecha'}
                   >
@@ -281,7 +278,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                       type="button"
                       className={`st-task-ok${hecha ? ' done' : ''}`}
                       onClick={() => {
-                        if (!hecha) store.toggleTask(slug, active, taskKey(step))
+                        if (!hecha) store.toggleCheck(slug, active, 100 + index)
                       }}
                       disabled={hecha}
                     >
@@ -319,8 +316,6 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         </section>
       )}
 
-      {!esFicha && <section className="st-block"><h2>{locale === 'en' ? 'Evidence notebook' : 'Cuaderno de evidencias'}</h2><label>{locale === 'en' ? 'Result, link and checks performed' : 'Resultado, enlace y comprobaciones realizadas'}<textarea aria-label={locale === 'en' ? 'Result, link and checks performed' : 'Resultado, enlace y comprobaciones realizadas'} value={progress.notes[active]?.evidencia || ''} onChange={e => store.setNote(slug, active, 'evidencia', e.target.value)} /></label></section>}
-      {<Quiz key={`${slug}:${active}`} questions={content.quiz} slug={slug} level={active} />}
       <section className="st-checklist">
         <h2>Antes de darlo por hecho</h2>
         <ul>
@@ -336,11 +331,10 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         <button
           type="button"
           className={`st-btn st-complete${isDone ? ' done' : ''}`}
-          disabled={!isDone && !esFicha && (taskDone.length !== content.practice.steps.length || !progress.notes[active]?.evidencia?.trim())}
           onClick={() => store.toggleDone(slug, active)}
         >
           {isDone ? <CheckCircle2 size={15} /> : <Circle size={15} />}
-          {esFicha ? (isDone ? (locale === 'en' ? 'Reference reviewed' : 'Referencia revisada') : (locale === 'en' ? 'Mark reference reviewed' : 'Marcar referencia revisada')) : (isDone ? `Nivel ${active} completado` : `Marcar nivel ${active} como completado`)}
+          {isDone ? `Nivel ${active} completado` : `Marcar nivel ${active} como completado`}
         </button>
       </section>
 

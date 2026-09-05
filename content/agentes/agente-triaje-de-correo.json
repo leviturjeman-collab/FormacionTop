@@ -8,12 +8,7 @@
   "level": "intermedio",
   "what": "Un flujo de n8n que vigila tu buzón de Gmail y, con cada correo nuevo, hace el trabajo aburrido del triaje: lo clasifica con IA por categoría y urgencia, redacta un borrador de respuesta y te avisa por Telegram con el resumen. El borrador se queda en tu carpeta de borradores de Gmail esperando tu revisión: nada sale hacia el remitente sin que tú lo leas, lo ajustes y pulses enviar. Es el circuito de la bandeja de entrada con freno humano incorporado.",
   "forWho": "Para quien atiende un buzón compartido (info@, soporte@, pedidos@) y pierde la primera hora del día leyendo y decidiendo. Compensa a partir de 15-20 correos diarios; por debajo, el triaje manual sigue siendo más rápido que mantener el flujo.",
-  "tools": [
-    "n8n",
-    "gmail",
-    "claude",
-    "telegram"
-  ],
+  "tools": ["n8n", "gmail", "claude", "telegram"],
   "capabilities": [
     "Detecta correos nuevos en Gmail cada minuto sin que tengas el correo abierto",
     "Clasifica cada correo por categoría (consulta, pedido, incidencia, factura, spam...) y urgencia con claude-haiku-4-5",
@@ -34,10 +29,7 @@
         "name": "Nota del flujo",
         "type": "n8n-nodes-base.stickyNote",
         "typeVersion": 1,
-        "position": [
-          -380,
-          -200
-        ],
+        "position": [-380, -200],
         "parameters": {
           "content": "## Triaje de correo con freno humano\nGmail Trigger → preparar → Claude clasifica y redacta → borrador en Gmail + aviso Telegram.\n\nAntes de activar: 1) credencial de Gmail (OAuth2), 2) credencial httpHeaderAuth con tu clave de Anthropic (cabecera x-api-key), 3) credencial del bot de Telegram y tu chat_id.\n\nEste flujo NUNCA envía correos: solo crea borradores.",
           "height": 300,
@@ -48,10 +40,7 @@
         "name": "Correo entrante",
         "type": "n8n-nodes-base.gmailTrigger",
         "typeVersion": 1.2,
-        "position": [
-          0,
-          0
-        ],
+        "position": [0, 0],
         "parameters": {
           "pollTimes": {
             "item": [
@@ -60,7 +49,7 @@
               }
             ]
           },
-          "simple": false,
+          "simple": true,
           "filters": {}
         },
         "credentials": {
@@ -74,22 +63,16 @@
         "name": "Preparar petición IA",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [
-          220,
-          0
-        ],
+        "position": [220, 0],
         "parameters": {
-          "jsCode": "// Normaliza el correo y construye la petición para la API de Anthropic.\nconst remitente = $json.From || $json.from || 'desconocido';\nconst asunto = $json.Subject || $json.subject || '(sin asunto)';\nconst completo = typeof $json.text === 'string' && $json.text.length > 0;\nconst original = completo ? $json.text : String($json.snippet || '');\nconst parcial = !completo || original.length > 20000;\nconst cuerpo = original.slice(0, 20000);\n\nconst sistema = 'Eres el asistente de triaje de un buzon profesional en espanol. ' +\n  'Devuelve SOLO un JSON valido con estas claves: ' +\n  'categoria (consulta | pedido | incidencia | factura | comercial | spam | revisar), ' +\n  'urgencia (alta | media | baja), ' +\n  'resumen (maximo 2 frases), ' +\n  'respuesta (borrador de respuesta cordial y breve en espanol, tuteo, listo para revisar; ' +\n  'si el correo es una reclamacion o un tema legal, la respuesta es solo un acuse de recibo). ' +\n  'Nada de texto fuera del JSON.';\n\nconst payload = {\n  model: 'claude-haiku-4-5',\n  max_tokens: 700,\n  system: sistema,\n  messages: [ { role: 'user', content: 'Remitente: ' + remitente + '\\nAsunto: ' + asunto + '\\nMensaje:\\n' + cuerpo } ]\n};\n\nreturn [ { json: { payload: payload, remitente: remitente, asunto: asunto, parcial } } ];"
+          "jsCode": "// Normaliza el correo y construye la petición para la API de Anthropic.\nconst remitente = $json.From || $json.from || 'desconocido';\nconst asunto = $json.Subject || $json.subject || '(sin asunto)';\nconst cuerpo = ($json.snippet || $json.text || '').slice(0, 2000);\n\nconst sistema = 'Eres el asistente de triaje de un buzon profesional en espanol. ' +\n  'Devuelve SOLO un JSON valido con estas claves: ' +\n  'categoria (consulta | pedido | incidencia | factura | comercial | spam | revisar), ' +\n  'urgencia (alta | media | baja), ' +\n  'resumen (maximo 2 frases), ' +\n  'respuesta (borrador de respuesta cordial y breve en espanol, tuteo, listo para revisar; ' +\n  'si el correo es una reclamacion o un tema legal, la respuesta es solo un acuse de recibo). ' +\n  'Nada de texto fuera del JSON.';\n\nconst payload = {\n  model: 'claude-haiku-4-5',\n  max_tokens: 700,\n  system: sistema,\n  messages: [ { role: 'user', content: 'Remitente: ' + remitente + '\\nAsunto: ' + asunto + '\\nMensaje:\\n' + cuerpo } ]\n};\n\nreturn [ { json: { payload: payload, remitente: remitente, asunto: asunto } } ];"
         }
       },
       {
         "name": "Clasificar con Claude",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [
-          440,
-          0
-        ],
+        "position": [440, 0],
         "parameters": {
           "method": "POST",
           "url": "https://api.anthropic.com/v1/messages",
@@ -122,22 +105,16 @@
         "name": "Interpretar respuesta",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [
-          660,
-          0
-        ],
+        "position": [660, 0],
         "parameters": {
-          "jsCode": "// Extrae el JSON que devuelve Claude y lo une a los datos del correo.\nconst origen = $('Preparar petición IA').first().json;\nconst bruto = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : '';\nconst limpio = bruto.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet datos;\ntry {\n  datos = JSON.parse(limpio);\n  if (!datos || !['consulta','pedido','incidencia','factura','comercial','spam','revisar'].includes(datos.categoria) || !['alta','media','baja'].includes(datos.urgencia) || typeof datos.resumen !== 'string' || typeof datos.respuesta !== 'string') throw new Error('invalid_classification');\n  if (origen.parcial) datos = {categoria:'revisar',urgencia:'media',resumen:'Texto parcial: revisar el correo completo antes de clasificar. '+datos.resumen,respuesta:''};\n} catch (e) {\n  // Si la IA no devolvio JSON valido, el correo se marca para revision manual.\n  datos = { categoria: 'revisar', urgencia: 'media', resumen: bruto.slice(0, 300), respuesta: '' };\n}\n\nreturn [ { json: {\n  remitente: origen.remitente,\n  asunto: origen.asunto,\n  categoria: datos.categoria || 'revisar',\n  urgencia: datos.urgencia || 'media',\n  resumen: datos.resumen || '(sin resumen)',\n  respuesta: datos.respuesta || 'Gracias por tu mensaje. Lo hemos recibido y te respondemos en breve.'\n} } ];"
+          "jsCode": "// Extrae el JSON que devuelve Claude y lo une a los datos del correo.\nconst origen = $('Preparar petición IA').first().json;\nconst bruto = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : '';\nconst limpio = bruto.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet datos;\ntry {\n  datos = JSON.parse(limpio);\n} catch (e) {\n  // Si la IA no devolvio JSON valido, el correo se marca para revision manual.\n  datos = { categoria: 'revisar', urgencia: 'media', resumen: bruto.slice(0, 300), respuesta: '' };\n}\n\nreturn [ { json: {\n  remitente: origen.remitente,\n  asunto: origen.asunto,\n  categoria: datos.categoria || 'revisar',\n  urgencia: datos.urgencia || 'media',\n  resumen: datos.resumen || '(sin resumen)',\n  respuesta: datos.respuesta || 'Gracias por tu mensaje. Lo hemos recibido y te respondemos en breve.'\n} } ];"
         }
       },
       {
         "name": "Crear borrador de respuesta",
         "type": "n8n-nodes-base.gmail",
         "typeVersion": 2.1,
-        "position": [
-          880,
-          0
-        ],
+        "position": [880, 0],
         "parameters": {
           "resource": "draft",
           "subject": "=Re: {{ $json.asunto }}",
@@ -157,10 +134,7 @@
         "name": "Avisar por Telegram",
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
-        "position": [
-          1100,
-          0
-        ],
+        "position": [1100, 0],
         "parameters": {
           "chatId": "REEMPLAZAR_CHAT_ID",
           "text": "=📬 Correo triado\nDe: {{ $('Interpretar respuesta').item.json.remitente }}\nAsunto: {{ $('Interpretar respuesta').item.json.asunto }}\nCategoría: {{ $('Interpretar respuesta').item.json.categoria }} · Urgencia: {{ $('Interpretar respuesta').item.json.urgencia }}\nResumen: {{ $('Interpretar respuesta').item.json.resumen }}\n\nHay un borrador esperando tu revisión en Gmail. Nada se envía sin ti.",
@@ -334,7 +308,5 @@
       "prompt": "Añade un nodo IF entre «Interpretar respuesta» y el aviso de Telegram con la condición urgencia = alta, y conecta la rama falsa directamente al borrador."
     }
   ],
-  "kits": [
-    "atencion-cliente-multicanal"
-  ]
+  "kits": ["atencion-cliente-multicanal"]
 }

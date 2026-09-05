@@ -1,106 +1,272 @@
-import { useEffect, useState } from 'react'
-import { adminRpc, useSession } from '../session'
-import { useLocale } from '../i18n'
+import { useEffect, useMemo, useState } from 'react'
+import { Check, Clipboard, KeyRound, Plus, Trash2 } from 'lucide-react'
+import { useCourse } from '../course'
+import { useLocale, useT } from '../i18n'
+import { hasSupabase, supabase } from '../supabase'
 
-type Learner = { id: string; login: string; name: string; level: string; goal: string; tools: string; notes: string; locale: string; status: 'active' | 'paused' | 'archived'; enabled: boolean; expiresAt?: string | null; createdAt: string }
-type Ticket = { id: string; ownerName: string; subject: string; context: string; expected: string; observed: string; status: 'open'|'answered'|'closed'; replies: { reply: string; author: string; createdAt: string }[] }
-const EMPTY = { login: '', name: '', level: 'basico', goal: '', tools: '', notes: '', locale: 'es', status: 'active', expiresAt: '' }
-function temporarySecret() {
-  // 128 random bits; generated only for delivery, never persisted or logged.
-  return Array.from(crypto.getRandomValues(new Uint8Array(16)), (v) => v.toString(16).padStart(2, '0')).join('')
+const KEY = 'academia.admin.alumnos.v1'
+
+type LearnerPin = {
+  id: string
+  name: string
+  pin: string
+  level: string
+  goal: string
+  tools: string
+  notes: string
+  createdAt: string
+  synced?: boolean
+}
+
+const EMPTY = { name: '', goal: '', tools: '', notes: '', level: 'basico' }
+
+function readPins(): LearnerPin[] {
+  try {
+    const raw = localStorage.getItem(KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function generatePin() {
+  return String(Math.floor(100000 + Math.random() * 900000))
 }
 
 export default function Admin() {
-  const session = useSession()
+  const course = useCourse()
   const locale = useLocale()
-  const tr = (es: string, en: string) => locale === 'en' ? en : es
-  const [learners, setLearners] = useState<Learner[]>([])
-  const [tickets, setTickets] = useState<Ticket[]>([])
-  const [answers, setAnswers] = useState<Record<string, {reply: string; status: Ticket['status']}>>({})
+  const t = useT()
+  const [pins, setPins] = useState<LearnerPin[]>(() => readPins())
   const [draft, setDraft] = useState(EMPTY)
-  const [editing, setEditing] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState('')
-  const [issued, setIssued] = useState<{ secret: string } | null>(null)
-  const authorized = session.status === 'authenticated' && session.profile?.role === 'admin'
-  async function load() { setLearners(await adminRpc<Learner[]>('academy_admin_learners')) }
-  async function loadSupport() { setTickets(await adminRpc<Ticket[]>('academy_support_list')) }
-  async function act(operation: () => Promise<void>) {
-    if (busy) return
-    setBusy(true); setMessage('')
-    try { await operation() } catch (error) { setMessage(error instanceof Error ? error.message : 'No se pudo completar la operación.') }
-    finally { setBusy(false) }
-  }
+  const [copied, setCopied] = useState<string | null>(null)
+  const [adminPin, setAdminPin] = useState('')
+  const [syncing, setSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState('')
+
   useEffect(() => {
-    // Purge the old plaintext cache; the replacement keeps records in memory.
-    try { localStorage.removeItem('academia.admin.alumnos.v1') } catch { /* No cache is required. */ }
-    if (authorized) void act(load)
-    else { setLearners([]); setTickets([]); setAnswers({}); setIssued(null) }
-  }, [authorized])
+    localStorage.setItem(KEY, JSON.stringify(pins.filter((item) => !item.synced || item.pin)))
+  }, [pins])
 
-  if (!authorized) return <div className="st-page"><h1>{tr('Acceso restringido', 'Restricted access')}</h1><p>{tr('La gestión de alumnos requiere la clave de profesor/superadmin.', 'Student management requires the teacher/super admin credential.')}</p></div>
+  const suggestedTools = useMemo(
+    () => course.toolPages.slice(0, 18).map((tool) => tool.label),
+    [course.toolPages],
+  )
 
-  async function save() {
-    await act(async () => {
-      if (editing) {
-        await adminRpc('academy_admin_update', { learner_id: editing, changes: draft })
-        setMessage(tr('Ficha actualizada.', 'Profile updated.'))
-      } else {
-        const secret = temporarySecret()
-        await adminRpc('academy_admin_create', { learner: { ...draft, login: 'student-' + crypto.randomUUID() }, initial_secret: secret })
-        setIssued({ secret })
-        setMessage(tr('Alumno creado. Entrega la clave una vez y después cierra su visualización.', 'Student created. Deliver the credential once, then hide it.'))
+  async function loadRemote(pin = adminPin) {
+    if (!supabase || !pin.trim()) return
+    setSyncing(true)
+    setSyncMessage('')
+    const { data, error } = await supabase.rpc('list_learners_admin', { admin_pin: pin.trim() })
+    setSyncing(false)
+    if (error) {
+      setSyncMessage(locale === 'en' ? 'Could not load Supabase students. Check the admin PIN and migration.' : 'No se han podido cargar los alumnos de Supabase. Revisa el PIN admin y la migración.')
+      return
+    }
+    setPins((data || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      pin: item.pin || '',
+      level: item.level,
+      goal: item.goal || '',
+      tools: item.tools || '',
+      notes: item.notes || '',
+      createdAt: item.created_at,
+      synced: true,
+    })))
+    setSyncMessage(locale === 'en' ? 'Students loaded from Supabase with visible PINs.' : 'Alumnos cargados desde Supabase con PIN visible.')
+  }
+
+  async function createPin() {
+    if (!draft.name.trim()) return
+    const pin = generatePin()
+    if (supabase && adminPin.trim()) {
+      setSyncing(true)
+      const { data, error } = await supabase.rpc('create_learner_with_pin', {
+        admin_pin: adminPin.trim(),
+        learner_name: draft.name.trim(),
+        learner_pin: pin,
+        learner_level: draft.level,
+        learner_goal: draft.goal.trim(),
+        learner_tools: draft.tools.trim(),
+        learner_notes: draft.notes.trim(),
+        learner_locale: locale,
+        learner_email: null,
+      })
+      setSyncing(false)
+      if (error) {
+        setSyncMessage(locale === 'en' ? 'Could not create the student in Supabase.' : 'No se ha podido crear el alumno en Supabase.')
+        return
       }
-      setDraft(EMPTY); setEditing(null); await load()
-    })
+      setPins((current) => [{
+        id: data.id,
+        name: data.name,
+        pin,
+        level: data.level,
+        goal: data.goal || '',
+        tools: data.tools || '',
+        notes: data.notes || '',
+        createdAt: data.created_at,
+        synced: true,
+      }, ...current])
+      setSyncMessage(locale === 'en' ? 'Student created in Supabase. The PIN stays visible in super admin.' : 'Alumno creado en Supabase. El PIN queda visible en súper admin.')
+      setDraft(EMPTY)
+      return
+    }
+    setPins((current) => [{
+      id: `${Date.now()}-${draft.name}`,
+      name: draft.name.trim(),
+      pin,
+      level: draft.level,
+      goal: draft.goal.trim(),
+      tools: draft.tools.trim(),
+      notes: draft.notes.trim(),
+      createdAt: new Date().toISOString(),
+    }, ...current])
+    setDraft(EMPTY)
   }
-  async function changeStatus(learner: Learner, status: Learner['status']) {
-    if (!window.confirm(tr(`${status === 'active' ? 'Reactivar' : status === 'paused' ? 'Suspender' : 'Archivar'} el acceso de ${learner.name}? Su trabajo se conservará.`, `${status === 'active' ? 'Reactivate' : status === 'paused' ? 'Suspend' : 'Archive'} access for ${learner.name}? Their work will be preserved.`))) return
-    await act(async () => { await adminRpc('academy_admin_update', { learner_id: learner.id, changes: { status } }); await load(); setMessage(tr('Estado actualizado en el servidor.', 'Status updated on the server.')) })
+
+  function copy(value: string, id: string) {
+    navigator.clipboard?.writeText(value)
+    setCopied(id)
+    window.setTimeout(() => setCopied(null), 1500)
   }
-  async function resetSecret(learner: Learner) {
-    if (!window.confirm(tr(`Restablecer la clave de ${learner.name}? Sus sesiones abiertas dejarán de ser válidas.`, `Reset the credential for ${learner.name}? Their current sessions will be revoked.`))) return
-    await act(async () => { const secret = temporarySecret(); await adminRpc('academy_admin_reset_secret', { learner_id: learner.id, new_secret: secret }); setIssued({ secret }); await load(); setMessage(tr('Clave restablecida. Entrega la nueva clave por un canal adecuado.', 'Credential reset. Deliver it through an appropriate channel.')) })
+
+  async function deletePin(item: LearnerPin) {
+    if (item.synced && supabase && adminPin.trim()) {
+      setSyncing(true)
+      const { error } = await supabase.rpc('delete_learner_admin', { admin_pin: adminPin.trim(), learner_id: item.id })
+      setSyncing(false)
+      if (error) {
+        setSyncMessage(locale === 'en' ? 'Could not delete the student in Supabase.' : 'No se ha podido borrar el alumno en Supabase.')
+        return
+      }
+    }
+    setPins((current) => current.filter((pin) => pin.id !== item.id))
   }
-  function exportLearners() {
-    const url = URL.createObjectURL(new Blob([JSON.stringify({ schemaVersion: 1, exportedAt: new Date().toISOString(), learners }, null, 2)], { type: 'application/json' }))
-    const a = document.createElement('a'); a.href = url; a.download = 'alumnos-sin-credenciales.json'; a.click(); URL.revokeObjectURL(url)
+
+  function exportPins() {
+    const blob = new Blob([JSON.stringify(pins, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'alumnos-pins-academia.json'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
   }
-  return <div className="st-page">
-    <div className="st-page-title"><span className="st-kicker">{tr('Profesor / superadmin', 'Teacher / super admin')}</span><h1>{tr('Alumnos y acceso', 'Students and access')}</h1><p>{tr('Este panel se abre con la clave 5555. Desde aquí creas alumnos y les entregas su propia clave.', 'This panel opens with the 5555 credential. From here you create students and give them their own credential.')}</p></div>
-    <div className="st-actions"><button className="st-btn-ghost" disabled={busy} onClick={() => void act(load)}>{tr('Actualizar alumnos', 'Refresh students')}</button><button className="st-btn-ghost" disabled={busy || !learners.length} onClick={exportLearners}>{tr('Exportar fichas sin claves', 'Export profiles without credentials')}</button></div>
-    <p role="status" aria-live="polite">{busy ? tr('Comprobando operación…', 'Checking operation…') : message}</p>
-    {issued && <section className="st-panel" aria-label={tr('Credencial recién creada', 'New credential')}><h2>{tr('Entrega de acceso', 'Deliver access')}</h2><p>{tr('Esta clave solo se muestra ahora. No se incluye en fichas ni exportaciones.', 'This credential is only shown now. Profiles and exports never include it.')}</p><input aria-label={tr('Clave inicial', 'Initial credential')} readOnly value={issued.secret} onFocus={(event) => event.currentTarget.select()} /><div className="st-actions"><button className="st-btn-ghost" onClick={() => void act(async () => { await navigator.clipboard.writeText(issued.secret); setMessage(tr('Credencial copiada. Entrégala solo a su destinatario.', 'Credential copied. Deliver it only to its recipient.')) })}>{tr('Copiar acceso', 'Copy access')}</button><button className="st-btn-ghost" onClick={() => setIssued(null)}>{tr('Ya la he entregado: ocultar', 'Delivered: hide credential')}</button></div></section>}
-    <section className="st-panel"><h2>{editing ? tr('Editar ficha', 'Edit profile') : tr('Crear alumno', 'Create student')}</h2><form onSubmit={(event) => { event.preventDefault(); void save() }}>
-      <label>{tr('Nombre', 'Name')}<input value={draft.name} required maxLength={120} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></label>
-      <label>{tr('Nivel', 'Level')}<select value={draft.level} onChange={(e) => setDraft({ ...draft, level: e.target.value })}><option value="basico">{tr('Básico', 'Basic')}</option><option value="intermedio">{tr('Intermedio', 'Intermediate')}</option><option value="avanzado">{tr('Avanzado', 'Advanced')}</option></select></label>
-      <label>{tr('Idioma', 'Language')}<select value={draft.locale} onChange={(e) => setDraft({ ...draft, locale: e.target.value })}><option value="es">Español</option><option value="en">English</option></select></label>
-      <label>{tr('Caducidad del acceso (UTC, opcional)', 'Access deadline (UTC, optional)')}<input type="datetime-local" value={draft.expiresAt ? draft.expiresAt.slice(0, 16) : ''} onChange={(e) => setDraft({ ...draft, expiresAt: e.target.value ? `${e.target.value}:00Z` : '' })} /></label>
-      <label>{tr('Objetivo', 'Goal')}<input value={draft.goal} maxLength={4000} onChange={(e) => setDraft({ ...draft, goal: e.target.value })} /></label>
-      <label>{tr('Herramientas', 'Tools')}<input value={draft.tools} maxLength={2000} onChange={(e) => setDraft({ ...draft, tools: e.target.value })} /></label>
-      <label>{tr('Notas internas', 'Internal notes')}<textarea value={draft.notes} maxLength={4000} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></label>
-      <div className="st-actions"><button className="st-btn" disabled={busy || !draft.name.trim()}>{editing ? tr('Guardar ficha', 'Save profile') : tr('Crear alumno y código', 'Create student and code')}</button>{editing && <button type="button" className="st-btn-ghost" onClick={() => { setEditing(null); setDraft(EMPTY) }}>{tr('Cancelar edición', 'Cancel editing')}</button>}</div>
-    </form></section>
-    <section className="st-panel"><h2>{tr('Alumnos', 'Students')} ({learners.length})</h2>{!learners.length && !busy && <p>{tr('No hay alumnos cargados. Crea uno o vuelve a actualizar.', 'No students loaded. Create one or refresh the list.')}</p>}
-      {learners.map((learner) => <article key={learner.id} className="st-block"><h3>{learner.name}</h3><p>{learner.level} · {learner.status}{!learner.enabled ? tr(' · necesita restablecer clave', ' · credential reset required') : ''}{learner.expiresAt ? ` · ${tr('caduca', 'expires')} ${new Date(learner.expiresAt).toLocaleString(locale)}` : ''}</p><p>{learner.goal}</p><div className="st-actions">
-        <button className="st-btn-ghost" disabled={busy} onClick={() => { setEditing(learner.id); setDraft({ login: learner.login, name: learner.name, level: learner.level, goal: learner.goal, tools: learner.tools, notes: learner.notes, locale: learner.locale, status: learner.status, expiresAt: learner.expiresAt ? new Date(learner.expiresAt).toISOString() : '' }) }}>{tr('Editar', 'Edit')} {learner.name}</button>
-        <button className="st-btn-ghost" disabled={busy} onClick={() => void resetSecret(learner)}>{tr('Restablecer clave de', 'Reset credential for')} {learner.name}</button>
-        <button className="st-btn-ghost" disabled={busy} onClick={() => void changeStatus(learner, learner.status === 'active' ? 'paused' : 'active')}>{learner.status === 'active' ? tr('Suspender', 'Suspend') : tr('Reactivar', 'Reactivate')} {learner.name}</button>
-        {learner.status !== 'archived' && <button className="st-btn-ghost" disabled={busy} onClick={() => void changeStatus(learner, 'archived')}>{tr('Archivar', 'Archive')} {learner.name}</button>}
-      </div></article>)}
-    </section>
-    <section className="st-panel"><h2>{tr('Dudas de los alumnos', 'Student support')}</h2>
-      <p>{tr('Carga la cola para revisar las consultas enviadas desde Preguntas frecuentes. Las respuestas quedan guardadas para el alumno.', 'Load the queue to review questions sent from FAQ. Replies are saved for the student.')}</p>
-      <button className="st-btn-ghost" disabled={busy} onClick={() => void act(loadSupport)}>{tr('Cargar y actualizar consultas', 'Load and refresh requests')}</button>
-      {tickets.map(ticket => <article className="st-block" key={ticket.id}><h3>{ticket.subject}</h3><p>{ticket.ownerName} · {ticket.status}</p>
-        <p>{tr('Contexto', 'Context')}: {ticket.context}</p><p>{tr('Esperaba', 'Expected')}: {ticket.expected}</p><p>{tr('Ocurrió', 'Observed')}: {ticket.observed}</p>
-        {ticket.replies.map((item, index) => <blockquote key={index}><p>{item.reply}</p><footer>{item.author} · {new Date(item.createdAt).toLocaleString(locale)}</footer></blockquote>)}
-        <form onSubmit={event => { event.preventDefault(); const answer = answers[ticket.id]; if (!answer?.reply.trim()) return; void act(async () => { await adminRpc('academy_support_reply', {request_id: ticket.id, ...answer}); setAnswers(current => { const copy = {...current}; delete copy[ticket.id]; return copy }); await loadSupport(); setMessage(tr('Respuesta guardada para el alumno.', 'Reply saved for the student.')) }) }}>
-          <label>{tr('Respuesta', 'Reply')}<textarea required maxLength={4000} value={answers[ticket.id]?.reply || ''} onChange={event => setAnswers(current => ({...current, [ticket.id]: {status: current[ticket.id]?.status || 'answered', reply: event.target.value}}))} /></label>
-          <label>{tr('Estado después de responder', 'Status after reply')}<select value={answers[ticket.id]?.status || 'answered'} onChange={event => setAnswers(current => ({...current, [ticket.id]: {reply: current[ticket.id]?.reply || '', status: event.target.value as Ticket['status']}}))}><option value="answered">{tr('Respondida', 'Answered')}</option><option value="open">{tr('Abierta', 'Open')}</option><option value="closed">{tr('Cerrada', 'Closed')}</option></select></label>
-          <button className="st-btn" disabled={busy || !answers[ticket.id]?.reply.trim()}>{tr('Guardar respuesta', 'Save reply')}</button>
-        </form>
-      </article>)}
-    </section>
-  </div>
+
+  return (
+    <div className="st-page">
+      <div className="st-page-title">
+        <span className="st-kicker"><KeyRound size={12} /> {t('admin.controlLocal')}</span>
+        <h1>{t('admin.titulo')}</h1>
+        <p>
+          {t('admin.descripcion')}
+        </p>
+      </div>
+
+      <section className="st-admin-warning">
+        <KeyRound size={15} />
+        <div>
+          <strong>{t('admin.avisoTitulo')}</strong>
+          <p>{t('admin.avisoTexto')}</p>
+        </div>
+      </section>
+
+      <section className="st-admin-sync">
+        <div>
+          <span className="st-kicker">{hasSupabase ? (locale === 'en' ? 'Supabase connected' : 'Supabase conectado') : (locale === 'en' ? 'Local mode' : 'Modo local')}</span>
+          <h2>{locale === 'en' ? 'Student database' : 'Base de datos de alumnos'}</h2>
+          <p>{hasSupabase
+            ? (locale === 'en' ? 'Enter your admin PIN to load, create and delete students securely through RLS-controlled functions.' : 'Mete tu PIN admin para cargar, crear y borrar alumnos con funciones controladas por RLS.')
+            : (locale === 'en' ? 'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to use the real database.' : 'Añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY para usar la base de datos real.')}</p>
+        </div>
+        <label>
+          <span>{locale === 'en' ? 'Admin PIN' : 'PIN admin'}</span>
+          <input value={adminPin} onChange={(event) => setAdminPin(event.target.value)} inputMode="numeric" placeholder="5555" />
+        </label>
+        <button type="button" className="st-btn-ghost" disabled={!hasSupabase || !adminPin.trim() || syncing} onClick={() => loadRemote()}>
+          {syncing ? (locale === 'en' ? 'Loading...' : 'Cargando...') : (locale === 'en' ? 'Load students' : 'Cargar alumnos')}
+        </button>
+        {syncMessage && <small>{syncMessage}</small>}
+      </section>
+
+      <section className="st-admin-grid">
+        <div className="st-admin-form">
+          <div className="st-section-head">
+            <div>
+              <span className="st-kicker">{locale === 'en' ? 'Create student' : 'Crear alumno'}</span>
+              <h2>{locale === 'en' ? 'Profile and PIN' : 'Ficha y PIN'}</h2>
+            </div>
+          </div>
+          <label><span>{locale === 'en' ? "Student's name" : 'Nombre del alumno'}</span><input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder={locale === 'en' ? 'E.g. Laura Pérez' : 'Ej. Laura Pérez'} /></label>
+          <label><span>{locale === 'en' ? 'Main goal' : 'Objetivo principal'}</span><input value={draft.goal} onChange={(event) => setDraft({ ...draft, goal: event.target.value })} placeholder={locale === 'en' ? 'E.g. build an automation for clients' : 'Ej. montar una automatización para clientes'} /></label>
+          <label><span>{locale === 'en' ? 'Starting level' : 'Nivel inicial'}</span><select value={draft.level} onChange={(event) => setDraft({ ...draft, level: event.target.value })}><option value="basico">{locale === 'en' ? 'Basic' : 'Básico'}</option><option value="intermedio">{locale === 'en' ? 'Intermediate' : 'Intermedio'}</option><option value="avanzado">{locale === 'en' ? 'Advanced' : 'Avanzado'}</option></select></label>
+          <label><span>{locale === 'en' ? 'Recommended tools' : 'Herramientas recomendadas'}</span><input value={draft.tools} onChange={(event) => setDraft({ ...draft, tools: event.target.value })} placeholder={locale === 'en' ? 'E.g. ChatGPT, n8n, Nano Banana' : 'Ej. ChatGPT, n8n, Nano Banana'} /></label>
+          <div className="st-admin-toolchips">
+            {suggestedTools.map((tool) => (
+              <button key={tool} type="button" onClick={() => setDraft({ ...draft, tools: draft.tools ? `${draft.tools}, ${tool}` : tool })}>{tool}</button>
+            ))}
+          </div>
+          <label><span>{locale === 'en' ? 'Internal notes' : 'Notas internas'}</span><textarea rows={4} value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} placeholder={locale === 'en' ? 'Restrictions, pace, questions, recommended kit...' : 'Restricciones, ritmo, dudas, kit recomendado...'} /></label>
+          <button type="button" className="st-btn" onClick={createPin} disabled={!draft.name.trim() || syncing}><Plus size={13} /> {locale === 'en' ? 'Create PIN' : 'Crear PIN'}</button>
+        </div>
+
+        <aside className="st-admin-missing">
+          <span className="st-kicker">{locale === 'en' ? 'What is missing to make it real' : 'Lo que falta para hacerlo real'}</span>
+          <h2>{locale === 'en' ? 'Next pieces' : 'Próximas piezas'}</h2>
+          <ul>
+            <li>{locale === 'en' ? 'Student database with synced progress.' : 'Base de datos de alumnos y progreso sincronizado.'}</li>
+            <li>{locale === 'en' ? 'Real login for administrator and student.' : 'Login real para administrador y alumno.'}</li>
+            <li>{locale === 'en' ? 'Role-based permissions: student, teacher, administrator.' : 'Permisos por rol: alumno, profesor, administrador.'}</li>
+            <li>{locale === 'en' ? 'PIN reset and access expiration.' : 'Restablecer PIN y caducidad de accesos.'}</li>
+            <li>{locale === 'en' ? 'Activity log and per-student export.' : 'Registro de actividad y exportación por alumno.'}</li>
+            <li>{locale === 'en' ? 'Consent, privacy and data policy.' : 'Consentimiento, privacidad y política de datos.'}</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section className="st-admin-list">
+        <div className="st-section-head">
+          <div>
+            <span className="st-kicker">{locale === 'en' ? 'Students set up' : 'Alumnos preparados'}</span>
+            <h2>{locale === 'en' ? 'Local PINs' : 'PINs locales'}</h2>
+          </div>
+          <button type="button" className="st-btn-ghost" onClick={exportPins} disabled={!pins.length}>{locale === 'en' ? 'Export JSON' : 'Exportar JSON'}</button>
+        </div>
+
+        {pins.length ? (
+          <div className="st-admin-table">
+            {pins.map((item) => (
+              <article key={item.id}>
+                <div>
+                  <strong>{item.name}</strong>
+                  <small>{item.goal || (locale === 'en' ? 'Goal pending' : 'Objetivo pendiente')} · {locale === 'en' ? 'level' : 'nivel'} {item.level}</small>
+                </div>
+                <code>{item.pin || (locale === 'en' ? 'No PIN' : 'Sin PIN')}</code>
+                <span>{item.tools || (locale === 'en' ? 'Tools to be defined' : 'Herramientas por definir')}</span>
+                <button type="button" onClick={() => item.pin && copy(item.pin, item.id)} disabled={!item.pin}>{copied === item.id ? <Check size={13} /> : <Clipboard size={13} />}</button>
+                <button type="button" onClick={() => deletePin(item)} disabled={syncing}><Trash2 size={13} /></button>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="st-empty">
+            <h2>{locale === 'en' ? 'No students yet' : 'Aún no hay alumnos'}</h2>
+            <p>{locale === 'en' ? 'Create the first one with name, goal, level and recommended tools.' : 'Crea el primero con nombre, objetivo, nivel y herramientas recomendadas.'}</p>
+          </div>
+        )}
+      </section>
+
+      <section className="st-admin-questions">
+        <span className="st-kicker">{locale === 'en' ? 'Questions worth deciding' : 'Preguntas que conviene decidir'}</span>
+        <h2>{locale === 'en' ? 'For the next version' : 'Para la siguiente versión'}</h2>
+        <p>{locale === 'en'
+          ? 'What data each student can see, whether the PIN expires, whether you need groups/classes, what the teacher sees, what gets exported as a certificate, and where progress is stored.'
+          : 'Qué datos puede ver cada alumno, si el PIN caduca, si necesitas grupos/clases, qué ve el profesor, qué se exporta como certificado y dónde se guarda el progreso.'}</p>
+      </section>
+    </div>
+  )
 }

@@ -19,7 +19,6 @@ import { appGuideFor } from './apps.mjs'
 import { installersFor } from './installers.mjs'
 import { toolGuideFor } from './toolguides.mjs'
 import { analyzeSections, sanitize } from './sections.mjs'
-import { cleanEditorialBlocks } from './editorial.mjs'
 
 export const LEVELS = ['basico', 'intermedio', 'avanzado']
 
@@ -156,7 +155,7 @@ function installBlocks(installers) {
  */
 function sectionBlocks(analysis, limit) {
   // Se recortan las secciones larguísimas: en pantalla, un muro no se lee.
-  const podar = (parts) => limit === Infinity ? parts : parts.slice(0, 6)
+  const podar = (parts) => parts.slice(0, 6)
   const seen = new Map()
   return analysis.blocks.slice(0, limit).map((section) => {
     const count = (seen.get(section.title) || 0) + 1
@@ -374,7 +373,8 @@ function buildIntermedio(signal, stage, tools) {
   const teaching = teachingFor(stage.id)
   const app = appGuideFor(tools, stage.id, signal.title)
   const recipes = recipesFor({ title: signal.title, text: signal.body, stageId: stage.id, tools })
-  // No inventar una receta de otra materia solo para rellenar la página.
+  // Ninguna lección se queda sin código que copiar y pegar.
+  if (!recipes.length) recipes.push(...recipesFor({ title: '', text: '', stageId: stage.id, tools: tools.length ? tools : ['python'] }).slice(0, 1))
   const steps = procedureSteps(signal, 7)
   const blocks = []
 
@@ -411,7 +411,7 @@ function buildIntermedio(signal, stage, tools) {
   blocks.push(...installBlocks(installersFor({ stageId: stage.id, tools, title: signal.title })))
 
   // Todo el contenido de la lección, entero.
-  blocks.push(...sectionBlocks(signal.analysis, Infinity))
+  blocks.push(...sectionBlocks(signal.analysis, 8))
 
   // El código real de la lección: copiable y explicado línea a línea.
   blocks.push(...recipeBlocks(recipes))
@@ -728,9 +728,8 @@ export function buildLevels(signal, stageId) {
   const builders = { basico: buildBasico, intermedio: buildIntermedio, avanzado: buildAvanzado }
   const levels = {}
   for (const level of LEVELS) {
-    // Feedback de criterio complementa las tareas; no sustituye la evidencia de ejecución.
-    levels[level] = { ...builders[level](signal, stage, tools), quiz: buildQuiz(signal, stageId, level, tools) }
-    levels[level].blocks = cleanEditorialBlocks(levels[level].blocks)
+    // Sin quiz: el alumno avanza haciendo tareas, no respondiendo tipo test.
+    levels[level] = { ...builders[level](signal, stage, tools), quiz: [] }
   }
   return { levels, tools }
 }

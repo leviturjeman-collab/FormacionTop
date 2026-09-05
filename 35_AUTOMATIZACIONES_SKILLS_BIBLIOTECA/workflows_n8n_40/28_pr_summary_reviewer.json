@@ -20,8 +20,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "wf-28-pr-abierta",
-        "options": {},
-        "authentication": "headerAuth"
+        "options": {}
       },
       "id": "nodo_078",
       "name": "PR de GitHub",
@@ -30,14 +29,7 @@
       "position": [
         0,
         340
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REEMPLAZAR_GATEWAY_CREDENTIAL",
-          "name": "Verified gateway: X-Academy-Gateway"
-        }
-      },
-      "notes": "Use starter-webhook-gateway for GitHub HMAC verification, repository allowlist and durable inbox. Do not point GitHub directly at this private endpoint."
+      ]
     },
     {
       "parameters": {
@@ -133,7 +125,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const origen = $('Validar evento de PR').item.json;\nconst fullDiff = String($json.diff || '');\nif (!fullDiff.trim() || fullDiff.length > 20000) throw new Error('Review blocked: diff empty or exceeds reviewed context; split PR or review manually');\nconst diff = fullDiff;\nconst coverage = fullDiff.length > diff.length ? 'PARCIAL: diff truncado, prohibido recomendar aprobar.' : 'COMPLETA';\nconst sistema = [\n  'Eres un revisor de pull requests senior. Escribes en español, con tono constructivo.',\n  'Responde SOLO con JSON válido:',\n  '{ \"resumen\": \"...\", \"riesgos\": [\"...\"], \"preguntas\": [\"...\"], \"veredicto\": \"aprobar|revisar\" }',\n  'Si el diff está truncado, dilo en el resumen. No inventes código que no esté en el diff.'\n].join('\\n');\nconst peticion_ia = {\n  model: 'claude-opus-5',\n  max_tokens: 2048,\n  system: sistema,\n  messages: [\n    { role: 'user', content: 'PR #' + origen.numero_pr + ': ' + origen.titulo + '\\n\\nDESCRIPCIÓN:\\n' + origen.descripcion + '\\n\\nCOBERTURA: ' + coverage + '\\n\\nDIFF:\\n' + diff }\n  ]\n};\nreturn { json: { peticion_ia: peticion_ia } };"
+        "jsCode": "const origen = $('Validar evento de PR').item.json;\nconst diff = String($json.diff || '').slice(0, 20000);\nconst sistema = [\n  'Eres un revisor de pull requests senior. Escribes en español, con tono constructivo.',\n  'Responde SOLO con JSON válido:',\n  '{ \"resumen\": \"...\", \"riesgos\": [\"...\"], \"preguntas\": [\"...\"], \"veredicto\": \"aprobar|revisar\" }',\n  'Si el diff está truncado, dilo en el resumen. No inventes código que no esté en el diff.'\n].join('\\n');\nconst peticion_ia = {\n  model: 'claude-opus-5',\n  max_tokens: 2048,\n  system: sistema,\n  messages: [\n    { role: 'user', content: 'PR #' + origen.numero_pr + ': ' + origen.titulo + '\\n\\nDESCRIPCIÓN:\\n' + origen.descripcion + '\\n\\nDIFF:\\n' + diff }\n  ]\n};\nreturn { json: { peticion_ia: peticion_ia } };"
       },
       "id": "nodo_082",
       "name": "Preparar revisión",
@@ -182,7 +174,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n');\nlet revision;\ntry {\n  const inicio = texto.indexOf('{');\n  const fin = texto.lastIndexOf('}');\n  revision = JSON.parse(texto.slice(inicio, fin + 1));\n  if(!revision || typeof revision.resumen!=='string' || !Array.isArray(revision.riesgos) || !Array.isArray(revision.preguntas)) throw new Error('invalid_review');\n  revision.veredicto='revisar'; // automated analysis never approves merging\n} catch (e) {\n  revision = { resumen: texto.slice(0, 800), riesgos: [], preguntas: [], veredicto: 'revisar' };\n}\nconst origen = $('Validar evento de PR').item.json;\nconst comentario = [\n  'Resumen automático de la PR (asistente IA, no sustituye la revisión humana):',\n  '',\n  revision.resumen,\n  '',\n  'Riesgos detectados:',\n  (revision.riesgos || []).map(function (r) { return '- ' + r; }).join('\\n') || '- ninguno detectado',\n  '',\n  'Preguntas para el autor:',\n  (revision.preguntas || []).map(function (p) { return '- ' + p; }).join('\\n') || '- ninguna',\n  '',\n  'Sugerencia: ' + revision.veredicto\n].join('\\n');\nconst salida = {\n  propietario: origen.propietario,\n  repo: origen.repo,\n  numero_pr: origen.numero_pr,\n  titulo: origen.titulo,\n  autor: origen.autor,\n  veredicto: revision.veredicto,\n  comentario: comentario,\n  revisado_en: new Date().toISOString()\n};\nreturn { json: salida };"
+        "jsCode": "const bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join('\\n');\nlet revision;\ntry {\n  const inicio = texto.indexOf('{');\n  const fin = texto.lastIndexOf('}');\n  revision = JSON.parse(texto.slice(inicio, fin + 1));\n} catch (e) {\n  revision = { resumen: texto.slice(0, 800), riesgos: [], preguntas: [], veredicto: 'revisar' };\n}\nconst origen = $('Validar evento de PR').item.json;\nconst comentario = [\n  'Resumen automático de la PR (asistente IA, no sustituye la revisión humana):',\n  '',\n  revision.resumen,\n  '',\n  'Riesgos detectados:',\n  (revision.riesgos || []).map(function (r) { return '- ' + r; }).join('\\n') || '- ninguno detectado',\n  '',\n  'Preguntas para el autor:',\n  (revision.preguntas || []).map(function (p) { return '- ' + p; }).join('\\n') || '- ninguna',\n  '',\n  'Sugerencia: ' + revision.veredicto\n].join('\\n');\nconst salida = {\n  propietario: origen.propietario,\n  repo: origen.repo,\n  numero_pr: origen.numero_pr,\n  titulo: origen.titulo,\n  autor: origen.autor,\n  veredicto: revision.veredicto,\n  comentario: comentario,\n  revisado_en: new Date().toISOString()\n};\nreturn { json: salida };"
       },
       "id": "nodo_084",
       "name": "Componer comentario",

@@ -2,35 +2,28 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, NotebookPen, X } from 'lucide-react'
 import { useCourse } from '../course'
 import { href } from '../router'
-import { useStudent } from '../store'
-import { useSession } from '../session'
+import { store, useStudent } from '../store'
 import { useLocale } from '../i18n'
-import { taskKey } from '../project-workspace'
-import SlideResponse from '../components/SlideResponse'
 
 /**
  * Presentación para impartir.
  *
  * Las diapositivas van a pantalla completa y las notas del ponente solo se ven
- * con el modo profesor activado y una sesión de administrador verificada.
+ * con el modo profesor activado: el alumno nunca las carga.
  * Flechas o espacio para avanzar, N para las notas, Escape para salir.
  */
 export default function Deck({ deckId }: { deckId: string }) {
   const course = useCourse()
   const locale = useLocale()
   const { teacher } = useStudent()
-  const session = useSession()
-  const canTeach = teacher && session.status === 'authenticated' && session.profile?.role === 'admin'
   const [index, setIndex] = useState(0)
-  const [showNotes, setShowNotes] = useState(canTeach)
+  const [showNotes, setShowNotes] = useState(teacher)
 
   const deck = (course.decks || []).find((item) => item.id === deckId)
 
-  useEffect(() => { setIndex(0); setShowNotes(canTeach) }, [deckId, canTeach])
-
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (!deck || !deck.slides.length || (event.target instanceof Element && event.target.closest('input, textarea, select, button, [contenteditable]'))) return
+      if (!deck) return
       if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'PageDown') {
         event.preventDefault()
         setIndex((value) => Math.min(deck.slides.length - 1, value + 1))
@@ -39,14 +32,14 @@ export default function Deck({ deckId }: { deckId: string }) {
         event.preventDefault()
         setIndex((value) => Math.max(0, value - 1))
       }
-      if (canTeach && event.key.toLowerCase() === 'n') setShowNotes((value) => !value)
+      if (event.key.toLowerCase() === 'n') setShowNotes((value) => !value)
       if (event.key === 'Escape') window.location.hash = href({ name: 'ruta' })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [deck, canTeach])
+  }, [deck])
 
-  if (!deck || !deck.slides.length) {
+  if (!deck) {
     return (
       <div className="st-page">
         <div className="st-empty">
@@ -57,27 +50,25 @@ export default function Deck({ deckId }: { deckId: string }) {
     )
   }
 
-  const slideIndex = Math.max(0, Math.min(index, deck.slides.length - 1))
-  const slide = deck.slides[slideIndex]
-  const lessonId = (slide as typeof slide & { lessonId?: string }).lessonId
-  const responseKey = 'deck:' + deckId + ':' + taskKey({ title: slide.title })
+  const slide = deck.slides[index]
 
   return (
     <div className="st-deck">
       <header className="st-deck-bar">
         <span>{deck.title} · {deck.minutes} min</span>
         <div>
-          {canTeach && <button
+          <button
             type="button"
             className={`st-btn-ghost${showNotes ? ' on' : ''}`}
             onClick={() => {
+              if (!teacher) store.toggleTeacher()
               setShowNotes((value) => !value)
             }}
           >
             <NotebookPen size={13} />
             {locale === 'en' ? 'Notes' : 'Notas'}
-          </button>}
-          <b>{slideIndex + 1} / {deck.slides.length}</b>
+          </button>
+          <b>{index + 1} / {deck.slides.length}</b>
           <a href={href({ name: 'ruta' })} aria-label={locale === 'en' ? 'Exit the presentation' : 'Salir de la presentación'}><X size={16} /></a>
         </div>
       </header>
@@ -99,9 +90,7 @@ export default function Deck({ deckId }: { deckId: string }) {
         {slide.code && <pre>{slide.code}</pre>}
       </section>
 
-      {['pregunta', 'practica', 'cierre'].includes(slide.kind) && <SlideResponse key={responseKey} storageKey={responseKey} options={slide.kind === 'pregunta' ? slide.items : undefined} />}
-      {lessonId && <a className="st-btn-ghost" href={href({ name: 'curso', lessonId })}>{locale === 'en' ? 'Open the source lesson and its tasks' : 'Abrir la lección de origen y sus tareas'}</a>}
-      {canTeach && showNotes && slide.notes && (
+      {showNotes && slide.notes && (
         <aside className="st-deck-notes">
           <strong>{locale === 'en' ? "Speaker's notes" : 'Notas del ponente'}</strong>
           <p>{slide.notes}</p>
@@ -109,14 +98,14 @@ export default function Deck({ deckId }: { deckId: string }) {
       )}
 
       <footer className="st-deck-nav">
-        <button type="button" onClick={() => setIndex((value) => Math.max(0, value - 1))} disabled={slideIndex === 0}>
+        <button type="button" onClick={() => setIndex((value) => Math.max(0, value - 1))} disabled={index === 0}>
           <ArrowLeft size={16} /> {locale === 'en' ? 'Previous' : 'Anterior'}
         </button>
-        <i><b style={{ width: `${((slideIndex + 1) / deck.slides.length) * 100}%` }} /></i>
+        <i><b style={{ width: `${((index + 1) / deck.slides.length) * 100}%` }} /></i>
         <button
           type="button"
           onClick={() => setIndex((value) => Math.min(deck.slides.length - 1, value + 1))}
-          disabled={slideIndex === deck.slides.length - 1}
+          disabled={index === deck.slides.length - 1}
         >
           {locale === 'en' ? 'Next' : 'Siguiente'} <ArrowRight size={16} />
         </button>

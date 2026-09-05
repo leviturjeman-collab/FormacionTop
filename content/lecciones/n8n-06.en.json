@@ -180,80 +180,70 @@
       "where": "At sheets.google.com",
       "action": "Create a new sheet called \"pending\". In row 1, type three lowercase headers with no accents: task, status, date. Add four rows of made-up data and set two with status pending and two with status done. Rename the bottom tab to \"tasks\".",
       "expect": "A sheet with four rows of data and clean headers in row 1.",
-      "stuck": "The row 1 headers are going to be the field names in n8n. If you put accents or spaces in them, you'll be dragging that along through the whole flow.",
-      "id": "task-07cf96d8d7f4"
+      "stuck": "The row 1 headers are going to be the field names in n8n. If you put accents or spaces in them, you'll be dragging that along through the whole flow."
     },
     {
       "title": "Create the Google Sheets credential",
       "where": "In n8n: Credentials → Add credential → Google Sheets",
       "action": "Follow your path from the theory: in the cloud it's the Google button; installed on your computer it's the Google console procedure. Take your time with it. When it's done, the credential shows up with a name and a connected mark.",
       "expect": "The credential saved and verified. You're going to reuse it in every flow that touches Google from now on.",
-      "stuck": "The typical snag on the long path is the callback address, the return address back to n8n. Copy EXACTLY what n8n shows on the credential screen. Paste it into the Google console without changing a single letter.",
-      "id": "task-202ccac19bbd"
+      "stuck": "The typical snag on the long path is the callback address, the return address back to n8n. Copy EXACTLY what n8n shows on the credential screen. Paste it into the Google console without changing a single letter."
     },
     {
       "title": "Build the alarm clock",
       "where": "New flow → first step → search \"Schedule\"",
       "action": "Choose Schedule Trigger and configure it: every day, at 9:00. Double-check the timezone: in the flow's settings it should say Europe/Madrid, which you set up in lesson 03.",
       "expect": "The alarm box on the canvas, set to 9:00.",
-      "stuck": "If running it for testing does nothing, that's normal: the real alarm only goes off at its scheduled time. To test, use the run button, which fires it by hand.",
-      "id": "task-dc8a1ae91d22"
+      "stuck": "If running it for testing does nothing, that's normal: the real alarm only goes off at its scheduled time. To test, use the run button, which fires it by hand."
     },
     {
       "title": "Connect the sheet read",
       "where": "The + after the alarm → Google Sheets",
       "action": "Operation: read rows (Get Rows / Read). Choose your credential, your \"pending\" document, and the \"tasks\" tab. Run the flow and open the box: in the right-hand column your four rows should show up turned into four items.",
       "expect": "Four items with the fields task, status, and date, with the exact names from your row 1.",
-      "stuck": "If it throws a 404 or \"not found\": the credential can't see that sheet. Check that you chose the document from the dropdown (not by pasting an address) and that the credential's account is the sheet's owner.",
-      "id": "task-d031fe6d1965"
+      "stuck": "If it throws a 404 or \"not found\": the credential can't see that sheet. Check that you chose the document from the dropdown (not by pasting an address) and that the credential's account is the sheet's owner."
     },
     {
       "title": "Set up the robust filter",
       "where": "The + after Sheets → search \"Filter\"",
       "action": "Condition: the status field contains pending. Make it robust like in the theory: look for the option to ignore case, or convert the field to lowercase first. Run it and count: out of four items, two should come out.",
       "expect": "The number 2 on the filter's output arrow.",
-      "stuck": "Getting zero? Open the filter and look at its left column: check letter by letter how the status field's real value is written in your rows. The difference will be there: a capital letter or a space.",
-      "id": "task-eb6dbcac60df"
+      "stuck": "Getting zero? Open the filter and look at its left column: check letter by letter how the status field's real value is written in your rows. The difference will be there: a capital letter or a space."
     },
     {
       "title": "Combine the rows into a single message",
       "where": "The + after the filter",
       "action": "This is the setting that avoids spam: you need to convert the N items into a single piece of text. The simplest way: a code box or an aggregation box (search \"Aggregate\") that combines the tasks into a list. If you use Aggregate: group all the items and keep the task field as a list.",
       "expect": "ONE single item on the output arrow, with the pending tasks combined.",
-      "stuck": "If this trips you up, here's a legitimate shortcut: in the Gmail node from the next task, some versions have an option to run only once (Execute Once). Turn it on and send only the summary from the first item. Less elegant, it works, and you'll refine it in lesson 21.",
-      "id": "task-bb2f2d711517"
+      "stuck": "If this trips you up, here's a legitimate shortcut: in the Gmail node from the next task, some versions have an option to run only once (Execute Once). Turn it on and send only the summary from the first item. Less elegant, it works, and you'll refine it in lesson 21."
     },
     {
       "title": "Build the email",
       "where": "The + at the end → Gmail → Send",
       "action": "Create the Gmail credential (same path as the Sheets one, and if it's the same Google account, faster). To: your own email. Subject: \"Today's pending tasks\". Body: the task list from the previous step, using the field selector, not typing it by hand. Run the whole flow.",
       "expect": "An email in your inbox, right now, with your two pending tasks inside.",
-      "stuck": "If the email arrives empty, open the Gmail box and look at its left column: did the list arrive? If it didn't, the problem is in step 6, not Gmail. Search backward from there.",
-      "id": "task-35dd5b306436"
+      "stuck": "If the email arrives empty, open the Gmail box and look at its left column: did the list arrive? If it didn't, the problem is in step 6, not Gmail. Search backward from there."
     },
     {
       "title": "Rehearse the \"nothing pending\" case",
       "where": "In your Google sheet",
       "action": "Change the two pending rows to status done and run the flow again. It should finish green WITHOUT sending an email: the filter cuts everything and there's nothing to alert about. This isn't a failure: it's the correct behavior, and seeing it once saves you from hunting for a nonexistent bug the day it happens for real.",
       "expect": "Green execution, zero items after the filter, no email.",
-      "stuck": "If you get an empty email, the Gmail node is running even though no items arrive. Check that it's connected AFTER the filter, not in parallel.",
-      "id": "task-e7212338ac98"
+      "stuck": "If you get an empty email, the Gmail node is running even though no items arrive. Check that it's connected AFTER the filter, not in parallel."
     },
     {
       "title": "Activate and close",
       "where": "The switch top right",
       "action": "Set a row back to pending. Save, flip the activate switch, and close the browser completely. That's it for today: the real test is tomorrow at 9:01.",
       "expect": "The flow shows up as active in your flows list.",
-      "stuck": "If your n8n runs on your computer, the computer needs to be on at 9:00. If it's going to be off, change the alarm time to one when it'll be on: the lesson is the same.",
-      "id": "task-0b3ce70c4ce3"
+      "stuck": "If your n8n runs on your computer, the computer needs to be on at 9:00. If it's going to be off, change the alarm time to one when it'll be on: the lesson is the same."
     },
     {
       "title": "Tomorrow's check and the day after's",
       "where": "In your inbox, tomorrow at 9:01",
       "action": "Tomorrow: check that the email arrived on its own and look in the executions list for the 9:00 line, opened by the system and not by you. The day after: repeat. If one day it doesn't arrive, apply the diagnosis from the theory: didn't even start, started with no rows, or blew up?",
       "expect": "Two emails on two mornings, without you touching anything. Your first automation in production.",
-      "stuck": "Didn't arrive and the 9:00 execution doesn't even show up? Timezone or flow not activated. Shows up green with no email? There was nothing pending, or the filter is cutting too much. Shows up red? Open it: the red box tells you where.",
-      "id": "task-a274abfbf4e5"
+      "stuck": "Didn't arrive and the 9:00 execution doesn't even show up? Timezone or flow not activated. Shows up green with no email? There was nothing pending, or the filter is cutting too much. Shows up red? Open it: the red box tells you where."
     }
   ],
   "errors": [
@@ -420,8 +410,5 @@
       ]
     }
   ],
-  "next": "Next: n8n vocabulary, in plain English",
-  "readingMinutes": 4,
-  "practiceMinutes": 100,
-  "durationNote": "Planning estimate: setup, external review and observation periods are additional."
+  "next": "You already have the whole circuit working on its own. Lesson 07 puts a name to everything you just touched — item, expression, credential, webhook — so from here on we can speak precisely, and in 08 you pick a trigger for your real process."
 }

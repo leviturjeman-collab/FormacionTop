@@ -92,6 +92,3 @@ Orientativo: con diffs de 20 000 caracteres (~6 000 tokens), del orden de 0,05 U
 ## Aviso legal
 
 Material didáctico de la formación: impórtalo, pruébalo con datos ficticios y adáptalo antes de usarlo con datos o sistemas reales. Las salidas de los modelos de IA pueden contener errores: mantén siempre revisión humana antes de cualquier acción irreversible. Revisa los términos de servicio y precios vigentes de cada proveedor (Anthropic, OpenAI, Google, Meta, Slack, GitHub, Vercel, Supabase) antes de usarlos en producción. Si el flujo trata datos personales, necesitas base legal (RGPD), información al interesado y un registro de tratamiento; consulta a tu asesor legal. El autor no se hace responsable del uso que hagas de esta plantilla.
-
-## Cobertura obligatoria
-El proceso se detiene ante entrada vacía/incompleta o contexto superior al límite; no publica una aprobación ni un análisis completo de un subconjunto. Release notes pagina y contrasta número de commits únicos con total_commits; máximo2000commits/120000caracteres para redactar. PR exige diff íntegro<=20000caracteres y todo veredicto automático es revisar. Push incompleto exige escáner de repositorio sobre el rango completo. Configura error workflow y verifica estos bloqueos con fixtures antes de activar.

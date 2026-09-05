@@ -11,7 +11,6 @@ import './project.css'
 import './prompts.css'
 import './curso.css'
 import './kits.css'
-import './accessibility.css'
 import App from './App'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -49,24 +49,21 @@
       "action": "Open the conversation where the AI created your project (if you have several, the most recent one) and paste the prompt below. What you want isn't a nice explanation, but four specific facts you'll use every day. Which folder to be in, what to type to start it, what exact address to open, and how to stop it. When it answers, don't close that response: you'll need it in the next task.",
       "prompt": "I'm working on the project we built in this conversation. I don't know how to code and the terminal intimidates me, so I need literal instructions, no implied steps.\n\nGive me a startup sheet with exactly these five points, each on its own line, no intro paragraphs:\n\n1. The full path of the folder I need to be in before typing anything.\n2. The exact command that opens the terminal already positioned in that folder, for my operating system (tell me which you're assuming: Windows, Mac, or Linux).\n3. The exact command that starts the project, written to copy and paste as-is.\n4. The full address I need to type into the browser, with http:// in front and the port number included, and warn me whether that number can change and where I read it if it does.\n5. How to stop the server when I'm done.\n\nAfter the sheet, tell me in two sentences what the terminal looks like when it started CORRECTLY: what specific line I should see to know it worked. And warn me whether the terminal is going to stay without giving me the cursor back, so I don't think it hung.\n\nIf the project needs any preliminary step done only the first time (installing dependencies, creating a config file), put that before everything and mark it \"first time only.\"",
       "expect": "A five-line list with a real folder path (something like C:\\Users\\yourname\\projects\\bikes). Plus a startup command (almost always npm run dev) and an address with the port included (http://localhost:3000). No filler paragraphs.",
-      "stuck": "If it answers with a generic internet tutorial instead of looking at YOUR project, reply: \"Don't give me general instructions. Look at this project's files, specifically package.json, and tell me what command is actually written there.\" If it doesn't have access to your files because you're working just by chat, paste the contents of the package.json file and repeat the question.",
-      "id": "task-ffaa07b052e4"
+      "stuck": "If it answers with a generic internet tutorial instead of looking at YOUR project, reply: \"Don't give me general instructions. Look at this project's files, specifically package.json, and tell me what command is actually written there.\" If it doesn't have access to your files because you're working just by chat, paste the contents of the package.json file and repeat the question."
     },
     {
       "title": "Start the server and read the address on screen",
       "where": "In your computer's terminal, positioned in the project folder",
       "action": "Open the terminal the way the AI told you in the previous task. On Windows the easiest way is to open the project folder in File Explorer. Click the address bar up top, clear what's there, type powershell, and press Enter. A blue window opens already positioned in that folder. On Mac, right-click the folder, then \"Services,\" then \"New Terminal at Folder.\" Type the startup command, press Enter, and wait five to thirty seconds without touching anything. When it stops printing things, look for a line that says \"Local:\" followed by an address, or \"running on,\" or \"ready.\" That address is the right one. Write down the port number on paper.",
       "expect": "Several lines of text and, among them, something like \"Local: http://localhost:3000\". The cursor doesn't come back, the window just sits there with a little cursor blinking. That's correct: it means it's running and waiting.",
-      "stuck": "If \"npm is not recognized as a command\" shows up, Node.js needs installing. That's done from nodejs.org, downloading the LTS version. Tell the AI to walk you through it and come back to this task after. If \"Missing script: dev\" shows up, your project's startup command is different. Type npm run by itself and press Enter, and it'll list the ones that do exist. If a wall of red text shows up, copy it in full, paste it to the AI, and add: \"This shows up when starting. Tell me in one sentence what's missing and the exact command to fix it.\"",
-      "id": "task-903451e1c268"
+      "stuck": "If \"npm is not recognized as a command\" shows up, Node.js needs installing. That's done from nodejs.org, downloading the LTS version. Tell the AI to walk you through it and come back to this task after. If \"Missing script: dev\" shows up, your project's startup command is different. Type npm run by itself and press Enter, and it'll list the ones that do exist. If a wall of red text shows up, copy it in full, paste it to the AI, and add: \"This shows up when starting. Tell me in one sentence what's missing and the exact command to fix it.\""
     },
     {
       "title": "Open your project in the browser and bookmark it",
       "where": "In your browser, with the previous task's terminal still open",
       "action": "Without closing the terminal, open Chrome, Edge, or whichever browser you use. Click the address bar up top and clear it. Type the exact address you read in the terminal, with http:// and the port number: for example http://localhost:3000. Press Enter. Once you see it, press Ctrl+D (Cmd+D on Mac) to bookmark it and give it a recognizable name, like \"MY WEBSITE — local.\" That way tomorrow you don't have to remember the number.",
       "expect": "Your project on screen. It can be ugly, half-finished, full of placeholder text: doesn't matter, that's the moment. And in the terminal you'll see new lines show up every time you reload, since it's logging every visit.",
-      "stuck": "If the browser takes you to a search engine instead of your website, you typed the address without http://. It got treated as a search: type it in full again. If it says it can't reach the site, go to the terminal and check two things. That it's still open and running, and that the number you typed matches what's shown there. Nine times out of ten, that's it.",
-      "id": "task-eee41c7a61f1"
+      "stuck": "If the browser takes you to a search engine instead of your website, you typed the address without http://. It got treated as a search: type it in full again. If it says it can't reach the site, go to the terminal and check two things. That it's still open and running, and that the number you typed matches what's shown there. Nine times out of ten, that's it."
     },
     {
       "title": "Change one word and check hot reload",
@@ -74,24 +71,21 @@
       "action": "Put the browser window on the left half of the screen and the AI on the right. On Windows, drag each window against the side edge and it snaps into place. Paste the prompt below, swapping the bracketed text for something visible on your website. Once the AI saves the change, don't touch the browser: watch it update on its own.",
       "prompt": "I want to check my project's auto-reload works before I get into building anything serious.\n\nChange the text \"[write the text currently shown on your website here]\" to \"[write the new text you want to see here]\". It's a one-line change: don't touch any other file, don't reorganize anything, don't improve anything along the way.\n\nBefore doing it, tell me exactly which file that text is in and on what line. After doing it, tell me one single sentence: whether this change shows up just by saving or whether I need to stop and restart the server.",
       "expect": "The new text shows up in the browser in under two seconds, with you not having reloaded anything. Look at the terminal and you'll see a new line like \"compiled in 340ms.\"",
-      "stuck": "If nothing changes, try in this order. One: press Ctrl+Shift+R (Cmd+Shift+R on Mac), which forces a reload ignoring anything the browser had cached. Two: check the terminal for red text, since then the change hasn't even been applied. Three: stop with Ctrl+C, start it again, and check. If after those three steps it's still the same, ask the AI: \"Am I looking at the right file? Tell me which file is actually used to render this screen.\"",
-      "id": "task-cb6a2322a31c"
+      "stuck": "If nothing changes, try in this order. One: press Ctrl+Shift+R (Cmd+Shift+R on Mac), which forces a reload ignoring anything the browser had cached. Two: check the terminal for red text, since then the change hasn't even been applied. Three: stop with Ctrl+C, start it again, and check. If after those three steps it's still the same, ask the AI: \"Am I looking at the right file? Tell me which file is actually used to render this screen.\""
     },
     {
       "title": "Break it on purpose to recognize blank A",
       "where": "In the terminal and the browser, at the same time",
       "action": "This is training, and it's worth doing even if it seems silly. Go to the terminal window, click inside it to select it, and press Ctrl+C. On Windows it might ask \"Terminate batch job (Y/N)?\": type Y and press Enter. You'll see the cursor come back and the terminal stop being busy. Now go to the browser and press F5 to reload. Read the message that shows up slowly and remember what it looks like. Then go back to the terminal and start it again with the same command as before. Trick: press the up arrow and the last command you typed shows up. Then reload the browser.",
       "expect": "Stopping the server, the browser tells you \"This site can't be reached.\" Smaller, you'll see \"localhost refused to connect\" or ERR_CONNECTION_REFUSED. Starting it again and reloading, your website reappears. You just watched blank A be born and die under your control.",
-      "stuck": "If Ctrl+C doesn't stop anything, make sure you clicked inside the terminal window before pressing it. If the focus is on the browser, Ctrl+C just copies text. If it's still running anyway, close the whole window with the X and open it again. If reloading the browser still shows your website with the server off, press Ctrl+Shift+R: you were looking at a previously cached copy.",
-      "id": "task-15c6a5a62f63"
+      "stuck": "If Ctrl+C doesn't stop anything, make sure you clicked inside the terminal window before pressing it. If the focus is on the browser, Ctrl+C just copies text. If it's still running anyway, close the whole window with the X and open it again. If reloading the browser still shows your website with the server off, press Ctrl+Shift+R: you were looking at a previously cached copy."
     },
     {
       "title": "Open the browser console and learn to copy the first error",
       "where": "In your browser, with the project open at localhost",
       "action": "With your website in front of you, press F12. A panel opens on the side or at the bottom. Above that panel there are tabs: find the one that says \"Console\" and click it. If the panel comes out very narrow, drag its edge to make it bigger. Now reload the page with F5 and watch what shows up. Find the very first red line, starting from the top, right-click on it, and choose \"Copy message.\" If there's no red line at all, your project is clean: press F12 again to close it and move on.",
       "expect": "A panel with tabs and, in the console one, zero red lines (healthy project) or one or several red lines starting with words like \"Uncaught,\" \"Failed to load,\" or \"TypeError.\" Ignore any yellow warnings: even your bank's website has those.",
-      "stuck": "If F12 does nothing, try Ctrl+Shift+J on Windows or Cmd+Option+J on Mac. If you have a laptop whose function keys control volume and brightness, you might need Fn+F12. If the panel opens in a language you don't recognize or with odd tabs, don't hunt around: take a full screenshot and hand it to the AI asking \"where's the console here?\"",
-      "id": "task-79145d7046db"
+      "stuck": "If F12 does nothing, try Ctrl+Shift+J on Windows or Cmd+Option+J on Mac. If you have a laptop whose function keys control volume and brightness, you might need Fn+F12. If the panel opens in a language you don't recognize or with odd tabs, don't hunt around: take a full screenshot and hand it to the AI asking \"where's the console here?\""
     },
     {
       "title": "Diagnose a real blank screen with the three-source prompt",
@@ -99,8 +93,7 @@
       "action": "Save this prompt somewhere fixed, because you'll use it dozens of times. The key is that you bring the AI all three sources of information at once: what the browser says, what the terminal says, and what the console says. Most people bring just one and that's why they get answers made in the dark. Fill in the three blanks by literally copying and pasting, without summarizing or translating anything.",
       "prompt": "My project isn't showing up in the browser and I need to know where the problem is before touching any code. I'm giving you three sources of information. Don't assume anything that isn't written here.\n\nADDRESS I OPENED: [paste the exact address here, with http:// and the port]\n\nWHAT I SEE IN THE BROWSER: [describe which of these three it is: (A) a browser message saying it can't reach the site, (B) a completely blank, empty screen but with the title in the tab, (C) a screen with a big error message. Copy the text as-is if there is any]\n\nWHAT THE TERMINAL SAYS: [paste the terminal's last 15 lines here, as-is, including the line saying what address it started on]\n\nWHAT THE BROWSER CONSOLE SAYS (F12): [paste the entire first red error here, or write \"no red errors\"]\n\nWith that, answer me in this order, don't skip any point:\n1. In one sentence: is the problem that the server isn't serving the page, or that the page arrives and breaks? Tell me what specific piece of data you're basing that on.\n2. The most likely cause, just one.\n3. Exactly what I do to fix it, as numbered steps, telling me at each step whether it's in the terminal, the browser, or a file.\n4. How I know it worked: what I should see on screen.\n\nIf what I gave you doesn't let you decide between two causes, don't pick one at random: tell me exactly what piece of data you're missing and where I look for it.",
       "expect": "A diagnosis that starts by distinguishing whether the page arrived or not, then a cause, then steps. If it jumps straight to \"let's rewrite the component\" without answering point 1, it started from the roof.",
-      "stuck": "If it suggests big code changes for a problem that smells like blank A, cut it off: \"Before touching any file: the terminal says it started on port X and I was opening port Y. Is that it?\" And if it gives you three possible causes at once, ask: \"Rank them by probability and tell me how I rule out the first one in under thirty seconds.\"",
-      "id": "task-0d44c5e26e0a"
+      "stuck": "If it suggests big code changes for a problem that smells like blank A, cut it off: \"Before touching any file: the terminal says it started on port X and I was opening port Y. Is that it?\" And if it gives you three possible causes at once, ask: \"Rank them by probability and tell me how I rule out the first one in under thirty seconds.\""
     },
     {
       "title": "Free up the port when it says it's taken",
@@ -108,16 +101,14 @@
       "action": "If starting up gives you \"Port 3000 is already in use\" or \"EADDRINUSE,\" an earlier program stayed running, often one of yours from yesterday you never stopped. You have two ways out. The easy one: accept the new port it offers (3001) and open that address, which works just as well. The clean one: kill the program occupying 3000, using the prompt below. Important warning before doing this: the command that shuts down a program by its identifier number is immediate and has no undo, so if you get the number wrong you could suddenly close something else you had open unsaved. Save whatever you have in progress before running it, and read carefully the program's name it shows you.",
       "prompt": "When starting my project I get this error: [paste the full error here].\n\nI'm on [Windows / Mac], I don't know how to code, and I'm going to copy and paste literally what you tell me.\n\nGive me two separate commands, not one combined:\n\nFIRST: the command that only LOOKS at what program is using that port, without closing anything. Explain to me which column in the result is the program's identifier number and how I know which program it is, so I can make sure I'm not about to close something important.\n\nSECOND: the command that closes that specific program, with a blank marked XXXX where I have to put the number from the first one. Don't write it with a made-up number.\n\nThen tell me: what's the sign, after running the second one, that the port is free again? And also tell me if there's any program name that, if it shows up in the first command, should make me stop and not close it.",
       "expect": "Two clear commands. On Windows the first will look something like netstat -ano | findstr :3000, which gives you back a row with a number at the end; on Mac it'll be something like lsof -ti:3000. Running the second with the correct number, the terminal says nothing, and starting your project again grabs 3000.",
-      "stuck": "If it makes you nervous, don't do it: use the port it offers and keep working, you lose absolutely nothing. The alternative that always fixes it with no weird commands is restarting the computer, which shuts down every hung program at once. If the name shown occupying the port isn't node or python or anything you recognize as part of your project, don't close it and ask the AI what it is before touching it.",
-      "id": "task-50fdf3a5fd7a"
+      "stuck": "If it makes you nervous, don't do it: use the port it offers and keep working, you lose absolutely nothing. The alternative that always fixes it with no weird commands is restarting the computer, which shuts down every hung program at once. If the name shown occupying the port isn't node or python or anything you recognize as part of your project, don't close it and ask the AI what it is before touching it."
     },
     {
       "title": "View it on your phone, on the same wifi",
       "where": "In the terminal first, then in your phone's browser",
       "action": "Localhost only works for your computer, but there's an intermediate trick before publishing anything: inside your home, devices on the same wifi can see each other. Many tools already give you that address at startup, on a line that says \"Network:\" followed by something like http://192.168.1.42:3000. If your terminal shows it, type that address into your phone's browser, with your phone connected to the same wifi as the computer. If that line doesn't show up, ask the AI how to start your project with local network access (in Vite you add --host, in Next.js you add -H 0.0.0.0). It's useful for what fails most at the start: seeing whether buttons overflow on a small screen.",
       "expect": "Your website on your phone, with the address starting with 192.168 or 10.0, not localhost. You'll see new lines show up in the terminal every time the phone requests the page.",
-      "stuck": "If your phone loads nothing, check the obvious first: that it's on your home wifi and not on mobile data. If it still doesn't work, it's usually the Windows firewall, which the first time pops up a window asking permission, and you need to click \"Allow access\" on private networks. And if you're on an office, library, or coffee shop wifi, it's normal for it not to work: many public networks isolate devices on purpose. It's not your project's fault.",
-      "id": "task-0b41e3eeb034"
+      "stuck": "If your phone loads nothing, check the obvious first: that it's on your home wifi and not on mobile data. If it still doesn't work, it's usually the Windows firewall, which the first time pops up a window asking permission, and you need to click \"Allow access\" on private networks. And if you're on an office, library, or coffee shop wifi, it's normal for it not to work: many public networks isolate devices on purpose. It's not your project's fault."
     },
     {
       "title": "Write your startup cheat sheet and leave it inside the project",
@@ -125,8 +116,7 @@
       "action": "What you just learned is going to fade in two weeks if you don't write it down, and it'll happen exactly when you're in the biggest hurry. Ask for a short file that lives inside the project folder, one anyone could follow without knowing anything, yourself included three months from now. Once it's made, open it and read it top to bottom once: if there's a step you don't understand, it's poorly written and you need to ask it to clarify.",
       "prompt": "Create a file called HOW-TO-START.md in this project's root. It's aimed at a person who doesn't code and is opening this project after months of not touching it. No untranslated jargon and no assuming prior knowledge.\n\nExact structure, with these headings:\n\n## Starting it\nThe steps numbered from scratch: opening the terminal, positioning in the folder (with the full path written out), the startup command, and the browser address. Include which terminal line confirms it went well.\n\n## Stopping it\nHow to shut it down and why it needs to be done.\n\n## If the screen is blank\nA three-row table, one per symptom: (1) the browser says it can't reach the site, (2) a completely blank, empty screen, (3) a screen with an error message. In each row: what it means, where I look first, and what I do.\n\n## Things that break this\nThe three or four most likely mistakes specific to THIS project, not in the abstract. For example, if there's an .env file without which it won't start, say so.\n\nStyle rules: each command on its own line, ready to copy and paste. Short sentences. No \"simply\" or \"just.\" One page max.",
       "expect": "A HOW-TO-START.md file in the project folder, openable with a double-click, with your real folder path written inside and a three-row table for blank screens.",
-      "stuck": "If the file comes out with generic steps like \"navigate to your working directory,\" send it back: \"Replace every vague instruction with this project's literal path and command. If you don't know a path, ask me instead of writing a made-up example.\" And if it comes out three pages long with theory, ask it to cut it in half, removing anything that's explanation and leaving only what to do.",
-      "id": "task-67404363bd81"
+      "stuck": "If the file comes out with generic steps like \"navigate to your working directory,\" send it back: \"Replace every vague instruction with this project's literal path and command. If you don't know a path, ask me instead of writing a made-up example.\" And if it comes out three pages long with theory, ask it to cut it in half, removing anything that's explanation and leaving only what to do."
     }
   ],
   "matters": [
@@ -153,49 +143,16 @@
     "Guess problems with your network or computer: a firewall blocking it, an antivirus getting jumpy about the port, an office wifi that isolates devices. It can suggest where to look, but you're the one who checks."
   ],
   "words": [
-    [
-      "Localhost",
-      "A word that means \"this computer, the one in front of me.\" When you type it into the browser, the page is served by your own machine and the request never goes outside."
-    ],
-    [
-      "127.0.0.1",
-      "The number that means the same thing as localhost. It's reserved worldwide to point to oneself, so on your computer it points to your computer and on your neighbor's, to theirs."
-    ],
-    [
-      "Port",
-      "The number after the colon, like 3000. It's for telling which of the running programs you're asking, the same way an apartment number tells who you're calling inside a building."
-    ],
-    [
-      "Server",
-      "A computer, or a program inside a computer, whose job is to wait for someone to request a page and hand it over. While you're learning, that's you."
-    ],
-    [
-      "Dev server",
-      "The program that runs while you're building, so you can see your project and have it update on its own every time you change something. It turns off when you're done and has nothing to do with what people will see once you publish."
-    ],
-    [
-      "Terminal",
-      "The window where you type commands with the keyboard instead of clicking buttons. It's intimidating because it has no graphics, but it only does exactly what you type, no more, no less."
-    ],
-    [
-      "Ctrl+C",
-      "The two keys pressed together inside the command window to shut down whatever's running there. Outside that window, those same keys copy text, so you need to click inside it first."
-    ],
-    [
-      "Hot reload",
-      "The browser page updating on its own as soon as you save a change, with no reload from you. It's what makes working fast instead of a constant back-and-forth."
-    ],
-    [
-      "Browser console",
-      "A hidden screen that opens with F12 where the page logs everything happening to it, failures included. You don't need to understand what it says: you need to copy and paste it."
-    ],
-    [
-      "Cache",
-      "A copy of the page the browser saves to show it to you faster next time. Sometimes it shows you the old copy even after you've changed things, which is why the forced reload with Ctrl+Shift+R exists."
-    ]
+    ["Localhost", "A word that means \"this computer, the one in front of me.\" When you type it into the browser, the page is served by your own machine and the request never goes outside."],
+    ["127.0.0.1", "The number that means the same thing as localhost. It's reserved worldwide to point to oneself, so on your computer it points to your computer and on your neighbor's, to theirs."],
+    ["Port", "The number after the colon, like 3000. It's for telling which of the running programs you're asking, the same way an apartment number tells who you're calling inside a building."],
+    ["Server", "A computer, or a program inside a computer, whose job is to wait for someone to request a page and hand it over. While you're learning, that's you."],
+    ["Dev server", "The program that runs while you're building, so you can see your project and have it update on its own every time you change something. It turns off when you're done and has nothing to do with what people will see once you publish."],
+    ["Terminal", "The window where you type commands with the keyboard instead of clicking buttons. It's intimidating because it has no graphics, but it only does exactly what you type, no more, no less."],
+    ["Ctrl+C", "The two keys pressed together inside the command window to shut down whatever's running there. Outside that window, those same keys copy text, so you need to click inside it first."],
+    ["Hot reload", "The browser page updating on its own as soon as you save a change, with no reload from you. It's what makes working fast instead of a constant back-and-forth."],
+    ["Browser console", "A hidden screen that opens with F12 where the page logs everything happening to it, failures included. You don't need to understand what it says: you need to copy and paste it."],
+    ["Cache", "A copy of the page the browser saves to show it to you faster next time. Sometimes it shows you the old copy even after you've changed things, which is why the forced reload with Ctrl+Shift+R exists."]
   ],
-  "next": "Next: API keys: what they are and how not to leak them",
-  "readingMinutes": 9,
-  "practiceMinutes": 100,
-  "durationNote": "Planning estimate: setup, external review and observation periods are additional."
+  "next": "In the next lesson you'll take the leap from your computer to the internet: publishing that same project to a real address you can actually send someone."
 }

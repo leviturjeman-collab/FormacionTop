@@ -45,25 +45,6 @@
             "response": {
               "neverError": true
             }
-          },
-          "pagination": {
-            "pagination": {
-              "paginationMode": "updateAParameterInEachRequest",
-              "parameters": {
-                "parameters": [
-                  {
-                    "type": "qs",
-                    "name": "until",
-                    "value": "={{ $response.body.pagination.next }}"
-                  }
-                ]
-              },
-              "paginationCompleteWhen": "other",
-              "completeExpression": "={{ !$response.body.pagination || $response.body.pagination.next === null || !Array.isArray($response.body.deployments) }}",
-              "limitPagesFetched": true,
-              "maxRequests": 100,
-              "requestInterval": 200
-            }
           }
         },
         "sendQuery": true,
@@ -71,7 +52,7 @@
           "parameters": [
             {
               "name": "limit",
-              "value": "100"
+              "value": "20"
             }
           ]
         },
@@ -91,12 +72,11 @@
           "id": "REEMPLAZAR",
           "name": "Vercel (Authorization: Bearer)"
         }
-      },
-      "onError": "continueRegularOutput"
+      }
     },
     {
       "parameters": {
-        "jsCode": "const pages = $input.all().map(i=>i.json);\nconst last = pages[pages.length-1] || {};\nconst complete = pages.length > 0 && pages.every(p=>Array.isArray(p.deployments)) && (last.pagination?.next === null || (!last.pagination && last.deployments?.length < 100));\nconst state = $getWorkflowStaticData('global');\nconst seen = state.deploy_states || {};\nconst unique = new Map();\nfor (const page of pages) for (const d of page.deployments || []) if (d.uid || d.id) unique.set(d.uid || d.id,d);\nconst failed=[];\nfor (const [id,d] of unique) {\n const status=d.state || d.readyState || '';\n if (status==='ERROR' && seen[id] !== 'ERROR') failed.push({id,proyecto:d.name || 'sin-nombre',url:d.url || ''});\n}\n// n8n persists static data only after a successful active execution. Failed notifications retry.\nif (complete) state.deploy_states = Object.fromEntries([...unique].map(([id,d])=>[id,d.state || d.readyState || '']));\nreturn [{json:{api_ok:complete,coverage_complete:complete,hay_fallos:failed.length>0,total_revisados:unique.size,total_paginas:pages.length,total_fallidos:failed.length,detalle_fallidos:failed.map(f=>f.proyecto+' ('+f.url+')').join(' | '),revisado_en:new Date().toISOString(),error:complete?null:'Incomplete or failed pagination; cursor not advanced'} }];"
+        "jsCode": "const cuerpo = $input.first().json || {};\nconst lista = cuerpo.deployments || [];\nconst VENTANA_MS = 1000 * 60 * 30; // solo deploys de la última media hora\nconst ahora = Date.now();\nconst fallidos = lista\n  .filter(function (d) {\n    const estado = d.state || d.readyState || '';\n    return estado === 'ERROR' && ahora - (d.createdAt || 0) < VENTANA_MS;\n  })\n  .map(function (d) {\n    return {\n      proyecto: d.name || 'sin-nombre',\n      url: d.url || '',\n      creado: d.createdAt ? new Date(d.createdAt).toISOString() : ''\n    };\n  });\nconst salida = {\n  api_ok: Array.isArray(cuerpo.deployments),\n  hay_fallos: fallidos.length > 0,\n  total_revisados: lista.length,\n  total_fallidos: fallidos.length,\n  detalle_fallidos: fallidos.map(function (f) { return f.proyecto + ' (' + f.url + ')'; }).join(' | '),\n  revisado_en: new Date().toISOString()\n};\nreturn [ { json: salida } ];"
       },
       "id": "nodo_114",
       "name": "Evaluar deploys",

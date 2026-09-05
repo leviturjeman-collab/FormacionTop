@@ -134,7 +134,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Interpreta el JSON de la IA y comprueba que base + IVA = total.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet ia = {};\ntry {\n  ia = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  ia = { proveedor: null, confianza: 0 };\n}\nconst base = Number(ia.base_imponible ?? NaN);\nconst iva = Number(ia.iva ?? NaN);\nconst total = Number(ia.total ?? NaN);\nconst cuadra = [base, iva, total].every(Number.isFinite) && Math.abs(base + iva - total) < 0.02;\nconst original = $('Normalizar entrada').item.json;\nreturn [{ json: { ...original, ...Object.fromEntries(Object.entries(ia && typeof ia === 'object' && !Array.isArray(ia) ? ia : {}).filter(([key]) => !(key in original))), cuadra, confianza: Number(ia.confianza ?? 0) } }];"
+        "jsCode": "// Interpreta el JSON de la IA y comprueba que base + IVA = total.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet ia = {};\ntry {\n  ia = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  ia = { proveedor: null, confianza: 0 };\n}\nconst base = Number(ia.base_imponible ?? NaN);\nconst iva = Number(ia.iva ?? NaN);\nconst total = Number(ia.total ?? NaN);\nconst cuadra = [base, iva, total].every(Number.isFinite) && Math.abs(base + iva - total) < 0.02;\nconst original = $('Normalizar entrada').item.json;\nreturn [{ json: { ...original, ...ia, cuadra, confianza: Number(ia.confianza ?? 0) } }];"
       },
       "id": "nodo-007",
       "name": "Comprobar totales",

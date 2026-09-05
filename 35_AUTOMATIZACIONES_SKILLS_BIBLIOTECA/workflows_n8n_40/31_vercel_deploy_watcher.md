@@ -85,6 +85,3 @@ Sin coste de IA. 96 consultas al día a la API de Vercel entran de sobra en los 
 ## Aviso legal
 
 Material didáctico de la formación: impórtalo, pruébalo con datos ficticios y adáptalo antes de usarlo con datos o sistemas reales. Las salidas de los modelos de IA pueden contener errores: mantén siempre revisión humana antes de cualquier acción irreversible. Revisa los términos de servicio y precios vigentes de cada proveedor (Anthropic, OpenAI, Google, Meta, Slack, GitHub, Vercel, Supabase) antes de usarlos en producción. Si el flujo trata datos personales, necesitas base legal (RGPD), información al interesado y un registro de tratamiento; consulta a tu asesor legal. El autor no se hace responsable del uso que hagas de esta plantilla.
-
-## Cobertura y repetición
-Ahora pagina de100en100 hasta agotar el cursor next (máximo100páginas, con alarma de cobertura incompleta si queda más). No descarta despliegues por ventana de30min. Guarda estado por deploymentID en static data de n8n solo tras ejecución activa exitosa; pruebas manuales no persisten ese estado. La primera ejecución puede avisar errores históricos. Un cambio posterior READY→ERROR vuelve a avisar. Si falla una página o notificación no se da el recorrido por completo. Configura error workflow y prueba un fallo HTTP antes de activar.
