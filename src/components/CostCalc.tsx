@@ -48,8 +48,8 @@ export default function CostCalc({ piece }: { piece: CostCalcPiece }) {
   }, [model, callsPerDay, inputTokens, outputTokens, cached, retryRate])
 
   const cheapest = piece.models.reduce((best, item) => {
-    const cost = ((inputTokens * item.input) + (outputTokens * item.output)) / 1_000_000
-    const bestCost = ((inputTokens * best.input) + (outputTokens * best.output)) / 1_000_000
+    const cost = ((inputTokens * ((1-cached/100) * item.input + cached/100 * item.cachedInput)) + (outputTokens * item.output)) / 1_000_000
+    const bestCost = ((inputTokens * ((1-cached/100) * best.input + cached/100 * best.cachedInput)) + (outputTokens * best.output)) / 1_000_000
     return cost < bestCost ? item : best
   }, piece.models[0])
 

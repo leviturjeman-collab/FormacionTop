@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { BookOpen, ChevronRight, Search } from 'lucide-react'
 import type { GlossaryEntry } from '../types'
 import { useCourse } from '../course'
@@ -17,11 +17,12 @@ type Entry = GlossaryEntry
  * término solo se ve el nombre y una línea. El desarrollo (explicación,
  * analogía, con qué no confundirlo y dónde se estudia) se abre al pulsar.
  */
-export default function Indice({ letter }: { letter?: string }) {
+export default function Indice({ letter, term }: { letter?: string; term?: string }) {
   const course = useCourse()
   const locale = useLocale()
   const active = letter?.toUpperCase()
-  const [open, setOpen] = useState<string | null>(null)
+  const [open, setOpen] = useState<string | null>(term || null)
+  useEffect(() => { setOpen(term || null); setQuery(''); requestAnimationFrame(() => document.getElementById('term-' + encodeURIComponent(term || ''))?.scrollIntoView({ block: 'center' })) }, [term, letter])
   const [query, setQuery] = useState('')
 
   const entries = course.glossaryIndex
@@ -107,7 +108,7 @@ function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle
   const hasDetail = Boolean(entry.long || entry.analogy || entry.confusion || entry.seeAlso?.length || entry.lessons.length)
 
   return (
-    <li className={`st-term${open ? ' open' : ''}`}>
+    <li id={'term-' + encodeURIComponent(entry.term)} className={`st-term${open ? ' open' : ''}`}>
       <button className="st-term-head" onClick={onToggle} aria-expanded={open} disabled={!hasDetail}>
         <ChevronRight size={11} className="st-term-caret" aria-hidden />
         <span className="st-term-name">{entry.term}</span>
@@ -137,7 +138,7 @@ function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle
               <span>{locale === 'en' ? 'See also' : 'Ver también'}</span>
               <div>
                 {(entry.seeAlso || []).map((related) => (
-                  <a key={related} href={href({ name: 'indice', letter: related[0].toUpperCase() })}>
+                  <a key={related} href={href({ name: 'indice', letter: related[0].toUpperCase(), term: related })}>
                     {related}
                   </a>
                 ))}

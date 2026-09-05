@@ -39,7 +39,7 @@ export default function Filters({ route, lessons, hide = [] }: Props) {
 
   const filters = route.filters
   const doneSlugs = new Set(
-    Object.entries(student.lessons).filter(([, progress]) => progress.done.length > 0).map(([slug]) => slug),
+    Object.entries(student.lessons).filter(([, progress]) => progress.done.length > 0 || Object.values(progress.tasks || {}).some(v => v && v.length > 0) || Object.values(progress.checks).some(v => v && v.length > 0) || Object.values(progress.notes).some(v => v && Object.values(v).some(Boolean))).map(([slug]) => slug),
   )
 
   /** Cuántas lecciones quedarían si se activara este valor, con el resto de filtros puestos. */
@@ -53,7 +53,6 @@ export default function Filters({ route, lessons, hide = [] }: Props) {
   if (!hide.includes('tool')) {
     const tools = course.toolPages
       .filter((tool) => lessons.some((lesson) => lesson.tools.includes(tool.id)))
-      .slice(0, 12)
       .map((tool) => ({ value: tool.id, label: tool.label }))
     if (tools.length > 1) rows.push({ key: 'tool', label: locale === 'en' ? 'Tool' : 'Herramienta', options: tools })
   }

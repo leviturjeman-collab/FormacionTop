@@ -266,28 +266,32 @@
       "where": "docker.com, sección Docker Desktop",
       "action": "Descarga la versión de tu sistema y instálala con las opciones por defecto. En Windows te pedirá activar WSL2 (una capa de Linux dentro de Windows): acepta, y reinicia si te lo pide. Al terminar, abre la aplicación de Docker Desktop y espera a que la ballena de la barra deje de moverse. Docker tiene que estar ABIERTO para que nada de esto funcione: no basta con instalarlo.",
       "expect": "El icono de la ballena fijo y, dentro de la aplicación, un panel sin contenedores.",
-      "stuck": "Si en Windows se queja de la virtualización, actívala en la BIOS, el menú de ajustes que aparece justo antes de arrancar el ordenador. Cómo entrar en él depende del modelo de placa: búscalo con el nombre de tu ordenador."
+      "stuck": "Si en Windows se queja de la virtualización, actívala en la BIOS, el menú de ajustes que aparece justo antes de arrancar el ordenador. Cómo entrar en él depende del modelo de placa: búscalo con el nombre de tu ordenador.",
+      "id": "task-76a207a2640c"
     },
     {
       "title": "Comprueba que Docker responde desde la terminal",
       "where": "En PowerShell (Windows) o Terminal (Mac)",
       "action": "Escribe docker --version y pulsa Enter. Después docker run hello-world. La segunda descarga una caja diminuta de prueba, la ejecuta y te escribe un mensaje de saludo. Si ese mensaje aparece, todo lo demás de esta lección va a funcionar.",
       "expect": "Un número de versión, y luego un párrafo que empieza por «Hello from Docker!».",
-      "stuck": "Si dice que no puede conectar con el demonio de Docker (el motor que trabaja por detrás), es que Docker Desktop no está abierto. Ábrelo y espera a que arranque del todo."
+      "stuck": "Si dice que no puede conectar con el demonio de Docker (el motor que trabaja por detrás), es que Docker Desktop no está abierto. Ábrelo y espera a que arranque del todo.",
+      "id": "task-1ccf67d196e3"
     },
     {
       "title": "Crea la carpeta donde van a vivir tus datos",
       "where": "En la terminal",
       "action": "En Windows: mkdir C:\\n8n-datos. En Mac o Linux: mkdir ~/n8n-datos. Esta carpeta es la caja fuerte: aquí dentro va la base de datos con tus flujos, tus credenciales y tus usuarios. Elígela en un sitio que no vayas a borrar limpiando el escritorio, y no la metas dentro de Descargas.",
       "expect": "La carpeta existe y está vacía. Compruébalo abriéndola en el explorador de archivos.",
-      "stuck": "Si el nombre tiene espacios o acentos, cámbialo: dan problemas en las órdenes. n8n-datos, sin más."
+      "stuck": "Si el nombre tiene espacios o acentos, cámbialo: dan problemas en las órdenes. n8n-datos, sin más.",
+      "id": "task-ea61a7029932"
     },
     {
       "title": "Genera tu clave de cifrado y guárdala YA",
       "where": "En la terminal y en tu gestor de contraseñas",
       "action": "Necesitas una cadena larga y aleatoria. Escribe esta orden para que te la genere: en Mac o Linux, openssl rand -hex 32; en Windows PowerShell, -join ((48..57)+(97..102) | Get-Random -Count 64 | %{[char]$_}). Copia el resultado y guárdalo AHORA en tu gestor de contraseñas, con el nombre «n8n clave de cifrado». No sigas hasta haberlo guardado: sin esta clave, una copia de seguridad de tus credenciales no vale nada.",
       "expect": "Una cadena de 64 caracteres guardada en el gestor de contraseñas.",
-      "stuck": "Si no tienes gestor de contraseñas, este es el momento de instalarlo. Mientras tanto, no la pegues en un chat ni en un correo."
+      "stuck": "Si no tienes gestor de contraseñas, este es el momento de instalarlo. Mientras tanto, no la pegues en un chat ni en un correo.",
+      "id": "task-86a027cdb687"
     },
     {
       "title": "Arranca n8n con la orden completa",
@@ -295,70 +299,80 @@
       "action": "Pega la orden de abajo, cambiando la clave por la tuya y la ruta por la tuya si estás en Windows. Está escrita en varias líneas para que se entienda: cada línea hace una cosa concreta y en el bloque de código las tienes explicadas una a una. Léela antes de ejecutarla; no es larga por capricho.",
       "prompt": "docker run -d --name n8n --restart unless-stopped \\\n  -p 5678:5678 \\\n  -e GENERIC_TIMEZONE=\"Europe/Madrid\" \\\n  -e TZ=\"Europe/Madrid\" \\\n  -e N8N_ENCRYPTION_KEY=\"PEGA-AQUI-TU-CLAVE-DE-64-CARACTERES\" \\\n  -e N8N_DIAGNOSTICS_ENABLED=false \\\n  -v ~/n8n-datos:/home/node/.n8n \\\n  docker.n8n.io/n8nio/n8n",
       "expect": "Te devuelve una cadena larga de letras y números: es el identificador del contenedor. Eso significa que ha arrancado.",
-      "stuck": "En Windows, cambia ~/n8n-datos por C:\\n8n-datos y pon la orden en una sola línea quitando las barras invertidas del final."
+      "stuck": "En Windows, cambia ~/n8n-datos por C:\\n8n-datos y pon la orden en una sola línea quitando las barras invertidas del final.",
+      "id": "task-3f8eced652c3"
     },
     {
       "title": "Ábrelo y crea tu usuario",
       "where": "En el navegador",
       "action": "Entra en http://localhost:5678. La primera vez tarda unos segundos. Te pedirá crear el usuario propietario: correo, nombre y contraseña. Esta contraseña también va al gestor de contraseñas, y también es de las que no se recuperan por correo.",
       "expect": "Estás dentro de n8n, con un lienzo vacío.",
-      "stuck": "Si el navegador dice que no puede conectar, espera treinta segundos más y recarga: la primera arrancada tarda. Si sigue, ve a la tarea 8 y mira los registros."
+      "stuck": "Si el navegador dice que no puede conectar, espera treinta segundos más y recarga: la primera arrancada tarda. Si sigue, ve a la tarea 8 y mira los registros.",
+      "id": "task-9c542ae3586d"
     },
     {
       "title": "Comprueba que la zona horaria ha entrado",
       "where": "En n8n, en Settings",
       "action": "Busca el ajuste de zona horaria y comprueba que pone Europe/Madrid. Si pone UTC o una zona de América, es que las dos líneas de zona horaria del arranque no llegaron bien. Para el contenedor, bórralo y vuelve a arrancarlo revisando esas dos líneas.",
       "expect": "Europe/Madrid, sin haberlo tocado a mano: tiene que venir puesto desde el arranque.",
-      "stuck": "Para borrar y repetir: docker stop n8n y luego docker rm n8n. Tus datos están en la carpeta, así que no pierdes nada."
+      "stuck": "Para borrar y repetir: docker stop n8n y luego docker rm n8n. Tus datos están en la carpeta, así que no pierdes nada.",
+      "id": "task-6d108f2648a7"
     },
     {
       "title": "Aprende a mirar los registros antes de necesitarlos",
       "where": "En la terminal",
       "action": "Escribe docker logs n8n y mira lo que sale: es lo que n8n va contando mientras funciona. Ahora prueba docker logs -f n8n, que se queda enganchado mostrando lo nuevo en tiempo real (se sale con Ctrl+C). Esta orden es lo primero que vas a ejecutar el día que algo no arranque.",
       "expect": "Un montón de líneas, y entre ellas una que dice que el editor está disponible en el puerto 5678.",
-      "stuck": "Si ves líneas en rojo con la palabra ERROR, cópialas enteras: son exactamente lo que hay que pegarle a una IA o buscar."
+      "stuck": "Si ves líneas en rojo con la palabra ERROR, cópialas enteras: son exactamente lo que hay que pegarle a una IA o buscar.",
+      "id": "task-877eb1b2ab7c"
     },
     {
       "title": "Haz el ensayo que separa una instalación de un susto",
       "where": "En la terminal y en el navegador",
       "action": "Primero, dentro de n8n, crea un flujo cualquiera con dos nodos y guárdalo con un nombre reconocible. Ahora, en la terminal: docker stop n8n, luego docker rm n8n (sí, borra el contenedor), y vuelve a ejecutar exactamente la misma orden de arranque de la tarea 5. Cuando levante, abre localhost:5678.",
       "expect": "Tu flujo sigue ahí, con su nombre, y tu usuario también. Eso demuestra que el volumen funciona y que puedes actualizar sin miedo.",
-      "stuck": "Si el flujo NO está, la línea del volumen no funcionó: revisa la ruta del -v, comprueba que la carpeta existe y que dentro ha aparecido un archivo llamado database.sqlite."
+      "stuck": "Si el flujo NO está, la línea del volumen no funcionó: revisa la ruta del -v, comprueba que la carpeta existe y que dentro ha aparecido un archivo llamado database.sqlite.",
+      "id": "task-5d3b61fe8953"
     },
     {
       "title": "Comprueba que la carpeta de datos tiene contenido de verdad",
       "where": "En el explorador de archivos",
       "action": "Abre tu carpeta n8n-datos. Tiene que haber al menos un archivo llamado database.sqlite y algo de configuración. Ese archivo es tu instalación entera: flujos, credenciales cifradas, usuarios e historial. Si está ahí y crece, todo está bien enganchado.",
       "expect": "Un archivo database.sqlite de varios cientos de kilobytes como mínimo.",
-      "stuck": "Si la carpeta está vacía, el volumen no está montado. Para, borra el contenedor y revisa la ruta: en Windows tiene que ser la ruta completa con C:\\ delante."
+      "stuck": "Si la carpeta está vacía, el volumen no está montado. Para, borra el contenedor y revisa la ruta: en Windows tiene que ser la ruta completa con C:\\ delante.",
+      "id": "task-7e1a5d2d1ee5"
     },
     {
       "title": "Aprende a apagarlo y encenderlo sin borrar nada",
       "where": "En la terminal",
       "action": "docker stop n8n lo apaga sin borrarlo. docker start n8n lo vuelve a encender con todo dentro. Practica las dos ahora mismo. Las vas a usar cada semana. Y mucha gente confunde stop con rm: ahí es donde empiezan los disgustos. La que borra es rm; la que apaga es stop.",
       "expect": "Después de stop, localhost:5678 no responde. Después de start, vuelve con todo tal cual.",
-      "stuck": "Si start dice que no existe el contenedor, es que lo borraste con rm. No pasa nada: vuelve a lanzar la orden de la tarea 5 y tus datos siguen en la carpeta."
+      "stuck": "Si start dice que no existe el contenedor, es que lo borraste con rm. No pasa nada: vuelve a lanzar la orden de la tarea 5 y tus datos siguen en la carpeta.",
+      "id": "task-3d5c68b144bd"
     },
     {
       "title": "Aprende a actualizar, que es lo que rompió a Sergio",
       "where": "En la terminal",
       "action": "Son cuatro órdenes en este orden: docker pull docker.n8n.io/n8nio/n8n (descarga la versión nueva), docker stop n8n, docker rm n8n y otra vez la orden completa de la tarea 5. Hazlo ahora, aunque acabes de instalarlo, para tenerlo hecho una vez con tus manos. Tus flujos van a seguir ahí, y a partir de hoy actualizar deja de dar miedo.",
       "expect": "n8n vuelve a levantar, con tu flujo de prueba y tu usuario intactos, en la versión nueva.",
-      "stuck": "Si después de actualizar algo va raro, para, borra y arranca con la versión anterior escribiendo la etiqueta al final: docker.n8n.io/n8nio/n8n:1.60.0, por ejemplo."
+      "stuck": "Si después de actualizar algo va raro, para, borra y arranca con la versión anterior escribiendo la etiqueta al final: docker.n8n.io/n8nio/n8n:1.60.0, por ejemplo.",
+      "id": "task-a850cd75c8ae"
     },
     {
       "title": "Guarda la orden de arranque donde la encuentres",
       "where": "En un archivo de texto, junto a tu carpeta de datos",
       "action": "Crea un archivo arrancar-n8n.txt y pega dentro tu orden completa, con tu clave y tu ruta, y una línea diciendo qué hace. Es lo que vas a copiar cada vez que actualices. Y es lo que le pasarás a otra persona si algún día lo tiene que levantar ella.",
       "expect": "Un archivo de texto con la orden lista para copiar.",
-      "stuck": "No lo subas nunca a internet: dentro va tu clave de cifrado. Si lo guardas en un repositorio de código, como GitHub, la clave va aparte."
+      "stuck": "No lo subas nunca a internet: dentro va tu clave de cifrado. Si lo guardas en un repositorio de código, como GitHub, la clave va aparte.",
+      "id": "task-1cf626bd6989"
     },
     {
       "title": "Haz tu primera copia de seguridad hoy",
       "where": "En el explorador de archivos",
       "action": "Para el contenedor con docker stop n8n, copia la carpeta n8n-datos entera a otro sitio (un disco externo, tu Drive) y arráncalo otra vez. Eso es una copia de seguridad completa. Guárdala junto a la clave de cifrado, porque las dos cosas se necesitan la una a la otra.",
       "expect": "Una copia fechada de la carpeta, en un sitio distinto del ordenador donde corre n8n.",
-      "stuck": "Paras el contenedor antes de copiar porque copiar una base de datos mientras se está usando puede dar una copia a medias. Treinta segundos apagado no le hacen daño a nadie."
+      "stuck": "Paras el contenedor antes de copiar porque copiar una base de datos mientras se está usando puede dar una copia a medias. Treinta segundos apagado no le hacen daño a nadie.",
+      "id": "task-7c17f3c142cb"
     }
   ],
   "errors": [
@@ -496,7 +510,7 @@
       "El número de versión que va detrás de la imagen, tras dos puntos. Es cómo se vuelve a una versión anterior."
     ]
   ],
-  "next": "Deja el contenedor encendido y abre localhost:5678. En la lección 05 se reconoce la pantalla por dentro: el lienzo, el panel de datos de cada caja y el historial de ejecuciones, que es donde vas a vivir a partir de ahora.",
+  "next": "Siguiente: La pantalla por dentro: lienzo, nodos y ejecuciones",
   "pieces": [
     {
       "kind": "anatomy",
@@ -643,5 +657,8 @@
         "Tienes una copia de la carpeta de datos en otro sitio, con su fecha"
       ]
     }
-  ]
+  ],
+  "readingMinutes": 5,
+  "practiceMinutes": 140,
+  "durationNote": "Estimación de planificación: instalación, revisión externa y periodos de observación se añaden aparte."
 }

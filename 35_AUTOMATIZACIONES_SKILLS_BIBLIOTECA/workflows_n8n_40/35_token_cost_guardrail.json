@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## 35 · Guardarraíl de coste\n\nTus apps envían a este webhook cada uso de IA (app, modelo, tokens_entrada, tokens_salida). El flujo calcula el coste, lo acumula en la pestaña \"Consumo\" y, si el gasto del día supera el umbral (10 USD por defecto, edítalo en \"Sumar gasto del día\"), avisa por Gmail.\n\nActualiza la tabla de precios del nodo \"Calcular coste\": COMPROBAR EN LA WEB OFICIAL.",
+        "content": "## 35 · Guardarraíl de coste\n\nTus apps envían a este webhook cada uso de IA (app, modelo, tokens_entrada, tokens_salida). El flujo calcula el coste, lo acumula en la pestaña \"Consumo\" y, si el gasto del día supera el umbral (10 USD por defecto, edítalo en \"Sumar gasto del día\"), avisa por Gmail.\n\nActualiza la tabla de precios del nodo \"Calcular coste\": COMPROBAR EN LA WEB OFICIAL.\n\nPREVIO: mode=reserve, request_id, app, ceiling_micro_usd llama al almacén transaccional. Solo HTTP200 + authorized=true permite llamar al proveedor. mode=settle registra actual_micro_usd. Configura BUDGET_LIMITS_MICRO_USD y autenticación privada. Sin mode solo registra gasto ya realizado: no es bloqueo.",
         "width": 500,
         "height": 280
       },
@@ -21,7 +21,8 @@
         "httpMethod": "POST",
         "path": "wf-35-uso-ia",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {},
+        "authentication": "headerAuth"
       },
       "id": "nodo_151",
       "name": "Registro de uso de IA",
@@ -30,12 +31,18 @@
       "position": [
         0,
         340
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR_CLIENT_AUTH",
+          "name": "Private cost gateway token"
+        }
+      }
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const b = $json.body || {};\nconst requeridos = ['app', 'modelo', 'tokens_entrada', 'tokens_salida'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst salida = {\n  app: String(b.app || '').trim(),\n  modelo: String(b.modelo || '').trim(),\n  tokens_entrada: Number(b.tokens_entrada || 0),\n  tokens_salida: Number(b.tokens_salida || 0),\n  faltan: faltan,\n  valido: faltan.length === 0 && Number.isFinite(Number(b.tokens_entrada)) && Number.isFinite(Number(b.tokens_salida))\n};\nreturn { json: salida };"
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['app', 'modelo', 'tokens_entrada', 'tokens_salida'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst salida = {\n  app: String(b.app || '').trim(),\n  modelo: String(b.modelo || '').trim(),\n  tokens_entrada: Number(b.tokens_entrada || 0),\n  tokens_salida: Number(b.tokens_salida || 0),\n  faltan: faltan,\n  valido: faltan.length === 0 && Number.isSafeInteger(Number(b.tokens_entrada)) && Number(b.tokens_entrada) >= 0 && Number.isSafeInteger(Number(b.tokens_salida)) && Number(b.tokens_salida) >= 0\n};\nreturn { json: salida };"
       },
       "id": "nodo_152",
       "name": "Validar registro",
@@ -83,7 +90,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Precios en USD por millón de tokens. COMPRUEBA los precios vigentes\n// en las webs oficiales antes de fiarte de estos números.\nconst PRECIOS = {\n  'claude-opus-5': { entrada: 5, salida: 25 },\n  'claude-haiku-4-5': { entrada: 1, salida: 5 }\n};\nconst precios = PRECIOS[$json.modelo] || { entrada: 5, salida: 25 };\nconst coste =\n  ($json.tokens_entrada / 1000000) * precios.entrada +\n  ($json.tokens_salida / 1000000) * precios.salida;\nreturn {\n  json: {\n    app: $json.app,\n    modelo: $json.modelo,\n    tokens_entrada: $json.tokens_entrada,\n    tokens_salida: $json.tokens_salida,\n    coste_usd: Number(coste.toFixed(6)),\n    fecha: new Date().toISOString().slice(0, 10),\n    registrado_en: new Date().toISOString()\n  }\n};"
+        "jsCode": "// Precios en USD por millón de tokens. COMPRUEBA los precios vigentes\n// en las webs oficiales antes de fiarte de estos números.\nconst PRECIOS = {\n  'claude-opus-5': { entrada: 5, salida: 25 },\n  'claude-haiku-4-5': { entrada: 1, salida: 5 }\n};\nconst precios = PRECIOS[$json.modelo];\nif (!precios) throw new Error('model_price_not_configured');\nconst coste =\n  ($json.tokens_entrada / 1000000) * precios.entrada +\n  ($json.tokens_salida / 1000000) * precios.salida;\nreturn {\n  json: {\n    app: $json.app,\n    modelo: $json.modelo,\n    tokens_entrada: $json.tokens_entrada,\n    tokens_salida: $json.tokens_salida,\n    coste_usd: Number(coste.toFixed(6)),\n    fecha: new Date().toISOString().slice(0, 10),\n    registrado_en: new Date().toISOString()\n  }\n};"
       },
       "id": "nodo_154",
       "name": "Calcular coste",
@@ -262,6 +269,90 @@
         660,
         460
       ]
+    },
+    {
+      "id": "5db2d88a-7a89-476b-998d-3bb368a5f048",
+      "name": "¿Autorizar o liquidar presupuesto?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        800
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "budget-mode",
+              "leftValue": "={{ ['reserve','settle'].includes($json.body.mode) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8066a7b5-a749-4827-a4af-bb96a00d4606",
+      "name": "Presupuesto transaccional previo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        800
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'http://127.0.0.1:8081/budget/' + $json.body.mode }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body.mode === 'reserve' ? {id:$json.body.request_id,app:$json.body.app,ceiling_micro_usd:$json.body.ceiling_micro_usd} : {id:$json.body.request_id,actual_micro_usd:$json.body.actual_micro_usd}) }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR_OPERATIONS",
+          "name": "Operations store: X-Operations-Token"
+        }
+      }
+    },
+    {
+      "id": "34ec99ff-4795-4e39-8507-8c6ae501eef3",
+      "name": "Responder decisión de presupuesto",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        300,
+        800
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode || 503 }}"
+        }
+      }
     }
   ],
   "connections": {
@@ -269,7 +360,7 @@
       "main": [
         [
           {
-            "node": "Validar registro",
+            "node": "¿Autorizar o liquidar presupuesto?",
             "type": "main",
             "index": 0
           }
@@ -372,6 +463,35 @@
         [
           {
             "node": "Responder estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Autorizar o liquidar presupuesto?": {
+      "main": [
+        [
+          {
+            "node": "Presupuesto transaccional previo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validar registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Presupuesto transaccional previo": {
+      "main": [
+        [
+          {
+            "node": "Responder decisión de presupuesto",
             "type": "main",
             "index": 0
           }

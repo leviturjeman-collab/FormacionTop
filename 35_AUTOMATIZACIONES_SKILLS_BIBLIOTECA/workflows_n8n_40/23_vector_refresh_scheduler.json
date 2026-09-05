@@ -21,8 +21,8 @@
         "rule": {
           "interval": [
             {
-              "field": "cronExpression",
-              "expression": "0 3 * * *"
+              "field": "minutes",
+              "minutesInterval": 5
             }
           ]
         }
@@ -34,12 +34,13 @@
       "position": [
         0,
         340
-      ]
+      ],
+      "notes": "Processes 25 chunks per run every 5 minutes. Monitor pending count; scale workers if ingestion exceeds processing throughput."
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT id, titulo, trozo FROM documentos_rag WHERE embedding_estado = 'pendiente' ORDER BY id LIMIT 25;",
+        "query": "SELECT id, titulo, trozo, count(*) OVER() AS total_pending FROM documentos_rag WHERE embedding_estado = 'pendiente' ORDER BY id LIMIT 25;",
         "options": {}
       },
       "id": "nodo_024",
@@ -59,7 +60,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const filas = $input.all().filter(function (item) {\n  return item.json && item.json.id !== undefined && item.json.id !== null;\n});\nif (filas.length === 0) {\n  return [ { json: { hay_pendientes: false, total_pendientes: 0 } } ];\n}\nreturn filas.map(function (item) {\n  const j = item.json;\n  return {\n    json: {\n      hay_pendientes: true,\n      id: j.id,\n      titulo: j.titulo || '',\n      contenido: String(j.trozo || '').slice(0, 8000)\n    }\n  };\n});"
+        "jsCode": "const filas = $input.all().filter(function (item) {\n  return item.json && item.json.id !== undefined && item.json.id !== null;\n});\nif (filas.length === 0) {\n  return [ { json: { hay_pendientes: false, total_pendientes: 0 } } ];\n}\nreturn filas.map(function (item) {\n  const j = item.json;\n  return {\n    json: {\n      hay_pendientes: true,\n      total_pending: Number(j.total_pending || 0),\n      id: j.id,\n      titulo: j.titulo || '',\n      contenido: String(j.trozo || '').slice(0, 8000)\n    }\n  };\n});"
       },
       "id": "nodo_025",
       "name": "Preparar pendientes",
@@ -133,9 +134,9 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE documentos_rag SET embedding = $1, embedding_estado = 'actualizado' WHERE id = $2;",
+        "query": "UPDATE documentos_rag SET embedding=$1,embedding_estado='actualizado',embedding_model='text-embedding-3-small',embedding_dimensions=1536,embedded_at=NOW() WHERE id=$2;",
         "options": {
-          "queryReplacement": "={{ JSON.stringify($json.data[0].embedding) }},{{ $('Preparar pendientes').item.json.id }}"
+          "queryReplacement": "={{ [JSON.stringify($json.data[0].embedding), $(\"Preparar pendientes\").item.json.id] }}"
         }
       },
       "id": "nodo_028",
@@ -155,7 +156,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const actualizados = $('Preparar pendientes').all();\nconst salida = {\n  documentos_actualizados: actualizados.length,\n  ids: actualizados.map(function (i) { return i.json.id; }).join(', '),\n  estado: 'vectores_refrescados',\n  fecha: new Date().toISOString()\n};\nreturn [ { json: salida } ];"
+        "jsCode": "const actualizados = $('Preparar pendientes').all();\nconst salida = {\n  documentos_actualizados: actualizados.length,\n  pending_after_batch: Math.max(0, Number(actualizados[0]?.json.total_pending || 0) - actualizados.length),\n  ids: actualizados.map(function (i) { return i.json.id; }).join(', '),\n  estado: 'vectores_refrescados',\n  fecha: new Date().toISOString()\n};\nreturn [ { json: salida } ];"
       },
       "id": "nodo_029",
       "name": "Resumir refresco",

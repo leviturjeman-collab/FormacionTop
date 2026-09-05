@@ -8,7 +8,12 @@
   "level": "intermedio",
   "what": "An n8n workflow that eliminates the Friday report: at the time you choose, it reads the Google Sheet where your team logs activity (cases, sales, incidents, hours), passes it to Claude to draft an executive summary with figures and points needing attention, and leaves that summary as a Gmail draft addressed to whoever needs to receive it. You open it, review it, correct whatever's needed, and send it. The mechanical part disappears; responsibility for what's stated stays yours.",
   "forWho": "For whoever builds the same report every week by copying from a spreadsheet: coordinators, operations managers, admin staff. It pays off if the report takes you more than half an hour a week and your data already lives in a sheet.",
-  "tools": ["n8n", "sheets", "claude", "gmail"],
+  "tools": [
+    "n8n",
+    "sheets",
+    "claude",
+    "gmail"
+  ],
   "capabilities": [
     "Triggers automatically every Friday at the configured time, with nobody needing to remember",
     "Reads the rows from the log sheet and condenses them for analysis (up to 200 recent rows)",
@@ -23,15 +28,18 @@
     "Shouldn't receive columns with sensitive personal data: it summarizes activity, not people's personal files"
   ],
   "flow": {
-    "name": "Weekly Summary Agent (Sheets → AI → draft)",
+    "name": "Agente de resumen semanal (Sheets → IA → borrador)",
     "nodes": [
       {
         "name": "Flow note",
         "type": "n8n-nodes-base.stickyNote",
         "typeVersion": 1,
-        "position": [-380, -220],
+        "position": [
+          -380,
+          -220
+        ],
         "parameters": {
-          "content": "## Weekly summary with a human brake\nFriday 4:00 PM → read Google Sheets → Claude drafts → Gmail draft.\n\nBefore activating: 1) Google Sheets credential and your sheet's ID, 2) httpHeaderAuth credential with your Anthropic key (x-api-key header), 3) Gmail credential and the recipient's email.\n\nThe email is NEVER sent on its own: it stays in Drafts until you approve it.",
+          "content": "## Resumen semanal con freno humano\nViernes 16:00 → leer Google Sheets → Claude redacta → borrador en Gmail.\n\nAntes de activar: 1) credencial de Google Sheets y el ID de tu hoja, 2) credencial httpHeaderAuth con la clave de Anthropic (cabecera x-api-key), 3) credencial de Gmail y el correo del destinatario.\n\nEl correo NUNCA se envía solo: queda en Borradores hasta que tú lo apruebes.",
           "height": 300,
           "width": 340
         }
@@ -40,13 +48,18 @@
         "name": "Every Friday afternoon",
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1.2,
-        "position": [0, 0],
+        "position": [
+          0,
+          0
+        ],
         "parameters": {
           "rule": {
             "interval": [
               {
                 "field": "weeks",
-                "triggerAtDay": [5],
+                "triggerAtDay": [
+                  5
+                ],
                 "triggerAtHour": 16
               }
             ]
@@ -57,24 +70,27 @@
         "name": "Read log sheet",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.5,
-        "position": [220, 0],
+        "position": [
+          220,
+          0
+        ],
         "parameters": {
           "documentId": {
             "__rl": true,
-            "value": "REPLACE_DOCUMENT_ID",
+            "value": "REEMPLAZAR_ID_DEL_DOCUMENTO",
             "mode": "id"
           },
           "sheetName": {
             "__rl": true,
-            "value": "REPLACE_TAB_NAME",
+            "value": "REEMPLAZAR_NOMBRE_DE_PESTANA",
             "mode": "name"
           },
           "options": {}
         },
         "credentials": {
           "googleSheetsOAuth2Api": {
-            "id": "REPLACE",
-            "name": "Google Sheets (log)"
+            "id": "REEMPLAZAR",
+            "name": "Google Sheets (registro)"
           }
         }
       },
@@ -82,16 +98,22 @@
         "name": "Condense rows",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [440, 0],
+        "position": [
+          440,
+          0
+        ],
         "parameters": {
-          "jsCode": "// Combines all sheet rows into a single text block for the AI.\nconst rows = $input.all().map(function (item) { return item.json; });\n\n// Sensible limit: the 200 most recent rows (adjust to your sheet).\nconst trimmed = rows.slice(-200);\nconst lines = trimmed.map(function (r) { return JSON.stringify(r); }).join('\\n');\n\nconst system = 'You are an operations analyst writing in English, professional but approachable. ' +\n  'Based on the log rows I give you, write the weekly summary for the team: ' +\n  '1) what happened this week in 3-4 sentences; ' +\n  '2) the key figures that can be derived from the rows (totals, breakdowns), citing which column they come from; ' +\n  '3) points to watch: at most 3, only if the data supports them; ' +\n  '4) what to keep an eye on next week. ' +\n  'Never invent data not present in the rows. If something cannot be known from this data, say so. ' +\n  'Format: plain email text, no markdown, maximum 300 words.';\n\nconst payload = {\n  model: 'claude-sonnet-5',\n  max_tokens: 1200,\n  system: system,\n  messages: [ { role: 'user', content: 'Log rows (one per line, as JSON):\\n' + lines } ]\n};\n\nreturn [ { json: { payload: payload, totalRows: rows.length } } ];"
+          "jsCode": "// Junta todas las filas de la hoja en un solo texto para la IA.\nconst filas = $input.all().map(function (item) { return item.json; });\n\n// Limite prudente: las 200 filas mas recientes (ajustalo a tu hoja).\nconst hasta = Date.now();\nconst desde = hasta - 7 * 86400000;\nconst semana = filas.filter(f => {\n  const fecha = Date.parse(f.fecha || f.created_at || f.fecha_entrada || '');\n  return Number.isFinite(fecha) && fecha >= desde && fecha <= hasta;\n}).sort((a,b) => Date.parse(a.fecha || a.created_at || a.fecha_entrada) - Date.parse(b.fecha || b.created_at || b.fecha_entrada));\nconst recorte = semana.slice(-200);\nif (!recorte.length) throw new Error('No hay filas con fecha válida de los últimos 7 días. Configura la columna fecha.');\nconst lineas = recorte.map(function (f) { return JSON.stringify(f); }).join('\\n');\n\nconst sistema = 'Eres analista de operaciones y redactas en espanol, con tuteo profesional. ' +\n  'A partir de las filas de registro que te paso, escribe el resumen semanal para el equipo: ' +\n  '1) que ha pasado esta semana en 3-4 frases; ' +\n  '2) las cifras clave que se deduzcan de las filas (totales, repartos), citando de que columna salen; ' +\n  '3) puntos de atencion: maximo 3, solo si los datos los sostienen; ' +\n  '4) que conviene mirar la semana que viene. ' +\n  'Prohibido inventar datos que no esten en las filas. Si algo no se puede saber con estos datos, dilo. ' +\n  'Formato: texto plano de correo, sin markdown, maximo 300 palabras.';\n\nconst payload = {\n  model: 'claude-sonnet-5',\n  max_tokens: 1200,\n  system: sistema,\n  messages: [ { role: 'user', content: 'Periodo: últimos 7 días. Filas analizadas: ' + recorte.length + '; omitidas por límite: ' + Math.max(0, semana.length-recorte.length) + '. Filas del registro (una por linea, en JSON):\\n' + lineas } ]\n};\n\nreturn [ { json: { payload: payload, totalFilas: recorte.length, filasDisponibles: semana.length, filasOmitidas: Math.max(0, semana.length - recorte.length) } } ];"
         }
       },
       {
         "name": "Draft with Claude",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [660, 0],
+        "position": [
+          660,
+          0
+        ],
         "parameters": {
           "method": "POST",
           "url": "https://api.anthropic.com/v1/messages",
@@ -115,8 +137,8 @@
         },
         "credentials": {
           "httpHeaderAuth": {
-            "id": "REPLACE",
-            "name": "Anthropic (x-api-key header)"
+            "id": "REEMPLAZAR",
+            "name": "Anthropic (cabecera x-api-key)"
           }
         }
       },
@@ -124,28 +146,34 @@
         "name": "Extract summary",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [880, 0],
+        "position": [
+          880,
+          0
+        ],
         "parameters": {
-          "jsCode": "// Collects the drafted text and the number of rows analyzed.\nconst raw = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : 'The AI did not return text. Check the execution in n8n.';\nconst total = $('Condense rows').first().json.totalRows;\n\nreturn [ { json: { summary: raw.trim(), totalRows: total } } ];"
+          "jsCode": "// Recoge el texto redactado y el numero de filas analizadas.\nconst bruto = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : 'La IA no devolvio texto. Revisa la ejecucion en n8n.';\nconst total = $('Condense rows').first().json.totalFilas;\n\nreturn [ { json: { resumen: bruto.trim(), totalFilas: total } } ];"
         }
       },
       {
         "name": "Weekly summary draft",
         "type": "n8n-nodes-base.gmail",
         "typeVersion": 2.1,
-        "position": [1100, 0],
+        "position": [
+          1100,
+          0
+        ],
         "parameters": {
           "resource": "draft",
-          "subject": "=Weekly summary — {{ $now.format('dd/MM/yyyy') }}",
-          "message": "=Summary generated from {{ $json.totalRows }} rows in the log sheet.\n\n{{ $json.summary }}\n\n---\nAutomatically generated draft. Review and correct it before sending: whatever it states goes out under your name.",
+          "subject": "=Resumen semanal — {{ $now.format('dd/MM/yyyy') }}",
+          "message": "=Resumen generado a partir de {{ $json.totalFilas }} filas de la hoja de registro.\n\n{{ $json.resumen }}\n\n---\nBorrador generado automáticamente. Revísalo y corrígelo antes de enviarlo: lo que afirme sale con tu firma.",
           "options": {
-            "sendTo": "REPLACE_RECIPIENT_EMAIL"
+            "sendTo": "REEMPLAZAR_CORREO_DESTINATARIO"
           }
         },
         "credentials": {
           "gmailOAuth2": {
-            "id": "REPLACE",
-            "name": "Gmail (account sending the summary)"
+            "id": "REEMPLAZAR",
+            "name": "Gmail (cuenta que envia el resumen)"
           }
         }
       }
@@ -312,5 +340,7 @@
       "prompt": "Duplicate the Sheets node to also read the incidents tab, merge both with a Merge node, and adjust the prompt so it distinguishes the two logs."
     }
   ],
-  "kits": ["crm-reporting-institucional"]
+  "kits": [
+    "crm-reporting-institucional"
+  ]
 }

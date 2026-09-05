@@ -145,7 +145,7 @@
           "mode": "id",
           "value": "REEMPLAZAR_ID_CANAL"
         },
-        "message": "={{ 'Carrito ' + $json.carrito_id + ' de ' + $json.cliente + ' (' + $json.importe + ' EUR, ' + $json.horas_abandonado + ' h abandonado).\\nSe enviara la plantilla aprobada \"recordatorio_carrito\" por WhatsApp al ' + $json.telefono + '.\\nAprueba para enviar; ignora para no contactar.' }}",
+        "message": "={{ 'Carrito ' + $('Evaluar elegibilidad').item.json.carrito_id + ' de ' + $('Evaluar elegibilidad').item.json.cliente + ' (' + $('Evaluar elegibilidad').item.json.importe + ' EUR, ' + $('Evaluar elegibilidad').item.json.horas_abandonado + ' h abandonado).\\nSe enviara la plantilla aprobada \"recordatorio_carrito\" por WhatsApp al ' + $('Evaluar elegibilidad').item.json.telefono + '.\\nAprueba para enviar; ignora para no contactar.' }}",
         "responseType": "approval",
         "options": {}
       },
@@ -270,6 +270,89 @@
           "name": "Google Sheets (OAuth2)"
         }
       }
+    },
+    {
+      "id": "d5f61e19-3729-5a36-8c66-621d75a46f4d",
+      "name": "Reservar seguimiento",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        500
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Carritos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "carrito_id"
+          ],
+          "value": {
+            "carrito_id": "={{ $json.carrito_id }}",
+            "estado": "pendiente_aprobacion"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
+    },
+    {
+      "id": "7bbed9b2-c98e-5896-b559-ed110b9e45dc",
+      "name": "Marcar carrito recordado",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        500
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_DOCUMENTO"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Carritos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "carrito_id"
+          ],
+          "value": {
+            "carrito_id": "={{ $('Evaluar elegibilidad').item.json.carrito_id }}",
+            "estado": "recordado",
+            "recordado_en": "={{ $now.toISO() }}"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets (OAuth2)"
+        }
+      }
     }
   ],
   "connections": {
@@ -310,7 +393,7 @@
       "main": [
         [
           {
-            "node": "Aprobar recordatorio",
+            "node": "Reservar seguimiento",
             "type": "main",
             "index": 0
           }
@@ -340,6 +423,28 @@
         [
           {
             "node": "Registrar recordatorio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reservar seguimiento": {
+      "main": [
+        [
+          {
+            "node": "Aprobar recordatorio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar recordatorio": {
+      "main": [
+        [
+          {
+            "node": "Marcar carrito recordado",
             "type": "main",
             "index": 0
           }

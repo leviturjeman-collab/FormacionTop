@@ -8,7 +8,12 @@
   "level": "intermedio",
   "what": "An n8n workflow that watches your Gmail inbox and, for every new email, does the tedious triage work: classifies it with AI by category and urgency, drafts a reply, and notifies you on Telegram with the summary. The draft stays in your Gmail drafts folder waiting for your review: nothing goes out to the sender without you reading it, adjusting it, and hitting send. It's the inbox pipeline with a built-in human brake.",
   "forWho": "For whoever handles a shared inbox (info@, support@, orders@) and loses the first hour of the day reading and deciding. It pays off from 15-20 emails a day; below that, manual triage is still faster than maintaining the workflow.",
-  "tools": ["n8n", "gmail", "claude", "telegram"],
+  "tools": [
+    "n8n",
+    "gmail",
+    "claude",
+    "telegram"
+  ],
   "capabilities": [
     "Detects new emails in Gmail every minute without you having the inbox open",
     "Classifies each email by category (inquiry, order, incident, invoice, spam...) and urgency with claude-haiku-4-5",
@@ -29,7 +34,10 @@
         "name": "Flow note",
         "type": "n8n-nodes-base.stickyNote",
         "typeVersion": 1,
-        "position": [-380, -200],
+        "position": [
+          -380,
+          -200
+        ],
         "parameters": {
           "content": "## Email triage with a human brake\nGmail Trigger → prepare → Claude classifies and drafts → Gmail draft + Telegram alert.\n\nBefore activating: 1) Gmail credential (OAuth2), 2) httpHeaderAuth credential with your Anthropic key (x-api-key header), 3) Telegram bot credential and your chat_id.\n\nThis workflow NEVER sends emails: it only creates drafts.",
           "height": 300,
@@ -40,7 +48,10 @@
         "name": "Incoming email",
         "type": "n8n-nodes-base.gmailTrigger",
         "typeVersion": 1.2,
-        "position": [0, 0],
+        "position": [
+          0,
+          0
+        ],
         "parameters": {
           "pollTimes": {
             "item": [
@@ -49,7 +60,7 @@
               }
             ]
           },
-          "simple": true,
+          "simple": false,
           "filters": {}
         },
         "credentials": {
@@ -63,16 +74,22 @@
         "name": "Prepare AI request",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [220, 0],
+        "position": [
+          220,
+          0
+        ],
         "parameters": {
-          "jsCode": "// Normalizes the email and builds the request for the Anthropic API.\nconst sender = $json.From || $json.from || 'unknown';\nconst subject = $json.Subject || $json.subject || '(no subject)';\nconst body = ($json.snippet || $json.text || '').slice(0, 2000);\n\nconst system = 'You are the triage assistant for a professional inbox, writing in English. ' +\n  'Return ONLY valid JSON with these keys: ' +\n  'category (inquiry | order | incident | invoice | sales | spam | needs_review), ' +\n  'urgency (high | medium | low), ' +\n  'summary (maximum 2 sentences), ' +\n  'reply (a friendly, brief draft reply in English, ready to review; ' +\n  'if the email is a complaint or a legal matter, the reply is just an acknowledgment of receipt). ' +\n  'No text outside the JSON.';\n\nconst payload = {\n  model: 'claude-haiku-4-5',\n  max_tokens: 700,\n  system: system,\n  messages: [ { role: 'user', content: 'Sender: ' + sender + '\\nSubject: ' + subject + '\\nMessage:\\n' + body } ]\n};\n\nreturn [ { json: { payload: payload, sender: sender, subject: subject } } ];"
+          "jsCode": "// Normaliza el correo y construye la petición para la API de Anthropic.\nconst remitente = $json.From || $json.from || 'desconocido';\nconst asunto = $json.Subject || $json.subject || '(sin asunto)';\nconst completo = typeof $json.text === 'string' && $json.text.length > 0;\nconst original = completo ? $json.text : String($json.snippet || '');\nconst parcial = !completo || original.length > 20000;\nconst cuerpo = original.slice(0, 20000);\n\nconst sistema = 'Eres el asistente de triaje de un buzon profesional en espanol. ' +\n  'Devuelve SOLO un JSON valido con estas claves: ' +\n  'categoria (consulta | pedido | incidencia | factura | comercial | spam | revisar), ' +\n  'urgencia (alta | media | baja), ' +\n  'resumen (maximo 2 frases), ' +\n  'respuesta (borrador de respuesta cordial y breve en espanol, tuteo, listo para revisar; ' +\n  'si el correo es una reclamacion o un tema legal, la respuesta es solo un acuse de recibo). ' +\n  'Nada de texto fuera del JSON.';\n\nconst payload = {\n  model: 'claude-haiku-4-5',\n  max_tokens: 700,\n  system: sistema,\n  messages: [ { role: 'user', content: 'Remitente: ' + remitente + '\\nAsunto: ' + asunto + '\\nMensaje:\\n' + cuerpo } ]\n};\n\nreturn [ { json: { payload: payload, remitente: remitente, asunto: asunto, parcial } } ];"
         }
       },
       {
         "name": "Classify with Claude",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [440, 0],
+        "position": [
+          440,
+          0
+        ],
         "parameters": {
           "method": "POST",
           "url": "https://api.anthropic.com/v1/messages",
@@ -105,16 +122,22 @@
         "name": "Parse response",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [660, 0],
+        "position": [
+          660,
+          0
+        ],
         "parameters": {
-          "jsCode": "// Extracts the JSON Claude returns and merges it with the email data.\nconst source = $('Prepare AI request').first().json;\nconst raw = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : '';\nconst clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet data;\ntry {\n  data = JSON.parse(clean);\n} catch (e) {\n  // If the AI didn't return valid JSON, flag the email for manual review.\n  data = { category: 'needs_review', urgency: 'medium', summary: raw.slice(0, 300), reply: '' };\n}\n\nreturn [ { json: {\n  sender: source.sender,\n  subject: source.subject,\n  category: data.category || 'needs_review',\n  urgency: data.urgency || 'medium',\n  summary: data.summary || '(no summary)',\n  reply: data.reply || 'Thank you for your message. We have received it and will get back to you shortly.'\n} } ];"
+          "jsCode": "// Extrae el JSON que devuelve Claude y lo une a los datos del correo.\nconst origen = $('Prepare AI request').first().json;\nconst bruto = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : '';\nconst limpio = bruto.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet datos;\ntry {\n  datos = JSON.parse(limpio);\n  if (!datos || !['consulta','pedido','incidencia','factura','comercial','spam','revisar'].includes(datos.categoria) || !['alta','media','baja'].includes(datos.urgencia) || typeof datos.resumen !== 'string' || typeof datos.respuesta !== 'string') throw new Error('invalid_classification');\n  if (origen.parcial) datos = {categoria:'revisar',urgencia:'media',resumen:'Texto parcial: revisar el correo completo antes de clasificar. '+datos.resumen,respuesta:''};\n} catch (e) {\n  // Si la IA no devolvio JSON valido, el correo se marca para revision manual.\n  datos = { categoria: 'revisar', urgencia: 'media', resumen: bruto.slice(0, 300), respuesta: '' };\n}\n\nreturn [ { json: {\n  remitente: origen.remitente,\n  asunto: origen.asunto,\n  categoria: datos.categoria || 'revisar',\n  urgencia: datos.urgencia || 'media',\n  resumen: datos.resumen || '(sin resumen)',\n  respuesta: datos.respuesta || 'Gracias por tu mensaje. Lo hemos recibido y te respondemos en breve.'\n} } ];"
         }
       },
       {
         "name": "Create reply draft",
         "type": "n8n-nodes-base.gmail",
         "typeVersion": 2.1,
-        "position": [880, 0],
+        "position": [
+          880,
+          0
+        ],
         "parameters": {
           "resource": "draft",
           "subject": "=Re: {{ $json.subject }}",
@@ -134,7 +157,10 @@
         "name": "Notify on Telegram",
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
-        "position": [1100, 0],
+        "position": [
+          1100,
+          0
+        ],
         "parameters": {
           "chatId": "REPLACE_CHAT_ID",
           "text": "=📬 Email triaged\nFrom: {{ $('Parse response').item.json.sender }}\nSubject: {{ $('Parse response').item.json.subject }}\nCategory: {{ $('Parse response').item.json.category }} · Urgency: {{ $('Parse response').item.json.urgency }}\nSummary: {{ $('Parse response').item.json.summary }}\n\nA draft is waiting for your review in Gmail. Nothing gets sent without you.",
@@ -308,5 +334,7 @@
       "prompt": "Add an IF node between \"Parse response\" and the Telegram alert with the condition urgency = high, and connect the false branch directly to the draft."
     }
   ],
-  "kits": ["atencion-cliente-multicanal"]
+  "kits": [
+    "atencion-cliente-multicanal"
+  ]
 }

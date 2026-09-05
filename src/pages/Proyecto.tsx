@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { store, useLessonProgress } from '../store'
+import { taskKey, emptyWorkspace } from '../project-workspace'
 import { CheckCircle2, ChevronRight, Circle, Clock, FileCode, Folder, PackageCheck, Rocket, TriangleAlert } from 'lucide-react'
 import type { AreaProject } from '../types'
 import { useCourse } from '../course'
@@ -15,7 +17,10 @@ import { useLocale } from '../i18n'
 export default function Proyecto({ stageId }: { stageId: string }) {
   const course = useCourse()
   const locale = useLocale()
-  const [done, setDone] = useState<number[]>([])
+  const [transferred, setTransferred] = useState(false)
+  useEffect(() => setTransferred(false), [stageId])
+  const progress = useLessonProgress('project:' + stageId)
+  const taskIds = progress.tasks?.intermedio || []
 
   const project = (course.projects || []).find((item) => item.stageId === stageId) as AreaProject | undefined
   const stage = course.stages.find((item) => item.id === stageId)
@@ -32,6 +37,10 @@ export default function Proyecto({ stageId }: { stageId: string }) {
     )
   }
 
+  const readiness = project as AreaProject & { requirementIds?: string[]; acceptanceIds?: string[] }
+  const requirementId = (item: string, index: number) => readiness.requirementIds?.[index] || taskKey({ title: item })
+  const acceptanceId = (item: string, index: number) => readiness.acceptanceIds?.[index] || taskKey({ title: item })
+  const done = project.steps.flatMap((step, index) => taskIds.includes(taskKey(step)) ? [index] : [])
   const percent = Math.round((done.length / project.steps.length) * 100)
 
   return (
@@ -62,7 +71,7 @@ export default function Proyecto({ stageId }: { stageId: string }) {
         <section className="st-block st-block-requisitos">
           <h3><PackageCheck size={15} /> {locale === 'en' ? 'You need to have this before you start' : 'Necesitas tener esto antes'}</h3>
           <ul className="st-plain">
-            {project.requires.map((item) => <li key={item}>{item}</li>)}
+            {project.requires.map((item, index) => <li key={item}><label><input type="checkbox" checked={Boolean(progress.tasks?.basico?.includes(requirementId(item, index)))} onChange={() => store.toggleTask('project:' + stageId, 'basico', requirementId(item, index))} />{item}</label></li>)}
           </ul>
         </section>
 
@@ -92,9 +101,8 @@ export default function Proyecto({ stageId }: { stageId: string }) {
               <button
                 type="button"
                 className="st-project-tick"
-                onClick={() => setDone((current) =>
-                  current.includes(index) ? current.filter((value) => value !== index) : [...current, index],
-                )}
+                onClick={() => store.toggleTask('project:' + stageId, 'intermedio', taskKey(step))}
+                aria-label={'Marcar paso ' + (index + 1) + ': ' + step.title}
                 aria-pressed={done.includes(index)}
               >
                 {done.includes(index) ? <CheckCircle2 size={17} /> : <Circle size={17} />}
@@ -118,11 +126,19 @@ export default function Proyecto({ stageId }: { stageId: string }) {
         ))}
       </ol>
 
+      <section className="st-block"><h3>{locale === 'en' ? 'Project evidence' : 'Evidencia del proyecto'}</h3><label>{locale === 'en' ? 'Outcome, tests and next improvement' : 'Resultado, pruebas y siguiente mejora'}<textarea aria-label={locale === 'en' ? 'Outcome, tests and next improvement' : 'Resultado, pruebas y siguiente mejora'} value={progress.notes.intermedio?.evidencia || ''} onChange={e => { store.setNote('project:' + stageId, 'intermedio', 'evidencia', e.target.value); setTransferred(false) }} /></label><a href={href({ name: 'mi-proyecto' })}>{locale === 'en' ? 'Open deliverables, reviews and impact in My project' : 'Abrir entregables, revisiones e impacto en Mi proyecto'}</a></section>
       <section className="st-block st-block-comprobar">
         <h3><CheckCircle2 size={15} /> {locale === 'en' ? 'It is done right if' : 'Está bien hecho si'}</h3>
-        <ul className="st-plain">{project.checks.map((item) => <li key={item}>{item}</li>)}</ul>
+        <ul className="st-plain">{project.checks.map((item, index) => <li key={item}><label><input type="checkbox" checked={Boolean(progress.tasks?.avanzado?.includes(acceptanceId(item, index)))} onChange={() => store.toggleTask('project:' + stageId, 'avanzado', acceptanceId(item, index))} />{item}</label></li>)}</ul>
       </section>
 
+      <section className="st-block"><button type="button" className="st-btn" disabled={!progress.notes.intermedio?.evidencia?.trim() || transferred} onClick={() => {
+        if (!store.get().project) store.createProject(project.title)
+        const current = store.get().project!
+        const workspace = { ...emptyWorkspace(), ...current.workspace }
+        store.setProject({ ...current, workspace: { ...workspace, artifacts: [...workspace.artifacts, { id: crypto.randomUUID(), title: project.title, url: '', notes: (locale === 'en' ? 'Self-reported project evidence.\n' : 'Evidencia de proyecto declarada por el alumno.\n') + progress.notes.intermedio!.evidencia + '\n\n' + (progress.notes.intermedio?.defensa || ''), createdAt: new Date().toISOString() }] } })
+        setTransferred(true)
+      }}>{transferred ? (locale === 'en' ? 'Evidence added to My project' : 'Evidencia añadida a Mi proyecto') : (locale === 'en' ? 'Add this evidence to My project' : 'Añadir esta evidencia a Mi proyecto')}</button></section>
       <section className="st-block st-block-ejemplo">
         <h3><Rocket size={15} /> {locale === 'en' ? 'How to extend it' : 'Cómo ampliarlo'}</h3>
         <ol className="st-example">
@@ -135,6 +151,7 @@ export default function Proyecto({ stageId }: { stageId: string }) {
       <section className="st-block st-block-decisiones">
         <h3>{locale === 'en' ? "This is how they'll ask you about it" : 'Te lo van a preguntar así'}</h3>
         <ul className="st-plain">{project.defend.map((item) => <li key={item}>{item}</li>)}</ul>
+        <label>{locale === 'en' ? 'Defense rehearsal: answers and evidence' : 'Ensayo de defensa: respuestas y evidencias'}<textarea aria-label={locale === 'en' ? 'Defense rehearsal: answers and evidence' : 'Ensayo de defensa: respuestas y evidencias'} value={progress.notes.intermedio?.defensa || ''} onChange={e => { store.setNote('project:' + stageId, 'intermedio', 'defensa', e.target.value); setTransferred(false) }} /></label>
       </section>
     </div>
   )

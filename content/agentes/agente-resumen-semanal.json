@@ -8,7 +8,12 @@
   "level": "intermedio",
   "what": "Un flujo de n8n que elimina el reporte de los viernes: a la hora que elijas, lee la hoja de Google Sheets donde tu equipo registra la actividad (casos, ventas, incidencias, horas), se la pasa a Claude para que redacte un resumen ejecutivo en español con cifras y puntos de atención, y deja ese resumen como borrador de correo en Gmail dirigido a quien deba recibirlo. Tú lo abres, lo repasas, corriges lo que haga falta y lo envías. La parte mecánica desaparece; la responsabilidad de lo que se afirma sigue siendo tuya.",
   "forWho": "Para quien monta cada semana el mismo informe copiando de una hoja de cálculo: coordinadores, responsables de operaciones, administración. Compensa si el reporte te lleva más de media hora semanal y tus datos ya viven en una hoja.",
-  "tools": ["n8n", "sheets", "claude", "gmail"],
+  "tools": [
+    "n8n",
+    "sheets",
+    "claude",
+    "gmail"
+  ],
   "capabilities": [
     "Se dispara solo cada viernes a la hora configurada, sin que nadie se acuerde",
     "Lee las filas de la hoja de registro y las compacta para el análisis (hasta 200 filas recientes)",
@@ -29,7 +34,10 @@
         "name": "Nota del flujo",
         "type": "n8n-nodes-base.stickyNote",
         "typeVersion": 1,
-        "position": [-380, -220],
+        "position": [
+          -380,
+          -220
+        ],
         "parameters": {
           "content": "## Resumen semanal con freno humano\nViernes 16:00 → leer Google Sheets → Claude redacta → borrador en Gmail.\n\nAntes de activar: 1) credencial de Google Sheets y el ID de tu hoja, 2) credencial httpHeaderAuth con la clave de Anthropic (cabecera x-api-key), 3) credencial de Gmail y el correo del destinatario.\n\nEl correo NUNCA se envía solo: queda en Borradores hasta que tú lo apruebes.",
           "height": 300,
@@ -40,13 +48,18 @@
         "name": "Cada viernes por la tarde",
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1.2,
-        "position": [0, 0],
+        "position": [
+          0,
+          0
+        ],
         "parameters": {
           "rule": {
             "interval": [
               {
                 "field": "weeks",
-                "triggerAtDay": [5],
+                "triggerAtDay": [
+                  5
+                ],
                 "triggerAtHour": 16
               }
             ]
@@ -57,7 +70,10 @@
         "name": "Leer hoja de registro",
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.5,
-        "position": [220, 0],
+        "position": [
+          220,
+          0
+        ],
         "parameters": {
           "documentId": {
             "__rl": true,
@@ -82,16 +98,22 @@
         "name": "Compactar filas",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [440, 0],
+        "position": [
+          440,
+          0
+        ],
         "parameters": {
-          "jsCode": "// Junta todas las filas de la hoja en un solo texto para la IA.\nconst filas = $input.all().map(function (item) { return item.json; });\n\n// Limite prudente: las 200 filas mas recientes (ajustalo a tu hoja).\nconst recorte = filas.slice(-200);\nconst lineas = recorte.map(function (f) { return JSON.stringify(f); }).join('\\n');\n\nconst sistema = 'Eres analista de operaciones y redactas en espanol, con tuteo profesional. ' +\n  'A partir de las filas de registro que te paso, escribe el resumen semanal para el equipo: ' +\n  '1) que ha pasado esta semana en 3-4 frases; ' +\n  '2) las cifras clave que se deduzcan de las filas (totales, repartos), citando de que columna salen; ' +\n  '3) puntos de atencion: maximo 3, solo si los datos los sostienen; ' +\n  '4) que conviene mirar la semana que viene. ' +\n  'Prohibido inventar datos que no esten en las filas. Si algo no se puede saber con estos datos, dilo. ' +\n  'Formato: texto plano de correo, sin markdown, maximo 300 palabras.';\n\nconst payload = {\n  model: 'claude-sonnet-5',\n  max_tokens: 1200,\n  system: sistema,\n  messages: [ { role: 'user', content: 'Filas del registro (una por linea, en JSON):\\n' + lineas } ]\n};\n\nreturn [ { json: { payload: payload, totalFilas: filas.length } } ];"
+          "jsCode": "// Junta todas las filas de la hoja en un solo texto para la IA.\nconst filas = $input.all().map(function (item) { return item.json; });\n\n// Limite prudente: las 200 filas mas recientes (ajustalo a tu hoja).\nconst hasta = Date.now();\nconst desde = hasta - 7 * 86400000;\nconst semana = filas.filter(f => {\n  const fecha = Date.parse(f.fecha || f.created_at || f.fecha_entrada || '');\n  return Number.isFinite(fecha) && fecha >= desde && fecha <= hasta;\n}).sort((a,b) => Date.parse(a.fecha || a.created_at || a.fecha_entrada) - Date.parse(b.fecha || b.created_at || b.fecha_entrada));\nconst recorte = semana.slice(-200);\nif (!recorte.length) throw new Error('No hay filas con fecha válida de los últimos 7 días. Configura la columna fecha.');\nconst lineas = recorte.map(function (f) { return JSON.stringify(f); }).join('\\n');\n\nconst sistema = 'Eres analista de operaciones y redactas en espanol, con tuteo profesional. ' +\n  'A partir de las filas de registro que te paso, escribe el resumen semanal para el equipo: ' +\n  '1) que ha pasado esta semana en 3-4 frases; ' +\n  '2) las cifras clave que se deduzcan de las filas (totales, repartos), citando de que columna salen; ' +\n  '3) puntos de atencion: maximo 3, solo si los datos los sostienen; ' +\n  '4) que conviene mirar la semana que viene. ' +\n  'Prohibido inventar datos que no esten en las filas. Si algo no se puede saber con estos datos, dilo. ' +\n  'Formato: texto plano de correo, sin markdown, maximo 300 palabras.';\n\nconst payload = {\n  model: 'claude-sonnet-5',\n  max_tokens: 1200,\n  system: sistema,\n  messages: [ { role: 'user', content: 'Periodo: últimos 7 días. Filas analizadas: ' + recorte.length + '; omitidas por límite: ' + Math.max(0, semana.length-recorte.length) + '. Filas del registro (una por linea, en JSON):\\n' + lineas } ]\n};\n\nreturn [ { json: { payload: payload, totalFilas: recorte.length, filasDisponibles: semana.length, filasOmitidas: Math.max(0, semana.length - recorte.length) } } ];"
         }
       },
       {
         "name": "Redactar con Claude",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [660, 0],
+        "position": [
+          660,
+          0
+        ],
         "parameters": {
           "method": "POST",
           "url": "https://api.anthropic.com/v1/messages",
@@ -124,7 +146,10 @@
         "name": "Extraer resumen",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [880, 0],
+        "position": [
+          880,
+          0
+        ],
         "parameters": {
           "jsCode": "// Recoge el texto redactado y el numero de filas analizadas.\nconst bruto = ($json.content && $json.content[0] && $json.content[0].text) ? $json.content[0].text : 'La IA no devolvio texto. Revisa la ejecucion en n8n.';\nconst total = $('Compactar filas').first().json.totalFilas;\n\nreturn [ { json: { resumen: bruto.trim(), totalFilas: total } } ];"
         }
@@ -133,7 +158,10 @@
         "name": "Borrador del correo semanal",
         "type": "n8n-nodes-base.gmail",
         "typeVersion": 2.1,
-        "position": [1100, 0],
+        "position": [
+          1100,
+          0
+        ],
         "parameters": {
           "resource": "draft",
           "subject": "=Resumen semanal — {{ $now.format('dd/MM/yyyy') }}",
@@ -312,5 +340,7 @@
       "prompt": "Duplica el nodo de Sheets para leer también la pestaña de incidencias, junta ambos con un nodo Merge y ajusta el prompt para que distinga los dos registros."
     }
   ],
-  "kits": ["crm-reporting-institucional"]
+  "kits": [
+    "crm-reporting-institucional"
+  ]
 }

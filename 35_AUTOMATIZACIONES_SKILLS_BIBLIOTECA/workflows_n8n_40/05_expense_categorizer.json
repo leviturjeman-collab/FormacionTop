@@ -154,7 +154,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Cruza la respuesta de la IA con los gastos originales.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet lista = [];\ntry {\n  lista = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  lista = [];\n}\nconst previo = $('Agrupar pendientes').item.json;\nconst porId = new Map(lista.map((g) => [String(g.id), g]));\nreturn previo.pendientes.map((gasto) => {\n  const ia = porId.get(String(gasto.id)) || { categoria: 'revisar', confianza: 0 };\n  return { json: { ...gasto, categoria: ia.categoria, confianza: ia.confianza, procesado_en: previo.procesado_en } };\n});"
+        "jsCode": "// Cruza la respuesta de la IA con los gastos originales.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet lista = [];\ntry {\n  lista = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  lista = [];\n}\nif (!Array.isArray(lista)) lista = [];\nlista = lista.filter(g => g && typeof g === 'object' && typeof g.categoria === 'string');\nconst previo = $('Agrupar pendientes').item.json;\nconst porId = new Map(lista.map((g) => [String(g.id), g]));\nreturn previo.pendientes.map((gasto) => {\n  const ia = porId.get(String(gasto.id)) || { categoria: 'revisar', confianza: 0 };\n  return { json: { ...gasto, categoria: ia.categoria, confianza: ia.confianza, procesado_en: previo.procesado_en } };\n});"
       },
       "id": "nodo-007",
       "name": "Interpretar categorías",

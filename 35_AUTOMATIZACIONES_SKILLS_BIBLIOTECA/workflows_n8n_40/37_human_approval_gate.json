@@ -184,6 +184,12 @@
               "name": "decidido_en",
               "value": "={{ $now.toISO() }}",
               "type": "string"
+            },
+            {
+              "id": "audit-request-Marcar como aprobada",
+              "name": "request_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
             }
           ]
         },
@@ -225,6 +231,12 @@
               "id": "asig_Marcar_como_rechazada_3",
               "name": "decidido_en",
               "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "audit-request-Marcar como rechazada",
+              "name": "request_id",
+              "value": "={{ $execution.id }}",
               "type": "string"
             }
           ]
@@ -301,19 +313,16 @@
       }
     },
     {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { ok: true, decision: $json.decision, accion: $json.accion } }}",
-        "options": {}
-      },
+      "parameters": {},
       "id": "nodo_183",
       "name": "Responder decisión",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
       "position": [
         1540,
         280
-      ]
+      ],
+      "notes": "Decision persisted in Aprobaciones. The original caller has already received 202 and request_id."
     },
     {
       "parameters": {
@@ -331,6 +340,56 @@
         660,
         480
       ]
+    },
+    {
+      "id": "audit-ack-37",
+      "name": "Aceptar solicitud asíncrona",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        300,
+        -200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { accepted: true, request_id: $execution.id, status: \"pending_approval\" } }}",
+        "options": {
+          "responseCode": 202
+        }
+      }
+    },
+    {
+      "id": "audit-phone-37",
+      "name": "¿Hay teléfono de aviso?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1000,
+        -250
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "phone",
+              "leftValue": "={{ $('Validar solicitud').first().json.telefono_aviso }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -360,7 +419,7 @@
       "main": [
         [
           {
-            "node": "Pedir aprobación por Telegram",
+            "node": "Aceptar solicitud asíncrona",
             "type": "main",
             "index": 0
           }
@@ -407,12 +466,12 @@
       "main": [
         [
           {
-            "node": "Avisar por WhatsApp al solicitante",
+            "node": "Registrar decisión",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Registrar decisión",
+            "node": "¿Hay teléfono de aviso?",
             "type": "main",
             "index": 0
           }
@@ -439,6 +498,29 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Aceptar solicitud asíncrona": {
+      "main": [
+        [
+          {
+            "node": "Pedir aprobación por Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay teléfono de aviso?": {
+      "main": [
+        [
+          {
+            "node": "Avisar por WhatsApp al solicitante",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },

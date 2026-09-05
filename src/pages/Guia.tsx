@@ -1,3 +1,5 @@
+import { copyText } from '../downloads'
+import { store, useStudent } from '../store'
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Ban, Check, CheckCircle2, Circle, Clock, Copy, HelpCircle, Languages, Lightbulb, List, Quote } from 'lucide-react'
 import type { Guide } from '../types'
@@ -20,7 +22,7 @@ function TaskPrompt({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => {
-          navigator.clipboard?.writeText(text).then(
+          copyText(text).then(
             () => {
               setCopied(true)
               window.setTimeout(() => setCopied(false), 1800)
@@ -41,12 +43,14 @@ export default function Guia({ guideId }: { guideId?: string }) {
   const course = useCourse()
   const locale = useLocale()
   const guias = course.guides || []
-  const [done, setDone] = useState<number[]>([])
+  const student = useStudent()
+  const done = student.lessons['guide:' + guideId]?.tasks?.intermedio || []
 
   const guia = guideId ? guias.find((item) => item.id === guideId) : null
 
   // Sin id, se muestra el índice de guías.
   if (!guia) {
+    if (guideId) return <div className="st-page"><h1>{locale === 'en' ? 'Guide unavailable' : 'Guía no disponible'}</h1><a href={href({ name: 'guia' })}>{locale === 'en' ? 'See all guides' : 'Ver todas las guías'}</a></div>
     if (!guias.length) {
       return (
         <div className="st-page">
@@ -151,16 +155,16 @@ export default function Guia({ guideId }: { guideId?: string }) {
 
         <ol className="st-task-list">
           {guia.tasks.map((task, index) => {
-            const hecha = done.includes(index)
+            const taskId = task.id || `guide-${guideId}-${index}`
+            const hecha = done.includes(taskId)
             return (
               <li key={index} className={hecha ? 'done' : ''}>
                 <div className="st-task-head">
                   <button
                     type="button"
                     className="st-task-tick"
-                    onClick={() => setDone((current) =>
-                      current.includes(index) ? current.filter((value) => value !== index) : [...current, index],
-                    )}
+                    onClick={() => store.toggleTask('guide:' + guideId, 'intermedio', taskId)}
+                    aria-label={task.title}
                     aria-pressed={hecha}
                   >
                     {hecha ? <CheckCircle2 size={18} /> : <Circle size={18} />}

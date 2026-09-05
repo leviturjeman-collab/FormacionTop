@@ -820,7 +820,8 @@
         "Gmail with the 'invoices' label and a rule that applies it, and send permission for reminders",
         "A Google Sheet with received, issued and transactions tabs",
         "An Anthropic API key as a Header Auth credential",
-        "Slack to validate invoices and approve reminders"
+        "Slack to validate invoices and approve reminders",
+        "Gmail downloads full messages and PDF attachments. Extract From File handles text PDFs; scanned, encrypted, empty or non-PDF files require manual review without a provider call. Test two distinct invoices in one poll and verify separate IDs before enabling."
       ],
       "fill": [
         [
@@ -852,7 +853,7 @@
         "Keys go in n8n credentials, never in a node. Test both branches with your own invoices and emails before using real data"
       ],
       "flow": {
-        "name": "Finance, Invoices and Collections Kit · validated intake and approved reminders",
+        "name": "Kit Finanzas, facturas y cobros · recepción validada y recordatorios aprobados",
         "nodes": [
           {
             "parameters": {
@@ -863,11 +864,14 @@
                   }
                 ]
               },
-              "simple": true,
+              "simple": false,
               "filters": {
                 "q": "label:facturas"
               },
-              "options": {}
+              "options": {
+                "downloadAttachments": true,
+                "dataPropertyAttachmentsPrefixName": "attachment_"
+              }
             },
             "id": "f1300000-0000-4000-8000-000000000001",
             "name": "Llega factura al buzón",
@@ -883,11 +887,12 @@
                 "name": "Gmail de administracion"
               }
             },
-            "notes": "Fires on every email that receives the 'facturas' label. The Gmail rule that applies the label is your on/off switch: remove it and the circuit stops."
+            "notes": "Dispara con cada correo que reciba la etiqueta 'facturas'. La regla de Gmail que etiqueta es tu interruptor: quitala y el circuito se para."
           },
           {
             "parameters": {
-              "jsCode": "// Prepara el texto de la factura para la extraccion.\nconst salida = [];\nfor (const item of $input.all()) {\n  const j = item.json;\n  const asunto = j.subject || j.Subject || '';\n  const cuerpo = j.text || j.snippet || '';\n  salida.push({\n    json: {\n      id: $execution.id + '-' + $itemIndex,\n      fecha_recepcion: new Date().toISOString(),\n      remitente: j.from?.value?.[0]?.address || j.From || '',\n      texto_factura: ('Asunto: ' + asunto + '\\n\\n' + cuerpo).slice(0, 8000),\n      estado: 'recibida',\n    },\n  });\n}\nreturn salida;"
+              "mode": "runOnceForEachItem",
+              "jsCode": "const original=$('Seleccionar facturas PDF').item.json;\nconst j=$json;\nconst body=typeof j.text==='string'?j.text:'';\nconst reason=j.error?'PDF no extraíble: revisar/OCR manual':original.attachment_missing?'Adjunto no PDF: convertir y verificar':!body.trim()?'No hay texto completo: revisar/OCR manual':body.length>100000?'Texto excede límite: dividir documento antes de procesar':'';\nif (!original.invoice_id) throw new Error('Gmail message id required');\nreturn {json:{id:original.invoice_id,fecha_recepcion:new Date().toISOString(),remitente:original.from?.value?.[0]?.address || original.From || '',texto_factura:reason?'':body,texto_valido:!reason,revision_origen:reason,attachment_name:original.attachment_name || '',estado:reason?'requiere_revision':'recibida'} };"
             },
             "id": "f1300000-0000-4000-8000-000000000002",
             "name": "Preparar texto de la factura",
@@ -897,7 +902,7 @@
               -660,
               160
             ],
-            "notes": "With PDF attachments, add a PDF text extraction step before this. Starting with the email body already covers many suppliers."
+            "notes": "Con adjuntos PDF, anade antes un paso de extraccion de texto del PDF. Empezar con el cuerpo del correo ya cubre a muchos proveedores."
           },
           {
             "parameters": {
@@ -939,11 +944,11 @@
                 "name": "Anthropic API"
               }
             },
-            "notes": "Header Auth credential: name x-api-key, value your key. Replace TU_NEGOCIO."
+            "notes": "Credencial Header Auth: nombre x-api-key, valor tu clave. Sustituye TU_NEGOCIO."
           },
           {
             "parameters": {
-              "jsCode": "// Junta el correo con la extraccion y hace la comprobacion aritmetica en codigo:\n// las cuentas no se le piden al modelo.\nconst salida = [];\nfor (const item of $input.all()) {\n  const correo = $('Preparar texto de la factura').first().json;\n  let bruto = item.json?.content?.[0]?.text ?? '';\n  bruto = bruto.replace(/```json/gi, '').replace(/```/g, '').trim();\n  let datos;\n  try {\n    datos = JSON.parse(bruto);\n  } catch (error) {\n    datos = { proveedor: null, numero_factura: null, base: null, iva: null, total: null, iban: null, vencimiento: null, concepto: null, dudas: ['extraccion no parseable: ' + bruto.slice(0, 150)] };\n  }\n  const dudas = Array.isArray(datos.dudas) ? datos.dudas : [];\n  const base = Number(datos.base);\n  const iva = Number(datos.iva);\n  const total = Number(datos.total);\n  if (!Number.isNaN(base) && !Number.isNaN(iva) && !Number.isNaN(total)) {\n    if (Math.abs(base + iva - total) > 0.01) {\n      dudas.push('DESCUADRE: base ' + base + ' + iva ' + iva + ' = ' + (base + iva).toFixed(2) + ', pero total ' + total);\n    }\n  }\n  salida.push({\n    json: {\n      id: correo.id,\n      fecha_recepcion: correo.fecha_recepcion,\n      remitente: correo.remitente,\n      proveedor: datos.proveedor ?? '',\n      cif: datos.cif ?? '',\n      numero_factura: datos.numero_factura ?? '',\n      fecha_factura: datos.fecha_factura ?? '',\n      base: datos.base ?? '',\n      iva: datos.iva ?? '',\n      total: datos.total ?? '',\n      iban: datos.iban ?? '',\n      vencimiento: datos.vencimiento ?? '',\n      concepto: datos.concepto ?? '',\n      dudas: dudas.join(' | '),\n      estado: 'extraida',\n    },\n  });\n}\nreturn salida;"
+              "jsCode": "// Junta el correo con la extraccion y hace la comprobacion aritmetica en codigo:\n// las cuentas no se le piden al modelo.\nconst salida = [];\nfor (const [index,item] of $input.all().entries()) {\n  const correo = $('Preparar texto de la factura').itemMatching(index).json;\n  let bruto = item.json?.content?.[0]?.text ?? '';\n  bruto = bruto.replace(/```json/gi, '').replace(/```/g, '').trim();\n  let datos;\n  try {\n    datos = JSON.parse(bruto);\n    if (!datos || typeof datos !== 'object' || Array.isArray(datos)) throw new Error('invalid_invoice');\n  } catch (error) {\n    datos = { proveedor: null, numero_factura: null, base: null, iva: null, total: null, iban: null, vencimiento: null, concepto: null, dudas: ['extraccion no parseable: ' + bruto.slice(0, 150)] };\n  }\n  const dudas = Array.isArray(datos.dudas) ? datos.dudas.map(String) : [];\n  if (correo.revision_origen) dudas.push(correo.revision_origen);\n  if (['base','iva','total'].some(k => datos[k] === null || datos[k] === undefined || datos[k] === '')) dudas.push('INCOMPLETA: faltan importes; verificar el adjunto original');\n  const base = Number(datos.base);\n  const iva = Number(datos.iva);\n  const total = Number(datos.total);\n  if (!Number.isNaN(base) && !Number.isNaN(iva) && !Number.isNaN(total)) {\n    if (Math.abs(base + iva - total) > 0.01) {\n      dudas.push('DESCUADRE: base ' + base + ' + iva ' + iva + ' = ' + (base + iva).toFixed(2) + ', pero total ' + total);\n    }\n  }\n  salida.push({\n    pairedItem: {item:index},\n    json: {\n      id: correo.id,\n      fecha_recepcion: correo.fecha_recepcion,\n      remitente: correo.remitente,\n      proveedor: datos.proveedor ?? '',\n      cif: datos.cif ?? '',\n      numero_factura: datos.numero_factura ?? '',\n      fecha_factura: datos.fecha_factura ?? '',\n      base: datos.base ?? '',\n      iva: datos.iva ?? '',\n      total: datos.total ?? '',\n      iban: datos.iban ?? '',\n      vencimiento: datos.vencimiento ?? '',\n      concepto: datos.concepto ?? '',\n      dudas: dudas.join(' | '),\n      estado: dudas.length ? 'requiere_revision' : 'extraida',\n    },\n  });\n}\nreturn salida;"
             },
             "id": "f1300000-0000-4000-8000-000000000004",
             "name": "Comprobar y componer",
@@ -956,7 +961,7 @@
           },
           {
             "parameters": {
-              "operation": "append",
+              "operation": "appendOrUpdate",
               "documentId": {
                 "__rl": true,
                 "value": "ID_DE_TU_HOJA",
@@ -1025,11 +1030,11 @@
                 "name": "Slack de administracion"
               }
             },
-            "notes": "Human brake: nothing extracted counts until a person validates it. The IBAN alert is the defense against the account-change fraud."
+            "notes": "Freno humano: nada de lo extraido cuenta hasta que una persona lo valida. El aviso del IBAN es la defensa contra el fraude del cambio de cuenta."
           },
           {
             "parameters": {
-              "operation": "append",
+              "operation": "appendOrUpdate",
               "documentId": {
                 "__rl": true,
                 "value": "ID_DE_TU_HOJA",
@@ -1043,7 +1048,7 @@
               "columns": {
                 "mappingMode": "defineBelow",
                 "value": {
-                  "id": "={{ $('Comprobar y componer').first().json.id }}",
+                  "id": "={{ $('Comprobar y componer').item.json.id }}",
                   "estado": "={{ $json.data && $json.data.approved ? 'validada' : 'rechazada' }}",
                   "validada_por": "escribe tu nombre al validar en la hoja",
                   "fecha_validacion": "={{ $now.toISO() }}"
@@ -1130,7 +1135,7 @@
               -440,
               620
             ],
-            "notes": "Adjust DIAS_NIVEL_1/2/3 to your collections policy. The texts are a starting point: you can replace them with the kit's reminder prompt to personalize per client."
+            "notes": "Ajusta DIAS_NIVEL_1/2/3 a tu politica de cobros. Los textos son la base: puedes sustituirlos por el prompt de recordatorios del kit para personalizarlos por cliente."
           },
           {
             "parameters": {
@@ -1166,7 +1171,7 @@
                 "name": "Slack de administracion"
               }
             },
-            "notes": "Human brake: no reminder goes out without approval. A reminder to someone who already paid costs more than ten unsent."
+            "notes": "Freno humano: ningun recordatorio sale sin aprobacion. Un recordatorio a quien ya pago cuesta mas que diez sin enviar."
           },
           {
             "parameters": {
@@ -1205,9 +1210,9 @@
           },
           {
             "parameters": {
-              "sendTo": "={{ $('Filtrar vencidas por nivel').first().json.email_cliente }}",
-              "subject": "=Factura {{ $('Filtrar vencidas por nivel').first().json.numero }} pendiente de pago",
-              "message": "={{ $('Filtrar vencidas por nivel').first().json.texto_propuesto }}",
+              "sendTo": "={{ $('Filtrar vencidas por nivel').item.json.email_cliente }}",
+              "subject": "=Factura {{ $('Filtrar vencidas por nivel').item.json.numero }} pendiente de pago",
+              "message": "={{ $('Filtrar vencidas por nivel').item.json.texto_propuesto }}",
               "options": {}
             },
             "id": "f1300000-0000-4000-8000-00000000000d",
@@ -1224,11 +1229,11 @@
                 "name": "Gmail de administracion"
               }
             },
-            "notes": "Goes out with your signature after approval. After sending, update the invoice status (recordada_1/2/escalada) in the sheet: avoids repeating the level."
+            "notes": "Sale con tu firma tras la aprobacion. Despues de enviar, actualiza el estado de la factura (recordada_1/2/escalada) en la hoja: evita repetir nivel."
           },
           {
             "parameters": {
-              "operation": "append",
+              "operation": "appendOrUpdate",
               "documentId": {
                 "__rl": true,
                 "value": "ID_DE_TU_HOJA",
@@ -1242,8 +1247,8 @@
               "columns": {
                 "mappingMode": "defineBelow",
                 "value": {
-                  "numero": "={{ $('Filtrar vencidas por nivel').first().json.numero }}",
-                  "estado": "={{ 'recordada_' + $('Filtrar vencidas por nivel').first().json.nivel }}",
+                  "numero": "={{ $('Filtrar vencidas por nivel').item.json.numero }}",
+                  "estado": "={{ 'recordada_' + $('Filtrar vencidas por nivel').item.json.nivel }}",
                   "ultimo_recordatorio": "={{ $now.toISO() }}"
                 },
                 "matchingColumns": [
@@ -1266,7 +1271,106 @@
                 "name": "Google Sheets del libro"
               }
             },
-            "notes": "Change the operation to appendOrUpdate in your n8n to update the existing row by number instead of adding another."
+            "notes": "Cambia la operacion a appendOrUpdate en tu n8n para actualizar la fila existente por numero en vez de anadir otra."
+          },
+          {
+            "id": "23f30fc9-1989-52b2-a15d-514952654b73",
+            "name": "Seleccionar facturas PDF",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              400,
+              900
+            ],
+            "parameters": {
+              "jsCode": "const output=[];\nfor (const [index,item] of $input.all().entries()) {\n const j=item.json;\n const pdfs=Object.entries(item.binary || {}).filter(([key,b])=>b.mimeType==='application/pdf' || String(b.fileName || '').toLowerCase().endsWith('.pdf'));\n if (pdfs.length) {\n  for (const [key,binary] of pdfs) output.push({json:{...j,invoice_id:String(j.id || j.messageId || '')+':'+key,attachment_name:binary.fileName || key,has_pdf:true},binary:{invoice:binary},pairedItem:{item:index} });\n } else output.push({json:{...j,invoice_id:String(j.id || j.messageId || ''),has_pdf:false,attachment_missing:Object.keys(item.binary || {}).length>0},pairedItem:{item:index} });\n}\nreturn output;"
+            }
+          },
+          {
+            "id": "f7413651-29ee-50b2-b9d9-01074521da24",
+            "name": "¿Adjunto PDF?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+              400,
+              900
+            ],
+            "parameters": {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ok",
+                    "leftValue": "={{ $json.has_pdf }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "options": {}
+            }
+          },
+          {
+            "id": "00cb9105-a2c4-53a9-8a47-41ec10bf1fc9",
+            "name": "Extraer texto PDF",
+            "type": "n8n-nodes-base.extractFromFile",
+            "typeVersion": 1,
+            "position": [
+              400,
+              900
+            ],
+            "parameters": {
+              "operation": "pdf",
+              "binaryPropertyName": "invoice",
+              "options": {
+                "joinPages": true,
+                "keepSource": "json",
+                "maxPages": 0
+              }
+            },
+            "onError": "continueRegularOutput"
+          },
+          {
+            "id": "d09986f0-a67a-5f47-80fd-9dcf7d0d3adc",
+            "name": "¿Texto completo extraíble?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+              400,
+              900
+            ],
+            "parameters": {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ok",
+                    "leftValue": "={{ $json.texto_valido }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "options": {}
+            }
           }
         ],
         "connections": {
@@ -1274,7 +1378,7 @@
             "main": [
               [
                 {
-                  "node": "Preparar texto de la factura",
+                  "node": "Seleccionar facturas PDF",
                   "type": "main",
                   "index": 0
                 }
@@ -1285,7 +1389,7 @@
             "main": [
               [
                 {
-                  "node": "Extraer datos de la factura",
+                  "node": "¿Texto completo extraíble?",
                   "type": "main",
                   "index": 0
                 }
@@ -1397,6 +1501,64 @@
               [
                 {
                   "node": "Actualizar estado de la factura",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Seleccionar facturas PDF": {
+            "main": [
+              [
+                {
+                  "node": "¿Adjunto PDF?",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "¿Adjunto PDF?": {
+            "main": [
+              [
+                {
+                  "node": "Extraer texto PDF",
+                  "type": "main",
+                  "index": 0
+                }
+              ],
+              [
+                {
+                  "node": "Preparar texto de la factura",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Extraer texto PDF": {
+            "main": [
+              [
+                {
+                  "node": "Preparar texto de la factura",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "¿Texto completo extraíble?": {
+            "main": [
+              [
+                {
+                  "node": "Extraer datos de la factura",
+                  "type": "main",
+                  "index": 0
+                }
+              ],
+              [
+                {
+                  "node": "Comprobar y componer",
                   "type": "main",
                   "index": 0
                 }

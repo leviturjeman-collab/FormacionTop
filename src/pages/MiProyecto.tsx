@@ -1,3 +1,4 @@
+import { workspaceText } from '../project-workspace-i18n'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
@@ -10,6 +11,9 @@ import { useCourse } from '../course'
 import type { ToolPage } from '../types'
 import { useLocale } from '../i18n'
 import type { Locale } from '../i18n'
+import ProjectWorkspace from '../components/ProjectWorkspace'
+import ProjectAssessment from '../components/ProjectAssessment'
+import ProjectBudget from '../components/ProjectBudget'
 
 type GoalId = 'aprender' | 'web' | 'app' | 'automatizar' | 'contenido' | 'datos' | 'no-se'
 type Choice = { id: string; label: string; description: string }
@@ -161,6 +165,7 @@ function projectSavedPrompts(locale: Locale, project?: ProjectProfile): SavedPro
 
 export default function MiProyecto() {
   const locale = useLocale()
+  const t = workspaceText(locale)
   const student = useStudent()
   const course = useCourse()
   const [step, setStep] = useState(0)
@@ -183,15 +188,16 @@ export default function MiProyecto() {
 
   useEffect(() => {
     if (student.project) {
+      setGoal((student.project.projectType as GoalId) || 'no-se')
       setDraft(student.project)
       setSelectedTools(student.project.toolIds || [])
       setAudience(student.project.audience || '')
       setOutcome(student.project.outcome || '')
     }
-  }, [student.project])
+  }, [student.project?.id])
 
   function save() {
-    store.setProject({ ...draft, audience, outcome, goal: selectedLabel(GOALS, goal), tools: chosenTools.map((tool) => tool.label).join(', '), toolIds: selectedTools, projectType: goal, promptBrief: prompt, savedPrompts: student.project?.savedPrompts || draft.savedPrompts || [], updatedAt: new Date().toISOString() })
+    store.setProject({ ...student.project, ...draft, workspace: student.project?.workspace, audience, outcome, goal: selectedLabel(GOALS, goal), tools: chosenTools.map((tool) => tool.label).join(', '), toolIds: selectedTools, projectType: goal, promptBrief: prompt, savedPrompts: student.project?.savedPrompts || draft.savedPrompts || [], updatedAt: new Date().toISOString() })
     setSaved(true)
   }
 
@@ -205,7 +211,7 @@ export default function MiProyecto() {
     setSaved(false)
   }
 
-  const canContinue = step === 0 || step === 1 ? Boolean(step === 0 ? goal : audience) : step === 2 ? Boolean(outcome) : step === 3 ? selectedTools.length > 0 : true
+  const canContinue = step === 0 || step === 1 ? Boolean(step === 0 ? goal : audience) : step === 2 ? Boolean(outcome) : true
 
   const stepLabels = locale === 'en'
     ? ['Goal', 'Audience', 'Outcome', 'Tools', 'Prompt', 'Path']
@@ -219,6 +225,10 @@ export default function MiProyecto() {
         <p>{locale === 'en' ? 'Choose the options and let the academy prepare a path. First we define the right prompt; then we build the first version.' : 'Elige opciones y deja que la academia prepare una ruta. Primero se define el prompt correcto; después se construye la primera versión.'}</p>
       </div>
 
+      <section className="st-actions" aria-label="Mis proyectos">
+        <label>{t("Proyecto activo")}<select value={student.activeProjectId || ''} onChange={e => { store.selectProject(e.target.value); setStep(0); setSaved(false) }}>{(student.projects || []).map(item => <option key={item.id} value={item.id}>{item.name || t("Sin nombre")}</option>)}</select></label>
+        <button type="button" className="st-btn-ghost" onClick={() => { store.createProject(t("Nuevo proyecto")); setStep(0); setSaved(false) }}>{t("Crear otro proyecto")}</button>
+      </section>
       <div className="st-project-progress" aria-label={locale === 'en' ? 'Assistant progress' : 'Progreso del asistente'}>
         {stepLabels.map((label, index) => <button key={label} type="button" className={index === step ? 'on' : index < step ? 'done' : ''} onClick={() => index <= step && setStep(index)}><span>{index < step ? <Check size={11} /> : index + 1}</span>{label}</button>)}
       </div>
@@ -232,26 +242,30 @@ export default function MiProyecto() {
 
         {step === 3 && <div><WizardHeading icon={<Wrench size={16} />} title={locale === 'en' ? 'Choose the tools you want to explore' : 'Elige las herramientas que quieres explorar'} hint={locale === 'en' ? 'You can pick several. The academy will tell you which fit and which to use first.' : 'Puedes seleccionar varias. La academia te dirá cuáles encajan y cuál usar primero.'} /><div className="st-tool-pick-note"><Lightbulb size={14} /><span>{locale === 'en' ? 'Recommended for your goal: ' : 'Recomendadas para tu objetivo: '}{suggestions.map((tool) => tool.label).join(', ') || (locale === 'en' ? 'pick one so recommendations appear' : 'elige una para que aparezcan recomendaciones')}.</span></div><div className="st-tool-picker">{course.toolPages.map((tool) => <ToolChoice key={tool.id} tool={tool} selected={selectedTools.includes(tool.id)} recommended={suggestions.some((item) => item.id === tool.id)} onClick={() => toggleTool(tool.id)} locale={locale} />)}</div></div>}
 
-        {step === 4 && <div><WizardHeading icon={<Sparkles size={16} />} title={locale === 'en' ? 'This is the specific prompt for your project' : 'Este es el prompt específico de tu proyecto'} hint={locale === 'en' ? 'Read it, copy it, and use it before building anything. It forces you to clarify the important decisions.' : 'Léelo, cópialo y úsalo antes de construir nada. Te obliga a aclarar las decisiones importantes.'} /><div className="st-prompt-prep"><strong>{locale === 'en' ? 'Before pasting it' : 'Antes de pegarlo'}</strong><span>{locale === 'en' ? 'Have a real description ready, no sensitive data. The prompt will ask you questions one at a time and compare the selected tools.' : 'Ten preparada una descripción real, no datos sensibles. El prompt te hará preguntas una a una y comparará las herramientas seleccionadas.'}</span></div><div className="st-code st-project-prompt"><button type="button" onClick={() => { navigator.clipboard?.writeText(prompt); setCopied(true); window.setTimeout(() => setCopied(false), 1600) }}><Clipboard size={11} /> {copied ? (locale === 'en' ? 'Copied' : 'Copiado') : (locale === 'en' ? 'Copy prompt' : 'Copiar prompt')}</button><pre><code>{prompt}</code></pre></div><small className="st-prompt-length">{prompt.trim().split(/\s+/).length} {locale === 'en' ? 'words · questions, tool choice, testing and limits' : 'palabras · preguntas, elección de herramienta, prueba y límites'}</small></div>}
+        {step === 4 && <div><WizardHeading icon={<Sparkles size={16} />} title={locale === 'en' ? 'This is the specific prompt for your project' : 'Este es el prompt específico de tu proyecto'} hint={locale === 'en' ? 'Read it, copy it, and use it before building anything. It forces you to clarify the important decisions.' : 'Léelo, cópialo y úsalo antes de construir nada. Te obliga a aclarar las decisiones importantes.'} /><div className="st-prompt-prep"><strong>{locale === 'en' ? 'Before pasting it' : 'Antes de pegarlo'}</strong><span>{locale === 'en' ? 'Have a real description ready, no sensitive data. The prompt will ask you questions one at a time and compare the selected tools.' : 'Ten preparada una descripción real, no datos sensibles. El prompt te hará preguntas una a una y comparará las herramientas seleccionadas.'}</span></div><div className="st-code st-project-prompt"><button type="button" onClick={() => { navigator.clipboard?.writeText(prompt).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1600) }, () => setCopied(false)) }}><Clipboard size={11} /> {copied ? (locale === 'en' ? 'Copied' : 'Copiado') : (locale === 'en' ? 'Copy prompt' : 'Copiar prompt')}</button><pre><code>{prompt}</code></pre></div><small className="st-prompt-length">{prompt.trim().split(/\s+/).length} {locale === 'en' ? 'words · questions, tool choice, testing and limits' : 'palabras · preguntas, elección de herramienta, prueba y límites'}</small></div>}
 
-        {step === 5 && <div><WizardHeading icon={<Save size={16} />} title={locale === 'en' ? 'Your path is ready' : 'Tu ruta está preparada'} hint={locale === 'en' ? 'The profile is saved in this browser and you can come back and change it whenever you learn something new.' : 'La ficha queda guardada en este navegador y puedes volver a cambiarla cuando aprendas algo nuevo.'} /><div className="st-project-summary"><div><span>{locale === 'en' ? 'Goal' : 'Objetivo'}</span><strong>{selectedLabel(GOALS, goal)}</strong></div><div><span>{locale === 'en' ? 'Audience' : 'Persona'}</span><strong>{selectedLabel(AUDIENCES, audience)}</strong></div><div><span>{locale === 'en' ? 'Outcome' : 'Resultado'}</span><strong>{selectedLabel(OUTCOMES, outcome)}</strong></div><div><span>{locale === 'en' ? 'Tools' : 'Herramientas'}</span><strong>{chosenTools.map((tool) => tool.label).join(', ')}</strong></div></div><div className="st-project-route"><a href={href({ name: 'curso' })}><BookMarked size={16} /><span><strong>{locale === 'en' ? '1. Follow the Program' : '1. Seguir el Programa'}</strong><small>{locale === 'en' ? 'Learn first the stage that matches your goal.' : 'Aprende primero la etapa que corresponde a tu objetivo.'}</small></span><ArrowRight size={13} /></a>{chosenTools.slice(0, 3).map((tool) => <a key={tool.id} href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}><Wrench size={16} /><span><strong>{locale === 'en' ? `2. Open ${tool.label}` : `2. Abrir ${tool.label}`}</strong><small>{locale === 'en' ? 'See its models, features, prompts, and automations.' : 'Ve sus modelos, funciones, prompts y automatizaciones.'}</small></span><ArrowRight size={13} /></a>)}</div>{saved && <p className="st-project-saved"><Check size={12} /> {locale === 'en' ? 'Saved in this browser.' : 'Guardado en este navegador.'}</p>}</div>}
+        {step === 5 && <div><WizardHeading icon={<Save size={16} />} title={locale === 'en' ? 'Your path is ready' : 'Tu ruta está preparada'} hint={locale === 'en' ? 'The profile is saved in this browser and you can come back and change it whenever you learn something new.' : 'La ficha queda guardada en este navegador y puedes volver a cambiarla cuando aprendas algo nuevo.'} /><div className="st-project-summary"><div><span>{locale === 'en' ? 'Goal' : 'Objetivo'}</span><strong>{selectedLabel(GOALS, goal)}</strong></div><div><span>{locale === 'en' ? 'Audience' : 'Persona'}</span><strong>{selectedLabel(AUDIENCES, audience)}</strong></div><div><span>{locale === 'en' ? 'Outcome' : 'Resultado'}</span><strong>{selectedLabel(OUTCOMES, outcome)}</strong></div><div><span>{locale === 'en' ? 'Tools' : 'Herramientas'}</span><strong>{chosenTools.map((tool) => tool.label).join(', ')}</strong></div></div><div className="st-project-route"><a href={href({ name: 'curso', lessonId: ({ web: 'primera-web', app: 'primera-web', automatizar: 'que-automatizar', contenido: 'encargo-comprobable', datos: 'datos-del-proyecto' } as Record<string, string>)[goal] || 'que-es-la-ia' })}><BookMarked size={16} /><span><strong>{locale === 'en' ? '1. Follow the Program' : '1. Seguir el Programa'}</strong><small>{locale === 'en' ? 'Learn first the stage that matches your goal.' : 'Aprende primero la etapa que corresponde a tu objetivo.'}</small></span><ArrowRight size={13} /></a>{chosenTools.map((tool) => <a key={tool.id} href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}><Wrench size={16} /><span><strong>{locale === 'en' ? `2. Open ${tool.label}` : `2. Abrir ${tool.label}`}</strong><small>{locale === 'en' ? 'See its models, features, prompts, and automations.' : 'Ve sus modelos, funciones, prompts y automatizaciones.'}</small></span><ArrowRight size={13} /></a>)}</div>{saved && <p className="st-project-saved"><Check size={12} /> {locale === 'en' ? 'Saved in this browser.' : 'Guardado en este navegador.'}</p>}</div>}
 
         <footer className="st-wizard-actions"><button type="button" className="st-btn-ghost" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0}><ArrowLeft size={13} /> {locale === 'en' ? 'Back' : 'Atrás'}</button>{step < 5 ? <button type="button" className="st-btn" onClick={next} disabled={!canContinue}>{step === 4 ? (locale === 'en' ? 'Prepare my path' : 'Preparar mi ruta') : (locale === 'en' ? 'Continue' : 'Continuar')} <ArrowRight size={13} /></button> : <button type="button" className="st-btn" onClick={save}><Save size={13} /> {locale === 'en' ? 'Save path' : 'Guardar ruta'}</button>}</footer>
       </section>
 
+      <ProjectWorkspace key={student.activeProjectId || "draft"} />
+      <ProjectAssessment />
+      <ProjectBudget />
       <SavedPromptsPanel prompts={savedPrompts} locale={locale} />
 
-      <p className="st-project-storage">{locale === 'en' ? 'For now the profile is saved only in this browser. The structure is ready to sync with an online account later.' : 'Por ahora la ficha se guarda solo en este navegador. La estructura queda preparada para sincronizarla con una cuenta online más adelante.'}</p>
+      <p className="st-project-storage">{locale === 'en' ? 'Your project has a local recovery copy and synchronizes with your signed-in account. Check the save status before closing.' : 'Tu proyecto tiene una copia local de recuperación y se sincroniza con tu cuenta. Comprueba el estado de guardado antes de cerrar.'}</p>
     </div>
   )
 }
 
 function SavedPromptsPanel({ prompts, locale }: { prompts: SavedPrompt[]; locale: Locale }) {
+  const t = workspaceText(locale)
   const [openId, setOpenId] = useState<string | null>(prompts[0]?.id || null)
   const [copied, setCopied] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!openId && prompts[0]) setOpenId(prompts[0].id)
+    if (!prompts.some(prompt => prompt.id === openId)) setOpenId(prompts[0]?.id || null)
   }, [openId, prompts])
 
   return (
@@ -283,14 +297,14 @@ function SavedPromptsPanel({ prompts, locale }: { prompts: SavedPrompt[]; locale
                 type="button"
                 className="st-btn"
                 onClick={() => {
-                  navigator.clipboard?.writeText(prompt.prompt)
-                  setCopied(prompt.id)
-                  window.setTimeout(() => setCopied(null), 1600)
+                  navigator.clipboard?.writeText(prompt.prompt).then(() => { setCopied(prompt.id); window.setTimeout(() => setCopied(null), 1600) }, () => setCopied(null))
                 }}
               >
                 <Clipboard size={12} /> {copied === prompt.id ? (locale === 'en' ? 'Copied' : 'Copiado') : (locale === 'en' ? 'Copy prompt' : 'Copiar prompt')}
               </button>
               <pre>{prompt.prompt}</pre>
+              <label>{t("Editar plantilla")}<textarea defaultValue={prompt.prompt} key={prompt.id + prompt.savedAt} onBlur={e => { const current = store.get().project; if (current && e.target.value !== prompt.prompt) store.setProject({ ...current, savedPrompts: (current.savedPrompts || []).map(item => item.id === prompt.id ? { ...item, prompt: e.target.value, savedAt: new Date().toISOString() } : item) }) }} /></label>
+              <button type="button" className="st-btn-danger" onClick={() => { const current = store.get().project; if (current && window.confirm(t("¿Eliminar esta plantilla guardada?"))) store.setProject({ ...current, savedPrompts: (current.savedPrompts || []).filter(item => item.id !== prompt.id) }) }}>{t("Eliminar plantilla")}</button>
             </article>
           ) : null)}
         </div>

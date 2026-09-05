@@ -61,7 +61,7 @@ export default function Quiz({ questions, slug, level }: { questions: QuizQuesti
         (sum, question, index) => sum + (next[index] !== undefined && question.options[next[index]].correct ? 1 : 0),
         0,
       )
-      store.saveQuiz(slug, level, score, prepared.length)
+      store.saveQuiz(slug, level, score, prepared.length, String(hash(JSON.stringify(questions))))
     }
   }
 
@@ -141,12 +141,12 @@ export default function Quiz({ questions, slug, level }: { questions: QuizQuesti
           <p>
             {locale === 'en'
               ? correctCount === prepared.length
-                ? "All correct. You've got this level."
+                ? "All correct in this check. Confirm your understanding with the practical evidence."
                 : correctCount >= prepared.length / 2
                   ? `${correctCount} of ${prepared.length}. Re-read what you got wrong: that's what still doesn't click.`
                   : `${correctCount} of ${prepared.length}. It's worth re-reading the lesson before moving on; it's not wasted time.`
               : correctCount === prepared.length
-                ? 'Todas correctas. Este nivel lo tienes.'
+                ? 'Todas correctas en esta comprobación. Confirma lo aprendido con la evidencia práctica.'
                 : correctCount >= prepared.length / 2
                   ? `${correctCount} de ${prepared.length}. Vuelve a leer los fallos: ahí está lo que todavía no encaja.`
                   : `${correctCount} de ${prepared.length}. Merece la pena releer la lección antes de seguir; no es tiempo perdido.`}

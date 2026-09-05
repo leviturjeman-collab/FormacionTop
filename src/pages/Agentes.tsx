@@ -1,3 +1,4 @@
+import { copyText, downloadPackage } from '../downloads'
 import { useMemo, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, Ban, Bot, Check, Clipboard, Cpu,
@@ -9,6 +10,7 @@ import type { Locale } from '../i18n'
 import { href } from '../router'
 import type { AgentPlatform, ReadyAgent } from '../types'
 import { BrandMark } from '../components/Brand'
+import ResourceVerification from '../components/ResourceVerification'
 
 /**
  * Agentes listos para usar.
@@ -47,9 +49,7 @@ function CopyButton({ text, label, ghost }: { text: string; label?: string; ghos
       type="button"
       className={ghost ? 'st-btn-ghost' : 'st-btn'}
       onClick={() => {
-        navigator.clipboard?.writeText(text)
-        setDone(true)
-        window.setTimeout(() => setDone(false), 1600)
+        void copyText(text).then(() => { setDone(true); window.setTimeout(() => setDone(false), 1600) }, () => setDone(false))
       }}
     >
       {done ? <Check size={12} /> : <Clipboard size={12} />} {done ? (locale === 'en' ? 'Copied' : 'Copiado') : (label ?? defaultLabel)}
@@ -75,6 +75,7 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
 
   return (
     <div className="st-page">
+      <ResourceVerification id={agent.id} kind="agentes" />
       <div className="st-page-title">
         <span className="st-kicker"><Bot size={12} /> {agent.kicker}</span>
         <h1>{agent.title}</h1>
@@ -107,6 +108,7 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
         <p className="st-kit-nocode"><strong>{agent.platformLabel || meta.label}.</strong> {meta.hint}</p>
       </section>
 
+      <button type="button" className="st-btn" onClick={() => downloadPackage(agent.id, [...agent.files.map(f => ({ name: f.name, content: f.content })), ...(agent.flow ? [{ name: 'workflow.json', content: JSON.stringify(agent.flow, null, 2) }] : []), { name: 'ACADEMY-SETUP.md', content: '# ' + agent.title + '\n\n' + agent.setup.map((step, i) => (i+1) + '. ' + step.title + '\n' + step.action + '\nComprobar: ' + step.expect).join('\n\n') }])}>{locale === 'en' ? 'Download installation package' : 'Descargar paquete de instalación'}</button>
       {agent.files.map((file) => (
         <section key={file.name} className="st-kit-block">
           <div className="st-section-head">
@@ -220,7 +222,7 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
           <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Fits with' : 'Encaja con'}</span><h2>{locale === 'en' ? 'Kits that use this agent' : 'Kits que usan este agente'}</h2></div></div>
           <div className="st-kit-resource-list">
             {relatedKits.map((kit) => kit && (
-              <a key={kit.id} href={href({ name: 'kits' })}>
+              <a key={kit.id} href={href({ name: 'kits', kitId: kit.id })}>
                 <ArrowRight size={13} />
                 <span><strong>{kit.title}</strong><small>{kit.promise}</small></span>
               </a>

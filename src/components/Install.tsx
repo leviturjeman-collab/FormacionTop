@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { tabKeys } from './tabs'
+import { useEffect, useState, useId } from 'react'
 import { CircleCheck, TriangleAlert } from 'lucide-react'
 import type { Block } from '../types'
 import { Code } from './Parts'
@@ -8,7 +9,8 @@ const KEY = 'academia.sistema'
 
 /** Detecta el sistema del alumno para abrir su pestaña por defecto. */
 function detectOs(): string {
-  const stored = localStorage.getItem(KEY)
+  let stored: string | null = null
+  try { stored = localStorage.getItem(KEY) } catch { /* Use browser detection when storage is unavailable. */ }
   if (stored) return stored
   const agent = navigator.userAgent
   if (/Mac/i.test(agent)) return 'mac'
@@ -24,10 +26,11 @@ function detectOs(): string {
  */
 export default function Install({ block }: { block: Block }) {
   const locale = useLocale()
+  const tabId = useId()
   const [os, setOs] = useState(detectOs)
   const variants = block.variants || []
 
-  useEffect(() => localStorage.setItem(KEY, os), [os])
+  useEffect(() => { try { localStorage.setItem(KEY, os) } catch { /* Preference remains in memory. */ } }, [os])
 
   const current = variants.find((item) => item.os === os) || variants[0]
   if (!current) return null
@@ -42,8 +45,8 @@ export default function Install({ block }: { block: Block }) {
           <button
             key={item.os}
             type="button"
-            role="tab"
-            aria-selected={item.os === os}
+            id={`${tabId}-${item.os}`} aria-controls={`${tabId}-panel`} role="tab" onKeyDown={tabKeys}
+            aria-selected={item.os === current.os} tabIndex={item.os === current.os ? 0 : -1}
             className={item.os === os ? 'on' : ''}
             onClick={() => setOs(item.os)}
           >
@@ -53,7 +56,7 @@ export default function Install({ block }: { block: Block }) {
         <em>{current.shell}</em>
       </div>
 
-      <Code code={current.code} lang={current.shell.toLowerCase()} />
+      <div role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${current.os}`}><Code code={current.code} lang={current.shell.toLowerCase()} /></div>
 
       {block.verify && (
         <p className="st-install-verify">

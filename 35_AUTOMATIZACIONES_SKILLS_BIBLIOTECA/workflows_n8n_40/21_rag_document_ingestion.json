@@ -97,7 +97,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Divide el contenido en trozos con solape, listos para vectorizar.\nconst TAM = 1200;\nconst SOLAPE = 200;\nconst salida = [];\nfor (const item of $input.all()) {\n  const d = item.json;\n  const texto = String(d.contenido || '');\n  let i = 0;\n  let indice = 0;\n  while (i < texto.length) {\n    salida.push({\n      json: {\n        titulo: d.titulo,\n        origen: d.origen,\n        idioma: d.idioma,\n        indice: indice,\n        trozo: texto.slice(i, i + TAM)\n      }\n    });\n    indice = indice + 1;\n    i = i + (TAM - SOLAPE);\n  }\n}\nreturn salida;"
+        "jsCode": "const d=$input.first().json;\nconst text=String(d.contenido||'');\nif(!text.trim()||text.length>1000000)throw new Error('Document empty or larger than 1 million characters');\nconst chunks=[];\nfor(let i=0,index=0;i<text.length;i+=1000,index++)chunks.push({indice:index,trozo:text.slice(i,i+1200)});\nreturn [{json:{...d,chunks} }];"
       },
       "id": "nodo_006",
       "name": "Trocear contenido",
@@ -111,9 +111,9 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO documentos_rag (titulo, origen, idioma, indice, trozo, embedding_estado, creado_en) VALUES ($1, $2, $3, $4, $5, 'pendiente', NOW());",
+        "query": "SELECT * FROM academy_ingest_document($1,$2,$3,$4,$5::jsonb);",
         "options": {
-          "queryReplacement": "={{ $json.titulo }},{{ $json.origen }},{{ $json.idioma }},{{ $json.indice }},{{ $json.trozo }}"
+          "queryReplacement": "={{ [$json.origen,$json.titulo,$json.idioma,$json.contenido,JSON.stringify($json.chunks)] }}"
         }
       },
       "id": "nodo_007",
@@ -129,11 +129,12 @@
           "id": "REEMPLAZAR",
           "name": "Postgres (Supabase)"
         }
-      }
+      },
+      "notes": "Apply rag_storage.sql first. The function replaces each source atomically, deduplicates unchanged versions and removes stale chunks."
     },
     {
       "parameters": {
-        "jsCode": "const trozos = $('Trocear contenido').all();\nconst primero = trozos.length > 0 ? trozos[0].json : {};\nconst salida = {\n  titulo: primero.titulo || '',\n  origen: primero.origen || '',\n  trozos_guardados: trozos.length,\n  estado: 'ingresado',\n  fecha: new Date().toISOString()\n};\nreturn [ { json: salida } ];"
+        "jsCode": "const r=$input.first().json; return [{json:{...r,estado:r.changed?'ingresado':'sin_cambios',fecha:new Date().toISOString()} }];"
       },
       "id": "nodo_008",
       "name": "Resumir ingesta",

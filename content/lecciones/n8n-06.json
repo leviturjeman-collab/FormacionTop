@@ -180,70 +180,80 @@
       "where": "En sheets.google.com",
       "action": "Crea una hoja nueva llamada «pendientes». En la fila 1, escribe tres títulos en minúsculas y sin acentos: tarea, estado, fecha. Añade cuatro filas de datos inventados y pon dos con estado pendiente y dos con estado hecho. Renombra la pestaña de abajo a «tareas».",
       "expect": "Una hoja con cuatro filas de datos y títulos limpios en la fila 1.",
-      "stuck": "Los títulos de la fila 1 van a ser los nombres de los campos en n8n. Si les pones acentos o espacios, los arrastrarás durante todo el flujo."
+      "stuck": "Los títulos de la fila 1 van a ser los nombres de los campos en n8n. Si les pones acentos o espacios, los arrastrarás durante todo el flujo.",
+      "id": "task-07cf96d8d7f4"
     },
     {
       "title": "Crea la credencial de Google Sheets",
       "where": "En n8n: Credentials → Add credential → Google Sheets",
       "action": "Sigue tu camino según la teoría: en la nube es el botón de Google; instalado en tu ordenador es el trámite de la consola de Google. Hazlo con calma. Cuando termine, la credencial aparece con un nombre y una marca de conectada.",
       "expect": "La credencial guardada y verificada. La vas a reutilizar en todos los flujos que toquen Google desde hoy.",
-      "stuck": "El atasco típico del camino largo es la dirección de callback, la dirección de vuelta hacia n8n. Copia EXACTAMENTE la que n8n muestra en la pantalla de la credencial. Pégala en la consola de Google sin cambiar ni una letra."
+      "stuck": "El atasco típico del camino largo es la dirección de callback, la dirección de vuelta hacia n8n. Copia EXACTAMENTE la que n8n muestra en la pantalla de la credencial. Pégala en la consola de Google sin cambiar ni una letra.",
+      "id": "task-202ccac19bbd"
     },
     {
       "title": "Monta el despertador",
       "where": "Flujo nuevo → primer paso → busca «Schedule»",
       "action": "Elige el Schedule Trigger y configúralo: cada día, a las 9:00. Comprueba dos veces la zona horaria: en los ajustes del flujo debe estar Europe/Madrid, lo que dejaste hecho en la lección 03.",
       "expect": "La caja del despertador en el lienzo, configurada a las 9:00.",
-      "stuck": "Si al ejecutar en pruebas no hace nada, es normal: el despertador de verdad solo suena a su hora. Para probar, usa el botón de ejecutar, que lo lanza a mano."
+      "stuck": "Si al ejecutar en pruebas no hace nada, es normal: el despertador de verdad solo suena a su hora. Para probar, usa el botón de ejecutar, que lo lanza a mano.",
+      "id": "task-dc8a1ae91d22"
     },
     {
       "title": "Conecta la lectura de la hoja",
       "where": "El + después del despertador → Google Sheets",
       "action": "Operación: leer filas (Get Rows / Read). Elige tu credencial, tu documento «pendientes» y la pestaña «tareas». Ejecuta el flujo y abre la caja: en la columna derecha tienen que estar tus cuatro filas convertidas en cuatro elementos.",
       "expect": "Cuatro elementos con los campos tarea, estado y fecha, con los nombres exactos de tu fila 1.",
-      "stuck": "Si da 404 o «not found»: la credencial no ve esa hoja. Comprueba que has elegido el documento desde el desplegable (no pegando una dirección) y que la cuenta de la credencial es la dueña de la hoja."
+      "stuck": "Si da 404 o «not found»: la credencial no ve esa hoja. Comprueba que has elegido el documento desde el desplegable (no pegando una dirección) y que la cuenta de la credencial es la dueña de la hoja.",
+      "id": "task-d031fe6d1965"
     },
     {
       "title": "Pon el filtro robusto",
       "where": "El + después de Sheets → busca «Filter»",
       "action": "Condición: el campo estado contiene pendiente. Y hazla robusta como en la teoría: busca la opción de ignorar mayúsculas, o convierte antes el campo a minúsculas. Ejecuta y cuenta: de cuatro elementos deben salir dos.",
       "expect": "El número 2 en la flecha de salida del filtro.",
-      "stuck": "¿Salen cero? Abre el filtro y mira la columna izquierda: comprueba letra a letra cómo está escrito el valor real del campo estado en tus filas. La diferencia estará ahí: una mayúscula o un espacio."
+      "stuck": "¿Salen cero? Abre el filtro y mira la columna izquierda: comprueba letra a letra cómo está escrito el valor real del campo estado en tus filas. La diferencia estará ahí: una mayúscula o un espacio.",
+      "id": "task-eb6dbcac60df"
     },
     {
       "title": "Junta las filas en un solo mensaje",
       "where": "El + después del filtro",
       "action": "Aquí está el ajuste que evita el spam: necesitas convertir los N elementos en un solo texto. La forma más simple: una caja de código o de agregación (busca «Aggregate») que junte las tareas en una lista. Si usas Aggregate: agrupa todos los elementos y quédate con el campo tarea como lista.",
       "expect": "UN solo elemento en la flecha de salida, con las tareas pendientes juntas.",
-      "stuck": "Si esto se te atasca, atajo legítimo: en el nodo de Gmail de la tarea siguiente, algunas versiones tienen la opción de ejecutar una sola vez (Execute Once). Actívala y manda solo el resumen del primer elemento. Menos elegante, funciona, y en la lección 21 lo harás fino."
+      "stuck": "Si esto se te atasca, atajo legítimo: en el nodo de Gmail de la tarea siguiente, algunas versiones tienen la opción de ejecutar una sola vez (Execute Once). Actívala y manda solo el resumen del primer elemento. Menos elegante, funciona, y en la lección 21 lo harás fino.",
+      "id": "task-bb2f2d711517"
     },
     {
       "title": "Monta el correo",
       "where": "El + al final → Gmail → Send",
       "action": "Crea la credencial de Gmail (mismo camino que la de Sheets, y si es la misma cuenta de Google, más rápido). Para: tu propio correo. Asunto: «Pendientes de hoy». Cuerpo: la lista de tareas del paso anterior, usando el selector de campos, no escribiéndolo a mano. Ejecuta el flujo entero.",
       "expect": "Un correo en tu bandeja, ahora mismo, con tus dos tareas pendientes dentro.",
-      "stuck": "Si el correo llega vacío, abre la caja de Gmail y mira su columna izquierda: ¿llegaba la lista? Si no llegaba, el problema es del paso 6, no de Gmail. Se busca hacia atrás."
+      "stuck": "Si el correo llega vacío, abre la caja de Gmail y mira su columna izquierda: ¿llegaba la lista? Si no llegaba, el problema es del paso 6, no de Gmail. Se busca hacia atrás.",
+      "id": "task-35dd5b306436"
     },
     {
       "title": "Ensaya el caso «no hay nada»",
       "where": "En tu hoja de Google",
       "action": "Cambia las dos filas pendientes a estado hecho y ejecuta el flujo otra vez. Debe terminar en verde SIN mandar correo: el filtro corta todo y no hay nada que avisar. Esto no es un fallo: es el comportamiento correcto, y verlo una vez te evita buscarle un problema el día que pase de verdad.",
       "expect": "Ejecución en verde, cero elementos tras el filtro, ningún correo.",
-      "stuck": "Si te llega un correo vacío, el nodo de Gmail se está ejecutando aunque no lleguen elementos. Revisa que esté conectado DESPUÉS del filtro, no en paralelo."
+      "stuck": "Si te llega un correo vacío, el nodo de Gmail se está ejecutando aunque no lleguen elementos. Revisa que esté conectado DESPUÉS del filtro, no en paralelo.",
+      "id": "task-e7212338ac98"
     },
     {
       "title": "Activa y cierra",
       "where": "El interruptor de arriba a la derecha",
       "action": "Vuelve a poner una fila en pendiente. Guarda, activa el interruptor, y cierra el navegador del todo. Se acabó por hoy: el examen es mañana a las 9:01.",
       "expect": "El flujo aparece como activo en tu lista de flujos.",
-      "stuck": "Si tu n8n corre en tu ordenador, el ordenador tiene que estar encendido a las 9:00. Si va a estar apagado, cambia la hora del despertador a una en que esté encendido: la lección es la misma."
+      "stuck": "Si tu n8n corre en tu ordenador, el ordenador tiene que estar encendido a las 9:00. Si va a estar apagado, cambia la hora del despertador a una en que esté encendido: la lección es la misma.",
+      "id": "task-0b3ce70c4ce3"
     },
     {
       "title": "La comprobación de mañana y la de pasado",
       "where": "En tu bandeja de entrada, mañana a las 9:01",
       "action": "Mañana: comprueba que el correo ha llegado solo y mira en la lista de ejecuciones la línea de las 9:00, abierta por el sistema y no por ti. Pasado mañana: repite. Si un día no llega, aplica el diagnóstico de la teoría: ¿ni arrancó, arrancó sin filas, o reventó?",
       "expect": "Dos correos en dos mañanas, sin que hayas tocado nada. Tu primera automatización en producción.",
-      "stuck": "¿No llegó y la ejecución de las 9:00 ni aparece? Zona horaria o flujo sin activar. ¿Aparece en verde sin correo? No había pendientes, o el filtro corta de más. ¿Aparece en rojo? Ábrela: la caja roja te dice dónde."
+      "stuck": "¿No llegó y la ejecución de las 9:00 ni aparece? Zona horaria o flujo sin activar. ¿Aparece en verde sin correo? No había pendientes, o el filtro corta de más. ¿Aparece en rojo? Ábrela: la caja roja te dice dónde.",
+      "id": "task-a274abfbf4e5"
     }
   ],
   "errors": [
@@ -410,5 +420,8 @@
       ]
     }
   ],
-  "next": "Ya tienes el circuito completo funcionando solo. La lección 07 le pone nombre a todo lo que acabas de tocar —item, expresión, credencial, webhook— para que a partir de aquí hablemos con precisión, y en la 08 eliges disparador para tu proceso de verdad."
+  "next": "Siguiente: El vocabulario de n8n, en cristiano",
+  "readingMinutes": 4,
+  "practiceMinutes": 100,
+  "durationNote": "Estimación de planificación: instalación, revisión externa y periodos de observación se añaden aparte."
 }

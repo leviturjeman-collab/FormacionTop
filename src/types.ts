@@ -82,6 +82,7 @@ export interface LessonAsset {
 }
 
 export interface PracticeStep {
+  id?: string
   title: string
   where: string
   action: string
@@ -322,6 +323,7 @@ export type InteractivePiece =
   | CanvasPiece | DataFlowPiece | DecisionPiece | ScreenMapPiece | BeforeAfterPiece
 
 export interface Lesson {
+  downloadPackage?: string
   id: string
   slug: string
   title: string
@@ -547,7 +549,7 @@ export interface Guide {
   intro: string
   minutes: number
   theory: { title: string; text: string; analogy?: string }[]
-  tasks: { title: string; where: string; action: string; prompt?: string; expect: string; stuck?: string }[]
+  tasks: { id?: string; title: string; where: string; action: string; prompt?: string; expect: string; stuck?: string }[]
   canDo: string[]
   cantDo: string[]
   words: [string, string][]

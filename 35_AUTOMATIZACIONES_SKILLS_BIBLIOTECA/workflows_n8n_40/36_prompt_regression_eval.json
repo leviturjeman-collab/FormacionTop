@@ -87,7 +87,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const caso = $('Casos de prueba').item.json;\nconst bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join(' ')\n  .toLowerCase();\nconst ausentes = (caso.esperado || []).filter(function (palabra) {\n  return texto.indexOf(String(palabra).toLowerCase()) === -1;\n});\nreturn {\n  json: {\n    id: caso.id,\n    pasa: ausentes.length === 0,\n    palabras_ausentes: ausentes.join(', '),\n    extracto: texto.slice(0, 200)\n  }\n};"
+        "jsCode": "const caso = $('Casos de prueba').item.json;\nconst bloques = $json.content || [];\nconst texto = bloques\n  .filter(function (b) { return b.type === 'text'; })\n  .map(function (b) { return b.text; })\n  .join(' ')\n  .toLowerCase();\nconst ausentes = (caso.esperado || []).filter(function (palabra) {\n  return texto.indexOf(String(palabra).toLowerCase()) === -1;\n});\nreturn {\n  json: {\n    id: caso.id,\n    pasa: ausentes.length === 0 && (caso.id !== 'formato-json' || (() => { try { const v=JSON.parse(texto); return v && !Array.isArray(v) && v.ok === true && Object.keys(v).length === 1; } catch { return false; } })()),\n    palabras_ausentes: ausentes.join(', '),\n    extracto: texto.slice(0, 200)\n  }\n};"
       },
       "id": "nodo_166",
       "name": "Puntuar caso",

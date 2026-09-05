@@ -4,15 +4,22 @@
   "version": "4.0.0",
   "type": "module",
   "scripts": {
-    "index": "node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs && cross-env LOCALE=en node scripts/build-content-index.mjs",
+    "index": "node scripts/source-check.mjs && node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs && cross-env LOCALE=en node scripts/build-content-index.mjs",
     "index:es": "node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs",
     "index:en": "cross-env LOCALE=en node scripts/build-content-index.mjs",
     "dev": "npm run index && vite",
-    "build": "npm run index && tsc -b && vite build",
+    "build": "npm run index && npm run validate:generated && npm run test:automations && npm run test:security && npm run typecheck && vite build",
     "preview": "vite preview",
-    "validate": "npm run index && node scripts/validate-content.mjs && node scripts/validate-student-ui.mjs",
+    "validate": "npm run index && npm run validate:generated",
+    "validate:generated": "node scripts/validate-content.mjs && cross-env LOCALE=en node scripts/validate-content.mjs && node scripts/validate-student-ui.mjs && node scripts/source-check.mjs --verify",
+    "typecheck": "tsc -b && tsc -p tsconfig.server.json",
+    "test:security": "node scripts/test-auth.mjs && node scripts/test-store.mjs && node scripts/test-session-client.mjs && node scripts/test-session-server.mjs",
+    "test:pedagogy": "node scripts/test-pedagogy.mjs",
+    "test:executables": "node scripts/test-executable-assets.mjs",
+    "test:setup": "node scripts/test-executable-assets.mjs --setup && playwright-core install chromium",
     "test:automations": "node scripts/validate-workflows.mjs && node scripts/validate-tool-automation-guides.mjs",
-    "test": "npm run validate && npm run test:automations && tsc -b && vite build"
+    "test": "npm run build && npm run test:portal && npm run test:pedagogy && npm run test:executables",
+    "test:portal": "node scripts/test-source-check.mjs && node scripts/test-content-shards.mjs && node scripts/test-ui-primitives.mjs && node scripts/test-portal.mjs"
   },
   "dependencies": {
     "@fontsource/fraunces": "^5.2.5",
@@ -20,6 +27,8 @@
     "@fontsource/inter-tight": "^5.3.0",
     "@fontsource/manrope": "^5.2.5",
     "@supabase/supabase-js": "^2.115.0",
+    "@vercel/functions": "^3.9.5",
+    "fflate": "^0.8.3",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -27,6 +36,8 @@
     "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/node": "^26.4.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

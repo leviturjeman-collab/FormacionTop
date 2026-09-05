@@ -67,43 +67,45 @@ export default function Buscar({ query, route }: { query: string; route: Route }
   const locale = useLocale()
   const [value, setValue] = useState(query)
   const [groupBy, setGroupBy] = useState<'categoria' | 'area' | 'tipo'>('categoria')
+  const [shown, setShown] = useState(12)
+  useEffect(() => setShown(12), [value])
   const level: LevelId = student.preferredLevel || 'basico'
 
   useEffect(() => setValue(query), [query])
 
   const doneSlugs = new Set(
-    Object.entries(student.lessons).filter(([, progress]) => progress.done.length > 0).map(([slug]) => slug),
+    Object.entries(student.lessons).filter(([, progress]) => progress.done.length > 0 || Object.values(progress.tasks || {}).some(v => v && v.length > 0) || Object.values(progress.checks).some(v => v && v.length > 0) || Object.values(progress.notes).some(v => v && Object.values(v).some(Boolean))).map(([slug]) => slug),
   )
 
   const liveQuery = value.trim()
-  const activeQuery = liveQuery || query.trim()
+  const activeQuery = liveQuery
   const words = useMemo(() => normalized(activeQuery).split(/\s+/).filter(Boolean), [activeQuery])
-  const found = useMemo(() => searchLessons(course.lessons, activeQuery, 240), [course.lessons, activeQuery])
+  const found = useMemo(() => searchLessons(course.lessons, activeQuery), [course.lessons, activeQuery])
   const filters = 'filters' in route ? route.filters : {}
   const results = applyFilters(found, filters, doneSlugs)
 
   const toolMatches = useMemo<ToolPage[]>(() => {
-    if (words.length < 1) return course.toolPages.filter((tool) => tool.guide).slice(0, 8)
+    if (words.length < 1) return course.toolPages.filter((tool) => tool.guide)
     return course.toolPages
       .filter((tool) => includesAll(`${tool.label} ${tool.id} ${tool.guide?.plain || ''} ${tool.guide?.matters?.join(' ') || ''}`, words))
-      .slice(0, 8)
+
   }, [course.toolPages, words])
 
   const promptMatches = useMemo<PromptMatch[]>(() => {
-    if (words.length < 2) return []
+    if (activeQuery.length < 2) return []
     return (course.prompts || [])
       .flatMap((family) => family.prompts.map((prompt) => ({ family, prompt })))
       .filter(({ family, prompt }) =>
         includesAll(`${family.title} ${family.intro} ${prompt.name} ${prompt.when} ${prompt.prompt} ${prompt.toolLabel || ''}`, words),
       )
-      .slice(0, 8)
+
   }, [course.prompts, words])
 
   const glossaryMatches = useMemo<GlossaryEntry[]>(() => {
     if (words.length < 1) return []
     return course.glossaryIndex
       .filter((entry) => includesAll(`${entry.term} ${entry.meaning} ${entry.long || ''} ${entry.seeAlso?.join(' ') || ''}`, words))
-      .slice(0, 8)
+
   }, [course.glossaryIndex, words])
 
   const guideMatches = useMemo<Guide[]>(() => {
@@ -112,10 +114,22 @@ export default function Buscar({ query, route }: { query: string; route: Route }
       .filter((guide) =>
         includesAll(`${guide.title} ${guide.kicker} ${guide.intro} ${guide.theory.map((item) => item.text).join(' ')}`, words),
       )
-      .slice(0, 6)
+
   }, [course.guides, words])
 
-  const quickTotal = found.length + toolMatches.length + promptMatches.length + glossaryMatches.length + guideMatches.length
+  const extraMatches = useMemo(() => {
+    if (activeQuery.length < 2) return []
+    const items = [
+      ...course.curso.map(x => ({ title: x.title, text: x.promise, search: JSON.stringify(x), target: href({ name: 'curso', lessonId: x.id }), meta: locale === 'en' ? 'Program' : 'Programa' })),
+      ...course.kits.map(x => ({ title: x.title, text: x.promise, search: JSON.stringify(x), target: href({ name: 'kits', kitId: x.id }), meta: 'Kit' })),
+      ...course.agents.map(x => ({ title: x.title, text: x.what, search: JSON.stringify(x), target: href({ name: 'agentes', agentId: x.id }), meta: locale === 'en' ? 'Agent' : 'Agente' })),
+      ...course.projects.map(x => ({ title: x.title, text: x.pitch, search: JSON.stringify(x), target: href({ name: 'proyecto', stageId: x.stageId }), meta: locale === 'en' ? 'Project' : 'Proyecto' })),
+      ...course.decks.map(x => ({ title: x.title, text: x.subtitle, search: JSON.stringify(x), target: href({ name: 'deck', deckId: x.id }), meta: locale === 'en' ? 'Presentation' : 'Presentación' })),
+      ...course.preguntas.flatMap(g => g.preguntas.map(x => ({ title: x.q, text: x.corta || x.a, search: JSON.stringify(x), target: href({ name: 'preguntas', question: x.q }), meta: 'FAQ' }))),
+    ]
+    return items.filter(x => includesAll(x.search, words))
+  }, [course, activeQuery, words, locale])
+  const quickTotal = results.length + toolMatches.length + promptMatches.length + glossaryMatches.length + guideMatches.length + extraMatches.length
 
   const groups = useMemo(() => {
     const map = new Map<string, { label: string; sub: string; lessons: Lesson[]; link: string }>()
@@ -220,8 +234,9 @@ export default function Buscar({ query, route }: { query: string; route: Route }
         </div>
       ) : (
         <>
+          {extraMatches.length > 0 && <section className="st-search-kind"><h2>{locale === 'en' ? 'Program, projects, kits, agents and answers' : 'Programa, proyectos, kits, agentes y respuestas'} ({extraMatches.length})</h2>{extraMatches.slice(0, shown).map(hit => <SearchHit key={hit.target} icon={<BookOpen size={17} />} title={hit.title} text={hit.text} href={hit.target} meta={hit.meta} />)}</section>}
           <section className="st-search-overview" aria-label={locale === 'en' ? 'Search summary' : 'Resumen de búsqueda'}>
-            <div><strong>{found.length}</strong><span>{locale === 'en' ? 'Lessons' : 'Lecciones'}</span></div>
+            <div><strong>{results.length}</strong><span>{locale === 'en' ? 'Lessons' : 'Lecciones'}</span></div>
             <div><strong>{toolMatches.length}</strong><span>{locale === 'en' ? 'Tools' : 'Herramientas'}</span></div>
             <div><strong>{promptMatches.length}</strong><span>Prompts</span></div>
             <div><strong>{glossaryMatches.length}</strong><span>{locale === 'en' ? 'Concepts' : 'Conceptos'}</span></div>
@@ -236,7 +251,7 @@ export default function Buscar({ query, route }: { query: string; route: Route }
                     <div><span className="st-kicker">{locale === 'en' ? 'Tools' : 'Herramientas'}</span><h2>{locale === 'en' ? 'Related guides' : 'Guías relacionadas'}</h2></div>
                     <span>{toolMatches.length}</span>
                   </div>
-                  {toolMatches.map((tool) => (
+                  {toolMatches.slice(0, shown).map((tool) => (
                     <SearchHit
                       key={tool.id}
                       icon={<BrandMark icon={tool.icon} size={18} />}
@@ -257,13 +272,13 @@ export default function Buscar({ query, route }: { query: string; route: Route }
                     <div><span className="st-kicker">Prompts</span><h2>{locale === 'en' ? 'Ready to copy' : 'Listos para copiar'}</h2></div>
                     <span>{promptMatches.length}</span>
                   </div>
-                  {promptMatches.map(({ prompt, family }) => (
+                  {promptMatches.slice(0, shown).map(({ prompt, family }) => (
                     <SearchHit
                       key={`${family.id}-${prompt.id || prompt.name}`}
                       icon={<Sparkles size={17} />}
                       title={prompt.name}
                       text={prompt.when}
-                      href={href({ name: 'prompts', familyId: family.id })}
+                      href={href({ name: 'prompts', familyId: family.id, promptId: prompt.id || prompt.name })}
                       meta={prompt.toolLabel || family.title}
                     />
                   ))}
@@ -276,13 +291,13 @@ export default function Buscar({ query, route }: { query: string; route: Route }
                     <div><span className="st-kicker">{locale === 'en' ? 'Glossary' : 'Diccionario'}</span><h2>{locale === 'en' ? 'Concepts' : 'Conceptos'}</h2></div>
                     <span>{glossaryMatches.length}</span>
                   </div>
-                  {glossaryMatches.map((entry) => (
+                  {glossaryMatches.slice(0, shown).map((entry) => (
                     <SearchHit
                       key={entry.term}
                       icon={<Languages size={17} />}
                       title={entry.term}
                       text={entry.meaning}
-                      href={href({ name: 'indice', letter: entry.letter })}
+                      href={href({ name: 'indice', letter: entry.letter, term: entry.term })}
                       meta={locale === 'en' ? 'Concept' : 'Concepto'}
                     />
                   ))}
@@ -295,7 +310,7 @@ export default function Buscar({ query, route }: { query: string; route: Route }
                     <div><span className="st-kicker">{locale === 'en' ? 'Guides' : 'Guías'}</span><h2>{locale === 'en' ? 'Essentials' : 'Fundamentales'}</h2></div>
                     <span>{guideMatches.length}</span>
                   </div>
-                  {guideMatches.map((guide) => (
+                  {guideMatches.slice(0, shown).map((guide) => (
                     <SearchHit
                       key={guide.id}
                       icon={<Compass size={17} />}
@@ -348,7 +363,7 @@ export default function Buscar({ query, route }: { query: string; route: Route }
             </p>
           )}
 
-          {groups.slice(0, 12).map((group) => (
+          {groups.map((group) => (
             <section key={group.label} style={{ marginBottom: 22 }}>
               <div className="st-section-head" style={{ marginTop: 0 }}>
                 <div>
@@ -366,13 +381,7 @@ export default function Buscar({ query, route }: { query: string; route: Route }
             </section>
           ))}
 
-          {groups.length > 12 && (
-            <p className="st-result-count">
-              {locale === 'en'
-                ? `And ${groups.length - 12} more groups. Narrow down with the filters above or search a more specific term.`
-                : `Y ${groups.length - 12} grupos más. Afina con los filtros de arriba o busca un término más concreto.`}
-            </p>
-          )}
+          {Math.max(extraMatches.length, toolMatches.length, promptMatches.length, glossaryMatches.length, guideMatches.length) > shown && <button type="button" className="st-btn" onClick={() => setShown(n => n + 24)}>{locale === 'en' ? 'Show more results' : 'Mostrar más resultados'}</button>}
         </>
       )}
     </div>

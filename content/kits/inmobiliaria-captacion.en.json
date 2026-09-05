@@ -754,7 +754,8 @@
         "A Telegram bot (created with @BotFather) and the on-duty agent's chat id",
         "The Google Sheet with leads, properties, and visits tabs",
         "A Google Calendar for the agent",
-        "An Anthropic API key"
+        "An Anthropic API key",
+        "Automatic scheduling is disabled: this workflow qualifies, records and acknowledges the lead after approval. No availability or appointment is promised. To enable visits, connect current inventory and Calendar free/busy, verify timezone and conflicts immediately before creation, and test concurrent booking and rejection."
       ],
       "fill": [
         [
@@ -794,7 +795,7 @@
         "The Meta token expires depending on how you generate it: use a permanent system token, not the developer panel's temporary 24-hour one"
       ],
       "flow": {
-        "name": "Real Estate Lead Capture Kit · from WhatsApp to approved viewing",
+        "name": "Kit Inmobiliaria captación · de WhatsApp a visita aprobada",
         "nodes": [
           {
             "parameters": {
@@ -827,7 +828,7 @@
                   {
                     "id": "f1",
                     "name": "id",
-                    "value": "={{ 'L-' + $execution.id }}",
+                    "value": "={{ 'L-' + $json.messages[0].id }}",
                     "type": "string"
                   },
                   {
@@ -923,7 +924,7 @@
               -440,
               300
             ],
-            "notes": "Audio notes, images with no text, and one-letter hellos don't burn a qualification: they go straight to manual handling."
+            "notes": "Audios, imagenes sin texto y holas de una letra no gastan cualificacion: van directos a atencion manual."
           },
           {
             "parameters": {
@@ -982,7 +983,7 @@
           },
           {
             "parameters": {
-              "operation": "append",
+              "operation": "appendOrUpdate",
               "documentId": {
                 "__rl": true,
                 "value": "ID_DE_TU_HOJA",
@@ -1059,43 +1060,25 @@
               440,
               200
             ],
-            "notes": "Start strict: high urgency with decent confidence. Nothing else gets lost: it drops to the manual-handling branch."
+            "notes": "Empieza estricto: urgencia alta con confianza decente. El resto no se pierde: baja a la rama de atencion manual."
           },
           {
-            "parameters": {
-              "calendar": {
-                "__rl": true,
-                "value": "TU_CALENDARIO",
-                "mode": "list"
-              },
-              "start": "={{ $now.plus({ days: 1 }).set({ hour: 17, minute: 30 }).toISO() }}",
-              "end": "={{ $now.plus({ days: 1 }).set({ hour: 18, minute: 0 }).toISO() }}",
-              "additionalFields": {
-                "summary": "={{ 'VISITA PROVISIONAL · ref ' + ($json.ref_inmueble || 'por asignar') + ' · ' + ($json.nombre || $json.telefono) }}",
-                "description": "={{ 'Lead: ' + $json.telefono + '\\nOperacion: ' + $json.operacion + '\\nZona: ' + $json.zona + '\\nPresupuesto: ' + ($json.presupuesto || 'no dicho') + '\\nMensaje original: ' + $json.mensaje }}"
-              }
-            },
+            "parameters": {},
             "id": "c1500000-0000-4000-8000-000000000008",
             "name": "Reservar hueco de visita",
-            "type": "n8n-nodes-base.googleCalendar",
-            "typeVersion": 1.3,
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
             "position": [
               660,
               120
             ],
-            "credentials": {
-              "googleCalendarOAuth2Api": {
-                "id": "REEMPLAZAR",
-                "name": "Google Calendar"
-              }
-            },
-            "notes": "PROVISIONAL event in the agency's default slot type. The agent moves or deletes it upon approval; what matters is that the viewing already exists and isn't forgotten."
+            "notes": "Scheduling disabled until a real availability source and conflict check are configured. No calendar event is created and no visit time is promised."
           },
           {
             "parameters": {
               "chatId": "CHAT_ID_AGENTE",
               "operation": "sendAndWait",
-              "message": "=🏠 Lead caliente por WhatsApp\n\nDe: {{ $('Leer cualificación').first().json.nombre || 'sin nombre' }} ({{ $('Leer cualificación').first().json.telefono }})\nOperación: {{ $('Leer cualificación').first().json.operacion }} · Zona: {{ $('Leer cualificación').first().json.zona || 'no dice' }}\nPresupuesto: {{ $('Leer cualificación').first().json.presupuesto || 'no dice' }} · Ref: {{ $('Leer cualificación').first().json.ref_inmueble || '-' }}\n\nSu mensaje:\n{{ $('Leer cualificación').first().json.mensaje }}\n\nRespuesta propuesta:\nHola{{ $('Leer cualificación').first().json.nombre ? ' ' + $('Leer cualificación').first().json.nombre : '' }}, soy del equipo de la agencia. Tenemos disponible lo que preguntas y te lo puedo enseñar mañana a las 17:30 o el sábado a las 11:00. ¿Cuál te viene mejor?\n\nHe dejado un hueco provisional mañana 17:30 en tu calendario. ¿Envío la respuesta?",
+              "message": "=🏠 Lead caliente por WhatsApp\n\nDe: {{ $('Leer cualificación').first().json.nombre || 'sin nombre' }} ({{ $('Leer cualificación').first().json.telefono }})\nOperación: {{ $('Leer cualificación').first().json.operacion }} · Zona: {{ $('Leer cualificación').first().json.zona || 'no dice' }}\nPresupuesto: {{ $('Leer cualificación').first().json.presupuesto || 'no dice' }} · Ref: {{ $('Leer cualificación').first().json.ref_inmueble || '-' }}\n\nSu mensaje:\n{{ $('Leer cualificación').first().json.mensaje }}\n\nRespuesta propuesta: Gracias por tu consulta. Un agente comprobará el inmueble y la disponibilidad real y te propondrá una visita.\n\nNo hay reserva creada ni disponibilidad verificada. Si quieres dar una fecha concreta, compruébala y acuerda la cita por el canal habitual. ¿Enviar acuse y asignar seguimiento?",
               "responseType": "approval",
               "approvalOptions": {
                 "values": {
@@ -1119,7 +1102,7 @@
                 "name": "Telegram Bot"
               }
             },
-            "notes": "The kit's human brake. The flow stops here until the agent taps from their phone."
+            "notes": "El freno humano del kit. El flujo se para aqui hasta que el agente pulsa desde el movil."
           },
           {
             "parameters": {
@@ -1161,7 +1144,7 @@
               "operation": "send",
               "phoneNumberId": "TU_PHONE_NUMBER_ID",
               "recipientPhoneNumber": "={{ $('Leer cualificación').first().json.telefono }}",
-              "textBody": "={{ 'Hola' + ($('Leer cualificación').first().json.nombre ? ' ' + $('Leer cualificación').first().json.nombre : '') + ', soy del equipo de la agencia. Tenemos disponible lo que preguntas y te lo puedo enseñar mañana a las 17:30 o el sábado a las 11:00. ¿Cuál te viene mejor?' }}",
+              "textBody": "={{ 'Hola' + ($('Leer cualificación').item.json.nombre ? ' ' + $('Leer cualificación').item.json.nombre : '') + ', gracias por tu consulta. Un agente comprobará el inmueble y la disponibilidad real y te propondrá una visita.' }}",
               "additionalFields": {}
             },
             "id": "c1500000-0000-4000-8000-00000000000b",
@@ -1178,11 +1161,11 @@
                 "name": "WhatsApp Cloud"
               }
             },
-            "notes": "Only runs after the agent's approval. Works within the 24-hour window; outside it, a Meta-approved template is required."
+            "notes": "Solo se ejecuta tras el visto bueno del agente. Funciona dentro de la ventana de 24 horas; fuera de ella hace falta plantilla aprobada por Meta."
           },
           {
             "parameters": {
-              "operation": "append",
+              "operation": "appendOrUpdate",
               "documentId": {
                 "__rl": true,
                 "value": "ID_DE_TU_HOJA",
@@ -1199,11 +1182,11 @@
                   "id"
                 ],
                 "value": {
-                  "id": "={{ 'M-' + $execution.id }}",
+                  "id": "={{ $('Normalizar lead').item.json.id }}",
                   "fecha_entrada": "={{ $now.toISO() }}",
                   "canal": "whatsapp",
-                  "telefono": "={{ $json.telefono || '' }}",
-                  "mensaje": "={{ $json.mensaje || '' }}",
+                  "telefono": "={{ $('Normalizar lead').item.json.telefono }}",
+                  "mensaje": "={{ $('Normalizar lead').item.json.mensaje }}",
                   "estado": "nuevo",
                   "motivo_perdido": "pendiente de atencion manual: sin texto util, lead templado o rechazado por el agente"
                 }
@@ -1224,7 +1207,7 @@
                 "name": "Google Sheets"
               }
             },
-            "notes": "Three things land here: messages with no useful text, lukewarm leads, and replies the agent preferred to handle by hand. Nothing is lost: someone reviews this queue every day."
+            "notes": "Aqui caen tres cosas: mensajes sin texto util, leads templados y respuestas que el agente prefirio llevar a mano. Nada se pierde: alguien repasa esta cola cada dia."
           }
         ],
         "connections": {

@@ -31,7 +31,7 @@ def validate_email(data: dict[str, Any]) -> dict[str, str]:
     if not isinstance(data, dict):
         raise ValueError("La entrada debe ser un objeto JSON.")
 
-    missing = [field for field in REQUIRED_FIELDS if not str(data.get(field, "")).strip()]
+    missing = [field for field in REQUIRED_FIELDS if not isinstance(data.get(field), str) or not data[field].strip()]
     if missing:
         raise ValueError(f"Faltan campos obligatorios: {', '.join(missing)}.")
 
@@ -119,8 +119,9 @@ def main() -> int:
             print(json.dumps({"ok": False, "status": "needs_review", "error": "invalid_json", "message": str(error)}, ensure_ascii=False))
             return 1
 
-    print(json.dumps(run(payload), ensure_ascii=False, indent=2))
-    return 0
+    result = run(payload)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0 if result["ok"] else 1
 
 
 if __name__ == "__main__":

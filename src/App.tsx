@@ -1,28 +1,37 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, lazy, Suspense } from 'react'
 import { BookOpen, BookMarked, Bot, Boxes, Compass, Globe, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, LogOut, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson, LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
-import { store, useStudent } from './store'
+import { store, useStudent, usePersistence } from './store'
 import { LOCALES, useLocale, useT } from './i18n'
-import { supabase } from './supabase'
-import Inicio from './pages/Inicio'
-import MiProyecto from './pages/MiProyecto'
-import Leccion from './pages/Leccion'
-import Buscar from './pages/Buscar'
-import Indice from './pages/Indice'
-import Preguntas from './pages/Preguntas'
-import Progreso from './pages/Progreso'
-import Presentar from './pages/Presentar'
-import Proyecto from './pages/Proyecto'
-import Deck from './pages/Deck'
-import Prompts from './pages/Prompts'
-import Kits from './pages/Kits'
-import Agentes from './pages/Agentes'
-import Admin from './pages/Admin'
-import Guia from './pages/Guia'
-import { CursoIndice, CursoLeccion } from './pages/Curso'
-import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
+import { useSession, restoreRemoteSession, signOutRemoteSession } from './session'
+import AccessGate, { RecoveryDownload } from './components/AccessGate'
+import ErrorBoundary from './components/ErrorBoundary'
+const Inicio = lazy(() => import('./pages/Inicio'))
+const MiProyecto = lazy(() => import('./pages/MiProyecto'))
+const Leccion = lazy(() => import('./pages/Leccion'))
+const Buscar = lazy(() => import('./pages/Buscar'))
+const Indice = lazy(() => import('./pages/Indice'))
+const Preguntas = lazy(() => import('./pages/Preguntas'))
+const Progreso = lazy(() => import('./pages/Progreso'))
+const Presentar = lazy(() => import('./pages/Presentar'))
+const Proyecto = lazy(() => import('./pages/Proyecto'))
+const Deck = lazy(() => import('./pages/Deck'))
+const Prompts = lazy(() => import('./pages/Prompts'))
+const Kits = lazy(() => import('./pages/Kits'))
+const Agentes = lazy(() => import('./pages/Agentes'))
+const Admin = lazy(() => import('./pages/Admin'))
+const Guia = lazy(() => import('./pages/Guia'))
+const CursoIndice = lazy(() => import('./pages/Curso').then(m => ({ default: m.CursoIndice })))
+const CursoLeccion = lazy(() => import('./pages/Curso').then(m => ({ default: m.CursoLeccion })))
+const Area = lazy(() => import('./pages/Listados').then(m => ({ default: m.Area })))
+const Biblioteca = lazy(() => import('./pages/Listados').then(m => ({ default: m.Biblioteca })))
+const Carpeta = lazy(() => import('./pages/Listados').then(m => ({ default: m.Carpeta })))
+const Categoria = lazy(() => import('./pages/Listados').then(m => ({ default: m.Categoria })))
+const Herramienta = lazy(() => import('./pages/Listados').then(m => ({ default: m.Herramienta })))
+const Herramientas = lazy(() => import('./pages/Listados').then(m => ({ default: m.Herramientas })))
+const Ruta = lazy(() => import('./pages/Listados').then(m => ({ default: m.Ruta })))
 
 const LEVEL_SHORT: Record<LevelId, string> = { basico: 'Bás', intermedio: 'Int', avanzado: 'Avz' }
 
@@ -50,6 +59,7 @@ function LanguageSwitch({ compact }: { compact?: boolean }) {
 }
 
 function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClose: () => void }) {
+  const session = useSession()
   const course = useCourse()
   const student = useStudent()
   const t = useT()
@@ -65,6 +75,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
     : null,
   )
 
+  useEffect(() => { document.querySelectorAll('.st-sidebar a').forEach(a => { if (a.classList.contains('active')) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current') }) }, [route])
   // El área de la página actual se despliega sola al navegar.
   useEffect(() => {
     if (route.name === 'area') setExpanded(route.stageId)
@@ -144,7 +155,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         <a className={is('agentes') ? 'active' : ''} href={href({ name: 'agentes' })} onClick={onClose}>
           <Bot size={14} /> {t('nav.agentes')}
         </a>
-        {(student.teacher || is('admin')) && (
+        {(session.profile?.role === 'admin') && (
           <a className={is('admin') ? 'active' : ''} href={href({ name: 'admin' })} onClick={onClose}>
             <KeyRound size={14} /> {t('nav.superAdmin')}
           </a>
@@ -248,8 +259,23 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
 function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const course = useCourse()
   const { teacher } = useStudent()
+  const session = useSession()
   const t = useT()
   const locale = useLocale()
+  const [exiting, setExiting] = useState(false)
+  const [exitMessage, setExitMessage] = useState('')
+  async function exitProfile() {
+    if (exiting) return
+    setExiting(true); setExitMessage('')
+    try {
+      const closed = await signOutRemoteSession()
+      if (!closed) {
+        setExitMessage(locale === 'en' ? 'Sign out paused to preserve unsaved work. Download a backup and retry saving in Progress.' : 'Salida detenida para conservar el trabajo sin guardar. Descarga una copia y reintenta el guardado en Progreso.')
+        navigate({ name: 'progreso' })
+      }
+    } catch { setExitMessage(locale === 'en' ? 'Unable to confirm sign out. Your current work has been kept. Retry.' : 'No se ha podido confirmar la salida. Tu trabajo actual se conserva. Inténtalo de nuevo.') }
+    finally { setExiting(false) }
+  }
 
   const trail = useMemo(() => {
     switch (route.name) {
@@ -325,7 +351,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
           <BookOpen size={12} />
           {t('header.rutaGuiada')}
         </a>
-        <button
+        {session.status === 'authenticated' && session.profile?.role === 'admin' && <button
           type="button"
           className={`st-project-switch${teacher ? ' on' : ''}`}
           onClick={() => store.toggleTeacher()}
@@ -334,101 +360,27 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
         >
           <Presentation size={12} />
           {teacher ? t('sidebar.modoProfesor') : t('sidebar.modoAlumno')}
-        </button>
+        </button>}
         <button
           type="button"
           className="st-project-switch danger"
-          onClick={() => store.logout()}
+          disabled={exiting}
+          onClick={() => { void exitProfile() }}
           title={locale === 'en' ? 'Exit this profile' : 'Salir de este perfil'}
         >
           <LogOut size={12} />
           {locale === 'en' ? 'Exit' : 'Salir'}
         </button>
+        {exitMessage && <p role="alert">{exitMessage}</p>}
       </div>
     </header>
   )
 }
 
-function AccessGate() {
-  const locale = useLocale()
-  const [pin, setPin] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-
-  async function enter(event: FormEvent) {
-    event.preventDefault()
-    const value = pin.trim()
-    if (!value) return
-    setError('')
-    if (value === '5555') {
-      store.enter({ name: 'Levi', teacher: true, access: 'admin', preferredLevel: 'intermedio', locale })
-      return
-    }
-    if (!supabase) {
-      setError(locale === 'en' ? 'Student PINs need Supabase configured.' : 'Los PINs de alumnos necesitan Supabase configurado.')
-      return
-    }
-    setBusy(true)
-    const { data, error: rpcError } = await supabase.rpc('verify_learner_pin', { learner_pin: value })
-    setBusy(false)
-    const learner = Array.isArray(data) ? data[0] : null
-    if (rpcError || !learner) {
-      setError(locale === 'en' ? 'That PIN is not active.' : 'Ese PIN no está activo.')
-      return
-    }
-    store.enter({
-      id: learner.id,
-      name: learner.name,
-      teacher: false,
-      access: 'learner',
-      preferredLevel: learner.level || 'basico',
-      locale: learner.locale || locale,
-      project: {
-        name: learner.goal || '',
-        goal: learner.goal || '',
-        audience: '',
-        problem: '',
-        outcome: '',
-        tools: learner.tools || '',
-        updatedAt: new Date().toISOString(),
-      },
-    })
-  }
-
-  return (
-    <div className="st-access">
-      <section className="st-access-card">
-        <div className="st-access-head">
-          <span className="st-kicker"><KeyRound size={12} /> {locale === 'en' ? 'Private academy' : 'Academia privada'}</span>
-          <LanguageSwitch compact />
-        </div>
-        <h1>{locale === 'en' ? 'Enter with your PIN' : 'Entra con tu PIN'}</h1>
-        <p>{locale === 'en' ? 'Use the PIN your teacher gave you. Admin access uses the teacher PIN.' : 'Usa el PIN que te ha dado tu profesor. El acceso admin usa el PIN de profesor.'}</p>
-        <form onSubmit={enter} className="st-access-form">
-          <label>
-            <span>{locale === 'en' ? 'Student or admin PIN' : 'PIN de alumno o administrador'}</span>
-            <input
-              value={pin}
-              onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 8))}
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="••••••"
-              autoFocus
-            />
-          </label>
-          <button type="submit" className="st-btn" disabled={busy || pin.trim().length < 4}>
-            <KeyRound size={14} />
-            {busy ? (locale === 'en' ? 'Checking...' : 'Comprobando...') : (locale === 'en' ? 'Unlock training' : 'Desbloquear formación')}
-          </button>
-          {error && <small className="st-access-error">{error}</small>}
-        </form>
-      </section>
-    </div>
-  )
-}
-
 function Pages({ route }: { route: Route }) {
+  const session = useSession()
   switch (route.name) {
+    case 'not-found': return <section className="st-page"><h1>Página no encontrada / Page not found</h1><p>{route.path}</p><a className="st-btn" href="#/">Inicio / Home</a></section>
     case 'inicio': return <Inicio />
     case 'mi-proyecto': return <MiProyecto />
     case 'ruta': return <Ruta />
@@ -438,24 +390,25 @@ function Pages({ route }: { route: Route }) {
     case 'presentar': return <Presentar slug={route.slug} level={route.level} />
     case 'proyecto': return <Proyecto stageId={route.stageId} />
     case 'deck': return <Deck deckId={route.deckId} />
-    case 'prompts': return <Prompts familyId={route.familyId} />
-    case 'kits': return <Kits />
+    case 'prompts': return <Prompts familyId={route.familyId} promptId={route.promptId} />
+    case 'kits': return <Kits kitId={route.kitId} tabId={route.tab} />
     case 'agentes': return <Agentes agentId={route.agentId} />
-    case 'admin': return <Admin />
+    case 'admin': return session.profile?.role === 'admin' ? <Admin /> : <section className="st-page" role="alert"><h1>Acceso restringido / Restricted access</h1><a href="#/">Inicio / Home</a></section>
     case 'guia': return <Guia guideId={route.guideId} />
     case 'curso': return route.lessonId ? <CursoLeccion lessonId={route.lessonId} /> : <CursoIndice />
     case 'biblioteca': return <Biblioteca />
     case 'carpeta': return <Carpeta folderId={route.folderId} route={route} />
     case 'herramientas': return <Herramientas />
     case 'herramienta': return <Herramienta toolId={route.toolId} route={route} />
-    case 'preguntas': return <Preguntas />
-    case 'indice': return <Indice letter={route.letter} />
+    case 'preguntas': return <Preguntas question={route.question} />
+    case 'indice': return <Indice letter={route.letter} term={route.term} />
     case 'buscar': return <Buscar query={route.query} route={route} />
     case 'progreso': return <Progreso />
   }
 }
 
 function Shell() {
+  const persistence = usePersistence()
   const route = useRoute()
   const course = useCourse()
   const locale = useLocale()
@@ -480,6 +433,23 @@ function Shell() {
       default: return route.name
     }
   }, [route])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const previous = document.activeElement as HTMLElement | null
+    const sidebar = document.querySelector<HTMLElement>('.st-sidebar')
+    const main = document.querySelector<HTMLElement>('.student-main')
+    const oldOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'; if (main) main.inert = true
+    const items = () => Array.from(sidebar?.querySelectorAll<HTMLElement>('a[href],button,input') || []).filter(e => e.getClientRects().length)
+    items()[0]?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); setMenuOpen(false) }
+      if (e.key === 'Tab') { const list = items(); if (e.shiftKey && document.activeElement === list[0]) { e.preventDefault(); list.at(-1)?.focus() } else if (!e.shiftKey && document.activeElement === list.at(-1)) { e.preventDefault(); list[0]?.focus() } }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = oldOverflow; if (main) main.inert = false; if (previous?.isConnected) previous.focus() }
+  }, [menuOpen])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -567,22 +537,24 @@ function Shell() {
   }, [route])
 
   // Las presentaciones ocupan la pantalla entera: sin barra lateral ni cabecera.
-  if (route.name === 'presentar') return <Presentar slug={route.slug} level={route.level} />
-  if (route.name === 'deck') return <Deck deckId={route.deckId} />
-  if (!student.access && !student.teacher) return <AccessGate />
+  if (route.name === 'presentar') return <ErrorBoundary key={route.slug + route.level}><Suspense fallback={<p role="status">Cargando / Loading…</p>}><Presentar slug={route.slug} level={route.level} /></Suspense></ErrorBoundary>
+  if (route.name === 'deck') return <ErrorBoundary key={route.deckId}><Suspense fallback={<p role="status">Cargando / Loading…</p>}><Deck deckId={route.deckId} /></Suspense></ErrorBoundary>
+
 
   return (
     <div className="student-app">
+      <a className="st-skip-link" href="#main-content" onClick={e => { e.preventDefault(); document.getElementById('main-content')?.focus() }}>Saltar al contenido / Skip to content</a>
       <Sidebar route={route} open={menuOpen} onClose={() => setMenuOpen(false)} />
       {menuOpen && <button type="button" className="st-scrim" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} />}
 
       <div className="student-main">
         <Header route={route} onMenu={() => setMenuOpen(true)} />
-        <main>
+        <div className="st-save-status" role="status" data-state={persistence.status}>{persistence.message}</div>
+        <main id="main-content" tabIndex={-1}>
           <div key={routeKey} className="st-route-canvas" data-route={route.name}>
             <span className="st-motion-rail rail-a" aria-hidden="true" />
             <span className="st-motion-rail rail-b" aria-hidden="true" />
-            <Pages route={route} />
+            <ErrorBoundary key={JSON.stringify(route)}><Suspense fallback={<p role="status">Cargando / Loading…</p>}><Pages route={route} /></Suspense></ErrorBoundary>
           </div>
         </main>
       </div>
@@ -600,7 +572,7 @@ function Shell() {
   )
 }
 
-export default function App() {
+function AuthenticatedApp() {
   const locale = useLocale()
   const t = useT()
   const { course, error } = useCourseLoader(locale)
@@ -611,6 +583,8 @@ export default function App() {
         <span><X size={18} /></span>
         <strong>{t('loading.noCargado')}</strong>
         <small>{error}</small>
+        <RecoveryDownload />
+        {locale === 'en' && <button type="button" className="st-btn-ghost" onClick={() => store.setLocale('es')}>Open Spanish content / Abrir contenido en español</button>}
         <button type="button" className="st-btn" onClick={() => window.location.reload()}>
           {t('loading.entrarOtraVez')}
         </button>
@@ -637,4 +611,12 @@ export default function App() {
       <Shell />
     </CourseContext.Provider>
   )
+}
+
+export default function App() {
+  const session = useSession()
+  useEffect(() => { void restoreRemoteSession() }, [])
+  if (session.status === 'checking') return <div className="st-loading" role="status">Comprobando sesión / Checking session…</div>
+  if (session.status !== 'authenticated') return <AccessGate message={session.message} canRetry={session.status === 'error'} />
+  return <ErrorBoundary><AuthenticatedApp /></ErrorBoundary>
 }

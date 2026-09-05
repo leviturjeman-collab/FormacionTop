@@ -1,3 +1,5 @@
+import { copyText } from '../downloads'
+import Modal from '../components/Modal'
 import { useEffect, useMemo, useState } from 'react'
 import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
@@ -14,27 +16,31 @@ type SearchResult = { prompt: PromptItem; family: PromptFamily }
  * o Gemini. Cada uno dice cuándo se usa, qué hay que sustituir, qué te va a
  * devolver y qué hacer después con esa respuesta.
  */
-function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: string }) {
+function PromptCard({ prompt, familyTitle, selected = false }: { prompt: PromptItem; familyTitle: string; selected?: boolean }) {
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(selected)
+  const [values, setValues] = useState<Record<string, string>>({})
+  const preparedPrompt = Object.entries(values).reduce((text, [token, value]) => value.trim() ? text.split(token).join(value.trim()) : text, prompt.prompt)
+  useEffect(() => setOpen(selected), [selected])
   const student = useStudent()
   const locale = useLocale()
 
   function saveToProject() {
     const previous = student.project
     const savedPrompts = [
-      ...(previous?.savedPrompts || []),
+      ...(previous?.savedPrompts || []).filter(p => p.id !== `${familyTitle}:${prompt.id || prompt.name}`),
       {
-        id: prompt.id || `${Date.now()}-${prompt.name}`,
+        id: `${familyTitle}:${prompt.id || prompt.name}`,
         family: familyTitle,
         name: prompt.name,
-        prompt: prompt.prompt,
+        prompt: preparedPrompt,
         savedAt: new Date().toISOString(),
         source: prompt.source ? `Biblioteca de prompts · ${prompt.source}` : 'Biblioteca de prompts',
       },
     ]
     store.setProject({
+      ...previous,
       name: previous?.name || '',
       goal: previous?.goal || 'Usar un prompt profesional',
       audience: previous?.audience || '',
@@ -68,7 +74,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
       </button>
 
       {open && (
-        <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={`Prompt ${prompt.name}`}>
+        <Modal label={`Prompt ${prompt.name}`} onClose={() => setOpen(false)}>
           <button type="button" className="st-focus-backdrop" onClick={() => setOpen(false)} aria-label={locale === 'en' ? 'Close' : 'Cerrar'} />
           <div className="st-focus-sheet st-prompt-modal">
             <header>
@@ -85,7 +91,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
                   type="button"
                   className="st-prompt-copy"
                   onClick={() => {
-                    navigator.clipboard?.writeText(prompt.prompt).then(
+                    copyText(preparedPrompt).then(
                       () => {
                         setCopied(true)
                         window.setTimeout(() => setCopied(false), 1800)
@@ -101,7 +107,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
                   {saved ? <Check size={12} /> : <Save size={12} />}
                   {saved ? (locale === 'en' ? 'Saved' : 'Guardado') : (locale === 'en' ? 'Save to my project' : 'Guardar en mi proyecto')}
                 </button>
-                <pre>{prompt.prompt}</pre>
+                <pre>{preparedPrompt}</pre>
                 <small className="st-prompt-length">{prompt.prompt.trim().split(/\s+/).filter(Boolean).length} {locale === 'en' ? 'words · full brief with context, tests, cost and delivery' : 'palabras · encargo completo con contexto, pruebas, coste y entrega'}</small>
               </div>
 
@@ -111,7 +117,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
                   {prompt.fill.map(([hueco, que]) => (
                     <div key={hueco}>
                       <dt><code>{hueco}</code></dt>
-                      <dd>{que}</dd>
+                      <dd><label>{que}<textarea value={values[hueco] || ''} onChange={event => setValues(current => ({ ...current, [hueco]: event.target.value }))} placeholder={hueco} /></label></dd>
                     </div>
                   ))}
                 </dl>
@@ -127,13 +133,13 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
               </div>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </article>
   )
 }
 
-export default function Prompts({ familyId }: { familyId?: string }) {
+export default function Prompts({ familyId, promptId }: { familyId?: string; promptId?: string }) {
   const course = useCourse()
   const locale = useLocale()
   const baseFamilias = course.prompts || []
@@ -237,7 +243,8 @@ export default function Prompts({ familyId }: { familyId?: string }) {
 
   const showingGlobalResults = query.trim().length > 0 || activeTool !== 'all'
   const encontrados = showingGlobalResults ? searchResults : familyPrompts
-  const visibles = encontrados.slice(0, cuantos)
+  const selectedIndex = encontrados.findIndex(({ prompt }) => (prompt.id || prompt.name) === promptId)
+  const visibles = encontrados.slice(0, Math.max(cuantos, selectedIndex + 1))
   const quedan = encontrados.length - visibles.length
   const exactToolCount = activeTool === 'all' ? 0 : allPromptEntries.filter(({ prompt }) => prompt.toolId === activeTool).length
 
@@ -377,7 +384,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
 
               <div className="st-prompt-list">
                 {visibles.map(({ prompt, family }) => (
-                  <PromptCard key={`${family.id}-${prompt.id || prompt.name}`} prompt={prompt} familyTitle={family.title} />
+                  <PromptCard selected={promptId === (prompt.id || prompt.name)} key={`${family.id}-${prompt.id || prompt.name}`} prompt={prompt} familyTitle={family.title} />
                 ))}
               </div>
 

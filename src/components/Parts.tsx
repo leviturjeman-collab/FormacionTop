@@ -1,3 +1,4 @@
+import { copyText } from '../downloads'
 import { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import type { Part } from '../types'
@@ -19,7 +20,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
       <button
         type="button"
         onClick={() => {
-          navigator.clipboard?.writeText(code).then(
+          copyText(code).then(
             () => {
               setCopied(true)
               window.setTimeout(() => setCopied(false), 1600)

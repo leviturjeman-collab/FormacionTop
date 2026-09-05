@@ -8,7 +8,11 @@
   "level": "basico",
   "what": "An n8n workflow that acts as a watchdog: every hour it checks the status of a service or an API in your business (your website, your ordering system, a count of pending cases), compares what it sees against thresholds you define, and if anything falls outside the norm, it sends you a Telegram alert with the exact reason. If everything is fine, it stays quiet. It turns \"is everything still working?\" into a channel that only speaks up when there's something to look at.",
   "forWho": "For whoever is responsible for keeping something running (a website, an order queue, an inbox with an SLA) and today finds out about problems when a customer calls. It pays for itself from the first scare it saves you: setting it up takes about an hour.",
-  "tools": ["n8n", "telegram", "python"],
+  "tools": [
+    "n8n",
+    "telegram",
+    "python"
+  ],
   "capabilities": [
     "Checks your service's status URL every hour (or at whatever pace you configure)",
     "Evaluates thresholds you write in a code node: status other than ok, more than N pending cases, whatever you define",
@@ -23,15 +27,18 @@
     "If n8n itself is down, there's no watchdog: for critical services, add a second, external watchdog"
   ],
   "flow": {
-    "name": "Operational Alerts Agent (hourly monitoring)",
+    "name": "Agente de alertas operativas (vigilancia horaria)",
     "nodes": [
       {
         "name": "Flow note",
         "type": "n8n-nodes-base.stickyNote",
         "typeVersion": 1,
-        "position": [-380, -220],
+        "position": [
+          -380,
+          -220
+        ],
         "parameters": {
-          "content": "## Hourly watchdog with Telegram alert\nSchedule → check your service → evaluate thresholds → if there's an incident, Telegram; if not, silence.\n\nBefore activating: 1) replace the URL in the \"Check service\" node with your API or status page, 2) adjust the thresholds in \"Evaluate thresholds\", 3) Telegram bot credential and your chat_id.\n\nThis workflow only warns: it never touches the monitored system.",
+          "content": "## Vigilante horario con alerta por Telegram\nSchedule → consultar tu servicio → evaluar umbrales → si hay incidencia, Telegram; si no, silencio.\n\nAntes de activar: 1) cambia la URL del nodo «Check service» por la de tu API o página de estado, 2) ajusta los umbrales en «Evaluate thresholds», 3) credencial del bot de Telegram y tu chat_id.\n\nEste flujo solo avisa: nunca toca el sistema vigilado.",
           "height": 300,
           "width": 340
         }
@@ -40,7 +47,10 @@
         "name": "Every hour",
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1.2,
-        "position": [0, 0],
+        "position": [
+          0,
+          0
+        ],
         "parameters": {
           "rule": {
             "interval": [
@@ -56,29 +66,46 @@
         "name": "Check service",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [220, 0],
+        "position": [
+          220,
+          0
+        ],
         "parameters": {
           "method": "GET",
-          "url": "https://REPLACE-your-service.example/api/status",
+          "url": "https://REEMPLAZAR-tu-servicio.ejemplo/api/estado",
           "options": {
-            "timeout": 15000
+            "timeout": 15000,
+            "response": {
+              "response": {
+                "neverError": true,
+                "fullResponse": true
+              }
+            }
           }
-        }
+        },
+        "onError": "continueRegularOutput",
+        "notes": "Transport errors continue as an error item and must be evaluated downstream."
       },
       {
         "name": "Evaluate thresholds",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [440, 0],
+        "position": [
+          440,
+          0
+        ],
         "parameters": {
-          "jsCode": "// DEFINE what counts as an incident HERE. Adapt these rules to your service.\n// $json is the response from your status API.\nconst data = $json || {};\nconst problems = [];\n\n// Rule 1: the status field must equal 'ok'.\nif (data.status && data.status !== 'ok') {\n  problems.push('The service reports status \"' + data.status + '\"');\n}\n\n// Rule 2: too many pending cases (change the 20 threshold to yours).\nconst pending = Number(data.pending || 0);\nif (pending > 20) {\n  problems.push('There are ' + pending + ' pending cases (threshold: 20)');\n}\n\n// Rule 3 (example, delete or adapt): empty response = suspicious.\nif (Object.keys(data).length === 0) {\n  problems.push('The status API returned an empty response');\n}\n\nreturn [ { json: {\n  alert: problems.length > 0,\n  reason: problems.join(' · ') || 'no incidents',\n  checkedAt: new Date().toISOString()\n} } ];"
+          "jsCode": "const respuesta = $json || {};\nconst codigo = Number(respuesta.statusCode || 0);\nconst datos = respuesta.body && typeof respuesta.body === 'object' ? respuesta.body : {};\nconst problemas = [];\nif (respuesta.error || !codigo) problemas.push('No se pudo conectar al servicio');\nelse if (codigo < 200 || codigo >= 300) problemas.push('HTTP ' + codigo);\nif (!datos || typeof datos.estado !== 'string') problemas.push('Contrato de estado no válido: falta estado');\nelse if (datos.estado !== 'ok') problemas.push('Estado: ' + datos.estado);\nif (datos.pendientes !== undefined) {\n  const pendientes = Number(datos.pendientes);\n  if (!Number.isFinite(pendientes) || pendientes < 0) problemas.push('Campo pendientes inválido');\n  else if (pendientes > 20) problemas.push('Hay ' + pendientes + ' casos pendientes (umbral: 20)');\n}\nreturn [{json:{alerta:problemas.length>0,motivo:problemas.join(' · ') || 'sin incidencias',revisado:new Date().toISOString()} }];"
         }
       },
       {
         "name": "Is there an incident?",
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
-        "position": [660, 0],
+        "position": [
+          660,
+          0
+        ],
         "parameters": {
           "conditions": {
             "options": {
@@ -90,7 +117,7 @@
             "conditions": [
               {
                 "id": "cond-alerta",
-                "leftValue": "={{ $json.alert }}",
+                "leftValue": "={{ $json.alerta }}",
                 "rightValue": "",
                 "operator": {
                   "type": "boolean",
@@ -108,16 +135,19 @@
         "name": "Telegram alert",
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
-        "position": [880, -100],
+        "position": [
+          880,
+          -100
+        ],
         "parameters": {
-          "chatId": "REPLACE_CHAT_ID",
-          "text": "=🚨 Operational alert\nReason: {{ $json.reason }}\nChecked: {{ $json.checkedAt }}\n\nOpen n8n and look at the execution before acting: full detail is in the \"Check service\" node.",
+          "chatId": "REEMPLAZAR_CHAT_ID",
+          "text": "=🚨 Alerta operativa\nMotivo: {{ $json.motivo }}\nRevisado: {{ $json.revisado }}\n\nEntra en n8n y mira la ejecución antes de actuar: el detalle completo está en el nodo «Check service».",
           "additionalFields": {}
         },
         "credentials": {
           "telegramApi": {
-            "id": "REPLACE",
-            "name": "Telegram bot (alerts)"
+            "id": "REEMPLAZAR",
+            "name": "Bot de Telegram (alertas)"
           }
         }
       },
@@ -125,7 +155,10 @@
         "name": "No incidents",
         "type": "n8n-nodes-base.noOp",
         "typeVersion": 1,
-        "position": [880, 120],
+        "position": [
+          880,
+          120
+        ],
         "parameters": {}
       }
     ],
@@ -278,5 +311,7 @@
       "prompt": "Duplicate the \"Telegram alert\" node, set your on-call colleague's chat_id, and connect it to the true branch of the IF as well."
     }
   ],
-  "kits": ["crm-reporting-institucional"]
+  "kits": [
+    "crm-reporting-institucional"
+  ]
 }

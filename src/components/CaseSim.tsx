@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { tabKeys } from './tabs'
+import { useState, useId } from 'react'
 import { AlertTriangle, CircleAlert, CircleCheck } from 'lucide-react'
 import type { CasesPiece } from '../types'
 import Parts from './Parts'
@@ -14,6 +15,7 @@ const ICONS = { feliz: CircleCheck, ambiguo: CircleAlert, roto: AlertTriangle }
  */
 export default function CaseSim({ piece }: { piece: CasesPiece }) {
   const locale = useLocale()
+  const tabId = useId()
   const [active, setActive] = useState(piece.cases[0].id)
   const current = piece.cases.find((item) => item.id === active) || piece.cases[0]
 
@@ -34,8 +36,8 @@ export default function CaseSim({ piece }: { piece: CasesPiece }) {
               <button
                 key={item.id}
                 type="button"
-                role="tab"
-                aria-selected={item.id === active}
+                id={`${tabId}-${item.id}`} aria-controls={`${tabId}-panel`} role="tab" onKeyDown={tabKeys}
+                aria-selected={item.id === active} tabIndex={item.id === active ? 0 : -1}
                 className={`st-case-tab case-${item.id}${item.id === active ? ' on' : ''}`}
                 onClick={() => setActive(item.id)}
               >
@@ -46,7 +48,7 @@ export default function CaseSim({ piece }: { piece: CasesPiece }) {
           })}
         </div>
 
-        <div className={`st-case-body case-${current.id}`}>
+        <div role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${current.id}`} className={`st-case-body case-${current.id}`}>
           <p className="st-case-hint">{current.hint}</p>
           <Parts parts={current.parts} />
         </div>

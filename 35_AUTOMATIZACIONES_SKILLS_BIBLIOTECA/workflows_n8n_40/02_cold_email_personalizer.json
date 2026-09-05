@@ -144,7 +144,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// La API de Anthropic devuelve una lista de bloques; con el razonamiento\n// activado el primero puede ser de tipo \"thinking\", asi que buscamos el\n// primer bloque de texto en vez de leer content[0] a ciegas.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet ia = {};\ntry {\n  // La IA a veces envuelve el JSON en un bloque de codigo; lo limpiamos.\n  ia = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  ia = { asunto: 'REVISAR: la IA no devolvio JSON', cuerpo: texto };\n}\nconst original = $('Normalizar prospecto').item.json;\nreturn [{ json: { ...original, ...ia, ia_texto_bruto: texto.slice(0, 500) } }];"
+        "jsCode": "// La API de Anthropic devuelve una lista de bloques; con el razonamiento\n// activado el primero puede ser de tipo \"thinking\", asi que buscamos el\n// primer bloque de texto en vez de leer content[0] a ciegas.\nconst bloque = ($json.content || []).find((b) => b.type === 'text');\nconst texto = bloque ? bloque.text : '';\nlet ia = {};\ntry {\n  // La IA a veces envuelve el JSON en un bloque de codigo; lo limpiamos.\n  ia = JSON.parse(texto.replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());\n} catch (e) {\n  ia = { asunto: 'REVISAR: la IA no devolvio JSON', cuerpo: texto };\n}\nconst original = $('Normalizar prospecto').item.json;\nreturn [{ json: { ...original, ...Object.fromEntries(Object.entries(ia && typeof ia === 'object' && !Array.isArray(ia) ? ia : {}).filter(([key]) => !(key in original))), ia_texto_bruto: texto.slice(0, 500) } }];"
       },
       "id": "nodo-007",
       "name": "Interpretar borrador",

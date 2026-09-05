@@ -1,0 +1,12 @@
+# Aforo transaccional para eventos y reservas
+
+Instala requirements.txt. Configura OPERATIONS_TOKEN con 32 caracteres aleatorios, OPERATIONS_DB con una ruta persistente y CAPACITY_LIMITS con JSON de límites administrados, por ejemplo `{"event:demo":80,"restaurant:*:comida_1330":52}`. Inicia `uvicorn store:app --host 127.0.0.1 --port 8081`.
+
+En n8n crea una credencial Header Auth llamada Operations store: cabecera `X-Operations-Token`, valor del token. En Docker, localhost del contenedor no es el host: cambia la URL de los nodos por la dirección privada del servicio y conserva autenticación/red restringida. No expongas el almacén públicamente ni metas el token en el formulario del alumno.
+
+Los nodos de los kits Eventos y Restauración llaman a `/capacity/reserve`: una transacción comprueba aforo y reserva unidades. El ID de origen deduplica reintentos; el payload original se conserva. Held y confirmed ocupan aforo; cancelled y expired lo liberan. Una confirmación tardía de hold caducado devuelve409 y debe pasar a recepción, nunca confirmar al cliente. Los límites solo se configuran en el servidor, no se aceptan del webhook.
+
+Los espejos de Sheets sirven para trabajar, no para calcular aforo. Crea una copia de la base y prueba restauración antes del piloto. El ejemplo es un servicio local de un solo servidor SQLite; para varios hosts migra la misma transacción a Postgres. La lista de espera se registra, pero promoverla requiere una acción humana y una nueva reserva con ID diferente. No se promete una promoción automática inexistente.
+
+## Autorización antes del gasto
+Despliega starter-operations-store con `BUDGET_LIMITS_MICRO_USD={"mi-app":10000000}` (10USD diarios UTC) y Header Auth. POST al webhook con `{"mode":"reserve","request_id":"operacion-001","app":"mi-app","ceiling_micro_usd":100000}` reserva0.10USD en una transacción. SOLO HTTP200 y authorized=true permite al cliente invocar al proveedor. 409=ID ya usado (no repetir llamada),429=presupuesto agotado, cualquier otroerror=detenerse. Después usa mode=settle, request_id y actual_micro_usd según usage real. Una reserva incierta permanece cargada: no se libera por timeout. GET /budget/ID permite revisar. El caller debe imponer max_tokens y una tarifa verificada que asegure coste<=ceiling; sin ese contrato NO activar pagos. Este servicio no impide que una aplicación lo omita: centraliza las credenciales del proveedor en el caller que implementa esta puerta. Prueba presupuesto excedido sin llamar al proveedor, duplicado y fallo después del envío.

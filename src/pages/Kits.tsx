@@ -1,3 +1,4 @@
+import { copyText, downloadPackage } from '../downloads'
 import { useMemo, useState } from 'react'
 import {
   AlertTriangle, ArrowRight, BookMarked, Check, Clipboard, Coins, Download, FileText,
@@ -6,10 +7,11 @@ import {
 import { useCourse } from '../course'
 import { useLocale } from '../i18n'
 import type { Locale } from '../i18n'
-import { href } from '../router'
+import { href, navigate } from '../router'
 import { store, useStudent } from '../store'
 import type { Course, InstitutionalKit, KitPrompt, Lesson, PromptFamily, ToolAutomation, ToolPage } from '../types'
 import { BrandMark } from '../components/Brand'
+import ResourceVerification from '../components/ResourceVerification'
 
 /**
  * Kits institucionales.
@@ -108,9 +110,7 @@ function CopyButton({ text, label, ghost }: { text: string; label?: string; ghos
       type="button"
       className={ghost ? 'st-btn-ghost' : 'st-btn'}
       onClick={() => {
-        navigator.clipboard?.writeText(text)
-        setDone(true)
-        window.setTimeout(() => setDone(false), 1600)
+        void copyText(text).then(() => { setDone(true); window.setTimeout(() => setDone(false), 1600) }, () => setDone(false))
       }}
     >
       {done ? <Check size={12} /> : <Clipboard size={12} />} {done ? (locale === 'en' ? 'Copied' : 'Copiado') : (label ?? defaultLabel)}
@@ -167,15 +167,16 @@ function PromptCard({ prompt, open }: { prompt: KitPrompt; open?: boolean }) {
   )
 }
 
-export default function Kits() {
+export default function Kits({ kitId, tabId }: { kitId?: string; tabId?: string }) {
   const course = useCourse()
   const locale = useLocale()
   const student = useStudent()
   const kits = course.kits || []
-  const [active, setActive] = useState(kits[0]?.id || '')
-  const [tab, setTab] = useState<TabId>('resumen')
+  const active = kitId || kits[0]?.id || ''
+  const tab = TABS(locale).some(t => t.id === tabId) ? tabId as TabId : 'resumen'
+  const setTab = (next: TabId) => navigate({ name: 'kits', kitId: active, tab: next })
   const [saved, setSaved] = useState(false)
-  const kit = kits.find((item) => item.id === active) || kits[0]
+  const kit = kits.find((item) => item.id === active)
 
   const tools = useMemo(() => (kit ? kitTools(course, kit) : []), [course, kit])
   const promptFamilies = useMemo(() => (kit ? kitPromptFamilies(course, kit) : []), [course, kit])
@@ -198,8 +199,8 @@ export default function Kits() {
           <h1>{locale === 'en' ? 'Institutional kits' : 'Kits institucionales'}</h1>
           <p>
             {locale === 'en'
-              ? <>No kits found in <code>content/kits/</code>. Add a .json file and regenerate the index.</>
-              : <>No hay ningún kit en <code>content/kits/</code>. Añade un archivo .json y vuelve a generar el índice.</>}
+                ? <>This kit is unavailable. <a href={href({ name: 'kits' })}>See all kits</a>.</>
+                : <>Este kit no está disponible. <a href={href({ name: 'kits' })}>Ver todos los kits</a>.</>}
           </p>
         </div>
       </div>
@@ -207,8 +208,10 @@ export default function Kits() {
   }
 
   function saveToProject() {
+    if (!kit) return
     const previous = student.project
     store.setProject({
+      ...previous,
       name: previous?.name || kit.title,
       goal: previous?.goal || kit.title,
       audience: previous?.audience || kit.audience,
@@ -219,9 +222,9 @@ export default function Kits() {
       projectType: previous?.projectType || 'institucional',
       promptBrief: previous?.promptBrief || '',
       savedPrompts: [
-        ...(previous?.savedPrompts || []),
+        ...(previous?.savedPrompts || []).filter(p => p.id !== `kit-${kit.id}`),
         {
-          id: `kit-${kit.id}-${Date.now()}`,
+          id: `kit-${kit.id}`,
           family: locale === 'en' ? 'Institutional kit' : 'Kit institucional',
           name: `${locale === 'en' ? 'Define your project' : 'Define tu proyecto'} · ${kit.title}`,
           prompt: kit.brief.prompt,
@@ -240,6 +243,7 @@ export default function Kits() {
 
   return (
     <div className="st-page">
+      <ResourceVerification id={kit.id} kind="kits" />
       <div className="st-page-title">
         <span className="st-kicker"><Sparkles size={12} /> {locale === 'en' ? 'Large projects' : 'Proyectos grandes'}</span>
         <h1>{locale === 'en' ? 'Institutional kits' : 'Kits institucionales'}</h1>
@@ -257,7 +261,7 @@ export default function Kits() {
               key={item.id}
               type="button"
               className={item.id === kit.id ? 'on' : ''}
-              onClick={() => { setActive(item.id); setTab('resumen') }}
+              onClick={() => navigate({ name: 'kits', kitId: item.id, tab: 'resumen' })}
             >
               <span>{item.kicker}</span>
               <strong>{item.title}</strong>
@@ -271,6 +275,7 @@ export default function Kits() {
             <h2>{kit.title}</h2>
             <p>{kit.promise}</p>
             <div className="st-kit-actions">
+              <button type="button" className="st-btn-ghost" onClick={() => downloadPackage(kit.id, [{ name: 'README.md', content: '# ' + kit.title + '\n\n' + kit.plain + '\n\n' + kit.phases.map(p => '## ' + p.title + '\n' + p.steps.map(s => s.title + '\n' + s.action + '\nComprobar: ' + s.expect).join('\n\n')).join('\n\n') }, { name: 'kit.json', content: JSON.stringify(kit, null, 2) }, ...kit.workflows.map((w,i) => ({ name: 'workflow-' + (i+1) + '.json', content: JSON.stringify(w.flow, null, 2) }))])}>{locale === 'en' ? 'Download project package' : 'Descargar paquete del proyecto'}</button>
               <CopyButton text={kit.brief.prompt} label={locale === 'en' ? 'Copy the starter brief' : 'Copiar el brief de arranque'} />
               <button type="button" className="st-btn-ghost" onClick={saveToProject}>
                 {saved ? <Check size={12} /> : <Save size={12} />} {saved ? (locale === 'en' ? 'Saved' : 'Guardado') : (locale === 'en' ? 'Save to my project' : 'Guardar en mi proyecto')}

@@ -754,7 +754,8 @@
         "Un bot de Telegram (creado con @BotFather) y el chat id del agente de guardia",
         "La hoja de Google con las pestañas leads, inmuebles y visitas",
         "Un calendario de Google del agente",
-        "Una clave de API de Anthropic"
+        "Una clave de API de Anthropic",
+        "Agenda automática desactivada: el flujo cualifica, registra, pide aprobación y envía acuse real. Para activar visitas: conectar inventario vigente + Calendar free/busy; aportar inicio/fin con zona horaria; comprobar conflictos inmediatamente antes de crear; probar dos reservas concurrentes y rechazo; solo entonces enviar fecha confirmada."
       ],
       "fill": [
         [
@@ -827,7 +828,7 @@
                   {
                     "id": "f1",
                     "name": "id",
-                    "value": "={{ 'L-' + $execution.id }}",
+                    "value": "={{ 'L-' + $json.messages[0].id }}",
                     "type": "string"
                   },
                   {
@@ -982,7 +983,7 @@
           },
           {
             "parameters": {
-              "operation": "append",
+              "operation": "appendOrUpdate",
               "documentId": {
                 "__rl": true,
                 "value": "ID_DE_TU_HOJA",
@@ -1062,40 +1063,22 @@
             "notes": "Empieza estricto: urgencia alta con confianza decente. El resto no se pierde: baja a la rama de atencion manual."
           },
           {
-            "parameters": {
-              "calendar": {
-                "__rl": true,
-                "value": "TU_CALENDARIO",
-                "mode": "list"
-              },
-              "start": "={{ $now.plus({ days: 1 }).set({ hour: 17, minute: 30 }).toISO() }}",
-              "end": "={{ $now.plus({ days: 1 }).set({ hour: 18, minute: 0 }).toISO() }}",
-              "additionalFields": {
-                "summary": "={{ 'VISITA PROVISIONAL · ref ' + ($json.ref_inmueble || 'por asignar') + ' · ' + ($json.nombre || $json.telefono) }}",
-                "description": "={{ 'Lead: ' + $json.telefono + '\\nOperacion: ' + $json.operacion + '\\nZona: ' + $json.zona + '\\nPresupuesto: ' + ($json.presupuesto || 'no dicho') + '\\nMensaje original: ' + $json.mensaje }}"
-              }
-            },
+            "parameters": {},
             "id": "c1500000-0000-4000-8000-000000000008",
             "name": "Reservar hueco de visita",
-            "type": "n8n-nodes-base.googleCalendar",
-            "typeVersion": 1.3,
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
             "position": [
               660,
               120
             ],
-            "credentials": {
-              "googleCalendarOAuth2Api": {
-                "id": "REEMPLAZAR",
-                "name": "Google Calendar"
-              }
-            },
-            "notes": "Evento PROVISIONAL en el primer hueco tipo de la agencia. El agente lo mueve o lo borra al aprobar; lo importante es que la visita ya existe y no se olvida."
+            "notes": "Scheduling disabled until a real availability source and conflict check are configured. No calendar event is created and no visit time is promised."
           },
           {
             "parameters": {
               "chatId": "CHAT_ID_AGENTE",
               "operation": "sendAndWait",
-              "message": "=🏠 Lead caliente por WhatsApp\n\nDe: {{ $('Leer cualificación').first().json.nombre || 'sin nombre' }} ({{ $('Leer cualificación').first().json.telefono }})\nOperación: {{ $('Leer cualificación').first().json.operacion }} · Zona: {{ $('Leer cualificación').first().json.zona || 'no dice' }}\nPresupuesto: {{ $('Leer cualificación').first().json.presupuesto || 'no dice' }} · Ref: {{ $('Leer cualificación').first().json.ref_inmueble || '-' }}\n\nSu mensaje:\n{{ $('Leer cualificación').first().json.mensaje }}\n\nRespuesta propuesta:\nHola{{ $('Leer cualificación').first().json.nombre ? ' ' + $('Leer cualificación').first().json.nombre : '' }}, soy del equipo de la agencia. Tenemos disponible lo que preguntas y te lo puedo enseñar mañana a las 17:30 o el sábado a las 11:00. ¿Cuál te viene mejor?\n\nHe dejado un hueco provisional mañana 17:30 en tu calendario. ¿Envío la respuesta?",
+              "message": "=🏠 Lead caliente por WhatsApp\n\nDe: {{ $('Leer cualificación').first().json.nombre || 'sin nombre' }} ({{ $('Leer cualificación').first().json.telefono }})\nOperación: {{ $('Leer cualificación').first().json.operacion }} · Zona: {{ $('Leer cualificación').first().json.zona || 'no dice' }}\nPresupuesto: {{ $('Leer cualificación').first().json.presupuesto || 'no dice' }} · Ref: {{ $('Leer cualificación').first().json.ref_inmueble || '-' }}\n\nSu mensaje:\n{{ $('Leer cualificación').first().json.mensaje }}\n\nRespuesta propuesta: Gracias por tu consulta. Un agente comprobará el inmueble y la disponibilidad real y te propondrá una visita.\n\nNo hay reserva creada ni disponibilidad verificada. Si quieres dar una fecha concreta, compruébala y acuerda la cita por el canal habitual. ¿Enviar acuse y asignar seguimiento?",
               "responseType": "approval",
               "approvalOptions": {
                 "values": {
@@ -1161,7 +1144,7 @@
               "operation": "send",
               "phoneNumberId": "TU_PHONE_NUMBER_ID",
               "recipientPhoneNumber": "={{ $('Leer cualificación').first().json.telefono }}",
-              "textBody": "={{ 'Hola' + ($('Leer cualificación').first().json.nombre ? ' ' + $('Leer cualificación').first().json.nombre : '') + ', soy del equipo de la agencia. Tenemos disponible lo que preguntas y te lo puedo enseñar mañana a las 17:30 o el sábado a las 11:00. ¿Cuál te viene mejor?' }}",
+              "textBody": "={{ 'Hola' + ($('Leer cualificación').item.json.nombre ? ' ' + $('Leer cualificación').item.json.nombre : '') + ', gracias por tu consulta. Un agente comprobará el inmueble y la disponibilidad real y te propondrá una visita.' }}",
               "additionalFields": {}
             },
             "id": "c1500000-0000-4000-8000-00000000000b",
@@ -1182,7 +1165,7 @@
           },
           {
             "parameters": {
-              "operation": "append",
+              "operation": "appendOrUpdate",
               "documentId": {
                 "__rl": true,
                 "value": "ID_DE_TU_HOJA",
@@ -1199,11 +1182,11 @@
                   "id"
                 ],
                 "value": {
-                  "id": "={{ 'M-' + $execution.id }}",
+                  "id": "={{ $('Normalizar lead').item.json.id }}",
                   "fecha_entrada": "={{ $now.toISO() }}",
                   "canal": "whatsapp",
-                  "telefono": "={{ $json.telefono || '' }}",
-                  "mensaje": "={{ $json.mensaje || '' }}",
+                  "telefono": "={{ $('Normalizar lead').item.json.telefono }}",
+                  "mensaje": "={{ $('Normalizar lead').item.json.mensaje }}",
                   "estado": "nuevo",
                   "motivo_perdido": "pendiente de atencion manual: sin texto util, lead templado o rechazado por el agente"
                 }

@@ -35,7 +35,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const b = $json.body || {};\nconst requeridos = ['url', 'afirmacion'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst url = String(b.url || '').trim();\nconst urlValida = url.indexOf('http://') === 0 || url.indexOf('https://') === 0;\nif (!urlValida && url !== '') {\n  faltan.push('url (debe empezar por http:// o https://)');\n}\nconst salida = {\n  url: url,\n  afirmacion: String(b.afirmacion || '').trim().slice(0, 1000),\n  faltan: faltan,\n  valido: faltan.length === 0 && urlValida\n};\nreturn { json: salida };"
+        "jsCode": "const b = $json.body || {};\nconst requeridos = ['url', 'afirmacion'];\nconst faltan = requeridos.filter(function (campo) {\n  const v = b[campo];\n  return v === undefined || v === null || String(v).trim() === '';\n});\nconst url = String(b.url || '').trim();\n// Explicit allowlist: replace these with public sources you trust. No arbitrary targets.\nconst ALLOWED_HOSTS = ['example.com', 'www.example.com'];\nlet urlValida = false;\ntry { const parsed = new URL(url); urlValida = parsed.protocol === 'https:' && !parsed.username && !parsed.password && ALLOWED_HOSTS.includes(parsed.hostname.toLowerCase()) && (!parsed.port || parsed.port === '443'); } catch {}\nif (!urlValida && url !== '') {\n  faltan.push('url (debe empezar por http:// o https://)');\n}\nconst salida = {\n  url: url,\n  afirmacion: String(b.afirmacion || '').trim().slice(0, 1000),\n  faltan: faltan,\n  valido: faltan.length === 0 && urlValida\n};\nreturn { json: salida };"
       },
       "id": "nodo_198",
       "name": "Validar fuente",
@@ -91,6 +91,11 @@
               "neverError": true,
               "responseFormat": "text",
               "outputPropertyName": "pagina"
+            }
+          },
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
             }
           }
         },
