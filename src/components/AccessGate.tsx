@@ -24,6 +24,7 @@ export function RecoveryDownload() {
 export default function AccessGate({ message, canRetry = false }: { message?: string; canRetry?: boolean }) {
   const locale = useLocale(), en = locale === 'en'
   const [identifier, setIdentifier] = useState(''), [pin, setPin] = useState('')
+  const minimumCredentialLength = identifier.trim().toLowerCase() === 'admin' ? 4 : 10
   const [busy, setBusy] = useState(false), [error, setError] = useState('')
   async function enter(event: FormEvent) {
     event.preventDefault()
@@ -40,8 +41,8 @@ export default function AccessGate({ message, canRetry = false }: { message?: st
     <p>{en ? 'Use the identifier and access credential provided by your teacher. Your saved work remains available when you sign out.' : 'Usa el identificador y la clave de acceso que te ha dado tu profesor. Tu trabajo guardado se conserva al cerrar sesión.'}</p>
     <form className="st-access-form" onSubmit={enter}>
       <label><span>{en ? 'Identifier' : 'Identificador'}</span><input value={identifier} onChange={e => setIdentifier(e.target.value)} autoComplete="username" minLength={3} maxLength={120} required autoFocus /></label>
-      <label><span>{en ? 'Access credential' : 'Clave de acceso'}</span><input type="password" value={pin} onChange={e => setPin(e.target.value)} autoComplete="current-password" minLength={10} maxLength={72} required /></label>
-      <button type="submit" className="st-btn" disabled={busy || identifier.trim().length < 3 || pin.length < 10}>{busy ? (en ? 'Checking…' : 'Comprobando…') : (en ? 'Sign in' : 'Entrar')}</button>
+      <label><span>{en ? 'Access credential' : 'Clave de acceso'}</span><input type="password" value={pin} onChange={e => setPin(e.target.value)} autoComplete="current-password" minLength={minimumCredentialLength} maxLength={72} required /></label>
+      <button type="submit" className="st-btn" disabled={busy || identifier.trim().length < 3 || pin.length < minimumCredentialLength}>{busy ? (en ? 'Checking…' : 'Comprobando…') : (en ? 'Sign in' : 'Entrar')}</button>
       {(error || message) && <p className="st-access-error" role="alert">{error || message}</p>}
     </form>
     {canRetry && <button type="button" className="st-btn-ghost" disabled={busy} onClick={() => { setBusy(true); void restoreRemoteSession().finally(() => setBusy(false)) }}>{en ? 'Check connection and session again' : 'Comprobar de nuevo conexión y sesión'}</button>}

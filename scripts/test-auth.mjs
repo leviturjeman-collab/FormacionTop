@@ -21,7 +21,11 @@ try {
   for (const file of migrations) await db.exec(await readFile(path.join(root, 'supabase/migrations', file), 'utf8'))
   check(migrations.length >= 5, 'All migrations ran on an empty database')
   await db.query(`insert into public.academy_accounts(login,display_name,role,secret_hash) values ('test-admin','Test admin','admin',extensions.crypt($1,extensions.gen_salt('bf',4)))`, [secret])
+  await db.query(`insert into public.academy_accounts(login,display_name,role,secret_hash) values ('admin','Owner','admin',extensions.crypt($1,extensions.gen_salt('bf',4)))`, ['1234'])
   await db.exec('set role anon')
+  check((await rpc('academy_sign_in', ['admin', '1234'])).ok, 'Configured four-character administrator credential accepted')
+  check(!(await rpc('academy_sign_in', ['admin', '123'])).ok, 'Three-character administrator credential rejected')
+  check(!(await rpc('academy_sign_in', ['admin', '4321'])).ok, 'Administrator still requires the matching hash')
   await assert.rejects(() => db.query('select * from public.academy_accounts')); checks++
   await assert.rejects(() => rpc('is_admin_pin', ['invalid'])); checks++
   await assert.rejects(() => rpc('verify_learner_pin', ['invalid'])); checks++

@@ -20,7 +20,7 @@ values ('admin', $1, 'admin', extensions.crypt($2, extensions.gen_salt('bf', 10)
 
 - `admin`: identificador de acceso fijado por el propietario; no es la contraseña ni concede permisos sin una cuenta verificada.
 - `$1`: nombre del administrador.
-- `$2`: secreto aleatorio individual, por ejemplo 32 caracteres hexadecimales generados criptográficamente; mínimo 10 caracteres, máximo 72 bytes UTF-8 por el límite de bcrypt. Guardarlo en un gestor de contraseñas, fuera del repositorio y del historial de terminal. No ejecutar un ejemplo con un secreto literal compartido.
+- `$2`: clave individual del administrador, máximo 72 bytes UTF-8 por el límite de bcrypt. Para la cuenta `admin`, el propietario ha elegido una clave de cuatro caracteres; su valor de preparación está en `ADMIN_PIN` de `.env.local` (archivo privado excluido de Git). La migración `20260905180000_admin_credential_length.sql` permite esa longitud únicamente para el administrador `admin`; los alumnos conservan el mínimo de diez. No introducir la clave en el frontend ni en migraciones. Esta configuración local no crea la cuenta remota.
 
 Cada profesor con funciones administrativas debe tener una cuenta individual. El cambio de vista «profesor» no otorga privilegios. No conceder acceso SQL ni claves service-role al navegador.
 
