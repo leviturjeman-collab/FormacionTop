@@ -160,6 +160,11 @@ export function CursoIndice() {
           <small>Lo único que conviene seguir en orden.</small>
         </div>
         <div>
+          <span>Cuánto lleva</span>
+          <strong>{Math.round(requiredMin / 60)} horas</strong>
+          <small>Leyendo y haciendo las tareas. No es tiempo de vídeo: es tiempo de trabajo tuyo.</small>
+        </div>
+        <div>
           <span>2. Herramientas</span>
           <strong>{porHerramienta.length} fichas</strong>
           <small>Entras solo cuando una lección o proyecto menciona una herramienta.</small>

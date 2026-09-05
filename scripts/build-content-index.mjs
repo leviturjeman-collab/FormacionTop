@@ -381,6 +381,34 @@ function leccionesDelTermino(termino) {
     .map(({ leccion }) => ({ id: leccion.id, title: leccion.title }))
 }
 
+/**
+ * El diccionario escrito a mano no cubría el vocabulario que las propias
+ * lecciones definen: 235 de sus términos no estaban. Aquí se completan con la
+ * definición que el alumno ya ha leído en la lección, para que buscar una
+ * palabra en el diccionario no dependa de que alguien se acordara de añadirla.
+ */
+function terminosDeLasLecciones(yaPuestos) {
+  const nuevos = new Map()
+  for (const leccion of cursoFiles) {
+    for (const [palabra, sentido] of leccion.words || []) {
+      const clave = sinTildes(palabra.split(' (')[0]).trim()
+      if (!clave || yaPuestos.has(clave) || nuevos.has(clave)) continue
+      nuevos.set(clave, {
+        term: palabra,
+        letter: palabra[0].toUpperCase(),
+        meaning: sentido,
+        long: null,
+        analogy: null,
+        confusion: null,
+        seeAlso: [],
+        lessons: [{ id: leccion.id, title: leccion.title }],
+        fromLesson: true,
+      })
+    }
+  }
+  return [...nuevos.values()]
+}
+
 const glossaryIndex = glosarioManual?.terms?.length
   ? glosarioManual.terms.map((entry) => ({
       term: entry.term,
@@ -396,6 +424,11 @@ const glossaryIndex = glosarioManual?.terms?.length
       lessons.map((lesson) => ({ slug: lesson.slug, title: lesson.title, terms: lesson.indexTerms || [] })),
     )
 for (const lesson of lessons) delete lesson.indexTerms
+
+// Se completa con el vocabulario de las lecciones y se reordena alfabéticamente.
+const yaEnDiccionario = new Set(glossaryIndex.map((entrada) => sinTildes(entrada.term.split(' (')[0]).trim()))
+glossaryIndex.push(...terminosDeLasLecciones(yaEnDiccionario))
+glossaryIndex.sort((a, b) => a.term.localeCompare(b.term, 'es'))
 
 /* --- Paginas por herramienta --------------------------------------- */
 
