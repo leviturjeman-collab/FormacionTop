@@ -1,0 +1,93 @@
+{
+  "id": "airbnb-alquiler-vacacional",
+  "title": "Airbnb and holiday lets: what to automate first",
+  "kicker": "Holiday lets",
+  "intro": "This guide is about understanding, without jargon, what can be automated in a holiday rental and what should never be let go of without a person watching. The aim isn't to build a robot that answers everything: it's for every booking, clean, incident and message to have a clear path.",
+  "minutes": 25,
+  "theory": [
+    {
+      "title": "The business isn't Airbnb: it's the operation",
+      "text": "Airbnb or Booking are the door the reservation comes through, but the real work happens afterwards: answering questions, confirming times, sending instructions, coordinating cleaning, checking for damage, ordering supplies, replying to reviews and explaining to the owner what happened this month. Good automation doesn't try to replace any of that. It puts it in order so nothing depends on you remembering.",
+      "analogy": "The platform is the front counter. The operation is the back room: that's where the money is made or lost."
+    },
+    {
+      "title": "Messages first, actions later",
+      "text": "The safest way to start is having the AI write drafts, not send messages on its own. For example: a guest asks whether they can check in early. The system looks at the previous guest's checkout time, the cleaning assigned and the property's rules. Then it leaves a draft: yes, no, or pending confirmation. A person reviews it and sends it. That way you save time without promising something impossible.",
+      "analogy": null
+    },
+    {
+      "title": "Check-in needs data, not memory",
+      "text": "A reliable check-in needs few pieces of data, but exact ones: property, date, expected time, number of guests, language, lock or keys, important rules, emergency phone number and whether the cleaning is finished. If one of those is missing, the system must not invent it. It has to stop and raise a flag.",
+      "analogy": "It isn't a friendly conversation: it's a checklist before opening the door."
+    },
+    {
+      "title": "Incidents are the limit",
+      "text": "When there's damage, serious complaints, money, refunds, claims or identity documents, automation has to slow down. It can sort photos, draft the report, summarise the conversation and notify whoever is responsible. What it must not do on its own is chase money, accuse a guest or change a compensation.",
+      "analogy": null
+    },
+    {
+      "title": "The value is in the record",
+      "text": "If you manage one property, the record saves you. If you manage twenty, it's compulsory. Every booking should leave a row: who checks in, when they leave, which clean is due, what incident occurred, what message was sent, who approved it and what's still outstanding. Without that, every dispute turns into hunting through old messages across five different chats.",
+      "analogy": "The record is the property's black box. It doesn't prevent the crash, but it explains what happened."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Design the guest message queue",
+      "where": "In ChatGPT, Claude or Gemini",
+      "action": "Picture a real property: a flat in Las Canteras, two bedrooms, check-in from 15:00, checkout before 11:00. Ask the AI to sort guest messages into simple types: before booking, before arrival, during the stay, checkout, incident and review.",
+      "prompt": "I'm designing an automation for an Airbnb-style holiday let. Property: [DESCRIBE THE PROPERTY]. Important rules: [RULES]. Channels: Airbnb, Booking, WhatsApp and email.\n\nI want a very simple table with these fields: MESSAGE TYPE | REAL EXAMPLE FROM A GUEST | WHAT DATA TO CHECK BEFORE REPLYING | DRAFT REPLY | WHEN A PERSON MUST REVIEW IT.\n\nUse beginner-level language. Don't just say \"automate\": write concrete cases. Mark as mandatory human review anything involving money, damage, a serious complaint, ID documents, police, refunds or changes to a booking.",
+      "expect": "A table with real examples, not theory. You should see cases like early check-in, wifi, late arrival, keys, cleaning, noise, damage, checkout and reviews.",
+      "stuck": "If the AI gives you a generic list, reply: give me examples of messages written as though a guest had sent them on WhatsApp."
+    },
+    {
+      "title": "Build the cleaning and restocking checklist",
+      "where": "In the same conversation",
+      "action": "Ask for a list for the cleaning team that isn't pretty but operational: what to look at, what photo to take, when to raise a flag and what counts as a blocker for the next check-in.",
+      "prompt": "Create a cleaning checklist for a holiday rental. The property has [BEDROOMS], [BATHROOMS], a kitchen, a terrace and a keypad lock. I want a table with: AREA | WHAT TO CHECK | PHOTO REQUIRED | IF IT FAILS, WHAT TO DO | BLOCKS CHECK-IN YES/NO.\n\nInclude restocking of toilet paper, soap, towels, bed linen, coffee pods, bin bags, batteries, wifi, air conditioning and keys/code. Don't use general phrases like \"check everything is fine\".",
+      "expect": "A table the team can follow without asking questions. Some rows must block check-in: bed not changed, dirty bathroom, faulty lock or broken air conditioning in hot season.",
+      "stuck": "If it comes out too long, ask for a single-page version for a phone screen."
+    },
+    {
+      "title": "Decide what an agent may and may not do",
+      "where": "In a note or in the AI",
+      "action": "Use four columns: can answer on its own, can prepare a draft, must notify a person, never automate. Put real cases in, without jargon.",
+      "prompt": "Give me a permissions matrix for holiday-let automations. Columns: CAN ANSWER ON ITS OWN | CAN PREPARE A DRAFT | MUST NOTIFY A PERSON | NEVER AUTOMATE.\n\nCases to place: asking about wifi, requesting early check-in, arriving in the small hours, guest says the cleaning was missed, neighbour complains about noise, damage to furniture, requesting a refund, requesting an invoice, changing dates, undeclared pet, negative review, owner asks for the monthly report.\n\nExplain each decision in one plain sentence.",
+      "expect": "A matrix that separates the dull from the delicate. Money, damage, claims and booking changes must stay out of the automatic column.",
+      "stuck": "If it puts too much into automatic, tell it: be more conservative; I'd rather save less time and avoid trouble."
+    },
+    {
+      "title": "Define the monthly report to the owner",
+      "where": "In ChatGPT, Claude or Gemini",
+      "action": "Ask for a report that isn't for show: occupancy, income, costs, incidents, reviews and outstanding decisions. It has to be understandable in two minutes.",
+      "prompt": "Design the monthly report for the owner of a holiday rental. Data available: nights occupied, nights free, income, cleaning costs, maintenance, incidents, reviews, important messages and outstanding tasks.\n\nGive me a template with fixed sections. For each section tell me: what data goes in, a filled-in example with made-up numbers, what decision it helps with, and what data I must NOT show for privacy reasons.",
+      "expect": "A clear monthly template, with made-up numbers and a section for outstanding decisions. It must not include guests' full personal details.",
+      "stuck": "If it reads like a consultancy report, reply: shorten it so an owner can take it in on WhatsApp or on a one-page PDF."
+    }
+  ],
+  "canDo": [
+    "Prepare answers to repeated guest questions and leave them ready for review.",
+    "Coordinate check-in, checkout, cleaning and restocking with lists, statuses and owners.",
+    "Raise alerts when a piece of data is missing before a check-in or when an incident blocks the property.",
+    "Summarise reviews and messages to spot recurring problems with a property.",
+    "Build reports for owners with occupancy, income, incidents and outstanding tasks."
+  ],
+  "cantDo": [
+    "Promise refunds, discounts, compensation or booking changes without a person taking responsibility.",
+    "Accuse a guest of damage automatically.",
+    "Share ID documents, full phone numbers or personal data with suppliers when it isn't needed.",
+    "Invent availability, rules, prices or facilities at the property.",
+    "Replace whatever legal, tax or tourism review applies in each city."
+  ],
+  "words": [
+    ["Property manager", "A person or company that runs other owners' properties: bookings, guests, cleaning, incidents and reports."],
+    ["Channel", "Where the message comes in from: Airbnb, Booking, WhatsApp, email or a phone call."],
+    ["Check-in", "The guest's arrival. Covers time, keys or code, basic rules and confirmation that the property is ready."],
+    ["Checkout", "The guest's departure. It triggers cleaning, damage checks and preparation for the next arrival."],
+    ["Incident", "Anything outside the normal run: damage, a complaint, missed cleaning, a key problem, noise or a breakdown."],
+    ["Escalation", "When the system stops resolving on its own and notifies a responsible person."],
+    ["Draft", "A reply written but not sent. It's the safest way to start automating."],
+    ["Record", "The table where it's noted what came in, what was done, who reviewed it and what's outstanding."],
+    ["Sensitive data", "Information to handle carefully: ID documents, phone numbers, exact address, payments, claims and full personal details."]
+  ]
+}

@@ -202,6 +202,7 @@ const BASE_FAMILY_CATEGORY = {
   'arreglar-errores': 'probar-reparar',
   'pedir-cambios': 'programar',
   'contenido-negocio': 'crear-contenido',
+  'alquiler-vacacional': 'crear-contenido',
 }
 
 /*
@@ -470,8 +471,13 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
   const generalEntries = []
   const output = []
 
+  // Un prompt cuya categoría no existe se caía en silencio. Así se perdieron
+  // los cuatro de `content/prompts/alquiler-vacacional.json`, que llevaban
+  // escritos sin llegar a ninguna pantalla. Ahora avisa por consola.
+  const descartados = new Map()
   const pushGeneral = (entry) => {
     if (CATEGORY_BY_ID.has(entry.categoryId)) generalEntries.push(entry)
+    else descartados.set(entry.categoryId, (descartados.get(entry.categoryId) || 0) + 1)
   }
 
   for (const family of baseFamilies || []) {
@@ -497,6 +503,10 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
    * anterior»...) con el mismo contenido de fondo. Ahora hay UNA familia por
    * tema; solo se parte en lotes numerados cuando supera los 50 prompts.
    */
+  for (const [categoria, cuantos] of descartados) {
+    console.warn(`  aviso: ${cuantos} prompts descartados por categoria desconocida «${categoria}».`)
+  }
+
   for (const metaEs of CATEGORY_META) {
     const entries = generalEntries.filter((entry) => entry.categoryId === metaEs.id)
     if (!entries.length) continue

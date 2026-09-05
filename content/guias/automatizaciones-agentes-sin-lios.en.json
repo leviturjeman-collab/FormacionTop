@@ -1,0 +1,104 @@
+{
+  "id": "automatizaciones-agentes-sin-lios",
+  "title": "Automations and agents without the mess",
+  "kicker": "Basic technical map",
+  "intro": "This is where you translate the odd words that come up when someone talks about automating: workflow, trigger, API, webhook, agent, credentials, logs, memory and human approval. You don't need to learn them to show off: you need to understand them so you don't build something that sends, deletes, charges or publishes without control.",
+  "minutes": 30,
+  "theory": [
+    {
+      "title": "Automation: the same path, many times",
+      "text": "An automation is worth it when the process repeats and the steps are fairly clear. For example: a guest message arrives, it gets classified, the booking is looked up, a reply is prepared and the person responsible is notified. If every case is different and needs human judgement, you don't automate the ending: you automate the preparation.",
+      "analogy": "It's a conveyor belt with stops. It doesn't run the whole factory, it moves one piece through known steps."
+    },
+    {
+      "title": "Workflow: the recipe of steps",
+      "text": "A workflow is the ordered list of what happens: input, cleaning the data, decision, action, record and notification. In n8n each step is usually a node. If you can't draw the workflow on a sheet of paper, you aren't ready to build it in a tool yet.",
+      "analogy": null
+    },
+    {
+      "title": "Trigger: what sets it off",
+      "text": "The trigger is what starts things. It can be a form submitted, a new email, a new row in Sheets, a booking that changes, a time of day or a button you press. Choosing the wrong trigger makes heavy automations: they run too often, duplicate work, or fire when data is still missing.",
+      "analogy": "It's the doorbell. If it rings for anything at all, nobody gets any rest."
+    },
+    {
+      "title": "API and webhook: two ways for apps to talk",
+      "text": "An API is an official door for requesting or changing an app's data. Your flow calls a CRM's API to create a contact, or a spreadsheet's to write a row. A webhook is an address that waits for something to arrive. A form sends data to a webhook and the flow wakes up. An API is knocking on a door; a webhook is putting up a letterbox.",
+      "analogy": null
+    },
+    {
+      "title": "Agent: it picks the next step using tools",
+      "text": "An agent isn't a longer automation. It's a system where the AI can choose among permitted tools: look up a booking, prepare a draft, find a policy or escalate to a person. That's why it needs limits: which tools exist, how many steps it can take, how much it can spend and which actions are forbidden.",
+      "analogy": "You don't hand it the keys to the house. You hand it a box with three tools and a sheet saying when it may use them."
+    },
+    {
+      "title": "Human approval: the good brake",
+      "text": "Human approval isn't a failure of automation. It's what makes it usable in real processes. Where there's money, personal data, damage, a serious complaint, a contract, a price, a publication or a deletion, the system can prepare everything, but a person decides before it goes out.",
+      "analogy": null
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Turn an idea into a workflow",
+      "where": "In ChatGPT, Claude or Gemini",
+      "action": "Use a real, small case: a guest asks whether they can check in two hours early. Ask for it as numbered steps, separating the automatic from the human.",
+      "prompt": "I want to automate this small case: a holiday-let guest asks whether they can check in two hours early.\n\nData available: the booking calendar, the previous guest's checkout time, cleaning status, check-in rules, which channel they wrote from, and the phone number of the person responsible.\n\nGive me the workflow in plain language, with this table: STEP | WHAT HAPPENS | TOOL | DATA IT NEEDS | WHAT GOES IN THE RECORD | WHEN IT STOPS AND NOTIFIES A PERSON.\n\nDon't use technical words without translating them. If anything could affect money, the booking or a promise to the guest, mark it as human review.",
+      "expect": "A table where you can see the trigger, the data, the decision, the draft, the record and the human review. It mustn't just say \"the AI replies\".",
+      "stuck": "If it comes out generic, ask it to redo it with concrete names: Apartment Centro 2B, checkout 11:00, cleaning 12:00, check-in 15:00."
+    },
+    {
+      "title": "Decide whether you need an automation or an agent",
+      "where": "In the same conversation",
+      "action": "Compare three cases: sending the wifi instructions, handling damage to a sofa, and replying to a negative review. Ask which needs a simple automation, which a draft and which an agent.",
+      "prompt": "I have these three holiday-let cases:\n1. The guest asks for the wifi password.\n2. Cleaning sends a photo of a broken sofa.\n3. A guest leaves a negative review saying the property was dirty.\n\nFor each case tell me whether it suits: simple automation, reviewed draft, agent with tools, or a person only. Explain why in plain language. Add what data the system would have to check before acting and which action would be forbidden.",
+      "expect": "Wifi can be more automatic if the data is confirmed. Damage and negative reviews should go through review or a person.",
+      "stuck": "If it recommends automating everything, reply: be more conservative and think about what could turn out expensive or illegal."
+    },
+    {
+      "title": "List your credentials without writing the keys",
+      "where": "In a note or a spreadsheet",
+      "action": "Make a table of the accounts a flow would touch: Airbnb or email, Sheets/Airtable, WhatsApp, n8n and the AI. Don't put passwords in: only what each permission is for.",
+      "prompt": "Help me build a credentials table for an automation project. Project: handling messages, cleaning and incidents for a holiday let.\n\nColumns: SERVICE | WHAT IT'S USED FOR | MINIMUM PERMISSION | WHAT IT MUST NOT BE ABLE TO DO | WHO IS RESPONSIBLE | HOW IT'S REVOKED.\n\nServices: Airbnb/Booking if applicable, Gmail, WhatsApp Business, Sheets or Airtable, n8n, OpenAI or Claude, Vercel if there's a portal.",
+      "expect": "A table of minimum permissions. Revoking/disconnecting has to appear, not just connecting.",
+      "stuck": "If it asks you to paste keys, don't. Keys never go in a chat or in a guide."
+    },
+    {
+      "title": "Define the logs that will save you when it fails",
+      "where": "In ChatGPT, Claude or Gemini",
+      "action": "Ask for a record table so you know what happened on each run: input, output, error, cost, responsible person and status.",
+      "prompt": "Design the minimum record for a holiday-let automation. It has to let me find out what happened when a guest says \"nobody answered me\" or when the owner asks about an incident.\n\nI want columns with clear names, a filled-in example and what each is for. Include date, property, booking, channel, case type, input data, decision, draft created, person who approved, message sent, error, approximate cost and final status.\n\nDon't include full ID numbers, full phone numbers or personal data that isn't needed.",
+      "expect": "A table you can take to Sheets or Airtable that doesn't expose unnecessary personal data.",
+      "stuck": "If the table is enormous, ask for a minimum version with at most 12 columns."
+    }
+  ],
+  "canDo": [
+    "Tell a simple automation, a workflow and an agent with tools apart.",
+    "Choose a sensible trigger so actions don't get duplicated.",
+    "Separate data, decision, action, record and notification.",
+    "Design minimum permissions without pasting keys anywhere.",
+    "Put human approval where there's real risk."
+  ],
+  "cantDo": [
+    "Turn a fuzzy idea into a safe system without drawing the process first.",
+    "Give an AI permission to send, delete, charge or publish with no brake.",
+    "Use full personal data when a reference would do.",
+    "Judge quality only by whether the reply read nicely.",
+    "Know whether an API, price or permission is still the same without checking the official site."
+  ],
+  "words": [
+    ["Workflow", "The recipe of steps in a process: what goes in, what gets checked, what gets decided, what gets done and what gets stored."],
+    ["Trigger", "What sets the flow off: a new email, a form, a schedule, a button, a new row or a changed booking."],
+    ["Node", "A step inside tools like n8n. A node reads, transforms, decides, calls an app or stores something."],
+    ["API", "An app's official door for reading or changing data from another tool."],
+    ["Webhook", "An address waiting to receive data. When it arrives, the flow wakes up."],
+    ["Credential", "An access key to an account or service. It's stored outside the prompt and outside public code."],
+    ["Token", "A kind of credential. It's like a password for programs."],
+    ["OAuth", "A way of giving an app permission without typing your password into it."],
+    ["Agent", "An AI that can choose among permitted tools to move forward step by step."],
+    ["Tool calling", "When the model asks to use a specific tool with specific data."],
+    ["Log", "A record of what happened: input, decision, output, error, cost and who was responsible."],
+    ["Idempotent", "An action you can repeat without duplicating the result. Example: updating a booking by its reference rather than creating another."],
+    ["Fallback", "The plan B when something fails: save it as pending, notify a person, or reply with a draft."],
+    ["Rate limit", "A cap on how much you can use an API per minute, hour or month."],
+    ["Human approval", "The point where the system stops and a person decides before anything sensitive happens."]
+  ]
+}
