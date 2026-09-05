@@ -1,3 +1,9 @@
+import {
+  UNIT_EN, DISCOVERED_PLAIN_EN, discoveredGuideEn, PROMPT_TASKS_EN, TASK_AUTOMATIONS_EN,
+  PROFILE_DEFAULT_EN, TOOL_PROFILES_EN, promptForEn, PROMPT_DETAILS_EN, PROMPT_PADDING_EN,
+  ENRICH_SECTIONS_EN, ENRICH_PADDING_EN, automationForEn, AUTOMATION_CODE_EN, PLATFORM_EN,
+} from './toolguides-en.mjs'
+
 import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS } from './automations-reales.mjs'
 
 const MAX_TOOL_AUTOMATIONS = 25
@@ -15,339 +21,20 @@ const MAX_TOOL_AUTOMATIONS = 25
  *   7. Preguntas para comprobar que lo he entendido.
  */
 
-const q = (prompt, options, explain) => ({ prompt, options, explain })
-const ok = (text, why) => ({ text, correct: true, why })
-const no = (text, why) => ({ text, correct: false, why })
 
-export const TOOL_GUIDES = {
-  chatgpt: {
-    tool: 'openai',
-    plain:
-      'Es una página web donde escribes lo que necesitas y una inteligencia artificial te responde. Funciona como un chat de WhatsApp: tú escribes abajo, la respuesta aparece arriba. No hay que instalar nada ni saber programar.',
-    account: {
-      url: 'chatgpt.com',
-      free: 'Hay versión gratuita y sirve perfectamente para todo el principio del curso. La de pago (unos 23 € al mes) da modelos mejores y menos esperas.',
-      steps: [
-        ['Entra en chatgpt.com', 'Escríbelo directamente en la barra del navegador. Cuidado con las apps de imitación: la web oficial no pide descargar nada.'],
-        ['Pulsa "Sign up"', 'Está arriba a la derecha. Significa "crear cuenta", frente a "Log in", que es entrar con una que ya tienes.'],
-        ['Elige cómo entrar', 'Con tu correo de Google es lo más rápido y no tienes que inventar otra contraseña.'],
-        ['Confirma tu correo', 'Te llega un email con un botón. Si no aparece en cinco minutos, mira en la carpeta de spam.'],
-        ['Pon tu número de teléfono', 'Lo piden para evitar cuentas falsas. Te llega un SMS con un código de seis cifras.'],
-        ['Ya estás dentro', 'Verás una caja de texto en el centro. Ahí es donde escribes.'],
-      ],
-      warning: 'Antes de escribir nada de un cliente: ve a Settings → Data controls y desactiva "Improve the model for everyone". Si no, lo que escribas puede usarse para entrenar.',
-    },
-    first: [
-      'Escribe cualquier cosa en la caja y pulsa intro. Lo primero es perderle el miedo.',
-      'Crea un Proyecto en la barra lateral: es una carpeta que recuerda instrucciones para todas sus conversaciones.',
-      'Dentro del proyecto, escribe en "Instructions" quién eres y cómo quieres que te responda. Se aplicará siempre sin repetirlo.',
-      'Arrastra un documento tuyo al proyecto. A partir de ahí puede responder sobre él.',
-    ],
-    words: [
-      ['Prompt', 'Lo que tú escribes. Es simplemente el encargo, en español de toda la vida.'],
-      ['Modelo', 'La "versión de cerebro" que responde. Los hay más rápidos y baratos, y más lentos y capaces.'],
-      ['Contexto', 'Todo lo que la IA tiene delante en ese momento: tu mensaje y lo hablado antes. Tiene un tamaño máximo.'],
-      ['Token', 'El trocito en que se parte el texto para contarlo. Una palabra larga son dos o tres. Se factura por tokens.'],
-      ['Alucinación', 'Cuando se inventa un dato con toda naturalidad. No miente a propósito: rellena el hueco.'],
-    ],
-    matters: [
-      'Las conversaciones largas empeoran. Cuando notes que se lía, abre una nueva y pega lo importante.',
-      'Los Proyectos son la diferencia entre usarlo de juguete y usarlo para trabajar.',
-      'Desactivar el entrenamiento antes de meter datos de clientes.',
-      'Guardar en un archivo los prompts que te funcionan: la conversación se pierde entre cientos.',
-    ],
-    ignore: [
-      'Los GPTs de la tienda: casi todos son un prompt metido en una caja.',
-      'Los "prompts mágicos" de los vídeos. Lo que funciona es ser concreto, no una fórmula secreta.',
-      'Cambiar de modelo a cada rato mientras aprendes.',
-    ],
-    questions: [
-      q('Estás usando ChatGPT para redactar respuestas a clientes y les pegas el email completo con nombre y teléfono. ¿Qué deberías haber hecho antes?',
-        [
-          ok('Desactivar el uso de tus datos para entrenamiento en Settings → Data controls', 'Correcto, y es un ajuste de treinta segundos. Por defecto viene activado, y no basta con confiar: es un dato de un tercero que te lo confió.'),
-          no('Nada, es una herramienta conocida y por tanto segura', 'Conocida no significa autorizada para tratar los datos de otra persona. Son cosas distintas.'),
-          no('Avisar al cliente de que usas IA', 'Es buena práctica y no resuelve el problema: el dato ya habría salido igual.'),
-        ],
-        'El dato de un cliente no es tuyo. Solo lo custodias.'),
-      q('Llevas una hora de conversación y empieza a contradecirse. ¿Qué haces?',
-        [
-          ok('Abrir una conversación nueva y pegar solo lo importante', 'Sí. Lo del principio se ha salido de su memoria de trabajo. Empezar de cero con un resumen es más rápido que pelearse.'),
-          no('Repetirle que se fije en lo que dijisteis antes', 'Ya no lo tiene delante. Puedes repetírselo diez veces y seguirá sin estar.'),
-          no('Cambiar a un modelo mejor', 'El límite de memoria no se arregla cambiando de modelo: solo lo mueve un poco más lejos.'),
-        ],
-        'La memoria de una conversación tiene borde. Cuando se llena, lo viejo se cae.'),
-    ],
-  },
-
-  'claude-code': {
-    tool: 'claude',
-    plain:
-      'Es un ayudante que trabaja dentro de la carpeta de tu proyecto. En vez de copiar y pegar código de una web, le hablas en español y él abre tus archivos, los cambia y ejecuta lo que haga falta. Se usa desde la terminal, que es esa ventana negra donde se escriben órdenes.',
-    account: {
-      url: 'claude.ai',
-      free: 'Necesita una cuenta de Claude. Con la suscripción Pro (unos 20 € al mes) va incluido; también funciona pagando por uso con una clave de API.',
-      steps: [
-        ['Crea la cuenta en claude.ai', 'Con tu correo. Confirma el email que te llega.'],
-        ['Instala Node.js', 'Es el programa que permite instalar Claude Code. Está en el bloque de instalación de más abajo, para copiar y pegar.'],
-        ['Instala Claude Code', 'Copia y pega: npm install -g @anthropic-ai/claude-code'],
-        ['Abre la terminal en tu carpeta', 'En Windows: clic derecho en la carpeta → "Abrir en Terminal". En Mac: clic derecho → Servicios → "Nuevo terminal en la carpeta".'],
-        ['Escribe claude y pulsa intro', 'La primera vez te abre el navegador para que autorices tu cuenta. Después ya no lo vuelve a pedir.'],
-      ],
-      warning: 'Antes de dejarle tocar nada, tu proyecto tiene que estar en git. Es el botón de deshacer: sin él, un cambio que no te guste no se puede revertir.',
-    },
-    first: [
-      'Crea un archivo llamado CLAUDE.md en la raíz del proyecto con las reglas: qué hace el proyecto, cómo se arranca y qué no debe tocar. Lo lee cada vez.',
-      'Pídele algo pequeño y concreto: "lee el archivo X y explícame qué hace". Sin cambios todavía.',
-      'Cuando te fíes, pídele un cambio de una sola cosa.',
-      'Después de cada cambio, escribe git diff para ver exactamente qué tocó.',
-    ],
-    words: [
-      ['Terminal', 'La ventana donde escribes órdenes en vez de hacer clic. No es más difícil que el explorador de archivos: es que no tiene botones.'],
-      ['Repositorio', 'La carpeta de tu proyecto, con su historial de cambios guardado.'],
-      ['git', 'El sistema que guarda ese historial. Son los puntos de guardado de un videojuego.'],
-      ['diff', 'La lista de lo que cambió: qué líneas se añadieron y cuáles se quitaron.'],
-      ['Rama', 'Una copia paralela donde probar sin tocar lo que funciona.'],
-    ],
-    matters: [
-      'El archivo CLAUDE.md es lo que más cambia la calidad del resultado, y casi nadie lo escribe.',
-      'Revisar el diff siempre, aunque sea aburrido. Es tu firma la que va en ese código.',
-      'Pedir cambios pequeños. "Refactoriza el proyecto" da resultados imprevisibles.',
-      'Trabajar en una rama: equivocarse pasa a ser gratis.',
-    ],
-    ignore: [
-      'Intentar que haga el proyecto entero de una vez.',
-      'Discutir con él cuando se equivoca dos veces seguidas. Sal, piensa qué contexto le falta y vuelve.',
-      'Aprender todos los comandos de git antes de empezar. Con cinco vas sobrado.',
-    ],
-    questions: [
-      q('Le pides un cambio y toca quince archivos. ¿Qué haces antes de darlo por bueno?',
-        [
-          ok('Mirar el diff archivo por archivo, con el proyecto en git para poder deshacer', 'Correcto. El diff te enseña exactamente qué cambió y git te da el botón de deshacer. Sin las dos cosas, es una apuesta.'),
-          no('Ejecutar el programa: si arranca, está bien', 'Que arranque no dice nada de los otros catorce archivos. Los peores fallos no impiden arrancar.'),
-          no('Preguntarle a él si su cambio está bien', 'Te dirá que sí con mucha convicción. Es justo donde menos fiable resulta.'),
-        ],
-        'Sin control de versiones, un ayudante potente es un riesgo, no una ayuda.'),
-      q('¿Qué es lo primero que deberías crear en un proyecto nuevo antes de usarlo?',
-        [
-          ok('Un archivo CLAUDE.md con las reglas del proyecto', 'Sí. Es su contexto permanente: cómo se arranca, qué convenciones seguís y qué no debe tocar. Cinco minutos aquí ahorran horas después.'),
-          no('Una carpeta de documentación completa', 'Está bien tenerla, pero no es lo que lee para trabajar.'),
-          no('Nada especial, funciona igual', 'Funciona, sí, pero adivinando. Y adivina peor cuanto más grande es el proyecto.'),
-        ],
-        'Un ayudante sin contexto adivina. Con contexto, acierta.'),
-    ],
-  },
-
-  n8n: {
-    tool: 'n8n',
-    plain:
-      'Es un tablero donde montas procesos automáticos arrastrando cajitas y uniéndolas con líneas. Cada cajita hace una cosa: recibir un email, mirar si cumple una condición, escribir en una hoja de cálculo. No se programa: se conecta.',
-    account: {
-      url: 'n8n.io',
-      free: 'Dos opciones. En la nube tiene prueba gratuita y luego se paga. En tu ordenador con Docker es gratis para siempre, y es lo que usamos en el curso.',
-      steps: [
-        ['Decide dónde: en tu ordenador', 'Es gratis y no depende de nadie. Necesita Docker, que se instala con el bloque de más abajo.'],
-        ['Copia y pega el bloque de instalación', 'Levanta n8n y una base de datos de una vez.'],
-        ['Abre localhost:5678 en el navegador', 'Es la dirección de tu propio ordenador. Ahí está n8n funcionando.'],
-        ['Crea tu usuario local', 'La primera vez te pide correo y contraseña. Son solo para tu instalación: no hay que confirmarlos por email.'],
-        ['Pulsa el "+" de arriba a la derecha', 'Ahí empieza tu primer flujo.'],
-      ],
-      warning: 'Un flujo activo actúa de verdad: envía correos reales y escribe en sistemas reales. Prueba siempre con datos inventados antes de activarlo.',
-    },
-    first: [
-      'Crea un flujo y ponle nombre inmediatamente. "Workflow 1" repetido veinte veces es un infierno.',
-      'Añade el primer nodo con "Add first step" y elige "Trigger manually" para practicar.',
-      'Añade un nodo "Edit Fields (Set)" y crea un campo de prueba.',
-      'Pulsa "Test step" en cada nodo: ejecuta solo ese y te enseña lo que sale. Así se trabaja: nodo a nodo.',
-    ],
-    words: [
-      ['Nodo', 'Cada cajita del tablero. Una hace una sola cosa.'],
-      ['Trigger o disparador', 'El nodo que arranca todo. Responde a "¿cuándo se ejecuta esto?".'],
-      ['Webhook', 'Una dirección web que tú das a otro programa para que te avise cuando pasa algo.'],
-      ['Credencial', 'El usuario y contraseña de un servicio, guardados dentro de n8n para no escribirlos cada vez.'],
-      ['Ejecución', 'Cada vez que el flujo se pone en marcha. Quedan guardadas en "Executions" y ahí ves qué pasó.'],
-      ['JSON', 'La forma en que viajan los datos entre nodos. Son parejas de nombre y valor, como una ficha.'],
-    ],
-    matters: [
-      'La dirección del webhook de prueba y la de producción son distintas. Confundirlas es el error número uno.',
-      'La pestaña "Executions" es tu caja negra: qué entró, qué decidió y qué salió en cada nodo.',
-      'Un nodo en rojo detiene el flujo entero salvo que le digas lo contrario en sus ajustes.',
-      'Las credenciales se comparten entre flujos: cambiar una afecta a todos.',
-    ],
-    ignore: [
-      'El catálogo entero de integraciones. Vas a usar cinco.',
-      'Colocar los nodos bonitos en el tablero: no cambia nada.',
-      'Las plantillas de la comunidad al empezar: traen veinte nodos y no entiendes ninguno.',
-    ],
-    questions: [
-      q('Montas un flujo que envía un email de bienvenida y lo activas para probar con tu lista real de contactos. ¿Qué pasa?',
-        [
-          ok('Se envían correos de verdad a esas personas, y no hay forma de deshacerlo', 'Exacto. Un flujo activo no simula: actúa. Por eso se prueba siempre con una dirección tuya y datos inventados antes de tocar la lista real.'),
-          no('n8n pide confirmación antes de enviar correos reales', 'No la pide. Hace exactamente lo que le has montado.'),
-          no('Se envían en modo prueba y se pueden cancelar', 'No existe ese modo. Enviado es enviado.'),
-        ],
-        'Un workflow no simula: actúa desde el primer minuto.'),
-      q('Un nodo devuelve un campo vacío y los siguientes fallan en cadena. ¿Cuál es el arreglo correcto?',
-        [
-          ok('Comprobar los datos nada más entrar y desviar a una rama de error que deje registro', 'Sí. Se valida en la frontera, antes de tocar nada. Y la rama de error tiene que dejar rastro: sin registro, el fallo se repite y nadie sabe por qué.'),
-          no('Poner reintentos automáticos en los nodos siguientes', 'Reintentar un dato vacío da un dato vacío. Multiplicas llamadas sin arreglar la causa.'),
-          no('Ignorar el error para que el flujo continúe', 'Acabas con registros a medias en sistemas reales, que es peor que no haber ejecutado nada.'),
-        ],
-        'Validar pronto, fallar claro, dejar rastro.'),
-    ],
-  },
-
-  github: {
-    tool: 'github',
-    plain:
-      'Es una nube donde se guarda el código con todo su historial. Como Google Drive, pero recordando cada cambio: quién lo hizo, cuándo y qué tocó exactamente. Te permite volver atrás en el tiempo si algo se rompe.',
-    account: {
-      url: 'github.com',
-      free: 'Gratis, y con repositorios privados ilimitados. No hace falta pagar nada para el curso entero.',
-      steps: [
-        ['Entra en github.com y pulsa "Sign up"', 'Te pide correo, contraseña y un nombre de usuario.'],
-        ['Elige bien el nombre de usuario', 'Va a salir en la dirección de todos tus proyectos y es tu carta de presentación. Mejor tu nombre que un apodo.'],
-        ['Confirma el correo', 'Te llega un código de ocho cifras.'],
-        ['Activa la verificación en dos pasos', 'Settings → Password and authentication. Te lo van a exigir tarde o temprano; mejor hacerlo con calma ahora.'],
-        ['Activa el escáner de secretos', 'Settings → Code security. Te avisa si subes una clave sin querer.'],
-      ],
-      warning: 'Lo que subes queda en el historial aunque lo borres después. Si se te escapa una contraseña, hay que anularla en su servicio: borrarla de GitHub no basta.',
-    },
-    first: [
-      'Crea un repositorio con el botón "+" de arriba a la derecha. Márcalo privado si dudas.',
-      'Copia los comandos que te enseña la propia página para conectarlo con tu carpeta.',
-      'Haz tu primer commit: es una foto del estado actual con un mensaje que explica qué cambiaste.',
-      'Escribe el README: es lo primero que ve cualquiera que llegue, incluido un cliente.',
-    ],
-    words: [
-      ['Repositorio', 'La carpeta de un proyecto con su historial. Se dice "repo".'],
-      ['Commit', 'Una foto guardada del proyecto, con un mensaje que explica el cambio.'],
-      ['Push', 'Subir tus commits a la nube.'],
-      ['Pull', 'Bajarte los cambios que hay en la nube.'],
-      ['Rama', 'Una línea paralela para probar sin romper la principal.'],
-      ['Pull Request', 'Proponer que tus cambios entren en la rama principal, para revisarlos antes.'],
-    ],
-    matters: [
-      'Crear el archivo .gitignore ANTES del primer commit, con .env dentro.',
-      'Mensajes de commit que digan qué cambió y por qué. "cambios" no sirve de nada dentro de seis meses.',
-      'El README con instalación, uso y límites.',
-      'Un repositorio privado por defecto mientras aprendes.',
-    ],
-    ignore: [
-      'El cuadrito verde de contribuciones. No mide nada.',
-      'Configurar Actions y automatizaciones antes de tener el proyecto funcionando.',
-      'Los debates sobre estrategias de ramas. Con una rama principal y ramas de trabajo vas sobrado.',
-    ],
-    questions: [
-      q('Subes sin querer un archivo con tu clave de API y lo borras en el commit siguiente. ¿Estás a salvo?',
-        [
-          ok('No: sigue en el historial y hay que anular la clave en el servicio que la emitió', 'Correcto. El historial guarda todo. Y hay robots rastreando repositorios públicos que la encuentran en minutos. Se anula primero y se limpia después.'),
-          no('Sí, borrarla en el commit siguiente la elimina', 'Desaparece de la versión actual, pero cualquiera puede ver el commit anterior.'),
-          no('Sí, si el repositorio es privado', 'Reduce el riesgo, no lo elimina: sigue estando y cualquiera con acceso la ve.'),
-        ],
-        'Lo que entra una vez en el historial, se queda.'),
-    ],
-  },
-
-  docker: {
-    tool: 'docker',
-    plain:
-      'Es un programa que empaqueta otros programas con todo lo que necesitan dentro, como una maleta cerrada. Así puedes ejecutar una base de datos o n8n sin instalarlos de verdad en tu ordenador, y sin que te dejen nada suelto cuando termines.',
-    account: {
-      url: 'docker.com',
-      free: 'Gratis para uso personal y para aprender. No hace falta ni crear cuenta para lo del curso.',
-      steps: [
-        ['Descarga Docker Desktop', 'O usa el comando del bloque de instalación de más abajo, que hace lo mismo sin buscar en la web.'],
-        ['Instálalo y ÁBRELO', 'Este paso se olvida siempre: si el programa no está abierto, ningún comando funciona.'],
-        ['Espera al icono verde', 'Abajo a la izquierda del programa. Mientras esté amarillo, aún está arrancando.'],
-        ['Comprueba en la terminal', 'Escribe docker --version. Si responde con un número, está listo.'],
-      ],
-      warning: 'Docker consume memoria mientras está abierto. Si tu ordenador va justo, ciérralo cuando no lo uses con docker compose down.',
-    },
-    first: [
-      'Crea una carpeta para el proyecto.',
-      'Dentro, crea un archivo llamado docker-compose.yml con lo que quieres levantar.',
-      'Ejecuta docker compose up -d. El -d significa que se queda funcionando en segundo plano.',
-      'Comprueba con docker ps qué está corriendo.',
-    ],
-    words: [
-      ['Imagen', 'La plantilla de un programa empaquetado, como el instalador.'],
-      ['Contenedor', 'Una copia de esa imagen ya en marcha.'],
-      ['Volumen', 'Un almacén para que los datos sobrevivan cuando apagues el contenedor.'],
-      ['Puerto', 'La puerta por la que se accede. localhost:5678 significa "mi ordenador, puerta 5678".'],
-      ['docker-compose.yml', 'Un archivo de texto que describe qué levantar y cómo. Se lee de arriba abajo.'],
-    ],
-    matters: [
-      'Los datos se pierden al borrar un contenedor salvo que hayas definido un volumen.',
-      'Fijar la versión de las imágenes: pg16, no latest.',
-      'Si el puerto está ocupado, cambia el de tu lado, no el de dentro.',
-      'docker compose logs es lo primero que se mira cuando algo falla.',
-    ],
-    ignore: [
-      'Optimizar el tamaño de las imágenes mientras aprendes.',
-      'Kubernetes. No lo necesitas y no lo vas a necesitar en mucho tiempo.',
-      'Escribir tus propios Dockerfile al principio: usa imágenes que ya existen.',
-    ],
-    questions: [
-      q('Ejecutas docker compose down -v y al volver a levantar todo está vacío. ¿Qué ha pasado?',
-        [
-          ok('El -v borra los volúmenes, que es donde vivían los datos', 'Exacto. Sin -v se apagan los contenedores y los datos siguen ahí. Con -v se borra todo. Es la diferencia entre apagar y formatear.'),
-          no('Docker limpia los datos automáticamente al apagar', 'No: los conserva mientras exista el volumen.'),
-          no('Hay que volver a instalar Docker', 'El problema no es la instalación, es el flag que borró el almacén.'),
-        ],
-        'Un flag de una letra puede borrarte la base de datos. Léelos.'),
-    ],
-  },
-
-  vercel: {
-    tool: 'vercel',
-    plain:
-      'Es un servicio que coge tu proyecto y lo pone en internet con una dirección que puedes compartir. Se conecta a GitHub, y cada vez que cambias algo lo publica solo, sin que tengas que hacer nada.',
-    account: {
-      url: 'vercel.com',
-      free: 'El plan gratuito sirve para proyectos personales y demos a clientes. No pide tarjeta.',
-      steps: [
-        ['Entra en vercel.com y pulsa "Sign Up"', 'Elige "Continue with GitHub": así ya quedan conectados los dos.'],
-        ['Autoriza el acceso a tus repositorios', 'Puedes darle acceso solo a los que elijas, y es lo recomendable.'],
-        ['Pulsa "Add New… → Project"', 'Te enseña tu lista de repositorios; elige el que quieres publicar.'],
-        ['Deja la configuración por defecto', 'Detecta solo qué tipo de proyecto es. Solo toca algo si sabes por qué.'],
-        ['Añade las variables de entorno', 'Settings → Environment Variables. Las claves NO viajan desde tu ordenador: hay que ponerlas aquí.'],
-      ],
-      warning: 'El primer despliegue falla casi siempre por una variable de entorno que falta. No es que lo hayas hecho mal: es que en tu ordenador estaba en el .env y aquí hay que declararla.',
-    },
-    first: [
-      'Publica algo pequeño primero, aunque sea una página con tu nombre.',
-      'Mira la pestaña Deployments: ahí está el historial y los errores.',
-      'Crea una rama, haz un cambio y abre un Pull Request: Vercel genera una dirección de prueba solo para eso.',
-      'Comparte esa dirección de prueba en vez de publicar directamente.',
-    ],
-    words: [
-      ['Despliegue (deploy)', 'Publicar una versión en internet.'],
-      ['Build', 'El proceso de preparar tu código para publicarlo. Si falla, no se publica.'],
-      ['Preview', 'Una dirección temporal para enseñar un cambio antes de que sea oficial.'],
-      ['Producción', 'La versión oficial, la que ve el público.'],
-      ['Variable de entorno', 'Un dato de configuración (como una clave) que se guarda aparte del código.'],
-    ],
-    matters: [
-      'Las variables se definen por entorno: producción, preview y desarrollo son tres listas distintas.',
-      'La dirección de preview de cada Pull Request es la mejor forma de enseñar algo a un cliente.',
-      'Si el build falla, el error completo está en Deployments → el que falló → "Building".',
-    ],
-    ignore: [
-      'Configurar un dominio propio antes de que el proyecto funcione.',
-      'Los planes de pago mientras aprendes.',
-      'Las opciones avanzadas de región y funciones: los valores por defecto están bien.',
-    ],
-    questions: [
-      q('Tu proyecto funciona en tu ordenador y al publicarlo en Vercel da error. ¿Por dónde empiezas?',
-        [
-          ok('Por las variables de entorno: las claves de tu .env no viajan con el código', 'Correcto, y es la causa en la gran mayoría de los casos. El .env se queda en tu ordenador a propósito; en el servidor hay que declararlas de nuevo.'),
-          no('Por reinstalar las dependencias en tu ordenador', 'Tu ordenador funciona: el problema está en el otro lado.'),
-          no('Por cambiar de servicio de publicación', 'El mismo fallo te seguiría a cualquier otro.'),
-        ],
-        'Las claves nunca viajan con el código. Ese es el diseño, no un fallo.'),
-    ],
-  },
-}
+/**
+ * Las fichas de herramienta.
+ *
+ * Aqui empieza vacio a proposito: las fichas escritas a mano viven en
+ * `content/toolguides/`, y `registerGuides()` las mete aqui durante el build.
+ * Habia siete escritas dentro de este archivo (ChatGPT, Claude Code, n8n,
+ * GitHub, Docker, Vercel y Wispr Flow) que ya no se leia ninguna: las siete
+ * tenian archivo en content/, y content/ pisa lo que haya aqui.
+ *
+ * Las herramientas que no tienen archivo propio reciben una ficha inicial
+ * generada por `discoveredGuide()`, justo debajo.
+ */
+export const TOOL_GUIDES = {}
 
 /*
  * Herramientas descubiertas en la revisión editorial.
@@ -375,7 +62,16 @@ const DISCOVERED_TOOL_META = {
   'wispr-flow': { label: 'Wispr Flow', url: 'wisprflow.ai', kind: 'voice', plain: 'Wispr Flow es una aplicación de dictado con IA: hablas de forma natural y convierte tu voz en texto claro dentro de otras apps. Sirve para escribir más rápido correos, prompts, notas, mensajes y borradores, pero no es una plataforma de automatización ni un generador de contenido autónomo.' },
 }
 
-function discoveredGuide(id, meta) {
+function discoveredGuide(id, meta, locale = 'es') {
+  if (locale === 'en') {
+    const unit = UNIT_EN[meta.kind] || UNIT_EN.default
+    return {
+      tool: id,
+      plain: DISCOVERED_PLAIN_EN[id] || `${meta.label} is a tool that can form part of a learning and working project.`,
+      ...discoveredGuideEn(meta, unit),
+      account: { url: meta.url, ...discoveredGuideEn(meta, unit).account },
+    }
+  }
   const toolWord = meta.kind === 'video' ? 'créditos o minutos de generación' : meta.kind === 'automation' ? 'tareas o ejecuciones' : meta.kind === 'data' ? 'filas, registros o automatizaciones' : meta.kind === 'knowledge' ? 'documentos y consultas' : 'tokens, créditos o límites del plan'
   return {
     tool: id,
@@ -435,9 +131,9 @@ function discoveredGuide(id, meta) {
   }
 }
 
-for (const [id, meta] of Object.entries(DISCOVERED_TOOL_META)) {
-  if (!TOOL_GUIDES[id]) TOOL_GUIDES[id] = discoveredGuide(id, meta)
-}
+/* Las fichas de estas herramientas NO se precargan aqui: si se precargaran,
+ * quedarian fijadas en español y el build en ingles se las encontraria ya
+ * hechas. Las construye baseGuideFor() en el momento, con su idioma. */
 
 /* ------------------------------------------------------------------ *
  * Biblioteca profunda generada por herramienta.
@@ -717,46 +413,115 @@ const TASK_AUTOMATIONS = [
 
 function wordCount(text) { return String(text).trim().split(/\s+/).filter(Boolean).length }
 
-function enrichToolPrompts(prompts, tool, profile) {
+function enrichToolPrompts(prompts, tool, profile, locale = 'es') {
+  const en = locale === 'en'
+  const sections = en ? ENRICH_SECTIONS_EN(tool, profile.units) : SECCIONES_ES(tool, profile.units)
   for (const item of prompts || []) {
     if (!item?.prompt || wordCount(item.prompt) >= 500) continue
-    const sections = [
-      `\n\n## Antes de usarlo en ${tool.label}\nTrabaja con mi caso concreto y no rellenes huecos con imaginación. Si falta una decisión que cambia el resultado, hazme una pregunta corta antes de continuar. Traduce cualquier palabra técnica la primera vez que aparezca y separa claramente lo que sabes, lo que estás suponiendo y lo que debo comprobar en la herramienta real.`,
-      `\n\n## Prueba mínima\nAntes de tocar datos reales, diseña una prueba con datos ficticios. Incluye un caso normal, uno incompleto, uno duplicado y uno extremo. Para cada caso dime qué entrada preparo, qué salida debería ver, dónde la compruebo dentro de ${tool.label} y qué hago si no coincide.`,
-      `\n\n## Seguridad, coste y límites\nIndica qué datos no debo pegar, qué permisos son necesarios, qué acciones serían irreversibles y cómo detenería el trabajo si sale mal. Explica cómo medir el consumo relacionado con ${profile.units || 'el plan de la herramienta'} y marca como COMPROBAR EN LA WEB OFICIAL cualquier precio, límite o nombre de función que pueda haber cambiado.`,
-      `\n\n## Entrega reutilizable\nTermina con una ficha breve para guardar en mi proyecto: objetivo, entrada, salida esperada, pasos dentro de ${tool.label}, criterio de aprobación, errores posibles, evidencia que debo conservar y siguiente acción de menos de treinta minutos. Si ${tool.label} no es la herramienta adecuada para mi caso, dilo claro y recomienda la alternativa mínima.`,
-    ]
     for (const section of sections) {
       if (wordCount(item.prompt) >= 500) break
       item.prompt += section
     }
-    if (wordCount(item.prompt) < 450) {
-      item.prompt += `\n\nAñade un ejemplo completo con datos ficticios, escrito como si yo fuera a hacerlo ahora mismo. El ejemplo debe incluir una entrada concreta, la salida exacta que debería aparecer, el punto donde debo revisarla, una decisión que no tomarías todavía y una señal clara para parar antes de gastar dinero, publicar, enviar o conectar datos reales.`
-    }
+    if (wordCount(item.prompt) < 450) item.prompt += en ? ENRICH_PADDING_EN : RELLENO_SECCION_ES
   }
   return prompts
 }
 
-function profileFor(id) {
-  if (TOOL_PROFILES[id]) return TOOL_PROFILES[id]
+function profileFor(id, locale = 'es') {
+  if (TOOL_PROFILES[id]) {
+    const perfil = TOOL_PROFILES[id]
+    return locale === 'en' ? { ...perfil, ...(TOOL_PROFILES_EN[id] || {}) } : perfil
+  }
+  if (locale === 'en') {
+    const kindEn = KIND_LABEL_EN(id)
+    return {
+      ...PROFILE_DEFAULT_EN,
+      intro: `${id} is about ${kindEn}. This page separates the pieces inside it, the right moment to use each one, and the automations that connect the result to the rest of the project.`,
+      selection: `pick the ${kindEn} feature that produces the smallest visible result, and leave the connections until after you have tested it`,
+      catalog: PROFILE_DEFAULT_EN.catalog.map(([group, name, useWhen, avoidWhen]) => [group, `${name} inside ${id}`, useWhen, avoidWhen]),
+    }
+  }
   const kind = id.includes('video') || ['higgsfield', 'runway', 'heygen', 'descript', 'seedance-2-5'].includes(id) ? 'vídeo' : id.includes('code') || ['python', 'node', 'typescript', 'react', 'vscode', 'cursor', 'codex'].includes(id) ? 'código' : id.includes('automation') || ['zapier', 'make', 'pipedream', 'n8n'].includes(id) ? 'automatización' : id.includes('data') || ['airtable', 'supabase', 'postgres', 'sheets'].includes(id) ? 'datos' : 'contenido y producto'
   return { ...PROFILE_DEFAULT, intro: `En ${id} se trabaja con ${kind}. Esta guía separa las piezas internas, el momento adecuado para usarlas y las automatizaciones que conectan el resultado con el resto del proyecto.`, selection: `elige la función de ${kind} que produzca el resultado visible más pequeño y deja las conexiones para después de probar`, catalog: PROFILE_DEFAULT.catalog.map(([group, name, useWhen, avoidWhen]) => [group, `${name} dentro de ${id}`, useWhen, avoidWhen]) }
 }
 
-function baseGuideFor(tool) {
-  const meta = DISCOVERED_TOOL_META[tool.id] || { label: tool.label, url: `${tool.id}.com`, kind: 'tool', plain: `${tool.label} es una herramienta que puede formar parte de un proyecto de aprendizaje y trabajo.` }
-  return discoveredGuide(tool.id, meta)
+/** El tipo de trabajo de una herramienta, en inglés. */
+function KIND_LABEL_EN(id) {
+  if (id.includes('video') || ['higgsfield', 'runway', 'heygen', 'descript', 'seedance-2-5'].includes(id)) return 'video'
+  if (id.includes('code') || ['python', 'node', 'typescript', 'react', 'vscode', 'cursor', 'codex'].includes(id)) return 'code'
+  if (id.includes('automation') || ['zapier', 'make', 'pipedream', 'n8n'].includes(id)) return 'automation'
+  if (id.includes('data') || ['airtable', 'supabase', 'postgres', 'sheets'].includes(id)) return 'data'
+  return 'content and product'
 }
 
-function promptFor(tool, profile, task, index) {
-  const [name, outcome, rule] = task
-  const model = profile.selection.length > 180 ? `${profile.selection.split(';')[0]}; comprueba disponibilidad.` : profile.selection
+function baseGuideFor(tool, locale = 'es') {
+  const meta = DISCOVERED_TOOL_META[tool.id] || { label: tool.label, url: `${tool.id}.com`, kind: 'tool', plain: `${tool.label} es una herramienta que puede formar parte de un proyecto de aprendizaje y trabajo.` }
+  return discoveredGuide(tool.id, meta, locale)
+}
+
+/* --- Las mismas plantillas, en español ------------------------------ */
+
+const PLANTILLA_PROMPT_ES = ({ tool, name, outcome, rule, model, inside, index }) =>
+  `Actúa como una persona experta en ${tool.label} que acompaña a alguien que empieza desde cero. Este encargo trata de: ${name.toLowerCase()}. Quiero ${outcome}. No me des una respuesta genérica ni una lista de posibilidades sin decidir: trabaja con mi caso y señala lo que no puedas saber.\n\nMi contexto es el siguiente. Proyecto: [NOMBRE]. Qué hago o qué problema tengo: [DESCRIPCIÓN]. Quién lo utilizará: [PERSONA]. Qué información entra: [ENTRADA]. Qué debe existir al terminar: [SALIDA]. Volumen aproximado: [NÚMERO DE CASOS]. Presupuesto y tiempo disponible: [LÍMITES]. Herramientas que ya tengo: [LISTA]. Datos sensibles o permisos implicados: [DATOS Y PERMISOS].\n\nEmpieza haciéndome solo la primera pregunta que realmente cambie la solución. Espera mi respuesta antes de continuar. Si una palabra técnica es imprescindible, tradúcela al español sencillo la primera vez. No rellenes huecos con una suposición silenciosa. ${rule}\n\nCuando tengas la información suficiente, analiza primero si ${tool.label} es la herramienta adecuada. Explica qué parte del trabajo resuelve y qué parte no. Dentro de ${tool.label}, considera estas piezas: ${inside}. Después elige la función, modelo, modo o espacio de trabajo que usarías. Usa este criterio de selección: ${model}. Si hay dos opciones razonables, compara calidad, velocidad, coste, privacidad, posibilidad de revisar y facilidad de recuperar una versión anterior. No elijas una opción solo por ser la más potente.\n\nDevuelve el trabajo en este orden. Uno: ficha del problema con objetivo, usuario, entrada, salida y criterio de éxito. Dos: plan de preparación con los archivos, datos, permisos y decisiones que tengo que reunir. Tres: instrucciones concretas dentro de ${tool.label}, indicando qué pantalla, botón, campo, nodo o archivo debo abrir y qué valor debo poner. Cuatro: resultado esperado y señales de que algo ha fallado. Cinco: una alternativa manual o con otra herramienta y el motivo por el que la descartas o la recomiendas.\n\nDiseña una prueba antes de usar datos reales. La prueba debe tener un caso normal, un caso incompleto, un duplicado y un caso extremo. Para cada uno dime la entrada exacta, la salida que debería ver, dónde comprobarla y qué decisión tomar si no coincide. Si el resultado puede generar una imagen, vídeo, texto, código, registro, mensaje o ejecución, dime cómo guardo la versión aprobada y cómo vuelvo atrás.\n\nIncluye una sección de seguridad: datos que no debo pegar, permisos mínimos, acciones irreversibles, aprobación humana y forma de detener el proceso. Incluye también una sección de consumo: qué unidad puede descontarse en ${tool.label}, cómo medirla antes y después de una prueba, cómo estimar diez, cien y mil usos y qué dato debe comprobarse en la web oficial porque puede cambiar.\n\nTermina con una entrega que otra persona pueda repetir: nombre de la versión, archivos o enlaces que debe conservar, instrucciones de uso, límites conocidos, errores posibles, responsable y siguiente paso de menos de treinta minutos. No digas que está listo para producción hasta que la prueba tenga resultado y evidencia. Este es el encargo número ${index + 1} de mi biblioteca de trabajo y debe quedar escrito en español natural.`
+
+const DETALLE_PROMPT_ES = ({ tool, name }) =>
+  `\n\nDetalle específico de ${tool.label}: separa la decisión de ${name.toLowerCase()} del trabajo posterior. Escribe el nombre visible de cada función, qué campo entra, qué campo sale y cómo se revisa un caso dudoso. Si no está disponible, marca COMPROBAR DISPONIBILIDAD y ofrece una alternativa.`
+
+const RELLENO_PROMPT_ES =
+  `\n\nAntes de terminar, vuelve a mirar el caso concreto y añade un ejemplo rellenado con datos ficticios, una decisión que no tomarías todavía y la pregunta que tendría que responder una persona responsable antes de compartir el resultado.`
+
+const SECCIONES_ES = (tool, units) => [
+      `\n\n## Antes de usarlo en ${tool.label}\nTrabaja con mi caso concreto y no rellenes huecos con imaginación. Si falta una decisión que cambia el resultado, hazme una pregunta corta antes de continuar. Traduce cualquier palabra técnica la primera vez que aparezca y separa claramente lo que sabes, lo que estás suponiendo y lo que debo comprobar en la herramienta real.`,
+      `\n\n## Prueba mínima\nAntes de tocar datos reales, diseña una prueba con datos ficticios. Incluye un caso normal, uno incompleto, uno duplicado y uno extremo. Para cada caso dime qué entrada preparo, qué salida debería ver, dónde la compruebo dentro de ${tool.label} y qué hago si no coincide.`,
+      `\n\n## Seguridad, coste y límites\nIndica qué datos no debo pegar, qué permisos son necesarios, qué acciones serían irreversibles y cómo detenería el trabajo si sale mal. Explica cómo medir el consumo relacionado con ${units || 'el plan de la herramienta'} y marca como COMPROBAR EN LA WEB OFICIAL cualquier precio, límite o nombre de función que pueda haber cambiado.`,
+      `\n\n## Entrega reutilizable\nTermina con una ficha breve para guardar en mi proyecto: objetivo, entrada, salida esperada, pasos dentro de ${tool.label}, criterio de aprobación, errores posibles, evidencia que debo conservar y siguiente acción de menos de treinta minutos. Si ${tool.label} no es la herramienta adecuada para mi caso, dilo claro y recomienda la alternativa mínima.`,
+]
+
+const RELLENO_SECCION_ES =
+  `\n\nAñade un ejemplo completo con datos ficticios, escrito como si yo fuera a hacerlo ahora mismo. El ejemplo debe incluir una entrada concreta, la salida exacta que debería aparecer, el punto donde debo revisarla, una decisión que no tomarías todavía y una señal clara para parar antes de gastar dinero, publicar, enviar o conectar datos reales.`
+
+const CODIGO_N8N_ES = `// Nodo Code de n8n: evita duplicados y deja una salida auditable\nconst item = $json;\nconst id = item.id || item.email || item.externalId;\nif (!id) throw new Error('Falta un identificador único');\nreturn [{ json: { ...item, workflowKey: String(id), receivedAt: new Date().toISOString(), needsReview: Boolean(item.needsReview) } }];`
+
+const PLANTILLA_AUTOMATIZACION_ES = ({ tool, name, trigger, difficulty, platform, index, code }) => ({
+    name: `${name} en ${tool.label}`,
+    goal: `Usar ${tool.label} dentro de un flujo que pueda observarse, detenerse y reparar.`,
+    difficulty,
+    platform,
+    trigger: `${trigger}. Define el identificador único antes de activar el flujo.`,
+    steps: [
+      `Recibir la entrada y guardar un registro de prueba con fecha, origen e identificador único.`,
+      `Validar los campos obligatorios; si falta uno, detener el caso y avisar sin ejecutar la acción final.`,
+      `Preparar los datos para ${tool.label}: nombres de campos, formato, tamaño y límites del plan.`,
+      `Ejecutar la operación de ${tool.label} en una cuenta o espacio de pruebas.`,
+      'Comprobar la salida con una condición observable y guardar el enlace, id o respuesta completa.',
+      'Enviar el aviso o crear el registro final solo después de que la comprobación sea correcta.',
+      'Registrar éxito, error, consumo, duración y responsable en una tabla de auditoría.',
+      'Activar una ruta de error con reintento limitado y aviso humano; nunca repetir indefinidamente.',
+    ],
+    code,
+    test: `Ejecuta ${name.toLowerCase()} con un caso normal, uno incompleto, uno repetido y uno extremo. Comprueba que ${tool.label} recibe solo los campos necesarios, que un duplicado no crea una segunda salida y que el error aparece en el historial.`,
+    failure: `Si ${tool.label} cambia el formato, se queda sin crédito o responde con error, conserva la entrada, no repitas la acción irreversible y avisa con el identificador del caso. Revisa primero credenciales, límites, datos y respuesta del servicio.`,
+    credentials: `Cuenta de pruebas de ${tool.label}, credencial con permisos mínimos, cuenta de n8n y una tabla o registro de auditoría. Nunca guardes la clave dentro del código ni en un repositorio público.`,
+    index,
+})
+
+function promptFor(tool, profile, task, index, locale = 'es') {
+  const en = locale === 'en'
+  const [nameEs, outcomeEs, ruleEs] = task
+  const [name, outcome, rule] = en ? (PROMPT_TASKS_EN[nameEs] || task) : task
+  const model = profile.selection.length > 180
+    ? `${profile.selection.split(';')[0]}; ${en ? 'check availability.' : 'comprueba disponibilidad.'}`
+    : profile.selection
   const inside = profile.catalog.slice(0, 3).map(([group, what]) => `${group}: ${what}`).join('; ')
-  let prompt = `Actúa como una persona experta en ${tool.label} que acompaña a alguien que empieza desde cero. Este encargo trata de: ${name.toLowerCase()}. Quiero ${outcome}. No me des una respuesta genérica ni una lista de posibilidades sin decidir: trabaja con mi caso y señala lo que no puedas saber.\n\nMi contexto es el siguiente. Proyecto: [NOMBRE]. Qué hago o qué problema tengo: [DESCRIPCIÓN]. Quién lo utilizará: [PERSONA]. Qué información entra: [ENTRADA]. Qué debe existir al terminar: [SALIDA]. Volumen aproximado: [NÚMERO DE CASOS]. Presupuesto y tiempo disponible: [LÍMITES]. Herramientas que ya tengo: [LISTA]. Datos sensibles o permisos implicados: [DATOS Y PERMISOS].\n\nEmpieza haciéndome solo la primera pregunta que realmente cambie la solución. Espera mi respuesta antes de continuar. Si una palabra técnica es imprescindible, tradúcela al español sencillo la primera vez. No rellenes huecos con una suposición silenciosa. ${rule}\n\nCuando tengas la información suficiente, analiza primero si ${tool.label} es la herramienta adecuada. Explica qué parte del trabajo resuelve y qué parte no. Dentro de ${tool.label}, considera estas piezas: ${inside}. Después elige la función, modelo, modo o espacio de trabajo que usarías. Usa este criterio de selección: ${model}. Si hay dos opciones razonables, compara calidad, velocidad, coste, privacidad, posibilidad de revisar y facilidad de recuperar una versión anterior. No elijas una opción solo por ser la más potente.\n\nDevuelve el trabajo en este orden. Uno: ficha del problema con objetivo, usuario, entrada, salida y criterio de éxito. Dos: plan de preparación con los archivos, datos, permisos y decisiones que tengo que reunir. Tres: instrucciones concretas dentro de ${tool.label}, indicando qué pantalla, botón, campo, nodo o archivo debo abrir y qué valor debo poner. Cuatro: resultado esperado y señales de que algo ha fallado. Cinco: una alternativa manual o con otra herramienta y el motivo por el que la descartas o la recomiendas.\n\nDiseña una prueba antes de usar datos reales. La prueba debe tener un caso normal, un caso incompleto, un duplicado y un caso extremo. Para cada uno dime la entrada exacta, la salida que debería ver, dónde comprobarla y qué decisión tomar si no coincide. Si el resultado puede generar una imagen, vídeo, texto, código, registro, mensaje o ejecución, dime cómo guardo la versión aprobada y cómo vuelvo atrás.\n\nIncluye una sección de seguridad: datos que no debo pegar, permisos mínimos, acciones irreversibles, aprobación humana y forma de detener el proceso. Incluye también una sección de consumo: qué unidad puede descontarse en ${tool.label}, cómo medirla antes y después de una prueba, cómo estimar diez, cien y mil usos y qué dato debe comprobarse en la web oficial porque puede cambiar.\n\nTermina con una entrega que otra persona pueda repetir: nombre de la versión, archivos o enlaces que debe conservar, instrucciones de uso, límites conocidos, errores posibles, responsable y siguiente paso de menos de treinta minutos. No digas que está listo para producción hasta que la prueba tenga resultado y evidencia. Este es el encargo número ${index + 1} de mi biblioteca de trabajo y debe quedar escrito en español natural.`
-  const details = `\n\nDetalle específico de ${tool.label}: separa la decisión de ${name.toLowerCase()} del trabajo posterior. Escribe el nombre visible de cada función, qué campo entra, qué campo sale y cómo se revisa un caso dudoso. Si no está disponible, marca COMPROBAR DISPONIBILIDAD y ofrece una alternativa.`
+
+  let prompt = en
+    ? promptForEn({ tool, name, outcome, rule, model, inside, index })
+    : PLANTILLA_PROMPT_ES({ tool, name, outcome, rule, model, inside, index })
+
+  const details = en ? PROMPT_DETAILS_EN({ tool, name }) : DETALLE_PROMPT_ES({ tool, name })
   prompt += details
   if (wordCount(prompt) > 600) prompt = prompt.replace(details, '')
-  if (wordCount(prompt) < 450) prompt += `\n\nAntes de terminar, vuelve a mirar el caso concreto y añade un ejemplo rellenado con datos ficticios, una decisión que no tomarías todavía y la pregunta que tendría que responder una persona responsable antes de compartir el resultado.`
+  if (wordCount(prompt) < 450) prompt += en ? PROMPT_PADDING_EN : RELLENO_PROMPT_ES
   return prompt
 }
 
@@ -779,20 +544,23 @@ const TOOL_PROMPT_TASKS = {
   'wispr-flow': [],
 }
 
-function generatedPromptsFor(tool, profile) {
+function generatedPromptsFor(tool, profile, locale = 'es') {
   const wanted = TOOL_PROMPT_TASKS[tool.id] || DEFAULT_PROMPT_TASKS
   const tasks = wanted
     .map((name) => PROMPT_TASKS.find((task) => task[0] === name))
     .filter(Boolean)
-  return tasks.map((task, index) => ({
-    name: `${task[0]} con ${tool.label}`,
-    prompt: promptFor(tool, profile, task, index),
-    when: `Úsalo cuando quieras ${task[1]}.`,
-    model: profile.selection,
-  }))
+  return tasks.map((task, index) => {
+    const [label, outcome] = locale === 'en' ? (PROMPT_TASKS_EN[task[0]] || task) : task
+    return {
+      name: locale === 'en' ? `${label} with ${tool.label}` : `${label} con ${tool.label}`,
+      prompt: promptFor(tool, profile, task, index, locale),
+      when: locale === 'en' ? `Use it when you want to ${outcome}.` : `Úsalo cuando quieras ${outcome}.`,
+      model: profile.selection,
+    }
+  })
 }
 
-function ensureMinimumToolPrompts(guide, tool, profile) {
+function ensureMinimumToolPrompts(guide, tool, profile, locale = 'es') {
   if (NO_PROMPT_TOOLS.has(tool.id)) return guide.prompts || []
   const prompts = Array.isArray(guide.prompts) ? guide.prompts : []
   const used = new Set(prompts.map((item) => String(item?.name || '').trim().toLowerCase()).filter(Boolean))
@@ -805,12 +573,13 @@ function ensureMinimumToolPrompts(guide, tool, profile) {
 
   for (const task of candidates) {
     if (prompts.length >= MAX_GENERATED_TOOL_PROMPTS) break
-    const name = `${task[0]} con ${tool.label}`
+    const [label, outcome] = locale === 'en' ? (PROMPT_TASKS_EN[task[0]] || task) : task
+    const name = locale === 'en' ? `${label} with ${tool.label}` : `${label} con ${tool.label}`
     if (used.has(name.toLowerCase())) continue
     prompts.push({
       name,
-      prompt: promptFor(tool, profile, task, index),
-      when: `Úsalo cuando quieras ${task[1]}.`,
+      prompt: promptFor(tool, profile, task, index, locale),
+      when: locale === 'en' ? `Use it when you want to ${outcome}.` : `Úsalo cuando quieras ${outcome}.`,
       model: profile.selection,
     })
     used.add(name.toLowerCase())
@@ -820,40 +589,26 @@ function ensureMinimumToolPrompts(guide, tool, profile) {
   return prompts
 }
 
-function automationFor(tool, profile, blueprint, index) {
-  const [name, trigger, difficulty] = blueprint
-  const platform = tool.id === 'n8n' ? 'n8n · workflow importable y prueba manual' : `n8n conectado con ${tool.label}`
-  return {
-    name: `${name} en ${tool.label}`,
-    goal: `Usar ${tool.label} dentro de un flujo que pueda observarse, detenerse y reparar.`,
-    difficulty,
-    platform,
-    trigger: `${trigger}. Define el identificador único antes de activar el flujo.`,
-    steps: [
-      `Recibir la entrada y guardar un registro de prueba con fecha, origen e identificador único.`,
-      `Validar los campos obligatorios; si falta uno, detener el caso y avisar sin ejecutar la acción final.`,
-      `Preparar los datos para ${tool.label}: nombres de campos, formato, tamaño y límites del plan.`,
-      `Ejecutar la operación de ${tool.label} en una cuenta o espacio de pruebas.`,
-      'Comprobar la salida con una condición observable y guardar el enlace, id o respuesta completa.',
-      'Enviar el aviso o crear el registro final solo después de que la comprobación sea correcta.',
-      'Registrar éxito, error, consumo, duración y responsable en una tabla de auditoría.',
-      'Activar una ruta de error con reintento limitado y aviso humano; nunca repetir indefinidamente.',
-    ],
-    code: tool.id === 'n8n' ? `// Nodo Code de n8n: evita duplicados y deja una salida auditable\nconst item = $json;\nconst id = item.id || item.email || item.externalId;\nif (!id) throw new Error('Falta un identificador único');\nreturn [{ json: { ...item, workflowKey: String(id), receivedAt: new Date().toISOString(), needsReview: Boolean(item.needsReview) } }];` : undefined,
-    test: `Ejecuta ${name.toLowerCase()} con un caso normal, uno incompleto, uno repetido y uno extremo. Comprueba que ${tool.label} recibe solo los campos necesarios, que un duplicado no crea una segunda salida y que el error aparece en el historial.`,
-    failure: `Si ${tool.label} cambia el formato, se queda sin crédito o responde con error, conserva la entrada, no repitas la acción irreversible y avisa con el identificador del caso. Revisa primero credenciales, límites, datos y respuesta del servicio.`,
-    credentials: `Cuenta de pruebas de ${tool.label}, credencial con permisos mínimos, cuenta de n8n y una tabla o registro de auditoría. Nunca guardes la clave dentro del código ni en un repositorio público.`,
-    index,
-  }
+function automationFor(tool, profile, blueprint, index, locale = 'es') {
+  const en = locale === 'en'
+  const [nameEs, triggerEs, difficulty] = blueprint
+  const [name, trigger] = en ? (TASK_AUTOMATIONS_EN[nameEs] || blueprint) : blueprint
+  const code = tool.id === 'n8n' ? (en ? AUTOMATION_CODE_EN : CODIGO_N8N_ES) : undefined
+  const platform = en ? PLATFORM_EN(tool)
+    : (tool.id === 'n8n' ? 'n8n · workflow importable y prueba manual' : `n8n conectado con ${tool.label}`)
+
+  if (en) return automationForEn({ tool, name, trigger, difficulty, platform, index, code })
+  return PLANTILLA_AUTOMATIZACION_ES({ tool, name, trigger, difficulty, platform, index, code })
 }
 
-export function completeToolGuide(existing, tool) {
-  const guide = existing || baseGuideFor(tool)
-  const profile = profileFor(tool.id)
-  guide.catalog = { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: 'Pieza interna', name: group, what, useWhen, avoidWhen, model })) }
-  if (!Array.isArray(guide.prompts)) guide.prompts = generatedPromptsFor(tool, profile)
-  guide.prompts = ensureMinimumToolPrompts(guide, tool, profile)
-  guide.prompts = enrichToolPrompts(guide.prompts, tool, profile)
+export function completeToolGuide(existing, tool, locale = 'es') {
+  const guide = existing || baseGuideFor(tool, locale)
+  const profile = profileFor(tool.id, locale)
+  const grupo = locale === 'en' ? 'Piece inside' : 'Pieza interna'
+  guide.catalog = { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: grupo, name: group, what, useWhen, avoidWhen, model })) }
+  if (!Array.isArray(guide.prompts)) guide.prompts = generatedPromptsFor(tool, profile, locale)
+  guide.prompts = ensureMinimumToolPrompts(guide, tool, profile, locale)
+  guide.prompts = enrichToolPrompts(guide.prompts, tool, profile, locale)
   // Las automatizaciones van donde tienen sentido, no en todas por plantilla:
   // las plataformas llevan el recetario general (son recetas de plataforma),
   // las conectables llevan las suyas reales, y el resto no lleva la seccion.
@@ -861,7 +616,7 @@ export function completeToolGuide(existing, tool) {
   if (Array.isArray(guide.automations)) {
     guide.automations = guide.automations.slice(0, MAX_TOOL_AUTOMATIONS)
   } else if (AUTOMATION_PLATFORMS.has(tool.id)) {
-    guide.automations = TASK_AUTOMATIONS.slice(0, MAX_TOOL_AUTOMATIONS).map((item, index) => automationFor(tool, profile, item, index))
+    guide.automations = TASK_AUTOMATIONS.slice(0, MAX_TOOL_AUTOMATIONS).map((item, index) => automationFor(tool, profile, item, index, locale))
   } else if (REAL_AUTOMATIONS[tool.id]) {
     guide.automations = REAL_AUTOMATIONS[tool.id].slice(0, MAX_TOOL_AUTOMATIONS)
   } else {

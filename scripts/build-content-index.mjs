@@ -276,7 +276,7 @@ const toolPages = TOOLS
       label: tool.label,
       icon: tool.icon,
       itinerary,
-      guide: completeToolGuide(toolGuideFor(tool.id), tool),
+      guide: completeToolGuide(toolGuideFor(tool.id), tool, LOCALE),
     }
   })
   .filter((tool) => tool.guide || tool.itinerary.length)
