@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BookOpen, BookMarked, Bot, Boxes, BrainCircuit, Compass, Globe, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Lock, LogOut, Menu, Presentation, Puzzle, Search, ShieldCheck, Sparkles, TrendingUp, X } from 'lucide-react'
+import { BookOpen, BookMarked, Globe, GraduationCap, Home, KeyRound, Lock, LogOut, Menu, Presentation, Search, ShieldCheck, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
@@ -135,38 +135,23 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         <a className={is('mi-proyecto') ? 'active' : ''} href={href({ name: 'mi-proyecto' })} onClick={onClose}>
           <BookMarked size={14} /> {t('nav.miProyecto')}
         </a>
-        <a className={is('prompts') ? 'active' : ''} href={href({ name: 'prompts' })} onClick={onClose}>
-          <Sparkles size={14} /> {t('nav.prompts')}
+        {/* Todo lo que no es la ruta principal cuelga de «Biblioteca». Antes
+            eran once entradas sueltas y el alumno no sabia por donde empezar. */}
+        <a
+          className={['biblioteca', 'guia', 'kits', 'prompts', 'herramientas', 'herramienta', 'agentes', 'skills', 'preguntas', 'indice'].includes(route.name) ? 'active' : ''}
+          href={href({ name: 'biblioteca' })}
+          onClick={onClose}
+        >
+          <BookMarked size={14} /> {t('nav.biblioteca')}
         </a>
-        <a className={is('skills') ? 'active' : ''} href={href({ name: 'skills' })} onClick={onClose}>
-          <BrainCircuit size={14} /> {t('nav.skills')}
-        </a>
-        <a className={is('kits') ? 'active' : ''} href={href({ name: 'kits' })} onClick={onClose}>
-          <Boxes size={14} /> {t('nav.kits')}
-        </a>
-        <a className={is('agentes') ? 'active' : ''} href={href({ name: 'agentes' })} onClick={onClose}>
-          <Bot size={14} /> {t('nav.agentes')}
+        <a className={is('progreso') ? 'active' : ''} href={href({ name: 'progreso' })} onClick={onClose}>
+          <TrendingUp size={14} /> {t('nav.progreso')}
         </a>
         {student.adminUnlocked && (
           <a className={is('admin') ? 'active' : ''} href={href({ name: 'admin' })} onClick={onClose}>
             <KeyRound size={14} /> {t('nav.superAdmin')}
           </a>
         )}
-        <a className={is('herramientas') || is('herramienta') ? 'active' : ''} href={href({ name: 'herramientas' })} onClick={onClose}>
-          <Puzzle size={14} /> {t('nav.herramientas')}
-        </a>
-        <a className={is('preguntas') ? 'active' : ''} href={href({ name: 'preguntas' })} onClick={onClose}>
-          <HelpCircle size={14} /> {t('nav.preguntas')}
-        </a>
-        <a className={is('indice') ? 'active' : ''} href={href({ name: 'indice' })} onClick={onClose}>
-          <ListOrdered size={14} /> {t('nav.diccionario')}
-        </a>
-        <a className={is('progreso') ? 'active' : ''} href={href({ name: 'progreso' })} onClick={onClose}>
-          <TrendingUp size={14} /> {t('nav.progreso')}
-        </a>
-        <a className={is('guia') ? 'active' : ''} href={href({ name: 'guia' })} onClick={onClose}>
-          <Compass size={14} /> {t('nav.guias')}
-        </a>
       </nav>
 
       <p className="st-side-title">{t('nav.rutaPrincipal')}</p>
@@ -175,9 +160,6 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
           const isOpen = expanded === stage.id
           const stageLessons = cursoBase.filter((lesson) => lesson.stageId === stage.id)
           const stageDone = stageLessons.filter(isCursoDone).length
-          const categories = stage.categoryIds
-            .map((id) => course.categories.find((category) => category.id === id))
-            .filter(Boolean) as typeof course.categories
           return (
             <div key={stage.id} className={`st-side-area${isOpen ? ' open' : ''}`}>
               <button type="button" onClick={() => setExpanded(isOpen ? null : stage.id)} aria-expanded={isOpen}>
@@ -207,16 +189,6 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
                   ) : (
                     <li className="st-side-muted">{t('sidebar.sinLeccionesPrincipales')}</li>
                   )}
-                  <li>
-                    <a
-                      className={route.name === 'area' && route.stageId === stage.id ? 'active' : ''}
-                      href={href({ name: 'area', stageId: stage.id, filters: {} })}
-                      onClick={onClose}
-                    >
-                      <span>{t('sidebar.bibliotecaBloque')}</span>
-                      <b>{categories.length}</b>
-                    </a>
-                  </li>
                 </ul>
               )}
             </div>

@@ -282,8 +282,82 @@ export function Categoria({ categoryId, route }: { categoryId: string; route: Ro
  * BIBLIOTECA: carpetas internas de consulta                           *
  * ------------------------------------------------------------------ */
 
+/**
+ * Biblioteca: todo lo que no es la ruta principal, en una sola pantalla.
+ *
+ * Antes el menu lateral tenia doce entradas y el alumno no sabia por cual
+ * empezar. Ahora el menu deja cinco y todo lo demas cuelga de aqui, con una
+ * frase que dice para que sirve cada cosa y cuanto hay dentro.
+ */
 export function Biblioteca() {
   const course = useCourse()
+
+  const apartados = [
+    {
+      id: 'guia',
+      titulo: 'Guías para empezar',
+      texto: 'Lo primero, explicado sin dar nada por sabido. Si no sabes por dónde arrancar, empieza aquí.',
+      cuenta: (course.guides || []).length,
+      unidad: 'guías',
+      destino: href({ name: 'guia' }),
+    },
+    {
+      id: 'kits',
+      titulo: 'Kits institucionales',
+      texto: 'Proyectos completos de principio a fin: brief, fases, prompts y lo que tienes que ver en pantalla.',
+      cuenta: (course.kits || []).length,
+      unidad: 'kits',
+      destino: href({ name: 'kits' }),
+    },
+    {
+      id: 'prompts',
+      titulo: 'Prompts listos para copiar',
+      texto: 'Escritos para pegar y rellenar los huecos. Agrupados por lo que quieres conseguir.',
+      cuenta: (course.prompts || []).reduce((suma, familia) => suma + familia.prompts.length, 0),
+      unidad: 'prompts',
+      destino: href({ name: 'prompts' }),
+    },
+    {
+      id: 'herramientas',
+      titulo: 'Herramientas',
+      texto: 'Qué es cada una, para qué sirve y cuándo te toca usarla. Con sus prompts y sus automatizaciones.',
+      cuenta: (course.toolPages || []).length,
+      unidad: 'herramientas',
+      destino: href({ name: 'herramientas' }),
+    },
+    {
+      id: 'agentes',
+      titulo: 'Agentes',
+      texto: 'Montajes que trabajan solos una vez los dejas puestos, con sus límites y sus permisos.',
+      cuenta: (course.agents || []).length,
+      unidad: 'agentes',
+      destino: href({ name: 'agentes' }),
+    },
+    {
+      id: 'skills',
+      titulo: 'Skills',
+      texto: 'Procedimientos que la IA activa sola cuando toca. Seleccionados y ordenados por uso real.',
+      cuenta: 0,
+      unidad: '',
+      destino: href({ name: 'skills' }),
+    },
+    {
+      id: 'indice',
+      titulo: 'Diccionario',
+      texto: 'Cada palabra rara del curso explicada en cristiano, con su analogía y dónde aparece.',
+      cuenta: (course.glossaryIndex || []).length,
+      unidad: 'términos',
+      destino: href({ name: 'indice' }),
+    },
+    {
+      id: 'preguntas',
+      titulo: 'Preguntas frecuentes',
+      texto: 'Las dudas que salen siempre, respondidas de una en una.',
+      cuenta: (course.preguntas || []).length,
+      unidad: 'preguntas',
+      destino: href({ name: 'preguntas' }),
+    },
+  ]
 
   return (
     <div className="st-page">
@@ -291,17 +365,17 @@ export function Biblioteca() {
         <span className="st-kicker">Consulta</span>
         <h1>Biblioteca</h1>
         <p>
-          Las {course.folders.length} carpetas de contenido interno, organizadas como biblioteca de consulta. La ruta es para
-          aprender en orden; esto es para encontrar algo concreto cuando ya sabes qué buscas.
+          El programa es para aprender en orden. Esto es para buscar algo concreto cuando ya sabes
+          qué necesitas. Entra en el apartado que te haga falta y se abre solo ese.
         </p>
       </div>
 
-      <div className="st-cat-grid">
-        {course.folders.map((folder) => (
-          <a key={folder.id} className="st-cat-card" href={href({ name: 'carpeta', folderId: folder.id, filters: {} })}>
-            <small>Carpeta</small>
-            <strong>{folder.label}</strong>
-            <span>{folder.count} {folder.count === 1 ? 'lección' : 'lecciones'}</span>
+      <div className="st-biblio-grid">
+        {apartados.map((item) => (
+          <a key={item.id} className="st-biblio-card" href={item.destino}>
+            <strong>{item.titulo}</strong>
+            <p>{item.texto}</p>
+            {item.cuenta > 0 && <small>{item.cuenta} {item.unidad}</small>}
           </a>
         ))}
       </div>
