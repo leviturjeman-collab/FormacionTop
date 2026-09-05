@@ -105,7 +105,6 @@ export function CursoIndice() {
   const porArea = course.stages
     .map((stage) => ({ stage, items: sueltas.filter((item) => item.stageId === stage.id) }))
   const areasConLecciones = porArea.filter((group) => group.items.length)
-  const areasBiblioteca = porArea.filter((group) => !group.items.length)
   const focusedStageMeta = focusedStage ? areasConLecciones.find(({ stage }) => stage.id === focusedStage)?.stage : null
 
   const requiredMin = sueltas.reduce((sum, item) => sum + item.minutes, 0)
@@ -169,11 +168,6 @@ export function CursoIndice() {
           <span>3. Extras</span>
           <strong>Prompts y flujos</strong>
           <small>No son deberes: son plantillas para copiar cuando ya sabes qué quieres hacer.</small>
-        </div>
-        <div>
-          <span>4. Pendiente de curar</span>
-          <strong>{areasBiblioteca.length} bloques</strong>
-          <small>Tienen biblioteca, pero aún no forman parte de la ruta principal.</small>
         </div>
       </section>
 
@@ -242,34 +236,6 @@ export function CursoIndice() {
         </details>
       ))}
       </div>
-
-      {areasBiblioteca.length > 0 && (
-        <section className="st-curso-pending">
-          <div className="st-section-head">
-            <div>
-              <span className="st-kicker">Biblioteca de apoyo</span>
-              <h2>Bloques que todavía no tienen ruta principal</h2>
-              <p>
-                No se muestran como deberes porque aún no tienen lecciones principales curadas. El alumno puede consultarlos desde la biblioteca del bloque.
-              </p>
-            </div>
-            <span>{areasBiblioteca.length} bloques</span>
-          </div>
-          <div className="st-program-tools-grid">
-            {areasBiblioteca.map(({ stage }) => (
-              <a key={stage.id} className="st-program-tool-card" href={href({ name: 'area', stageId: stage.id, filters: {} })}>
-                <span className="st-curso-num">{String(stage.number).padStart(2, '0')}</span>
-                <span>
-                  <strong>{stage.title}</strong>
-                  <small>{stage.categoryIds.length} categorías disponibles como consulta.</small>
-                </span>
-                <em><b>Biblioteca</b></em>
-                <ArrowRight size={13} />
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
 
       <details className="st-curso-optional">
         <summary>

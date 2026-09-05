@@ -21,18 +21,102 @@ const course = JSON.parse(await fs.readFile(path.join(publicDir, 'course.json'),
 const countWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
 const MANUAL_ONLY_TOOLS = new Set(['wispr-flow'])
 
-// El umbral bajó de 300 a 250 al dejar de convertir en lección el andamiaje
-// del vault (índices de módulo, plantillas, fuentes, rúbricas y solucionarios).
-// Son ~130 documentos menos, y ninguno era material de estudio.
-check(course.lessons.length >= 250, `Solo hay ${course.lessons.length} lecciones; se esperaban al menos 250.`)
 check(course.stages.length === 10, `Hay ${course.stages.length} etapas; se esperaban 10.`)
-check(course.folders.length > 0, 'No se ha generado ninguna carpeta para la biblioteca.')
 check(course.tools?.length > 0, 'Falta el catálogo de herramientas en course.json.')
+check(course.lessons.length === 0, `El vault ha vuelto a generar ${course.lessons.length} lecciones; debería generar 0.`)
 
-// Nada de documentación interna del proyecto servida como lección.
-const INTERNAL_SOURCES = /^(README\.md|CHANGELOG\.md|PLAN_QA|ARQUITECTURA_VISUAL|99_PENDIENTE|23_AUDITORIA|content\/)/i
-for (const lesson of course.lessons) {
-  check(!INTERNAL_SOURCES.test(lesson.sourcePath || ''), `La lección «${lesson.slug}» viene de documentación interna (${lesson.sourcePath}).`)
+/* --- Voz: se le habla al alumno, no se habla de él ------------------ */
+
+/**
+ * El material del vault estaba escrito para quien imparte, y hablaba del
+ * alumno en tercera persona: «el objetivo pedagógico es que el alumno
+ * aprenda…». Al leerlo desde el curso, el alumno veía cómo hablaban de él.
+ * Aquí se comprueba que eso no vuelve a entrar por ninguna puerta.
+ */
+const VOZ_DE_PROFESOR = /\b(?:el|la|los|las|al|del)\s+alumn[oa]s?\b|\bobjetivo pedag[oó]gic|\bcompetencias por nivel\b|\bb[oó]veda\b|\bvault\b|\besta nota\b|\beste documento (?:desarrolla|forma parte)/i
+
+const revisarVoz = (donde, texto) => {
+  if (typeof texto !== 'string' || !VOZ_DE_PROFESOR.test(texto)) return
+  const frase = texto.match(new RegExp(`[^.]*(?:${VOZ_DE_PROFESOR.source})[^.]*\\.`, 'i'))?.[0]?.trim()
+  problems.push(`${donde} habla del alumno en tercera persona: «${(frase || texto).slice(0, 120)}»`)
+}
+
+for (const leccion of course.curso || []) {
+  const donde = `La lección ${leccion.number} «${leccion.title}»`
+  revisarVoz(donde, leccion.promise)
+  revisarVoz(donde, leccion.why)
+  for (const bloque of leccion.theory || []) {
+    revisarVoz(`${donde}, apartado «${bloque.title}»`, bloque.text)
+    revisarVoz(`${donde}, analogía de «${bloque.title}»`, bloque.analogy)
+    revisarVoz(`${donde}, ejemplo de «${bloque.title}»`, bloque.example)
+  }
+  for (const tarea of leccion.tasks || []) {
+    revisarVoz(`${donde}, tarea «${tarea.title}»`, tarea.action)
+    revisarVoz(`${donde}, tarea «${tarea.title}»`, tarea.expect)
+  }
+}
+for (const guia of course.guides || []) {
+  revisarVoz(`La guía «${guia.title}»`, guia.intro)
+  for (const bloque of guia.theory || []) revisarVoz(`La guía «${guia.title}», apartado «${bloque.title}»`, bloque.text)
+}
+for (const tool of course.toolPages || []) {
+  if (tool.guide) revisarVoz(`La guía de ${tool.label}`, tool.guide.plain)
+}
+
+/* --- El programa: las lecciones escritas a mano --------------------- */
+
+const programa = (course.curso || []).filter((leccion) => !leccion.tool)
+
+check(programa.length >= 45, `El programa tiene ${programa.length} lecciones; se esperaban al menos 45.`)
+
+// Cada bloque tiene que tener lecciones: un bloque vacío en el menú es una
+// promesa incumplida delante del alumno.
+for (const stage of course.stages) {
+  const enBloque = programa.filter((leccion) => leccion.stageId === stage.id)
+  check(enBloque.length >= 4, `El bloque ${stage.number} «${stage.title}» solo tiene ${enBloque.length} lecciones.`)
+}
+
+// Los números ordenan el programa y salen en pantalla como «12 de 49».
+const numeros = new Map()
+for (const leccion of programa) {
+  if (numeros.has(leccion.number)) {
+    problems.push(`Dos lecciones con el número ${leccion.number}: «${numeros.get(leccion.number)}» y «${leccion.title}».`)
+  }
+  numeros.set(leccion.number, leccion.title)
+}
+
+// Un título que enumera palabras clave sin verbo es el nombre de una carpeta,
+// no el tema de una lección. Fue el fallo que trajo aquí todo este trabajo.
+const pareceCarpeta = (titulo) =>
+  (titulo.match(/,/g) || []).length >= 3 && !/[.:?!]$/.test(titulo) && !/\b(?:es|son|hace|c[oó]mo|qu[eé]|cuando|sin|para)\b/i.test(titulo)
+
+for (const leccion of programa) {
+  const donde = `La lección ${leccion.number} «${leccion.title}»`
+  check(!pareceCarpeta(leccion.title), `${donde} tiene un título con forma de nombre de carpeta.`)
+  check(countWords(leccion.promise) >= 20, `${donde} tiene una promesa de ${countWords(leccion.promise)} palabras; se esperaban 20 o más.`)
+  check(countWords(leccion.why) >= 40, `${donde} no explica por qué importa (${countWords(leccion.why)} palabras).`)
+  check((leccion.theory || []).length >= 4, `${donde} tiene ${(leccion.theory || []).length} apartados de teoría; se esperaban 4 o más.`)
+  check((leccion.tasks || []).length >= 4, `${donde} tiene ${(leccion.tasks || []).length} tareas; se esperaban 4 o más.`)
+  check((leccion.words || []).length >= 4, `${donde} define ${(leccion.words || []).length} términos; se esperaban 4 o más.`)
+  check(leccion.minutes > 0, `${donde} no dice cuánto dura.`)
+
+  for (const bloque of leccion.theory || []) {
+    // Se mide el apartado entero, que es lo que el alumno lee: un paso corto
+    // con su analogía y su ejemplo enseña más que un párrafo largo y solo.
+    const total = countWords(bloque.text) + countWords(bloque.analogy) + countWords(bloque.example)
+    check(countWords(bloque.text) >= 40,
+      `${donde}: el apartado «${bloque.title}» explica en ${countWords(bloque.text)} palabras; se queda corto.`)
+    check(total >= 110,
+      `${donde}: el apartado «${bloque.title}» suma ${total} palabras entre explicación, analogía y ejemplo; se queda corto.`)
+  }
+  for (const tarea of leccion.tasks || []) {
+    check(Boolean(tarea.where), `${donde}: la tarea «${tarea.title}» no dice dónde se hace.`)
+    check(Boolean(tarea.expect), `${donde}: la tarea «${tarea.title}» no dice qué hay que ver al terminar.`)
+  }
+  // La última de cada bloque puede no tener siguiente, pero el resto sí: es lo
+  // que encadena el programa.
+  const ultima = leccion.number === Math.max(...programa.map((item) => item.number))
+  if (!ultima) check(Boolean(leccion.next), `${donde} no dice qué viene después.`)
 }
 
 for (const family of course.prompts || []) {
@@ -206,7 +290,14 @@ for (const tool of course.tools || []) {
   if (!iconModule.includes(`"${tool.icon}":`)) warnings.push(`La herramienta ${tool.id} usa el icono «${tool.icon}», que no está descargado.`)
 }
 
-console.log(`Lecciones: ${course.lessons.length} · niveles: ${course.lessons.length * 3} · fichas: ${course.stats.fichas ?? 0} · diagramas descargables: ${downloads}`)
+const delPrograma = (course.curso || []).filter((leccion) => !leccion.tool)
+const minutosTotales = delPrograma.reduce((suma, leccion) => suma + (leccion.minutes || 0), 0)
+const tareasTotales = delPrograma.reduce((suma, leccion) => suma + (leccion.tasks?.length || 0), 0)
+console.log(
+  `Programa: ${delPrograma.length} lecciones · ${Math.round(minutosTotales / 60)} h · ${tareasTotales} tareas · ` +
+    `${course.guides.length} guías · ${course.kits.length} kits · ${course.toolPages.length} herramientas · ` +
+    `${downloads} diagramas descargables`,
+)
 for (const warning of warnings.slice(0, 10)) console.warn(`  aviso: ${warning}`)
 if (warnings.length > 10) console.warn(`  … y ${warnings.length - 10} avisos más.`)
 

@@ -445,7 +445,7 @@ export interface GlossaryEntry {
   analogy?: string | null
   confusion?: string | null
   seeAlso?: string[]
-  lessons: { slug: string; title: string }[]
+  lessons: { id: string; title: string }[]
 }
 
 export interface SectionMeta {

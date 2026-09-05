@@ -17,11 +17,6 @@ export interface Filters {
 export type Route =
   | { name: 'inicio' }
   | { name: 'mi-proyecto' }
-  | { name: 'ruta' }
-  | { name: 'area'; stageId: string; filters: Filters }
-  | { name: 'categoria'; categoryId: string; filters: Filters }
-  | { name: 'leccion'; slug: string; level?: LevelId }
-  | { name: 'presentar'; slug: string; level: LevelId }
   | { name: 'proyecto'; stageId: string }
   | { name: 'deck'; deckId: string }
   | { name: 'prompts'; familyId?: string }
@@ -32,7 +27,6 @@ export type Route =
   | { name: 'guia'; guideId?: string }
   | { name: 'curso'; lessonId?: string }
   | { name: 'biblioteca' }
-  | { name: 'carpeta'; folderId: string; filters: Filters }
   | { name: 'herramientas' }
   | { name: 'herramienta'; toolId: string; filters: Filters; panel?: string }
   | { name: 'preguntas' }
@@ -73,30 +67,24 @@ export function parseHash(hash: string): Route {
     case undefined:
     case '':
       return { name: 'inicio' }
-    case 'ruta':
-      return { name: 'ruta' }
     case 'mi-proyecto':
       return { name: 'mi-proyecto' }
     case 'automatizaciones':
       return { name: 'herramienta', toolId: 'n8n', filters: {} }
+    // Rutas del material del vault, que ya no se publica. Se conservan aquí
+    // para que un enlace antiguo no acabe en una pantalla vacía: llevan al
+    // programa en vez de dar error.
+    case 'ruta':
     case 'area':
-      return segments[1] ? { name: 'area', stageId: segments[1], filters } : { name: 'ruta' }
     case 'categoria':
-      return segments[1] ? { name: 'categoria', categoryId: segments[1], filters } : { name: 'ruta' }
-    case 'leccion': {
-      if (!segments[1]) return { name: 'ruta' }
-      const level = params.get('n') as LevelId | null
-      return { name: 'leccion', slug: segments[1], level: level && LEVELS.includes(level) ? level : undefined }
-    }
-    case 'presentar': {
-      if (!segments[1]) return { name: 'ruta' }
-      const level = params.get('n') as LevelId | null
-      return { name: 'presentar', slug: segments[1], level: level && LEVELS.includes(level) ? level : 'intermedio' }
-    }
+    case 'leccion':
+    case 'presentar':
+    case 'carpeta':
+      return { name: 'curso' }
     case 'proyecto':
-      return segments[1] ? { name: 'proyecto', stageId: segments[1] } : { name: 'ruta' }
+      return segments[1] ? { name: 'proyecto', stageId: segments[1] } : { name: 'curso' }
     case 'deck':
-      return segments[1] ? { name: 'deck', deckId: segments[1] } : { name: 'ruta' }
+      return segments[1] ? { name: 'deck', deckId: segments[1] } : { name: 'curso' }
     case 'prompts':
       return { name: 'prompts', familyId: segments[1] }
     case 'skills':
@@ -115,8 +103,6 @@ export function parseHash(hash: string): Route {
       return { name: 'curso', lessonId: segments[1] }
     case 'biblioteca':
       return { name: 'biblioteca' }
-    case 'carpeta':
-      return segments[1] ? { name: 'carpeta', folderId: segments[1], filters } : { name: 'biblioteca' }
     case 'herramientas':
       return { name: 'herramientas' }
     case 'herramienta':
@@ -142,16 +128,6 @@ export function href(route: Route): string {
       return '#/'
     case 'mi-proyecto':
       return '#/mi-proyecto'
-    case 'ruta':
-      return '#/ruta'
-    case 'area':
-      return `#/area/${encodeURIComponent(route.stageId)}${writeFilters(route.filters)}`
-    case 'categoria':
-      return `#/categoria/${encodeURIComponent(route.categoryId)}${writeFilters(route.filters)}`
-    case 'leccion':
-      return `#/leccion/${encodeURIComponent(route.slug)}${route.level ? `?n=${route.level}` : ''}`
-    case 'presentar':
-      return `#/presentar/${encodeURIComponent(route.slug)}?n=${route.level}`
     case 'proyecto':
       return `#/proyecto/${encodeURIComponent(route.stageId)}`
     case 'deck':
@@ -172,8 +148,6 @@ export function href(route: Route): string {
       return route.lessonId ? `#/curso/${encodeURIComponent(route.lessonId)}` : '#/curso'
     case 'biblioteca':
       return '#/biblioteca'
-    case 'carpeta':
-      return `#/carpeta/${encodeURIComponent(route.folderId)}${writeFilters(route.filters)}`
     case 'herramientas':
       return '#/herramientas'
     case 'herramienta': {

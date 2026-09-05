@@ -1,376 +1,239 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
-import { ArrowRight, BookOpen, Compass, Languages, Puzzle, Search, Sparkles } from 'lucide-react'
-import type { GlossaryEntry, Guide, LevelId, Lesson, PromptFamily, PromptItem, ToolPage } from '../types'
-import { searchLessons, useCourse } from '../course'
+import { useMemo, useState, type FormEvent } from 'react'
+import { ArrowRight, Bot, BookOpen, Boxes, GraduationCap, ListOrdered, Puzzle, Search, Sparkles } from 'lucide-react'
+import { useCourse } from '../course'
 import { href, navigate, type Route } from '../router'
-import { useStudent } from '../store'
-import Filters, { applyFilters } from '../components/Filters'
-import { LessonRow } from '../components/LessonList'
-import { BrandMark } from '../components/Brand'
 import { useLocale } from '../i18n'
 
 /**
- * Búsqueda con resultados agrupados.
+ * Búsqueda en todo lo que ve el alumno.
  *
- * Buscar "n8n" en una lista plana devuelve cien filas indistinguibles. Aquí los
- * resultados se agrupan por categoría, con el recuento de cada grupo, para que
- * se vea de un vistazo dónde vive lo que buscas.
+ * Antes buscaba sobre las lecciones generadas desde el vault, que ya no se
+ * publican. Ahora recorre las seis cosas que existen de verdad —lecciones del
+ * programa, guías, kits, herramientas, prompts, agentes y el diccionario— y
+ * devuelve cada resultado con su tipo, para que el alumno sepa a dónde va antes
+ * de pulsar.
  */
-function normalized(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
+
+type Tipo = 'leccion' | 'guia' | 'kit' | 'herramienta' | 'prompt' | 'agente' | 'termino'
+
+interface Resultado {
+  clave: string
+  tipo: Tipo
+  titulo: string
+  detalle: string
+  enlace: string
+  peso: number
 }
 
-function includesAll(haystack: string, words: string[]) {
-  const text = normalized(haystack)
-  return words.every((word) => text.includes(word))
+const ETIQUETAS: Record<Tipo, { es: string; en: string; icono: typeof Search }> = {
+  leccion: { es: 'Lección', en: 'Lesson', icono: GraduationCap },
+  guia: { es: 'Guía', en: 'Guide', icono: BookOpen },
+  kit: { es: 'Kit', en: 'Kit', icono: Boxes },
+  herramienta: { es: 'Herramienta', en: 'Tool', icono: Puzzle },
+  prompt: { es: 'Prompt', en: 'Prompt', icono: Sparkles },
+  agente: { es: 'Agente', en: 'Agent', icono: Bot },
+  termino: { es: 'Diccionario', en: 'Glossary', icono: ListOrdered },
 }
 
-function highlightSource(lesson: Lesson) {
-  return `${lesson.title} ${lesson.kindLabel} ${lesson.folderLabel} ${lesson.tools.join(' ')} ${lesson.tags.join(' ')} ${lesson.search}`
-}
+const ORDEN: Tipo[] = ['leccion', 'guia', 'kit', 'herramienta', 'agente', 'prompt', 'termino']
 
-function SearchHit({
-  icon,
-  title,
-  text,
-  href: target,
-  meta,
-}: {
-  icon: ReactNode
-  title: string
-  text: string
-  href: string
-  meta: string
-}) {
-  return (
-    <a className="st-search-hit" href={target}>
-      <span className="st-search-hit-icon">{icon}</span>
-      <div>
-        <small>{meta}</small>
-        <strong>{title}</strong>
-        <p>{text}</p>
-      </div>
-      <ArrowRight size={14} />
-    </a>
-  )
-}
+const sinTildes = (valor: string) =>
+  valor.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-type PromptMatch = { prompt: PromptItem; family: PromptFamily }
+/** Corta un texto largo alrededor de la primera palabra buscada. */
+function recorte(texto: string, aguja: string, largo = 130) {
+  const limpio = texto.replace(/\s+/g, ' ').trim()
+  const donde = sinTildes(limpio).indexOf(aguja)
+  if (donde < 0) return limpio.slice(0, largo) + (limpio.length > largo ? '…' : '')
+  const desde = Math.max(0, donde - 40)
+  return (desde ? '…' : '') + limpio.slice(desde, desde + largo) + (desde + largo < limpio.length ? '…' : '')
+}
 
 export default function Buscar({ query, route }: { query: string; route: Route }) {
   const course = useCourse()
-  const student = useStudent()
   const locale = useLocale()
-  const [value, setValue] = useState(query)
-  const [groupBy, setGroupBy] = useState<'categoria' | 'area' | 'tipo'>('categoria')
-  const level: LevelId = student.preferredLevel || 'basico'
+  const es = locale !== 'en'
+  const [texto, setTexto] = useState(query)
+  const [tipoActivo, setTipoActivo] = useState<Tipo | 'todo'>('todo')
 
-  useEffect(() => setValue(query), [query])
+  const consulta = query.trim()
 
-  const doneSlugs = new Set(
-    Object.entries(student.lessons).filter(([, progress]) => progress.done.length > 0).map(([slug]) => slug),
-  )
+  const resultados = useMemo<Resultado[]>(() => {
+    const palabras = sinTildes(consulta).split(/\s+/).filter((palabra) => palabra.length > 1)
+    if (!palabras.length) return []
 
-  const liveQuery = value.trim()
-  const activeQuery = liveQuery || query.trim()
-  const words = useMemo(() => normalized(activeQuery).split(/\s+/).filter(Boolean), [activeQuery])
-  const found = useMemo(() => searchLessons(course.lessons, activeQuery, 240), [course.lessons, activeQuery])
-  const filters = 'filters' in route ? route.filters : {}
-  const results = applyFilters(found, filters, doneSlugs)
+    const encontrados: Resultado[] = []
 
-  const toolMatches = useMemo<ToolPage[]>(() => {
-    if (words.length < 1) return course.toolPages.filter((tool) => tool.guide).slice(0, 8)
-    return course.toolPages
-      .filter((tool) => includesAll(`${tool.label} ${tool.id} ${tool.guide?.plain || ''} ${tool.guide?.matters?.join(' ') || ''}`, words))
-      .slice(0, 8)
-  }, [course.toolPages, words])
-
-  const promptMatches = useMemo<PromptMatch[]>(() => {
-    if (words.length < 2) return []
-    return (course.prompts || [])
-      .flatMap((family) => family.prompts.map((prompt) => ({ family, prompt })))
-      .filter(({ family, prompt }) =>
-        includesAll(`${family.title} ${family.intro} ${prompt.name} ${prompt.when} ${prompt.prompt} ${prompt.toolLabel || ''}`, words),
-      )
-      .slice(0, 8)
-  }, [course.prompts, words])
-
-  const glossaryMatches = useMemo<GlossaryEntry[]>(() => {
-    if (words.length < 1) return []
-    return course.glossaryIndex
-      .filter((entry) => includesAll(`${entry.term} ${entry.meaning} ${entry.long || ''} ${entry.seeAlso?.join(' ') || ''}`, words))
-      .slice(0, 8)
-  }, [course.glossaryIndex, words])
-
-  const guideMatches = useMemo<Guide[]>(() => {
-    if (words.length < 1) return []
-    return (course.guides || [])
-      .filter((guide) =>
-        includesAll(`${guide.title} ${guide.kicker} ${guide.intro} ${guide.theory.map((item) => item.text).join(' ')}`, words),
-      )
-      .slice(0, 6)
-  }, [course.guides, words])
-
-  const quickTotal = found.length + toolMatches.length + promptMatches.length + glossaryMatches.length + guideMatches.length
-
-  const groups = useMemo(() => {
-    const map = new Map<string, { label: string; sub: string; lessons: Lesson[]; link: string }>()
-    for (const lesson of results) {
-      let key: string
-      let label: string
-      let sub = ''
-      let link = ''
-
-      if (groupBy === 'categoria') {
-        const category = course.categories.find((item) => item.id === lesson.categoryId)
-        key = lesson.categoryId
-        label = category?.label || lesson.folderLabel
-        sub = category?.parentLabel || ''
-        link = href({ name: 'categoria', categoryId: lesson.categoryId, filters: {} })
-      } else if (groupBy === 'area') {
-        const stage = course.stages.find((item) => item.id === lesson.stageId)
-        key = lesson.stageId
-        label = stage ? `${stage.number}. ${stage.title}` : lesson.stageId
-        sub = stage?.tagline || ''
-        link = href({ name: 'area', stageId: lesson.stageId, filters: {} })
-      } else {
-        key = lesson.kind
-        label = lesson.kindLabel
-        sub = course.kinds[lesson.kind]?.hint || ''
+    // Puntúa: en el título vale mucho más que en el cuerpo, y hace falta que
+    // aparezcan todas las palabras para no devolver ruido.
+    const mirar = (
+      clave: string, tipo: Tipo, titulo: string, cuerpo: string, detalle: string, enlace: string,
+    ) => {
+      const tituloPlano = sinTildes(titulo)
+      const cuerpoPlano = sinTildes(cuerpo)
+      let peso = 0
+      for (const palabra of palabras) {
+        if (tituloPlano.includes(palabra)) peso += tituloPlano.startsWith(palabra) ? 14 : 9
+        else if (cuerpoPlano.includes(palabra)) peso += 2
+        else return
       }
+      encontrados.push({ clave, tipo, titulo, detalle: detalle || recorte(cuerpo, palabras[0]), enlace, peso })
+    }
 
-      if (!map.has(key)) map.set(key, { label, sub, lessons: [], link })
-      map.get(key)!.lessons.push(lesson)
+    for (const leccion of course.curso || []) {
+      const cuerpo = [
+        leccion.promise, leccion.why,
+        ...(leccion.theory || []).map((bloque) => `${bloque.title} ${bloque.text}`),
+        ...(leccion.tasks || []).map((tarea) => `${tarea.title} ${tarea.action}`),
+        ...(leccion.words || []).map(([palabra, sentido]) => `${palabra} ${sentido}`),
+      ].join(' ')
+      mirar(`leccion:${leccion.id}`, 'leccion', leccion.title, cuerpo,
+        `${leccion.minutes} min · ${leccion.promise}`,
+        href({ name: 'curso', lessonId: leccion.id }))
     }
-    // Los grupos con una sola coincidencia se juntan al final: setenta grupos
-    // de un resultado cada uno no ayudan a nadie a encontrar nada.
-    const list = [...map.values()].sort((a, b) => b.lessons.length - a.lessons.length)
-    const strong = list.filter((group) => group.lessons.length > 1)
-    const singles = list.filter((group) => group.lessons.length === 1)
-    if (singles.length > 2) {
-      strong.push({
-        label: locale === 'en' ? 'Scattered mentions' : 'Menciones sueltas',
-        sub: locale === 'en'
-          ? `In ${singles.length} more categories, with one result each`
-          : `En ${singles.length} categorías más, con un resultado en cada una`,
-        lessons: singles.flatMap((group) => group.lessons),
-        link: '',
-      })
-    } else {
-      strong.push(...singles)
+
+    for (const guia of course.guides || []) {
+      const cuerpo = [guia.intro, ...(guia.theory || []).map((bloque) => `${bloque.title} ${bloque.text}`)].join(' ')
+      mirar(`guia:${guia.id}`, 'guia', guia.title, cuerpo, guia.intro, href({ name: 'guia', guideId: guia.id }))
     }
-    return strong
-  }, [results, groupBy, course, locale])
+
+    for (const kit of course.kits || []) {
+      const cuerpo = [kit.promise, kit.plain, ...(kit.fits || [])].join(' ')
+      mirar(`kit:${kit.id}`, 'kit', kit.title, cuerpo, kit.promise, href({ name: 'kits', kitId: kit.id }))
+    }
+
+    for (const tool of course.toolPages || []) {
+      const cuerpo = tool.guide?.plain || ''
+      mirar(`tool:${tool.id}`, 'herramienta', tool.label, cuerpo, cuerpo,
+        href({ name: 'herramienta', toolId: tool.id, filters: {} }))
+    }
+
+    for (const agente of course.agents || []) {
+      const cuerpo = [agente.what, agente.forWho].filter(Boolean).join(' ')
+      mirar(`agente:${agente.id}`, 'agente', agente.title, cuerpo, agente.what,
+        href({ name: 'agentes', agentId: agente.id }))
+    }
+
+    for (const familia of course.prompts || []) {
+      for (const prompt of familia.prompts) {
+        mirar(`prompt:${prompt.id}`, 'prompt', prompt.name, `${prompt.when} ${prompt.prompt}`,
+          prompt.when, href({ name: 'prompts', familyId: familia.id }))
+      }
+    }
+
+    for (const termino of course.glossaryIndex || []) {
+      mirar(`termino:${termino.term}`, 'termino', termino.term, `${termino.meaning} ${termino.long || ''}`,
+        termino.meaning, href({ name: 'indice', letter: termino.letter }))
+    }
+
+    return encontrados.sort((a, b) =>
+      b.peso - a.peso ||
+      ORDEN.indexOf(a.tipo) - ORDEN.indexOf(b.tipo) ||
+      a.titulo.localeCompare(b.titulo, 'es'),
+    )
+  }, [consulta, course])
+
+  const porTipo = useMemo(() => {
+    const cuenta = new Map<Tipo, number>()
+    for (const item of resultados) cuenta.set(item.tipo, (cuenta.get(item.tipo) || 0) + 1)
+    return ORDEN.filter((tipo) => cuenta.has(tipo)).map((tipo) => ({ tipo, total: cuenta.get(tipo) || 0 }))
+  }, [resultados])
+
+  const visibles = tipoActivo === 'todo' ? resultados : resultados.filter((item) => item.tipo === tipoActivo)
+
+  function buscar(event: FormEvent) {
+    event.preventDefault()
+    setTipoActivo('todo')
+    navigate({ name: 'buscar', query: texto.trim(), filters: 'filters' in route ? route.filters : {} })
+  }
 
   return (
     <div className="st-page">
       <div className="st-page-title">
-        <span className="st-kicker">{locale === 'en' ? 'Search' : 'Búsqueda'}</span>
-        <h1>{locale === 'en' ? 'Super search' : 'Súper búsqueda'}</h1>
-        <form
-          className="st-super-search"
-          onSubmit={(event) => {
-            event.preventDefault()
-            navigate({ name: 'buscar', query: value.trim(), filters })
-          }}
-        >
-          <div className="st-super-input">
-            <Search size={14} />
-            <input
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-              placeholder={locale === 'en' ? 'Search lessons, tools, prompts, guides or concepts…' : 'Busca lecciones, herramientas, prompts, guías o conceptos…'}
-              aria-label={locale === 'en' ? 'Search the whole academy' : 'Buscar en toda la academia'}
-              autoFocus
-            />
-            <button type="submit" className="st-btn">{locale === 'en' ? 'Search' : 'Buscar'}</button>
-          </div>
-          <div className="st-super-tags" aria-label={locale === 'en' ? 'Quick searches' : 'Búsquedas rápidas'}>
-            {['Wispr Flow', 'n8n', 'prompts', 'automatizaciones', 'privacidad', 'RAG'].map((term) => (
-              <button
-                key={term}
-                type="button"
-                onClick={() => {
-                  setValue(term)
-                  navigate({ name: 'buscar', query: term, filters: {} })
-                }}
-              >
-                {term}
-              </button>
-            ))}
-          </div>
-        </form>
+        <span className="st-kicker"><Search size={12} /> {es ? 'Búsqueda' : 'Search'}</span>
+        <h1>{es ? 'Buscar en el curso' : 'Search the course'}</h1>
+        <p>
+          {es
+            ? 'Busca en las lecciones del programa, las guías, los kits, las herramientas, los agentes, los prompts y el diccionario. Cada resultado dice de qué tipo es antes de que entres.'
+            : 'Search the program lessons, guides, kits, tools, agents, prompts and glossary. Every result tells you what it is before you open it.'}
+        </p>
       </div>
 
-      {activeQuery.length < 2 ? (
-        <p className="st-empty">
-          {locale === 'en'
-            ? 'Type at least two letters, or use a shortcut. Search looks through lessons, tools, prompts, guides and glossary.'
-            : 'Escribe al menos dos letras, o usa un atajo. La búsqueda mira lecciones, herramientas, prompts, guías y diccionario.'}
-        </p>
-      ) : quickTotal === 0 ? (
+      <form className="st-buscar-form" onSubmit={buscar}>
+        <Search size={14} />
+        <input
+          autoFocus
+          value={texto}
+          onChange={(event) => setTexto(event.target.value)}
+          placeholder={es ? 'claves, n8n, coste, rag, aprobación…' : 'keys, n8n, cost, rag, approval…'}
+          aria-label={es ? 'Buscar' : 'Search'}
+        />
+        <button type="submit" className="st-btn">{es ? 'Buscar' : 'Search'}</button>
+      </form>
+
+      {!consulta && (
         <div className="st-empty">
-          <h2>{locale === 'en' ? `Nothing for "${activeQuery}"` : `Nada para «${activeQuery}»`}</h2>
-          <p>{locale === 'en' ? 'Try a shorter term, or search by tool: n8n, Claude, OpenAI, Docker, RAG or Wispr Flow.' : 'Prueba con un término más corto, o busca por herramienta: n8n, Claude, OpenAI, Docker, RAG o Wispr Flow.'}</p>
-          <a className="st-btn" href={href({ name: 'indice' })}>{locale === 'en' ? 'See the concept index' : 'Ver el índice de conceptos'}</a>
+          <h2>{es ? 'Escribe lo que buscas' : 'Type what you need'}</h2>
+          <p>{es ? 'Con una palabra basta.' : 'One word is enough.'}</p>
         </div>
-      ) : (
+      )}
+
+      {consulta && !resultados.length && (
+        <div className="st-empty">
+          <h2>{es ? `Sin resultados para «${consulta}»` : `No results for “${consulta}”`}</h2>
+          <p>
+            {es
+              ? 'Prueba con una palabra más corta o más general. Si buscas una palabra técnica, mira en el diccionario.'
+              : 'Try a shorter or more general word. For technical terms, check the glossary.'}
+          </p>
+          <a className="st-btn" href={href({ name: 'indice' })}>{es ? 'Ir al diccionario' : 'Go to the glossary'}</a>
+        </div>
+      )}
+
+      {resultados.length > 0 && (
         <>
-          <section className="st-search-overview" aria-label={locale === 'en' ? 'Search summary' : 'Resumen de búsqueda'}>
-            <div><strong>{found.length}</strong><span>{locale === 'en' ? 'Lessons' : 'Lecciones'}</span></div>
-            <div><strong>{toolMatches.length}</strong><span>{locale === 'en' ? 'Tools' : 'Herramientas'}</span></div>
-            <div><strong>{promptMatches.length}</strong><span>Prompts</span></div>
-            <div><strong>{glossaryMatches.length}</strong><span>{locale === 'en' ? 'Concepts' : 'Conceptos'}</span></div>
-            <div><strong>{guideMatches.length}</strong><span>{locale === 'en' ? 'Guides' : 'Guías'}</span></div>
-          </section>
-
-          {(toolMatches.length > 0 || promptMatches.length > 0 || glossaryMatches.length > 0 || guideMatches.length > 0) && (
-            <section className="st-search-kind-grid">
-              {toolMatches.length > 0 && (
-                <div className="st-search-kind">
-                  <div className="st-section-head">
-                    <div><span className="st-kicker">{locale === 'en' ? 'Tools' : 'Herramientas'}</span><h2>{locale === 'en' ? 'Related guides' : 'Guías relacionadas'}</h2></div>
-                    <span>{toolMatches.length}</span>
-                  </div>
-                  {toolMatches.map((tool) => (
-                    <SearchHit
-                      key={tool.id}
-                      icon={<BrandMark icon={tool.icon} size={18} />}
-                      title={tool.label}
-                      text={tool.guide?.plain || (locale === 'en' ? `${tool.count} associated lessons` : `${tool.count} lecciones asociadas`)}
-                      href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}
-                      meta={locale === 'en'
-                        ? `${tool.guide?.prompts?.length || 0} prompts · ${tool.guide?.automations?.length || 0} automations`
-                        : `${tool.guide?.prompts?.length || 0} prompts · ${tool.guide?.automations?.length || 0} automatizaciones`}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {promptMatches.length > 0 && (
-                <div className="st-search-kind">
-                  <div className="st-section-head">
-                    <div><span className="st-kicker">Prompts</span><h2>{locale === 'en' ? 'Ready to copy' : 'Listos para copiar'}</h2></div>
-                    <span>{promptMatches.length}</span>
-                  </div>
-                  {promptMatches.map(({ prompt, family }) => (
-                    <SearchHit
-                      key={`${family.id}-${prompt.id || prompt.name}`}
-                      icon={<Sparkles size={17} />}
-                      title={prompt.name}
-                      text={prompt.when}
-                      href={href({ name: 'prompts', familyId: family.id })}
-                      meta={prompt.toolLabel || family.title}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {glossaryMatches.length > 0 && (
-                <div className="st-search-kind">
-                  <div className="st-section-head">
-                    <div><span className="st-kicker">{locale === 'en' ? 'Glossary' : 'Diccionario'}</span><h2>{locale === 'en' ? 'Concepts' : 'Conceptos'}</h2></div>
-                    <span>{glossaryMatches.length}</span>
-                  </div>
-                  {glossaryMatches.map((entry) => (
-                    <SearchHit
-                      key={entry.term}
-                      icon={<Languages size={17} />}
-                      title={entry.term}
-                      text={entry.meaning}
-                      href={href({ name: 'indice', letter: entry.letter })}
-                      meta={locale === 'en' ? 'Concept' : 'Concepto'}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {guideMatches.length > 0 && (
-                <div className="st-search-kind">
-                  <div className="st-section-head">
-                    <div><span className="st-kicker">{locale === 'en' ? 'Guides' : 'Guías'}</span><h2>{locale === 'en' ? 'Essentials' : 'Fundamentales'}</h2></div>
-                    <span>{guideMatches.length}</span>
-                  </div>
-                  {guideMatches.map((guide) => (
-                    <SearchHit
-                      key={guide.id}
-                      icon={<Compass size={17} />}
-                      title={guide.title}
-                      text={guide.intro}
-                      href={href({ name: 'guia', guideId: guide.id })}
-                      meta={`${guide.minutes} min`}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-          {found.length > 0 && <Filters route={route} lessons={found} />}
-
-          <div className="st-filter-row" style={{ marginTop: 12 }}>
-            <span style={{ minWidth: 74, color: '#68706a', fontSize: 7, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em' }}>
-              {locale === 'en' ? 'Group by' : 'Agrupar por'}
-            </span>
-            {(['categoria', 'area', 'tipo'] as const).map((mode) => (
+          <div className="st-buscar-tipos" role="group" aria-label={es ? 'Filtrar por tipo' : 'Filter by type'}>
+            <button
+              type="button"
+              className={tipoActivo === 'todo' ? 'on' : ''}
+              onClick={() => setTipoActivo('todo')}
+            >
+              {es ? 'Todo' : 'All'} <b>{resultados.length}</b>
+            </button>
+            {porTipo.map(({ tipo, total }) => (
               <button
-                key={mode}
+                key={tipo}
                 type="button"
-                className={`st-chip${groupBy === mode ? ' on' : ''}`}
-                onClick={() => setGroupBy(mode)}
+                className={tipoActivo === tipo ? 'on' : ''}
+                onClick={() => setTipoActivo(tipo)}
               >
-                {locale === 'en'
-                  ? (mode === 'categoria' ? 'Category' : mode === 'area' ? 'Area' : 'Type')
-                  : (mode === 'categoria' ? 'Categoría' : mode === 'area' ? 'Área' : 'Tipo')}
+                {es ? ETIQUETAS[tipo].es : ETIQUETAS[tipo].en} <b>{total}</b>
               </button>
             ))}
           </div>
 
-          <p className="st-result-count">
-            {locale === 'en' ? (
-              <><strong>{results.length}</strong> {results.length === 1 ? 'lesson' : 'lessons'} for "{activeQuery}",
-              in {groups.length} {groups.length === 1 ? 'group' : 'groups'}.</>
-            ) : (
-              <><strong>{results.length}</strong> {results.length === 1 ? 'lección' : 'lecciones'} para «{activeQuery}»,
-              en {groups.length} {groups.length === 1 ? 'grupo' : 'grupos'}.</>
-            )}
-          </p>
+          <div className="st-buscar-lista">
+            {visibles.slice(0, 60).map((item) => {
+              const Icono = ETIQUETAS[item.tipo].icono
+              return (
+                <a key={item.clave} className="st-buscar-hit" href={item.enlace}>
+                  <span className="st-buscar-hit-icono"><Icono size={15} /></span>
+                  <span className="st-buscar-hit-texto">
+                    <em>{es ? ETIQUETAS[item.tipo].es : ETIQUETAS[item.tipo].en}</em>
+                    <strong>{item.titulo}</strong>
+                    <small>{item.detalle}</small>
+                  </span>
+                  <ArrowRight size={14} />
+                </a>
+              )
+            })}
+          </div>
 
-          {!found.length && (
-            <p className="st-empty">
-              {locale === 'en'
-                ? 'There are no lessons with that term, but there are matches in tools, prompts, guides or glossary.'
-                : 'No hay lecciones con ese término, pero sí hay coincidencias en herramientas, prompts, guías o diccionario.'}
-            </p>
-          )}
-
-          {groups.slice(0, 12).map((group) => (
-            <section key={group.label} style={{ marginBottom: 22 }}>
-              <div className="st-section-head" style={{ marginTop: 0 }}>
-                <div>
-                  {group.sub && <span className="st-kicker">{group.sub}</span>}
-                  <h2>{group.label}</h2>
-                </div>
-                <span>{group.lessons.length} {locale === 'en' ? (group.lessons.length === 1 ? 'result' : 'results') : (group.lessons.length === 1 ? 'resultado' : 'resultados')}</span>
-                {group.link && <a href={group.link}>{locale === 'en' ? 'See the full category' : 'Ver la categoría completa'}</a>}
-              </div>
-              <div className="st-lesson-rows" style={{ marginTop: 10 }}>
-                {group.lessons.map((lesson) => (
-                  <LessonRow key={lesson.slug} lesson={lesson} level={level} showCategory={groupBy !== 'categoria'} />
-                ))}
-              </div>
-            </section>
-          ))}
-
-          {groups.length > 12 && (
-            <p className="st-result-count">
-              {locale === 'en'
-                ? `And ${groups.length - 12} more groups. Narrow down with the filters above or search a more specific term.`
-                : `Y ${groups.length - 12} grupos más. Afina con los filtros de arriba o busca un término más concreto.`}
+          {visibles.length > 60 && (
+            <p className="st-buscar-mas">
+              {es
+                ? `Se muestran 60 de ${visibles.length}. Afina la búsqueda para ver el resto.`
+                : `Showing 60 of ${visibles.length}. Refine your search to see the rest.`}
             </p>
           )}
         </>

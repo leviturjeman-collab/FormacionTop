@@ -29,8 +29,8 @@ export default function Progreso() {
         ? { title: lesson.title, link: href({ name: 'curso', lessonId }) }
         : null
     }
-    const lesson = bySlug.get(slug)
-    return lesson ? { title: lesson.title, link: href({ name: 'leccion', slug }) } : null
+    // Solo quedan lecciones del programa: lo demás son restos de progreso viejo.
+    return null
   }
 
   const download = () => {
@@ -128,7 +128,7 @@ export default function Progreso() {
         <div className="st-empty">
           <h2>Todavía no hay nada registrado</h2>
           <p>En cuanto completes el primer nivel de una lección, aparecerá aquí.</p>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Ir a la ruta</a>
+          <a className="st-btn" href={href({ name: 'curso' })}>Ir a la ruta</a>
         </div>
       )}
     </div>

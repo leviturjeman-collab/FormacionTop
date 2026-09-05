@@ -4,8 +4,6 @@ import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from
 import { useCourse, useIndexes } from '../course'
 import { href, navigate, type Route } from '../router'
 import { useStudent } from '../store'
-import Filters, { applyFilters } from '../components/Filters'
-import LessonList from '../components/LessonList'
 import { BrandMark } from '../components/Brand'
 import Blocks from '../components/Blocks'
 
@@ -66,217 +64,6 @@ function automationReality(automation: ToolAutomation) {
 }
 
 /* ------------------------------------------------------------------ *
- * RUTA: las diez áreas                                                *
- * ------------------------------------------------------------------ */
-
-export function Ruta() {
-  const course = useCourse()
-  const student = useStudent()
-
-  return (
-    <div className="st-page">
-      <div className="st-page-title">
-        <span className="st-kicker">Itinerario</span>
-        <h1>La ruta completa</h1>
-        <p>
-          Diez áreas en el orden en que se aprende, divididas en {course.stats.categories} categorías.
-          Cada lección existe en tres niveles y puedes cambiar de nivel dentro de la propia lección.
-        </p>
-      </div>
-
-      <div className="st-area-preview">
-        <div>
-          {course.stages.map((stage) => {
-            const total = stage.lessonSlugs.length * 3
-            const done = stage.lessonSlugs.reduce((sum, slug) => sum + (student.lessons[slug]?.done.length || 0), 0)
-            const percent = total ? Math.round((done / total) * 100) : 0
-            return (
-              <a key={stage.id} href={href({ name: 'area', stageId: stage.id, filters: {} })}>
-                <span>{stage.number}</span>
-                <div>
-                  <strong>{stage.title}</strong>
-                  <small>{stage.tagline} · {stage.categoryIds.length} categorías · {stage.lessonSlugs.length} lecciones</small>
-                </div>
-                <i><b style={{ width: `${percent}%` }} /></i>
-                <b>{percent}%</b>
-              </a>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ *
- * ÁREA: sus categorías y, debajo, sus lecciones filtrables            *
- * ------------------------------------------------------------------ */
-
-export function Area({ stageId, route }: { stageId: string; route: Route }) {
-  const course = useCourse()
-  const { bySlug, stageById } = useIndexes()
-  const student = useStudent()
-  const doneSlugs = useDoneSet()
-  const level: LevelId = student.preferredLevel || 'basico'
-
-  const stage = stageById.get(stageId)
-  const progress = useProgressOf(stage?.lessonSlugs || [])
-
-  if (!stage) {
-    return (
-      <div className="st-page">
-        <div className="st-empty">
-          <h2>Esa área no existe</h2>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
-        </div>
-      </div>
-    )
-  }
-
-  const categories = course.categories.filter((category) => stage.categoryIds.includes(category.id))
-  const all = stage.lessonSlugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Lesson[]
-  const filters = 'filters' in route ? route.filters : {}
-  const shown = applyFilters(all, filters, doneSlugs)
-  const filtering = Object.keys(filters).length > 0
-
-  return (
-    <div className="st-page">
-      <header className="st-area-head">
-        <span>{stage.number}</span>
-        <div>
-          <span className="st-kicker">{stage.tagline}</span>
-          <h1>{stage.title}</h1>
-          <p>{stage.description}</p>
-          <p><strong>Meta del área:</strong> {stage.milestone}</p>
-        </div>
-        <div className="st-area-stats">
-          <div><strong>{categories.length}</strong><small>categorías</small></div>
-          <div><strong>{stage.lessonSlugs.length}</strong><small>lecciones</small></div>
-          <div><strong>{progress.percent}%</strong><small>completado</small></div>
-        </div>
-      </header>
-
-      {(() => {
-        const project = (course.projects || []).find((item) => item.stageId === stage.id)
-        return project ? (
-          <a className="st-project-cta" href={href({ name: 'proyecto', stageId: stage.id })}>
-            <span className="st-kicker">Proyecto final del área · {project.time}</span>
-            <strong>{project.title}</strong>
-            <em>{project.pitch}</em>
-          </a>
-        ) : null
-      })()}
-
-      <div className="st-section-head">
-        <h2>Categorías de esta área</h2>
-        <span>{categories.length} grupos</span>
-      </div>
-      <CategoryGrid categoryIds={categories.map((category) => category.id)} />
-
-      <div className="st-section-head">
-        <h2>Todas las lecciones del área</h2>
-        <span>{shown.length} de {all.length}</span>
-      </div>
-      <Filters route={route} lessons={all} hide={['stage']} />
-      {filtering && <p className="st-result-count">Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</p>}
-      <LessonList lessons={shown} level={level} />
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ *
- * REJILLA DE CATEGORÍAS                                               *
- * ------------------------------------------------------------------ */
-
-export function CategoryGrid({ categoryIds }: { categoryIds: string[] }) {
-  const course = useCourse()
-  const student = useStudent()
-  const categories = categoryIds
-    .map((id) => course.categories.find((category) => category.id === id))
-    .filter(Boolean) as typeof course.categories
-
-  if (!categories.length) return <p className="st-empty">Esta área no tiene categorías propias.</p>
-
-  return (
-    <div className="st-cat-grid">
-      {categories.map((category) => {
-        const total = category.lessonSlugs.length * 3
-        const done = category.lessonSlugs.reduce((sum, slug) => sum + (student.lessons[slug]?.done.length || 0), 0)
-        const percent = total ? Math.round((done / total) * 100) : 0
-        return (
-          <a key={category.id} className="st-cat-card" href={href({ name: 'categoria', categoryId: category.id, filters: {} })}>
-            {category.parentLabel && <small>{category.parentLabel}</small>}
-            <strong>{category.label}</strong>
-            <span>{category.count} {category.count === 1 ? 'lección' : 'lecciones'} · {Math.round(category.minutes / 60)} h</span>
-            <div>
-              <i><b style={{ width: `${percent}%` }} /></i>
-              <span>{percent}%</span>
-            </div>
-          </a>
-        )
-      })}
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ *
- * CATEGORÍA                                                           *
- * ------------------------------------------------------------------ */
-
-export function Categoria({ categoryId, route }: { categoryId: string; route: Route }) {
-  const course = useCourse()
-  const { bySlug, stageById } = useIndexes()
-  const student = useStudent()
-  const doneSlugs = useDoneSet()
-  const level: LevelId = student.preferredLevel || 'basico'
-
-  const category = course.categories.find((item) => item.id === categoryId)
-  const progress = useProgressOf(category?.lessonSlugs || [])
-
-  if (!category) {
-    return (
-      <div className="st-page">
-        <div className="st-empty">
-          <h2>Esa categoría no existe</h2>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
-        </div>
-      </div>
-    )
-  }
-
-  const stage = stageById.get(category.stageId)
-  const all = category.lessonSlugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Lesson[]
-  const filters = 'filters' in route ? route.filters : {}
-  const shown = applyFilters(all, filters, doneSlugs)
-
-  return (
-    <div className="st-page">
-      <header className="st-area-head">
-        <span>{stage?.number}</span>
-        <div>
-          <span className="st-kicker">{category.parentLabel || stage?.title}</span>
-          <h1>{category.label}</h1>
-          <p><code>{category.key}</code></p>
-          {stage && (
-            <p>
-              Pertenece al área{' '}
-              <a href={href({ name: 'area', stageId: stage.id, filters: {} })}>{stage.number}. {stage.title}</a>.
-            </p>
-          )}
-        </div>
-        <div className="st-area-stats">
-          <div><strong>{category.count}</strong><small>lecciones</small></div>
-          <div><strong>{Math.round(category.minutes / 60)} h</strong><small>nivel medio</small></div>
-          <div><strong>{progress.percent}%</strong><small>completado</small></div>
-        </div>
-      </header>
-
-      <Filters route={route} lessons={all} hide={['stage']} />
-      <p className="st-result-count">Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</p>
-      <LessonList lessons={shown} level={level} showCategory={false} />
-    </div>
-  )
-}
 
 /* ------------------------------------------------------------------ *
  * BIBLIOTECA: carpetas internas de consulta                           *
@@ -383,44 +170,6 @@ export function Biblioteca() {
   )
 }
 
-export function Carpeta({ folderId, route }: { folderId: string; route: Route }) {
-  const course = useCourse()
-  const { bySlug } = useIndexes()
-  const student = useStudent()
-  const doneSlugs = useDoneSet()
-  const level: LevelId = student.preferredLevel || 'basico'
-
-  const folder = course.folders.find((item) => item.id === folderId)
-  if (!folder) {
-    return (
-      <div className="st-page">
-        <div className="st-empty">
-          <h2>Esa carpeta no existe</h2>
-          <a className="st-btn" href={href({ name: 'biblioteca' })}>Volver a la biblioteca</a>
-        </div>
-      </div>
-    )
-  }
-
-  const all = folder.lessonSlugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Lesson[]
-  const filters = 'filters' in route ? route.filters : {}
-  const shown = applyFilters(all, filters, doneSlugs)
-
-  return (
-    <div className="st-page">
-      <div className="st-page-title">
-        <span className="st-kicker">Biblioteca</span>
-        <h1>{folder.label}</h1>
-        <p><code>{folder.folder}</code> · {folder.count} {folder.count === 1 ? 'lección' : 'lecciones'}</p>
-      </div>
-
-      <Filters route={route} lessons={all} />
-      <p className="st-result-count">Mostrando <strong>{shown.length}</strong> de {all.length} lecciones.</p>
-      <LessonList lessons={shown} level={level} />
-    </div>
-  )
-}
-
 /* ------------------------------------------------------------------ *
  * HERRAMIENTAS                                                        *
  * ------------------------------------------------------------------ */
@@ -465,17 +214,13 @@ export function Herramientas() {
 
 export function Herramienta({ toolId, route }: { toolId: string; route: Route }) {
   const course = useCourse()
-  const { bySlug } = useIndexes()
   const student = useStudent()
-  const doneSlugs = useDoneSet()
-  const level: LevelId = student.preferredLevel || 'basico'
   // La seccion abierta se decide por la URL: asi cada apartado de la
   // herramienta es una pantalla propia, enlazable, y al entrar en una no queda
   // el mapa entero encima obligando a bajar.
   const activePanel = route.name === 'herramienta' ? route.panel || '' : ''
 
   const tool = course.toolPages.find((item) => item.id === toolId)
-  const progress = useProgressOf(tool?.lessonSlugs || [])
   if (!tool) {
     return (
       <div className="st-page">
@@ -487,11 +232,10 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
     )
   }
 
-  const all = tool.lessonSlugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Lesson[]
-  const totalAvailable = tool.totalCount ?? tool.count
-  const hiddenCount = Math.max(0, totalAvailable - tool.count)
+  // El itinerario son las lecciones escritas a mano para esta herramienta.
+  const itinerario = tool.itinerary || []
+  const hechas = itinerario.filter((leccion) => (student.lessons['curso:' + leccion.id]?.done.length || 0) > 0).length
   const filters = 'filters' in route ? route.filters : {}
-  const shown = applyFilters(all, filters, doneSlugs)
   const promptCount = tool.guide?.prompts?.length || 0
   const automationCount = tool.guide?.automations?.length || 0
   const toolMapItems = [
@@ -500,10 +244,10 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
       title: 'Guía rápida',
       detail: 'Qué es, para qué sirve y qué no debes tocar todavía.',
     }] : []),
-    ...(all.length ? [{
+    ...(itinerario.length ? [{
       id: 'lecciones-herramienta',
       title: 'Lecciones',
-      detail: `${tool.count} de consulta${hiddenCount ? `, ${hiddenCount} internas fuera` : ''}`,
+      detail: `${itinerario.length} del programa sobre ${tool.label}`,
     }] : []),
     ...(promptCount ? [{
       id: 'prompts-herramienta',
@@ -521,7 +265,7 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
       detail: `${automationCount} flujos explicados`,
     }] : []),
   ]
-  const defaultToolPanel = tool.guide ? 'guia-herramienta' : all.length ? 'lecciones-herramienta' : toolMapItems[0]?.id || 'guia-herramienta'
+  const defaultToolPanel = tool.guide ? 'guia-herramienta' : toolMapItems[0]?.id || 'guia-herramienta'
   const currentPanel = activePanel || defaultToolPanel
   const currentMapItem = toolMapItems.find((item) => item.id === currentPanel)
 
@@ -538,22 +282,21 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
           <span className="st-kicker">Herramienta</span>
           <h1>{tool.label}</h1>
           <p>
-            {tool.count
-              ? `Lo esencial de ${tool.label}, curado como biblioteca de consulta. Si existe una ruta paso a paso, se marca aparte para no mezclar estudio con material de apoyo.`
-              : `${tool.label} funciona como herramienta manual de consulta: primero entiendes qué hace y después la usas solo cuando te ayuda en tu trabajo real.`}
-            {hiddenCount ? ` Hay ${hiddenCount} menciones internas más, pero no se muestran aquí para no crear una lista interminable.` : ''}
+            {itinerario.length
+              ? `Qué es ${tool.label}, para qué sirve y cuándo te toca usarla. Debajo tienes el itinerario de lecciones del programa, sus prompts y sus automatizaciones.`
+              : `Qué es ${tool.label}, para qué sirve y qué no conviene tocar todavía. Con sus prompts listos para copiar y las automatizaciones explicadas.`}
           </p>
         </div>
         <div className="st-area-stats">
-          {tool.count ? (
+          {itinerario.length ? (
             <>
-              <div><strong>{tool.count}</strong><small>seleccionadas</small></div>
-              <div><strong>{progress.percent}%</strong><small>completado</small></div>
-              <div><strong>{tool.itinerary?.length || 'No'}</strong><small>paso a paso</small></div>
+              <div><strong>{itinerario.length}</strong><small>lecciones</small></div>
+              <div><strong>{hechas}</strong><small>hechas</small></div>
+              <div><strong>{promptCount}</strong><small>prompts</small></div>
             </>
           ) : (
             <>
-              <div><strong>Manual</strong><small>uso guiado</small></div>
+              <div><strong>{promptCount}</strong><small>prompts</small></div>
               <div><strong>{automationCount}</strong><small>automatizaciones</small></div>
             </>
           )}
@@ -595,20 +338,31 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
           </section>
         )}
 
-        {all.length > 0 && currentPanel === 'lecciones-herramienta' && (
+        {itinerario.length > 0 && currentPanel === 'lecciones-herramienta' && (
           <section id="lecciones-herramienta" className="st-tool-lessons">
             <div className="st-section-head">
               <div>
-                <span className="st-kicker">Lecciones dentro de {tool.label}</span>
-                <h2>Estudia solo estas piezas</h2>
+                <span className="st-kicker">Lecciones sobre {tool.label}</span>
+                <h2>El itinerario, en orden</h2>
                 <p className="st-tool-inside-intro">
-                  No son otra ruta obligatoria ni prometen ser un curso exacto de 20 lecciones. Son piezas de consulta seleccionadas para entender {tool.label} cuando tu proyecto la necesite.
+                  Son lecciones del programa, escritas para seguirse una detrás de otra. Si vas a usar
+                  {' '}{tool.label} en tu proyecto, este es el camino corto.
                 </p>
               </div>
-              <span>{shown.length} de {all.length}{hiddenCount ? ` · ${hiddenCount} guardadas fuera` : ''}</span>
+              <span>{hechas} de {itinerario.length} hechas</span>
             </div>
-            <Filters route={route} lessons={all} hide={['tool']} />
-            <LessonList lessons={shown} level={level} />
+            <ol className="st-tool-itinerary">
+              {itinerario.map((leccion, indice) => (
+                <li key={leccion.id}>
+                  <a href={href({ name: 'curso', lessonId: leccion.id })}>
+                    <span>{String(indice + 1).padStart(2, '0')}</span>
+                    <strong>{leccion.title}</strong>
+                    <small>{leccion.minutes} min</small>
+                    <ArrowRight size={13} />
+                  </a>
+                </li>
+              ))}
+            </ol>
           </section>
         )}
 

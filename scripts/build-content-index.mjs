@@ -292,173 +292,25 @@ const titleOverrides = new Map([
   ['35_AUTOMATIZACIONES_SKILLS_BIBLIOTECA/automatizaciones_codigo_40/docs/02_email_summarizer.py.md', 'Email summarizer: resumen y acciones desde Python'],
 ])
 
+/**
+ * El vault dejó de ser fuente de lecciones.
+ *
+ * Durante mucho tiempo, cada .md de las carpetas numeradas se convertía en una
+ * lección de tres niveles. Salían 432, y no eran lecciones: eran índices de
+ * módulo, plantillas, rúbricas, bibliografías y notas escritas para quien
+ * imparte, con el nombre de la carpeta por título. El propio generador tenía
+ * que retirar después casi 3.000 bloques de texto repetido para que no se
+ * notara tanto, y aun así el alumno abría «la guía de Claude Code» y leía
+ * «Anthropic, Claude, Claude Code, prompt engineering, skills, hooks y
+ * subagents» como encabezado.
+ *
+ * Ahora el curso del alumno son las lecciones escritas a mano de
+ * `content/lecciones/`, las guías, los kits, las herramientas, los prompts y
+ * los agentes. Los archivos del vault siguen en el repositorio como material
+ * de origen para escribir lecciones nuevas, pero no se publican como tales.
+ */
 const lessons = []
-const usedSlugs = new Set()
-
-for (const absolute of markdownFiles) {
-  const relativePath = toPosix(path.relative(vaultDir, absolute))
-  // Los .md sueltos en la raíz (README, changelog, planes) son documentación
-  // del proyecto, no material del curso.
-  if (!relativePath.includes('/')) continue
-  const raw = await fs.readFile(absolute, 'utf8')
-  const signal = extract(raw, relativePath)
-
-  // Documentos vacíos o casi vacíos no llegan a ser lección.
-  if (signal.words < 60) continue
-
-  // Los archivos que solo sirven para navegar por el material no se enseñan.
-  if (isMetaDocument(signal.title, relativePath)) continue
-
-  // Secciones clasificadas y los tres casos, para el simulador.
-  signal.analysis = analyzeSections(signal.sections)
-
-  const extractedTitle = signal.title
-    .replace(/^Desarrollo completo\s*[-–—]\s*/i, '')
-    .replace(/^Documentaci[oó]n\s*[-–—]\s*/i, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-  const title = titleOverrides.get(relativePath) || extractedTitle
-
-  const stageId = stageFor(relativePath, title)
-  const kind = kindFor(relativePath, title)
-  const { levels, tools } = buildLevels(signal, stageId)
-
-  // Cuánto contenido REAL tiene, ya sin la plantilla repetida. Es lo que decide
-  // si esto es una lección de verdad o una ficha de consulta.
-  const realWords = levels.intermedio.blocks
-    .filter((block) => block.kind === 'seccion')
-    .reduce((sum, block) => sum + (block.parts || []).reduce(
-      (acc, part) => acc + `${part.text || ''} ${(part.items || []).join(' ')}`.split(/\s+/).filter(Boolean).length, 0), 0)
-  const assetSources = assetSourcesFor(relativePath)
-  // Un archivo ejecutable o importable necesita una lección completa aunque
-  // su documentación sea breve. La longitud del texto no puede ocultar la práctica.
-  const format = realWords < 400 && assetSources.length === 0 ? 'ficha' : 'leccion'
-
-  // Una ficha es consulta rápida: se queda con su contenido propio y nada más.
-  // Sin instaladores, sin recetas y sin el andamiaje de una lección larga.
-  if (format === 'ficha') {
-    const CONSULTA = new Set(['idea', 'seccion', 'tabla', 'herramientas', 'receta', 'codigo', 'comandos', 'instalar'])
-    const compacto = levels.intermedio.blocks
-      .filter((block) => CONSULTA.has(block.kind))
-      // Los títulos genéricos de lección no pintan nada en una ficha.
-      .filter((block) => !/^(?:lo que vas a construir|referencia de la lecci[oó]n|herramientas de esta pr[aá]ctica)$/i.test(block.title))
-      .map((block) => (block.kind === 'herramientas' ? { ...block, title: 'Herramientas' } : block))
-    for (const level of LEVELS) {
-      levels[level] = {
-        ...levels[level],
-        headline: `${title}, en una pantalla`,
-        hook: 'Ficha de consulta: lo esencial de este tema, para mirarlo cuando lo necesites.',
-        blocks: compacto,
-        objectives: [],
-        pitfalls: [],
-        minutes: Math.max(3, Math.round(realWords / 190)),
-      }
-    }
-  }
-
-  let slug = slugify(title)
-  if (usedSlugs.has(slug)) {
-    const folder = slugify(relativePath.split('/')[0])
-    slug = usedSlugs.has(`${folder}-${slug}`) ? `${slug}-${usedSlugs.size}` : `${folder}-${slug}`
-  }
-  usedSlugs.add(slug)
-
-  const assets = []
-  for (const sourcePath of assetSources) {
-    const absoluteAsset = fileByRelative.get(sourcePath)
-    if (!absoluteAsset) continue
-    const stat = await fs.stat(absoluteAsset)
-    if (stat.size > 120000) continue
-    const code = await fs.readFile(absoluteAsset, 'utf8')
-    const fileName = `${slug}-${path.basename(sourcePath)}`
-    const generatedAssetPath = path.join(generatedDir, 'assets', fileName)
-    await fs.mkdir(path.dirname(generatedAssetPath), { recursive: true })
-    await fs.writeFile(generatedAssetPath, code, 'utf8')
-    assets.push({
-      kind: assetKind(sourcePath),
-      name: path.basename(sourcePath),
-      language: assetLanguage(sourcePath),
-      sourcePath,
-      downloadPath: `/generated/assets/${fileName}`,
-      code,
-    })
-  }
-
-  const workflowFile = path.basename(relativePath).replace(/\.md$/i, '.json')
-  const relatedWorkflow = assets.find((asset) => asset.kind === 'workflow')
-  const interactive = buildInteractive({
-    signal,
-    stageId,
-    workflow: workflowJson.get(workflowFile) || (relatedWorkflow ? workflowJson.get(relatedWorkflow.name) : undefined),
-    workflowFile: relatedWorkflow?.name || workflowFile,
-    slug,
-  })
-
-  lessons.push({
-    id: slug,
-    slug,
-    title,
-    stageId,
-    kind,
-    kindLabel: KINDS[kind].label,
-    folder: relativePath.split('/')[0],
-    folderLabel: folderLabel(relativePath.split('/')[0]),
-    sourcePath: relativePath,
-    sourceWords: signal.words,
-    realWords,
-    format,
-    categoryKey: categoryKeyFor(relativePath),
-    sectionId: sectionFor(relativePath),
-    tools,
-    tags: Array.isArray(signal.front.tags) ? signal.front.tags.slice(0, 6) : [],
-    search: `${title} ${signal.keyTerms.join(' ')} ${signal.intro}`.slice(0, 900).toLowerCase(),
-    levels,
-    interactive,
-    assets,
-    relatedTitles: signal.links,
-    // Alimenta el indice A-Z: definiciones con significado y terminos destacados.
-    indexTerms: [
-      ...signal.definitions.filter((item) => item.meaning.length > 30).slice(0, 12),
-      ...signal.keyTerms.map((term) => ({ term, meaning: '' })),
-    ],
-    authored: false,
-  })
-}
-
-/* --- Contenido escrito a mano, que pisa al generado ---------------- */
-
-const authoredDir = path.join(projectDir, 'content', 'authored')
-let authoredCount = 0
-if (await exists(authoredDir)) {
-  for (const name of (await fs.readdir(authoredDir)).filter((file) => file.endsWith('.json'))) {
-    const override = JSON.parse(await fs.readFile(path.join(authoredDir, name), 'utf8'))
-    const target = lessons.find(
-      (lesson) => lesson.sourcePath === override.sourcePath || lesson.slug === override.slug,
-    )
-    if (!target) {
-      console.warn(`  aviso: ${name} no encaja con ninguna lección (${override.sourcePath || override.slug}).`)
-      continue
-    }
-    for (const level of LEVELS) {
-      if (override.levels?.[level]) target.levels[level] = { ...target.levels[level], ...override.levels[level] }
-    }
-    if (override.interactive) target.interactive = override.interactive
-    if (override.title) target.title = override.title
-    target.authored = true
-    authoredCount += 1
-  }
-}
-
-/* --- Relaciones entre lecciones ------------------------------------ */
-
-const byTitle = new Map(lessons.map((lesson) => [lesson.title.toLowerCase(), lesson.slug]))
-for (const lesson of lessons) {
-  lesson.related = (lesson.relatedTitles || [])
-    .map((title) => byTitle.get(title.toLowerCase()))
-    .filter((slug) => slug && slug !== lesson.slug)
-    .slice(0, 5)
-  delete lesson.relatedTitles
-}
+const authoredCount = 0
 
 /* --- Ruta: etapas ordenadas ---------------------------------------- */
 
@@ -485,90 +337,7 @@ const baseStages = STAGES.map((stage) => {
 
 const { categories, stages } = buildCategories(lessons, baseStages)
 
-/* --- Preguntas escritas a mano por categoria ----------------------- */
-
-const quizDir = path.join(projectDir, 'content', 'quiz')
-let categoryQuizCount = 0
-if (await exists(quizDir)) {
-  const byCategory = new Map()
-  for (const name of (await fs.readdir(quizDir)).filter((file) => file.endsWith('.json'))) {
-    const pack = JSON.parse(await fs.readFile(path.join(quizDir, name), 'utf8'))
-    const id = pack.categoryId || name.replace(/\.json$/, '')
-    if (!categories.some((category) => category.id === id)) {
-      console.warn(`  aviso: ${name} no encaja con ninguna categoria (${id}).`)
-      continue
-    }
-    byCategory.set(id, pack)
-  }
-
-  // Los quiz quedan fuera del curso: el alumno avanza haciendo tareas.
-  // Los archivos se conservan en content/quiz por si vuelven a hacer falta.
-  categoryQuizCount = 0
-  console.log(`  Preguntas por categoria: ${byCategory.size} archivos en reserva (no se muestran).`)
-}
-
-/* --- Fuera el relleno que se repite -------------------------------- */
-
-/**
- * Hay texto en la boveda que se copio igual en decenas de archivos cambiando
- * solo el titulo: capas metodologicas, apartados de "para que sirve" y
- * listas de requisitos identicas. Al alumno le llegan como si fueran
- * contenido de esa leccion, y no lo son: son plantilla.
- *
- * Aqui no se toca ningun archivo. Se detecta que un bloque aparece con el
- * MISMO texto en demasiadas lecciones y se deja de mostrar. Solo se mira lo
- * que viene de los .md; lo que generan las guias de herramienta se repite a
- * proposito, porque es la misma guia enseñada en cada leccion de esa
- * herramienta.
- */
-const REPETICIONES_ADMITIDAS = 12
-
-function huellaDeBloque(bloque) {
-  const cuerpo = { ...bloque }
-  delete cuerpo.title
-  return `${bloque.title || ''}::${JSON.stringify(cuerpo)}`
-}
-
-const vecesQueApareceCadaBloque = new Map()
-for (const lesson of lessons) {
-  const vistosEnEstaLeccion = new Set()
-  for (const level of LEVELS) {
-    for (const bloque of lesson.levels[level].blocks || []) {
-      if (bloque.from !== 'vault') continue
-      const huella = huellaDeBloque(bloque)
-      // Cuenta una vez por leccion, no una por nivel.
-      if (vistosEnEstaLeccion.has(huella)) continue
-      vistosEnEstaLeccion.add(huella)
-      vecesQueApareceCadaBloque.set(huella, (vecesQueApareceCadaBloque.get(huella) || 0) + 1)
-    }
-  }
-}
-
-let bloquesDeRellenoFuera = 0
-const rellenoDistinto = new Set()
-for (const lesson of lessons) {
-  for (const level of LEVELS) {
-    const antes = lesson.levels[level].blocks || []
-    const despues = antes.filter((bloque) => {
-      if (bloque.from !== 'vault') return true
-      const huella = huellaDeBloque(bloque)
-      const veces = vecesQueApareceCadaBloque.get(huella) || 0
-      if (veces <= REPETICIONES_ADMITIDAS) return true
-      rellenoDistinto.add(huella)
-      return false
-    })
-    // Nunca se deja una leccion en blanco: si TODO lo que tenia era relleno,
-    // se conserva el primer bloque para que siga diciendo algo. Esa leccion
-    // no esta bien, pero una pagina vacia esta peor.
-    const finales = despues.length || !antes.length ? despues : antes.slice(0, 1)
-    bloquesDeRellenoFuera += antes.length - finales.length
-    lesson.levels[level].blocks = finales
-  }
-}
-console.log(
-  `  Relleno retirado de las lecciones: ${bloquesDeRellenoFuera} bloques ` +
-    `(${rellenoDistinto.size} textos distintos repetidos en mas de ${REPETICIONES_ADMITIDAS} lecciones).`,
-)
+const categoryQuizCount = 0
 
 /* --- Indice alfabetico de conceptos -------------------------------- */
 
@@ -579,21 +348,37 @@ const glosarioManual = (await loadContent('glosario'))[0]
 const sinTildes = (valor) =>
   valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
+/**
+ * Cada termino enlaza con las lecciones del programa donde de verdad sale.
+ * Se busca en el titulo, en la promesa, en la teoria y en el vocabulario de
+ * cada leccion escrita a mano, que es lo unico que ve el alumno.
+ */
+const textoDeLeccion = (leccion) => sinTildes([
+  leccion.title,
+  leccion.promise || '',
+  ...(leccion.theory || []).map((bloque) => `${bloque.title} ${bloque.text}`),
+  ...(leccion.words || []).map(([palabra, sentido]) => `${palabra} ${sentido}`),
+].join(' '))
+
 function leccionesDelTermino(termino) {
   // "Chunk (trozo)" busca por "chunk": lo de los parentesis es la traduccion.
   const aguja = sinTildes(termino.split(' (')[0]).trim()
   if (aguja.length < 3) return []
   const patron = new RegExp(`(^|[^a-z0-9])${aguja.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`)
   const marcadas = []
-  for (const leccion of lessons) {
+  for (const leccion of cursoFiles) {
     const enTitulo = patron.test(sinTildes(leccion.title))
-    const enCuerpo = patron.test(sinTildes(leccion.search || ''))
-    if (enTitulo || enCuerpo) marcadas.push({ leccion, peso: enTitulo ? 0 : 1 })
+    // El vocabulario de la leccion pesa mas que una mencion de pasada.
+    const enVocabulario = (leccion.words || []).some(([palabra]) => patron.test(sinTildes(palabra)))
+    const enCuerpo = patron.test(textoDeLeccion(leccion))
+    if (enTitulo || enVocabulario || enCuerpo) {
+      marcadas.push({ leccion, peso: enTitulo ? 0 : enVocabulario ? 1 : 2 })
+    }
   }
   return marcadas
-    .sort((a, b) => a.peso - b.peso || a.leccion.title.localeCompare(b.leccion.title, 'es'))
+    .sort((a, b) => a.peso - b.peso || (a.leccion.number || 0) - (b.leccion.number || 0))
     .slice(0, 4)
-    .map(({ leccion }) => ({ slug: leccion.slug, title: leccion.title }))
+    .map(({ leccion }) => ({ id: leccion.id, title: leccion.title }))
 }
 
 const glossaryIndex = glosarioManual?.terms?.length
@@ -754,15 +539,26 @@ const course = {
 
 await fs.writeFile(path.join(publicDir, outputFile), JSON.stringify(course), 'utf8')
 
+const leccionesDelPrograma = cursoFiles.filter((leccion) => !leccion.tool)
+const sinEnlace = glossaryIndex.filter((entrada) => !entrada.lessons.length).length
+
 console.log(
-  `Curso generado: ${lessons.length} lecciones x 3 niveles en ${categories.length} categorias.
-` +
-    `  ${course.stats.blocks} bloques de contenido, ${course.stats.quizQuestions} preguntas, ` +
-    `${course.stats.interactivePieces} piezas interactivas, ${glossaryIndex.length} terminos indexados.`,
+  `Curso generado: ${leccionesDelPrograma.length} lecciones del programa ` +
+    `y ${cursoFiles.length - leccionesDelPrograma.length} de itinerario por herramienta.`,
+)
+console.log(
+  `  ${guideFiles.length} guias, ${institutionalKits.length} kits, ${toolPages.length} herramientas, ` +
+    `${agentFiles.length} agentes, ${promptLibrary.reduce((suma, familia) => suma + familia.prompts.length, 0)} prompts.`,
+)
+console.log(
+  `  ${glossaryIndex.length} terminos en el diccionario` +
+    (sinEnlace ? `, ${sinEnlace} sin ninguna leccion que los explique.` : '.'),
 )
 for (const stage of stages) {
+  const enEtapa = leccionesDelPrograma.filter((leccion) => leccion.stageId === stage.id)
+  const minutos = enEtapa.reduce((suma, leccion) => suma + (leccion.minutes || 0), 0)
   console.log(
-    `  ${stage.number} ${stage.title.padEnd(40)} ${String(stage.categoryIds.length).padStart(3)} categorias  ` +
-      `${String(stage.lessonSlugs.length).padStart(3)} lecciones`,
+    `  ${stage.number} ${stage.title.padEnd(40)} ${String(enEtapa.length).padStart(2)} lecciones  ` +
+      `${String(minutos).padStart(4)} min` + (enEtapa.length ? '' : '   <-- SIN LECCIONES'),
   )
 }

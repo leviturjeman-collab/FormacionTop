@@ -6,7 +6,7 @@ import {
 import { useCourse } from '../course'
 import { href } from '../router'
 import { store, useStudent } from '../store'
-import type { Course, InstitutionalKit, KitPrompt, Lesson, PromptFamily, ToolAutomation, ToolPage } from '../types'
+import type { Course, CursoLesson, InstitutionalKit, KitPrompt, PromptFamily, ToolAutomation, ToolPage } from '../types'
 import { BrandMark } from '../components/Brand'
 
 /**
@@ -39,17 +39,35 @@ function toolById(course: Course, id: string) {
   return course.toolPages.find((tool) => tool.id === id)
 }
 
-function relevantSkills(course: Course, kit: InstitutionalKit): Lesson[] {
-  const needles = [...(kit.skillKeywords || []), ...(kit.tools || [])].map((item) => item.toLowerCase())
-  const skillish = course.lessons.filter((lesson) => {
-    const haystack = `${lesson.title} ${lesson.folder} ${lesson.sourcePath} ${lesson.tags.join(' ')} ${lesson.search}`.toLowerCase()
-    const isSkill = /skill|workflow|automatiz|proceso|auditoria|entregable|plantilla/.test(haystack)
-    return isSkill && needles.some((needle) => haystack.includes(needle))
-  })
-  if (skillish.length) return skillish.slice(0, 20)
-  return course.lessons
-    .filter((lesson) => /35_AUTOMATIZACIONES|skills|workflow/i.test(`${lesson.sourcePath} ${lesson.folder}`))
-    .slice(0, 20)
+/**
+ * Lecciones del programa que preparan para este kit. Se buscan por las
+ * herramientas del kit y por sus palabras clave, dentro del texto que ve el
+ * alumno: título, promesa, teoría y vocabulario.
+ */
+function relevantSkills(course: Course, kit: InstitutionalKit): CursoLesson[] {
+  const agujas = [...(kit.skillKeywords || []), ...(kit.tools || [])]
+    .map((item) => item.toLowerCase())
+    .filter((item) => item.length > 2)
+  if (!agujas.length) return []
+
+  const texto = (leccion: CursoLesson) => [
+    leccion.title,
+    leccion.promise,
+    ...(leccion.theory || []).map((bloque) => `${bloque.title} ${bloque.text}`),
+    ...(leccion.words || []).map(([palabra, sentido]) => `${palabra} ${sentido}`),
+    leccion.tool || '',
+  ].join(' ').toLowerCase()
+
+  return (course.curso || [])
+    .map((leccion) => {
+      const cuerpo = texto(leccion)
+      const aciertos = agujas.filter((aguja) => cuerpo.includes(aguja)).length
+      return { leccion, aciertos }
+    })
+    .filter((item) => item.aciertos > 0)
+    .sort((a, b) => b.aciertos - a.aciertos || a.leccion.number - b.leccion.number)
+    .slice(0, 8)
+    .map((item) => item.leccion)
 }
 
 function kitTools(course: Course, kit: InstitutionalKit): ToolPage[] {
@@ -701,10 +719,10 @@ export default function Kits({ kitId }: { kitId?: string }) {
                 </div>
                 <div className="st-kit-skill-grid">
                   {skills.map((lesson) => (
-                    <a key={lesson.slug} href={href({ name: 'leccion', slug: lesson.slug, level: 'intermedio' })}>
+                    <a key={lesson.id} href={href({ name: 'curso', lessonId: lesson.id })}>
                       <BookMarked size={14} />
                       <strong>{lesson.title}</strong>
-                      <small>{lesson.folderLabel}</small>
+                      <small>{lesson.minutes} min</small>
                     </a>
                   ))}
                 </div>

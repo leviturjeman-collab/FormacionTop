@@ -7,12 +7,10 @@ import { store, useStudent } from './store'
 import { LOCALES, useLocale, useT } from './i18n'
 import Inicio from './pages/Inicio'
 import MiProyecto from './pages/MiProyecto'
-import Leccion from './pages/Leccion'
 import Buscar from './pages/Buscar'
 import Indice from './pages/Indice'
 import Preguntas from './pages/Preguntas'
 import Progreso from './pages/Progreso'
-import Presentar from './pages/Presentar'
 import Proyecto from './pages/Proyecto'
 import Deck from './pages/Deck'
 import Prompts from './pages/Prompts'
@@ -22,7 +20,7 @@ import Agentes from './pages/Agentes'
 import Admin from './pages/Admin'
 import Guia from './pages/Guia'
 import { CursoIndice, CursoLeccion } from './pages/Curso'
-import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
+import { Biblioteca, Herramienta, Herramientas } from './pages/Listados'
 
 function LanguageSwitch({ compact }: { compact?: boolean }) {
   const locale = useLocale()
@@ -54,26 +52,19 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
   const cursoBase = [...(course.curso || [])].filter((lesson) => !lesson.tool).sort((a, b) => a.number - b.number)
   const defaultCursoStage = cursoBase[0]?.stageId || course.stages[0]?.id || null
   const [expanded, setExpanded] = useState<string | null>(() =>
-    route.name === 'area' ? route.stageId
-    : route.name === 'categoria' ? course.categories.find((item) => item.id === route.categoryId)?.stageId || null
-    : route.name === 'curso' && route.lessonId ? course.curso.find((lesson) => lesson.id === route.lessonId)?.stageId || null
+    route.name === 'curso' && route.lessonId ? course.curso.find((lesson) => lesson.id === route.lessonId)?.stageId || null
     : route.name === 'curso' ? defaultCursoStage
     : null,
   )
 
-  // El área de la página actual se despliega sola al navegar.
+  // El bloque de la lección actual se despliega solo al navegar.
   useEffect(() => {
-    if (route.name === 'area') setExpanded(route.stageId)
     if (route.name === 'curso' && !route.lessonId) setExpanded(defaultCursoStage)
     if (route.name === 'curso' && route.lessonId) {
       const lesson = course.curso.find((item) => item.id === route.lessonId)
       if (lesson) setExpanded(lesson.stageId)
     }
-    if (route.name === 'categoria') {
-      const stage = course.categories.find((item) => item.id === route.categoryId)?.stageId
-      if (stage) setExpanded(stage)
-    }
-  }, [route, course.categories, course.curso, defaultCursoStage])
+  }, [route, course.curso, defaultCursoStage])
 
   const is = (name: Route['name']) => route.name === name
   const isCursoDone = (lesson: CursoLesson) => {
@@ -306,26 +297,7 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
     switch (route.name) {
       case 'inicio': return [t('nav.inicio')]
       case 'mi-proyecto': return [t('nav.miProyecto')]
-      case 'ruta': return [t('nav.rutaPrincipal')]
-      case 'area': {
-        const stage = course.stages.find((item) => item.id === route.stageId)
-        return [t('nav.rutaPrincipal'), stage ? `${stage.number}. ${stage.title}` : route.stageId]
-      }
-      case 'categoria': {
-        const category = course.categories.find((item) => item.id === route.categoryId)
-        const stage = category && course.stages.find((item) => item.id === category.stageId)
-        return [t('nav.rutaPrincipal'), stage ? `${stage.number}. ${stage.title}` : '', category?.label || ''].filter(Boolean)
-      }
-      case 'leccion': {
-        const lesson = course.lessons.find((item) => item.slug === route.slug)
-        const category = lesson && course.categories.find((item) => item.id === lesson.categoryId)
-        return [category?.label || 'Lección', lesson?.title || route.slug]
-      }
-      case 'biblioteca': return ['Biblioteca']
-      case 'carpeta': {
-        const folder = course.folders.find((item) => item.id === route.folderId)
-        return ['Biblioteca', folder?.label || route.folderId]
-      }
+      case 'biblioteca': return [t('nav.biblioteca')]
       case 'herramientas': return [t('nav.herramientas')]
       case 'herramienta': {
         const tool = course.toolPages.find((item) => item.id === route.toolId)
@@ -334,7 +306,6 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'preguntas': return [t('nav.preguntas')]
       case 'indice': return [t('nav.diccionario'), route.letter?.toUpperCase() || ''].filter(Boolean)
       case 'buscar': return [t('nav.busqueda'), route.query ? `«${route.query}»` : ''].filter(Boolean)
-      case 'presentar': return [t('nav.presentacion')]
       case 'proyecto': return [t('nav.proyectoFinal')]
       case 'deck': return [t('nav.presentacion')]
       case 'prompts': return [t('nav.prompts')]
@@ -390,11 +361,6 @@ function Pages({ route }: { route: Route }) {
   switch (route.name) {
     case 'inicio': return <Inicio />
     case 'mi-proyecto': return <MiProyecto />
-    case 'ruta': return <Ruta />
-    case 'area': return <Area stageId={route.stageId} route={route} />
-    case 'categoria': return <Categoria categoryId={route.categoryId} route={route} />
-    case 'leccion': return <Leccion slug={route.slug} level={route.level} />
-    case 'presentar': return <Presentar slug={route.slug} level={route.level} />
     case 'proyecto': return <Proyecto stageId={route.stageId} />
     case 'deck': return <Deck deckId={route.deckId} />
     case 'prompts': return <Prompts familyId={route.familyId} />
@@ -405,7 +371,6 @@ function Pages({ route }: { route: Route }) {
     case 'guia': return <Guia guideId={route.guideId} />
     case 'curso': return route.lessonId ? <CursoLeccion lessonId={route.lessonId} /> : <CursoIndice />
     case 'biblioteca': return <Biblioteca />
-    case 'carpeta': return <Carpeta folderId={route.folderId} route={route} />
     case 'herramientas': return <Herramientas />
     case 'herramienta': return <Herramienta toolId={route.toolId} route={route} />
     case 'preguntas': return <Preguntas />
@@ -429,12 +394,8 @@ function Shell() {
 
   const routeKey = useMemo(() => {
     switch (route.name) {
-      case 'area': return `${route.name}:${route.stageId}`
-      case 'categoria': return `${route.name}:${route.categoryId}:${JSON.stringify(route.filters)}`
       case 'herramienta': return `${route.name}:${route.toolId}:${JSON.stringify(route.filters)}`
-      case 'leccion': return `${route.name}:${route.slug}:${route.level}`
       case 'buscar': return `${route.name}:${route.query}:${JSON.stringify(route.filters)}`
-      case 'carpeta': return `${route.name}:${route.folderId}:${JSON.stringify(route.filters)}`
       case 'guia': return `${route.name}:${route.guideId || 'indice'}`
       case 'curso': return `${route.name}:${route.lessonId || 'indice'}`
       default: return route.name
@@ -531,7 +492,6 @@ function Shell() {
   }
 
   // Las presentaciones ocupan la pantalla entera: sin barra lateral ni cabecera.
-  if (route.name === 'presentar') return <Presentar slug={route.slug} level={route.level} />
   if (route.name === 'deck') return <Deck deckId={route.deckId} />
 
   return (

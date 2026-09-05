@@ -33,7 +33,7 @@ export default function Deck({ deckId }: { deckId: string }) {
         setIndex((value) => Math.max(0, value - 1))
       }
       if (event.key.toLowerCase() === 'n') setShowNotes((value) => !value)
-      if (event.key === 'Escape') window.location.hash = href({ name: 'ruta' })
+      if (event.key === 'Escape') window.location.hash = href({ name: 'curso' })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -44,7 +44,7 @@ export default function Deck({ deckId }: { deckId: string }) {
       <div className="st-page">
         <div className="st-empty">
           <h2>{locale === 'en' ? 'This presentation does not exist' : 'Esa presentación no existe'}</h2>
-          <a className="st-btn" href={href({ name: 'ruta' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
+          <a className="st-btn" href={href({ name: 'curso' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
         </div>
       </div>
     )
@@ -69,7 +69,7 @@ export default function Deck({ deckId }: { deckId: string }) {
             {locale === 'en' ? 'Notes' : 'Notas'}
           </button>
           <b>{index + 1} / {deck.slides.length}</b>
-          <a href={href({ name: 'ruta' })} aria-label={locale === 'en' ? 'Exit the presentation' : 'Salir de la presentación'}><X size={16} /></a>
+          <a href={href({ name: 'curso' })} aria-label={locale === 'en' ? 'Exit the presentation' : 'Salir de la presentación'}><X size={16} /></a>
         </div>
       </header>
 

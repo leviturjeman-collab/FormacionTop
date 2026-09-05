@@ -124,20 +124,21 @@ export default function Inicio() {
             <span className="st-kicker">Programa</span>
             <h2>Las diez áreas</h2>
           </div>
-          <a href={href({ name: 'ruta' })}>Ver la ruta completa</a>
+          <a href={href({ name: 'curso' })}>Ver la ruta completa</a>
         </div>
-        <p className="st-area-preview-note">Estas áreas son el mapa completo. Para empezar, usa Programa o Mi proyecto; vuelve aquí cuando quieras profundizar.</p>
+        <p className="st-area-preview-note">Los diez bloques del programa, en orden. Cada uno se apoya en el anterior, así que se recorren de arriba abajo.</p>
         <div>
           {course.stages.map((stage) => {
-            const total = stage.lessonSlugs.length * 3
-            const done = stage.lessonSlugs.reduce((sum, slug) => sum + (student.lessons[slug]?.done.length || 0), 0)
-            const stagePercent = total ? Math.round((done / total) * 100) : 0
+            const enBloque = (course.curso || []).filter((leccion) => !leccion.tool && leccion.stageId === stage.id)
+            const hechas = enBloque.filter((leccion) => (student.lessons['curso:' + leccion.id]?.done.length || 0) > 0).length
+            const stagePercent = enBloque.length ? Math.round((hechas / enBloque.length) * 100) : 0
+            const minutos = enBloque.reduce((suma, leccion) => suma + (leccion.minutes || 0), 0)
             return (
-              <a key={stage.id} href={href({ name: 'area', stageId: stage.id, filters: {} })}>
+              <a key={stage.id} href={href({ name: 'curso', lessonId: enBloque[0]?.id })}>
                 <span>{stage.number}</span>
                 <div>
                   <strong>{stage.title}</strong>
-                  <small>{stage.categoryIds.length} categorías · {stage.lessonSlugs.length} lecciones · {stage.tagline}</small>
+                  <small>{enBloque.length} lecciones · {minutos} min · {stage.tagline}</small>
                 </div>
                 <i><b style={{ width: `${stagePercent}%` }} /></i>
                 <b>{stagePercent}%</b>

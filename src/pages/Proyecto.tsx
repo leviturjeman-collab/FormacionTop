@@ -26,7 +26,7 @@ export default function Proyecto({ stageId }: { stageId: string }) {
         <div className="st-empty">
           <h2>{locale === 'en' ? 'There is no project for this area yet' : 'Todavía no hay proyecto para esta área'}</h2>
           <p>{locale === 'en' ? 'It is being written. In the meantime, the lessons in this area are already complete.' : 'Se está escribiendo. Mientras tanto, las lecciones del área ya están completas.'}</p>
-          <a className="st-btn" href={href({ name: 'ruta' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
+          <a className="st-btn" href={href({ name: 'curso' })}>{locale === 'en' ? 'Back to the path' : 'Volver a la ruta'}</a>
         </div>
       </div>
     )
@@ -38,7 +38,7 @@ export default function Proyecto({ stageId }: { stageId: string }) {
     <div className="st-page">
       <nav className="breadcrumb st-lesson-meta">
         {stage && (
-          <a href={href({ name: 'area', stageId, filters: {} })}>
+          <a href={href({ name: 'curso' })}>
             {stage.number}. {stage.title}
           </a>
         )}

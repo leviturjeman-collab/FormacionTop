@@ -150,7 +150,7 @@ function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle
               <span>{locale === 'en' ? 'Explained in' : 'Se explica en'}</span>
               <div>
                 {entry.lessons.map((lesson) => (
-                  <a key={lesson.slug} href={href({ name: 'leccion', slug: lesson.slug })}>
+                  <a key={lesson.id} href={href({ name: 'curso', lessonId: lesson.id })}>
                     {lesson.title}
                   </a>
                 ))}
