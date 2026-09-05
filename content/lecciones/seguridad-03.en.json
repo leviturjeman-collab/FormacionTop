@@ -1,0 +1,119 @@
+{
+  "id": "seguridad-03",
+  "number": 42,
+  "stageId": "seguridad",
+  "title": "What this costs and how not to get a nasty surprise",
+  "promise": "You'll understand why you're charged what you're charged, work out what your setup will cost you per month before you build it, and leave the brakes in place. By the end you'll have your sums done with real numbers and the caps switched on.",
+  "minutes": 35,
+  "why": "Álvaro built a workflow that summarised every email that came in. It looked cheap in testing: four emails, a few cents. He left it running on a Friday. On Monday he had $210. He was getting three hundred emails a day, nearly all of it marketing, and every one went through the expensive model. The sum he didn't do was a multiplication of three numbers that were sitting right in front of him: how many times a day, how much each time, how many days a month.",
+  "theory": [
+    {
+      "title": "You pay for text, not for questions",
+      "text": "These tools don't charge per query: they charge for the amount of text going in and coming out. The unit is tokens, which are pieces of words; in English, a thousand tokens is roughly seven hundred and fifty words. And you're charged twice: what goes in has one price and what comes out has another, usually higher. This explains something that throws everybody: two equally short questions can cost ten times differently, if one has a twenty-page document attached and the other doesn't. What inflates the bill is almost never the number of questions, it's the size of what's attached to each one.",
+      "analogy": "It's like sending parcels: you don't pay for how many you send, you pay for what they weigh. A hundred thin envelopes cost less than three big boxes.",
+      "example": "Asking «summarise this» with a five-line email costs a fraction of a cent. The same question with a forty-page contract costs hundreds of times more."
+    },
+    {
+      "title": "The sum to do before building anything",
+      "text": "It's three numbers multiplied and it takes two minutes. How many times a day it will run. How much text goes in and out each time. And how many days a month. The key is the first: people calculate with the number of times they're going to test it, not the number of times it will actually happen once it's running on its own. Álvaro thought about four emails and he was getting three hundred. And you always do the worst-case sum, not the normal-case one: what happens on the day five times the usual arrives, because that day comes.",
+      "example": "Álvaro should have calculated: 300 emails × 30 days = 9,000 runs a month. With that in front of him, the decision about which model to use would have been different from the start."
+    },
+    {
+      "title": "The expensive model for the hard part and the cheap one for everything else",
+      "text": "Within a single brand there are models at very different prices, and the gap between the small and the large one can be ten or twenty times. The general habit is to use the best for everything, and that's where most of the money goes without buying anything. Classifying, extracting a value, deciding whether an email is marketing or not, putting a text into a format: the small model does all of that just as well. The large one is needed for reasoning, writing well or analysing something complex. The move that works best is two steps: the small one filters and only what passes the filter goes to the large one. In Álvaro's case, the small one would have discarded 80% of the emails for a few cents.",
+      "example": "Filtering 300 emails with the small model and summarising with the large one only the 60 that matter: the bill drops by more than 80% and the result is the same."
+    },
+    {
+      "title": "The three holes the money goes through",
+      "text": "Almost every surprise invoice comes from three places. First, the loop: a workflow that calls itself, or that's triggered by something it causes itself. That's the one that can multiply by a hundred overnight and it's the main reason the hard cap exists. Second, sending the whole context every time: if you attach the same twenty pages of instructions to every question, you're paying for those twenty pages on each of the month's nine thousand runs. And third, processing things that didn't need processing: marketing, duplicates, automatic notifications. A dumb filter at the start of the workflow, the kind that costs nothing, removes most of the spend.",
+      "example": "A workflow that answers emails and whose reply lands in the same inbox it's watching: it answers itself indefinitely. It's the classic, and without a hard cap it's a four-figure invoice."
+    },
+    {
+      "title": "Subscription or pay-per-use, and when it changes",
+      "text": "There are two ways to pay and it's worth being clear when each suits. The subscription is a fixed amount per month with a usage cap: you know what you're paying and there are no surprises, but if you go over it throttles you. Pay-per-use never throttles you, and that, which sounds good, is precisely the danger: it doesn't throttle you even when something runs away. For working by hand yourself, the subscription almost always works out better and is calmer. For setups that run on their own you need pay-per-use, and that's why the hard cap isn't optional there. Plenty of people have both at once and that's the sensible arrangement: a subscription for their daily work and a key with a low cap for the automated part.",
+      "example": "Nuria: Claude Pro for querying her documents, and a key with a $25 cap for the two workflows she has running on their own."
+    },
+    {
+      "title": "Measure before optimising",
+      "text": "Before changing anything to save money, look at where the spending comes from. Every service has a usage screen saying how much you've spent and, on many, on what. Without looking at it you'll end up optimising the wrong thing: people cut back on the questions they ask by hand, which are four a day, while the automated workflow takes ninety per cent without anyone looking. With that screen in front of you the fix is usually obvious and usually singular.",
+      "analogy": "It's checking the electricity bill before changing the light bulbs. The spending may not be in the bulbs at all, but in an old water heater that's been on all month.",
+      "example": "Álvaro looked at the usage screen: of his $210, $196 was the email workflow and $14 everything else. There was nothing to optimise but one thing. Had he started where everyone starts — shortening the questions he asked by hand — he'd have worked an afternoon to save seventy cents."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Look at what you've spent and on what",
+      "where": "On each service's website",
+      "action": "Go into the usage or billing section of each service and note two things: how much you've spent this month and, if it breaks it down, what share goes to each model or each key. If you have separate keys per place, as in lesson 40, this is where that starts paying for itself: you'll see which specific setup is taking the money.",
+      "expect": "A figure per service and, with luck, the breakdown. What's usual is discovering that nearly all the spending comes from one single place.",
+      "stuck": "If the breakdown doesn't distinguish, create one key per setup from today and in a month you'll have it separated. Meanwhile, use the dates: see whether the spending started rising the day you activated something."
+    },
+    {
+      "title": "Do the worst-month sum",
+      "where": "In a spreadsheet or on paper",
+      "action": "For every setup you have running on its own, write four numbers: how many times a day it actually runs (not in your tests), roughly how much text goes in and out per run, how many days a month, and which model it uses. Multiply. And then do the same sum with the daily runs multiplied by five: that's the bad month, the one with the campaign, the breakdown or the bot that finds your form.",
+      "expect": "Two figures per setup: normal month and bad month. The second is the one that tells you where to put the hard cap.",
+      "stuck": "If you don't know how much text goes in per run, look at a real run in your tool's history and count roughly: half a page is about 350 words, around 500 tokens. You don't need precision, you need the order of magnitude."
+    },
+    {
+      "title": "Have the AI do the sum and propose the cut",
+      "where": "In ChatGPT or Claude",
+      "action": "Describe your setup with the numbers from the previous task and ask for the calculation and the saving, with one condition: that it doesn't propose changes that make the result worse.",
+      "prompt": "I have an automated setup and I want to know what it's going to cost me and where to cut without losing quality.\n\nTHE SETUP: [describe what it does, step by step]\nRUNS PER DAY: [real number, not the one from your tests]\nTEXT PER RUN: about [X] words in, about [Y] words out\nMODEL I USE: [name]\nDAYS PER MONTH: [number]\n\nGIVE ME, in this order:\n1. The estimated cost of a normal month and of a month where it multiplies by five. Show me the multiplication, not just the result.\n2. Which steps of my setup could be done with a cheaper model without the result getting worse. Tell me which ones must NOT be changed and why.\n3. Whether it's worth putting a filter before calling the model, and exactly what it would filter out.\n4. Where you'd put the hard spending cap, with a figure.\n\nIf my numbers aren't enough to calculate something, say what's missing. Don't invent prices: if you're not sure of the current price, say so and give me the formula so I can put the number in.",
+      "expect": "A calculation with the multiplication visible and two or three concrete cuts. The commonest: putting a cheap filter before the expensive step.",
+      "stuck": "If it gives you prices that don't match what you see on your invoice, don't argue: take them from the provider's website and say «use these prices: input X, output Y». The formula is what you want from it, not the price."
+    },
+    {
+      "title": "Put the cheap filter in",
+      "where": "In your workflow",
+      "action": "Apply the main cut, which is almost always the same: putting a step at the start of the workflow that discards what doesn't need processing, before calling the expensive model. It can be a dumb condition (if the subject contains «newsletter», stop) or a call to the small model to classify. What matters is that what's discarded never reaches the expensive step.",
+      "expect": "The workflow with a filter step at the start. Run it with ten real cases and count how many reach the expensive step: if ten used to and now three do, you've just cut 70%.",
+      "stuck": "If you're worried the filter will discard good things, have it send them to a folder or a separate sheet for a week instead of discarding them. At the end of the week you look at what it set aside and adjust. That way you lose nothing while you check."
+    },
+    {
+      "title": "Leave both brakes in place",
+      "where": "On each service's website and in your workflow",
+      "action": "Two things. First, the hard cap and the warning at half, using the bad-month figure you calculated. If you did this in lesson 38, check the figure still makes sense against what you've now worked out. Second, in the workflow itself, set a run limit: nearly every tool lets you limit how many times it runs per hour. That's what stops a loop before it reaches the spending cap.",
+      "expect": "Money cap and run limit both set. The two brakes act in different places: one cuts the spending and the other cuts the cause.",
+      "stuck": "If your tool won't limit runs, add a step at the start of the workflow that counts how many have gone today in a spreadsheet and stops above a number. It's crude and it has saved a lot of invoices."
+    },
+    {
+      "title": "Note the figure and set the review",
+      "where": "In your working file and in your calendar",
+      "action": "Write down what the setup costs you per month, with the date. Add the spending review to the monthly review list you built in lesson 38. When a month has passed, compare what you calculated with what actually happened: that's the figure that teaches you to calculate better next time.",
+      "expect": "A line with the figure and the review in your calendar. By the second month your estimates will be quite good, because you'll have checked them against reality twice.",
+      "stuck": "If the real figure is far from the calculated one, it's almost always the number of runs, not the price. Go back to the history and see how many times it actually ran: that's where the difference is."
+    }
+  ],
+  "matters": [
+    "That you pay for the amount of text, and what inflates the bill is what's attached to each call.",
+    "That the sum uses the real number of runs, not your test ones, and multiplied by five for the bad month.",
+    "That the small model filters, classifies and extracts just as well, for a fraction of the price.",
+    "That a loop without a hard cap is the only way to end up with a four-figure invoice."
+  ],
+  "ignore": [
+    "Optimising the questions you ask by hand. They're small change next to the automated ones.",
+    "Chasing the cheapest model on the market. The big difference is in filtering, not in switching brand.",
+    "Memorising exact prices. They change: what stays is the formula."
+  ],
+  "canDo": [
+    "Work out what a setup will cost you before leaving it running.",
+    "Know which part of your bill each setup is taking.",
+    "Cut most of the spending with a filter at the start of the workflow.",
+    "Bound the damage of a loop with a money cap and a run limit."
+  ],
+  "cantDo": [
+    "Predict the spending exactly. You calculate the order of magnitude and set a cap.",
+    "Avoid a charge for a month that has already passed.",
+    "Use the small model for reasoning or writing well.",
+    "Trust an estimate you haven't compared against a real invoice."
+  ],
+  "words": [
+    ["Token", "A piece of a word. The unit you're charged in. In English, about 750 words is 1,000 tokens."],
+    ["Input and output", "The text you send and the text it returns. They're charged separately and the output is usually dearer."],
+    ["Loop", "A workflow that triggers itself. The number one cause of surprise invoices."],
+    ["Pre-filter", "The cheap step that discards what doesn't need processing before calling the expensive model."],
+    ["Hard cap", "The limit that switches the service off at a given figure. The only thing that genuinely cuts spending."]
+  ],
+  "next": "You know what it costs and the brakes are on. Lesson 43 closes the block with what has to be said to people: when you have to disclose there's an AI behind this, and what you answer when someone asks."
+}

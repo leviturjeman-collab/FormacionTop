@@ -1,0 +1,118 @@
+{
+  "id": "seguridad-05",
+  "number": 44,
+  "stageId": "seguridad",
+  "title": "Reviewing what the AI decides for you",
+  "promise": "You'll decide which steps of your setup can't run without a person saying yes, and you'll build that pause. By the end you'll have at least one approval point working and you'll know how much it actually slows you down.",
+  "minutes": 35,
+  "why": "Nuria automated the renewal reminders to her clients. The workflow read the date, drafted the email and sent it. One Thursday a reminder went out to 84 clients saying their deadline expired «on 30 February». The date had been miscalculated by one step of the workflow. There was no error, no alarm fired: the email went out perfectly drafted and perfectly delivered. What was missing wasn't a technical check: it was someone glancing at the first few before all eighty-four went.",
+  "theory": [
+    {
+      "title": "Automatic doesn't mean unwatched",
+      "text": "There's an idea that creeps in while learning this: that a good setup is one that runs without anyone touching it. And for anything that goes outwards, it's the other way round. Automating exists to take the repetitive work off you, not to take the final decision off you. The right question isn't «can I automate this end to end?», it's «at which point do I still want to be here?». There's almost always a single point, it's the last one, and it costs thirty seconds a day. Everything before it gets automated.",
+      "analogy": "It's the difference between a washing machine and an oven. You leave the washing machine alone. You leave the oven alone too, but before you serve the dish you look at it. Nobody carries a tray to the table without looking at it, however well the oven works.",
+      "example": "Nuria automated reading dates, choosing clients and drafting. What she put back under her own hand was pressing send after looking at the first three."
+    },
+    {
+      "title": "The three steps you don't leave alone",
+      "text": "You don't have to review everything: you have to review three things and they're easy to recognise. First, anything going outwards under your name: emails, messages, posts, replies to clients. Second, anything that moves money or commits you: invoices, payments, quotes, confirmations. And third, anything that deletes or modifies something in a way that can't be undone. Everything else — classifying, sorting, summarising for yourself, preparing drafts, moving files between your own folders — can safely be left alone. Apply that list and you'll see there are one or two points to review in your setups, not ten.",
+      "example": "In Nuria's workflow: reading dates (alone), choosing who to remind (alone), drafting (alone), SENDING (with approval). One point out of four."
+    },
+    {
+      "title": "Approve in batches, not one by one",
+      "text": "The fear is that reviewing kills the advantage of automating, and it does if you build it badly. Approving eighty emails one at a time is worse than doing it by hand. The way that works is approving in a batch with a sample: the workflow prepares all eighty-four, shows you three and the total, and you press one button. If the three are right, the eighty-four almost certainly are too, because the same process made them all. And if one of the three is wrong, you've avoided the whole disaster. Thirty seconds for eighty-four emails is a ridiculous price for not sending «30 February».",
+      "example": "The notice Nuria gets: «84 emails ready. Sample: [three complete emails]. Dates found: 12 to 28 March. Send?» One glance and one click."
+    },
+    {
+      "title": "The summary has to show the odd, not the normal",
+      "text": "A good approval point doesn't show you three at random: it shows you the ones that stand out. The first, the last and the strangest. And above all, the aggregate numbers, which is where disasters show: how many there are, what date range, how many go to the same address, whether any has an empty field. A disaster is almost never visible by looking at one item; it's visible by looking at the total. «84 emails, all to the same address» or «84 emails and 12 with an empty name» jump out of a summary and are invisible one by one.",
+      "example": "If Nuria's summary had said «date range: 30 February», she'd have seen it without reading a single email."
+    },
+    {
+      "title": "What happens if you don't approve",
+      "text": "An approval point needs to know what to do with what you don't approve, and this always gets forgotten. There are three options and you have to choose one: discard everything, keep it to look at later, or leave it pending and ask you again tomorrow. The worst is for it to sit in limbo, because then you don't know whether it went out or not. And there's one more case to decide: what happens if you don't reply. The cautious answer is almost always that nothing goes out, but there are processes where doing nothing also does damage, and there you have to set a deadline and get notified by another route.",
+      "example": "Nuria: if she doesn't approve, the batch stays in a sheet marked as pending and she gets reminded the next day. Nothing goes out without a yes."
+    },
+    {
+      "title": "The approval point can be loosened over time",
+      "text": "This isn't forever and it doesn't have to be all or nothing. The sensible way to work is to start by reviewing everything and loosen as you build up measured confidence, not felt confidence. If you've spent two months approving and haven't rejected a single one, you can move to reviewing a weekly sample. And the other way round: the moment you reject one, you go back to reviewing everything for a while. What decides is your rejection record, not the feeling that it's going fine now. And there are things you never loosen: anything that moves money and anything that can't be undone.",
+      "example": "Álvaro approved every reply from his assistant. After six weeks without correcting one, he moved to reviewing only the ones touching on injuries. The opening-hours ones he let go."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Mark the steps that don't get left alone",
+      "where": "In your workflow or on paper",
+      "action": "Draw or list your setup's steps, start to finish. Next to each one note whether it goes outwards under your name, whether it moves money or commits you, or whether it deletes or modifies something with no way back. The ones with any mark are the ones that need approval. The rest don't.",
+      "expect": "A list with one or two steps marked. If you end up with five, check whether they genuinely meet one of the three criteria or you're marking them out of general caution.",
+      "stuck": "If you're unsure about a step, ask yourself this: if this step ran wrong a hundred times tonight, could I undo it tomorrow? If not, it gets marked."
+    },
+    {
+      "title": "Cut the workflow just before the marked step",
+      "where": "In your automation tool",
+      "action": "Split your workflow in two. The first does all the work up to the marked step, leaves the result prepared somewhere (a spreadsheet, a draft, a folder) and notifies you. The second is the one that runs the marked step, and you launch it. In n8n that's a workflow ending by writing to a sheet and another with a manual trigger that reads that sheet and sends. In Make or Zapier, the same idea.",
+      "expect": "Two workflows instead of one. Run the first and check it leaves the work prepared without sending anything.",
+      "stuck": "If your tool has an approval-wait step, use it and save yourself the split. If it doesn't, the two-workflow version works just as well and it also lets you look at what's prepared at your own pace."
+    },
+    {
+      "title": "Write the summary you're going to look at",
+      "where": "In the first workflow's notification step",
+      "action": "Have the notice carry five things: how many items there are, the range of the key values (dates, amounts, recipients), how many have an empty field, three complete samples (the first, the last and one from the middle), and the link or place to approve. The aggregate numbers go at the top, above the samples.",
+      "prompt": "BATCH READY FOR REVIEW\nItems: [NUMBER]\nRange of [dates / amounts]: from [MIN] to [MAX]\nWith an empty field: [NUMBER]\nDistinct recipients: [NUMBER]\n\nSAMPLE (first, middle and last):\n[THE THREE COMPLETE ITEMS]\n\nTo approve: [WHERE]\nIf I don't approve: [WHAT HAPPENS]",
+      "expect": "A notice you can read in twenty seconds and where a disaster jumps out. Check the range: it's the field that would have saved Nuria.",
+      "stuck": "If you don't know how to calculate the aggregates in your tool, the easy way out is to write the batch to a spreadsheet and put the formulas there (count, min, max, count blanks). The notice sends you to the sheet and you look."
+    },
+    {
+      "title": "Decide and build what happens if you don't approve",
+      "where": "In your workflow",
+      "action": "Choose one of the three options (discard, keep for review, ask again tomorrow) and actually build it. And decide what happens if you don't reply: the cautious choice is that nothing goes out, but write it down so it isn't left to chance. Add a status marker to each batch: pending, approved or discarded.",
+      "expect": "A pending batch in your sheet or folder, with its status. Nothing can sit in limbo without you knowing whether it went out.",
+      "stuck": "If you're worried about forgetting to approve, set the notice for a time when you're at your desk and add a second notice if the batch is still pending the next day. Having it nag you is better than having it go out without your sign-off."
+    },
+    {
+      "title": "Test it with a fake batch containing an error",
+      "where": "In your workflow",
+      "action": "Prepare a test batch of ten items and deliberately put in an error of the kind the summary would show: an impossible date, an amount with an extra zero, three items with an empty name. Run the first workflow and look at the notice you get. What you're testing isn't the workflow: it's whether your summary would have warned you.",
+      "expect": "The error jumping out of the summary, without having to open anything. If you can't see it, your summary is missing the relevant field: add it and repeat.",
+      "stuck": "If the error is only visible by opening the items one by one, you're missing an aggregate. Add the one that would have caught it: usually a minimum, a maximum or a count of empty fields."
+    },
+    {
+      "title": "Start the approvals record",
+      "where": "In a spreadsheet",
+      "action": "One row per batch: date, how many items, approved or rejected, and if you rejected, why. This sheet is what decides in two months whether you can loosen the approval point. Without it, that decision gets made on a feeling, which is how bad decisions get made.",
+      "expect": "A sheet with its first rows. The rule you can use: after twenty consecutive batches without a single rejection, you can move to sampling. With one rejection, you go back to reviewing everything.",
+      "stuck": "If keeping a record feels excessive, weigh it against what building all this cost you and what sending eighty-four wrong emails would cost. The sheet is five seconds per batch."
+    }
+  ],
+  "matters": [
+    "That automating removes the repetitive work, not the final decision about what goes out under your name.",
+    "That only three kinds of step need approval: what goes outwards, what moves money and what can't be undone.",
+    "That you approve in batches with a sample and aggregates, not one by one.",
+    "That loosening control is done with a rejection record, not with the feeling that it's going fine."
+  ],
+  "ignore": [
+    "Approval systems with roles and permissions. A notice and a button will do.",
+    "Reviewing internal steps that only move data between your own places.",
+    "Approving item by item: it kills the advantage and catches no more."
+  ],
+  "canDo": [
+    "Know exactly which steps of your setup can't run on their own.",
+    "Review eighty items in thirty seconds with a well-built summary.",
+    "Spot a disaster from the aggregate numbers before it goes out.",
+    "Decide when to loosen control with data rather than by feel."
+  ],
+  "cantDo": [
+    "Spot an error that isn't reflected in the summary you built.",
+    "Delegate responsibility: what goes out under your name is still yours.",
+    "Ever fully loosen what moves money or has no way back.",
+    "Approve properly if the notice reaches somewhere you don't look."
+  ],
+  "words": [
+    ["Approval point", "The step where the workflow stops and waits for a person to say yes."],
+    ["Batch approval", "Reviewing a sample and the group's numbers, and approving the lot at once."],
+    ["Aggregate", "The figure for the whole set: how many, minimum, maximum, how many empty. Where disasters show."],
+    ["Batch status", "Pending, approved or discarded. Without a status you don't know whether something went out."],
+    ["Rejection record", "The sheet where you note what you stopped and why. What lets you loosen control on evidence."]
+  ],
+  "next": "Block closed: keys stored, data sorted, spending bounded, warnings in place and the important decisions in your hands. Block 10 turns everything you've built into something you can show, defend and charge for."
+}

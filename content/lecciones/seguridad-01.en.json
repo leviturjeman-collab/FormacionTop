@@ -1,0 +1,117 @@
+{
+  "id": "seguridad-01",
+  "number": 40,
+  "stageId": "seguridad",
+  "title": "Access keys: where they never go",
+  "promise": "You'll get your keys out of where they shouldn't be, keep them in one safe place, and know what to do in the ten minutes after leaking one. By the end you'll have done the full sweep and rotated one key.",
+  "minutes": 35,
+  "why": "A student uploaded his project to GitHub to show a client. Inside a configuration file was his OpenAI key, typed in by hand because «it was only for testing». In nine hours he had $340 of usage. The bots crawling GitHub for keys don't take days: they take minutes. It wasn't bad luck and it wasn't an attack aimed at him. It was the normal workings of the internet applied to a file that should never have left his computer.",
+  "theory": [
+    {
+      "title": "What a key is and why it's worth money",
+      "text": "An access key, what you'll see called an API key, is a password you give a program so it can act on your behalf in another service. It isn't your personal password: it's a permission anyone holding it can use, from anywhere, without warning you. There's no second check, no notification email, no code to your phone. Whoever has it, is you. And on pay-per-use services, being you means spending your money. That's the important difference from an ordinary password: a stolen password is stolen from you; a stolen key gets used, and the charge lands all the same.",
+      "analogy": "It's a copy of the warehouse key with your name on the invoice. It doesn't matter who opens it: whatever they take, you pay for, and nobody calls to ask whether it was you going in at four in the morning.",
+      "example": "$340 in nine hours, with the key in a file inside a public repository. No warning at all until the charge email arrived."
+    },
+    {
+      "title": "The four places they always end up",
+      "text": "Keys almost always leak by the same four routes, and none of them is sophisticated. First, typed inside a project file that later gets pushed to GitHub. Second, pasted into a chat with an AI to ask for help with an error, with the key inside the message. Third, in a screenshot sent over WhatsApp or put into a tutorial. And fourth, in an error message copied verbatim into a forum, because many errors include the full request. In all four the pattern is the same: the key travels attached to something else, and you were looking at the something else.",
+      "example": "«I copied the whole error so people could help me» is leak route number three, and the one fewest people see coming."
+    },
+    {
+      "title": "The only place they go: environment variables",
+      "text": "The answer isn't hiding them better inside the project: it's them not being inside it at all. Keys go in environment variables, which is a separate place the program reads them from when it starts. In a local project that means a file called dot env, which never gets uploaded because it's listed in the exclusions file. On Vercel, Netlify or any hosting, it's a settings screen where you paste them and that's that. In n8n or Make, it's the credentials section, which stores them encrypted and shows them as dots. The rule is one line: if a key appears written in a file you can open in a text editor and read, it's in the wrong place.",
+      "example": "Bad: a line in the code with the key typed in. Good: the line reads a variable, and that variable's value lives in the settings panel, outside the project."
+    },
+    {
+      "title": "One key per place, with the minimum permission",
+      "text": "Two habits that cost a minute and are worth a great deal. First: a different key for every place you use it. One for your computer, another for what's published, another for each workflow. That way, if one leaks, you revoke that one and everything else carries on working, instead of having to reconnect the lot at once under pressure. Second: give the minimum permission. Many services let you create read-only keys, or ones limited to one part. If your setup only reads, the key has no business being able to delete. And name them when you create them, because a list of eight keys called «key1» is impossible to manage the day you're in a hurry.",
+      "example": "«nuria-laptop», «n8n-reminders», «published-site». When the odd-usage warning fires, you know which to revoke without touching the other two."
+    },
+    {
+      "title": "The ten minutes after leaking one",
+      "text": "It's going to happen, and what matters is the reaction. The right order is this and the order matters. First: revoke the key on the service's website, the revoke or delete button. Not change it, revoke it. Second: create a new one and put it where it belongs, in the environment variable. Third: look at the last few hours' usage in case it's already been used. And fourth, the one almost everyone skips: if it was in a git repository, deleting it from the file doesn't delete it from the history. It's still there, recoverable, forever. That's why the first step is to revoke and not to delete the file: as long as the key is revoked, it doesn't matter who finds it.",
+      "example": "Deleting the key and making a commit saying «removed the key» is worse than doing nothing: it doesn't take it out of the history and it flags where it was."
+    },
+    {
+      "title": "What you don't paste into an AI",
+      "text": "When you ask an AI for help with an error, it's very easy to paste more than you meant to. Before pressing send, scan the text for four things: long strings of letters and numbers starting with sk-, api-, ghp- or similar; internal addresses from your company; people's data with names attached; and the contents of configuration files. Replacing them with something like KEY-REMOVED takes nothing away from the help you'll get: for diagnosing an error, the key's value contributes nothing. What contributes is the message and the three-digit code.",
+      "example": "«401 error with key sk-proj-abc123...» → «401 error with key KEY-REMOVED». The help is exactly the same."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Take an inventory of your keys",
+      "where": "In a text file, and on your services' websites",
+      "action": "Write the list of every service where you have a key created: OpenAI, Anthropic, n8n, GitHub, the hosting, whatever. Next to each, put where that key currently sits, honestly. If it's typed into a project file, write that down. This list doesn't contain the keys themselves, only the names and the places.",
+      "expect": "A list of between three and eight services. The usual surprise is finding keys created months ago for a test and still active.",
+      "stuck": "To find them, go into each service and look for the API keys section. You'll see how many you have and when each was last used. Revoke any that haven't been used in months right now: it's the most profitable tidy-up in the block."
+    },
+    {
+      "title": "Search for keys where they shouldn't be",
+      "where": "In your project folder",
+      "action": "Open your project folder and use the search to find suspicious text. In Windows search or Spotlight, search inside files for «sk-», «api_key», «apikey», «token» and «password». Also look at the configuration files and any notes files where you've been jotting things down. Note every place you find a key typed in.",
+      "expect": "With luck, zero results. What's normal is finding one or two, almost always in a test file from the first few days.",
+      "stuck": "If you use git, look at the history too: in GitHub Desktop, the History tab, and go back through old commits looking for configuration files. A key can be out of today's project and still inside yesterday's history."
+    },
+    {
+      "title": "Move them out to environment variables",
+      "where": "In your project and on your hosting",
+      "action": "For every key you found typed in: create or open the «.env» file in your project's root and put a line in it with the name and the value. Check that «.env» is listed in the «.gitignore» file; if that file doesn't exist, create it and write .env inside. In the code, replace the typed key with a read of that variable. And if the project is published, paste the same value into your hosting's environment variables screen.",
+      "expect": "No key typed into any file in the project. Check in GitHub Desktop that the «.env» file doesn't appear in the changes list: if it does, the .gitignore isn't right and you'd upload it again.",
+      "stuck": "If you don't know how a variable is read in your case, ask the AI, saying which language or tool you use, but without pasting it the key. And if your setup is n8n or Make, this is even easier: use the tool's own credentials section, which already stores them encrypted."
+    },
+    {
+      "title": "Rehearse revoking a key",
+      "where": "On one of your services' websites",
+      "action": "This is a drill, like the one in lesson 37. Take a key you use and revoke it for real: go into the service, revoke it, create a new one, and put it in place. Time it. What you're measuring is how long it would take you the day one leaks, and along the way you discover how many places had to be updated, which is almost always more than you thought.",
+      "expect": "Everything working again and a time noted down. Note also how many places you had to paste the new key into: that number tells you whether separate keys per place would suit you.",
+      "stuck": "If revoking it breaks three things at once and takes you half an hour, you've just discovered why one key per place is worth having. Create them separately now while you're at it."
+    },
+    {
+      "title": "Set the spending limit, if you haven't already",
+      "where": "On every pay-per-use service",
+      "action": "This is the net that catches you if everything above fails. If you did it in lesson 38, review it. If not, go into each service's billing section and set a hard monthly limit and a warning at half. This is the only measure that turns a $340 leak into a $35 one.",
+      "expect": "A limit and a warning set on each service, with the email address you actually read.",
+      "stuck": "If a service doesn't allow a hard limit, compensate elsewhere: use a prepaid card with a small balance or check the usage weekly. And keep a close eye on that account, because it's the one that can hurt you."
+    },
+    {
+      "title": "Write your leak protocol",
+      "where": "In a file called «if-a-key-leaks.txt»",
+      "action": "Four lines written to be read with your pulse racing: where each key is revoked (the exact web address for each service), where the new one has to be pasted, where you check the usage, and the reminder that deleting the file doesn't remove it from git history. Save it alongside the course's other files.",
+      "expect": "Four lines with concrete links. On the day it happens you won't be in a state to go hunting for which menu the revoke button was in.",
+      "stuck": "If you think it won't happen to you, bear in mind the commonest route isn't a big careless mistake: it's pasting a long error message into a chat without looking at what was inside it. It's a matter of time."
+    }
+  ],
+  "matters": [
+    "That a key is permission to act on your behalf and spend your money, with no second check.",
+    "That they leak by four routes and the commonest is pasting a long error into a chat.",
+    "That they go in environment variables, outside any project file.",
+    "That the first thing on a leak is to revoke, not delete: deleting the file doesn't take it out of the history."
+  ],
+  "ignore": [
+    "Professional secret managers. Environment variables and the tool's credentials will serve you.",
+    "Encrypting the keys yourself. The right place already stores them properly.",
+    "Rotating them monthly out of habit. Better few, well placed, and with a spending cap."
+  ],
+  "canDo": [
+    "Know how many live keys you have and where each one is.",
+    "Get them out of project files and into environment variables.",
+    "Revoke and replace a key in minutes, because you've rehearsed it.",
+    "Bound the damage of a leak with a spending limit."
+  ],
+  "cantDo": [
+    "Get back money already spent with a leaked key.",
+    "Remove a key from git history by deleting the file.",
+    "Find out it's being used if you have no usage warnings.",
+    "Eliminate the risk entirely: only reduce it and react fast."
+  ],
+  "words": [
+    ["Access key (API key)", "Permission for a program to act on your behalf in another service. Whoever has it, is you."],
+    ["Environment variable", "The separate place a key lives, outside the project's files."],
+    [".env", "The local file those variables go in. It never gets uploaded: it's in the .gitignore."],
+    ["Revoke", "Cancelling a key so it stops working. The first thing you do about a leak."],
+    ["Minimum permission", "Giving each key only what it needs. If your setup only reads, the key shouldn't be able to delete."]
+  ],
+  "next": "The keys are where they should be. In lesson 41 you go to what causes the most legal trouble: other people's data that you put into these tools, and what can go in and what can't."
+}
