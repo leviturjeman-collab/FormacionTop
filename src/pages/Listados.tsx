@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Clipboard, Search, X } from 'lucide-react'
 import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from '../types'
 import { useCourse, useIndexes } from '../course'
-import { href, type Route } from '../router'
+import { href, navigate, type Route } from '../router'
 import { useStudent } from '../store'
 import Filters, { applyFilters } from '../components/Filters'
 import LessonList from '../components/LessonList'
@@ -395,13 +395,10 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const student = useStudent()
   const doneSlugs = useDoneSet()
   const level: LevelId = student.preferredLevel || 'basico'
-  const [activePanel, setActivePanel] = useState('')
-  const [focused, setFocused] = useState(false)
-
-  useEffect(() => {
-    setActivePanel('')
-    setFocused(false)
-  }, [toolId])
+  // La seccion abierta se decide por la URL: asi cada apartado de la
+  // herramienta es una pantalla propia, enlazable, y al entrar en una no queda
+  // el mapa entero encima obligando a bajar.
+  const activePanel = route.name === 'herramienta' ? route.panel || '' : ''
 
   const tool = course.toolPages.find((item) => item.id === toolId)
   const progress = useProgressOf(tool?.lessonSlugs || [])
@@ -454,11 +451,10 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const currentPanel = activePanel || defaultToolPanel
   const currentMapItem = toolMapItems.find((item) => item.id === currentPanel)
 
-  function openPanel(id: string) {
-    setActivePanel(id)
-    setFocused(true)
-    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }))
-  }
+  const panelHref = (id: string) => href({ name: 'herramienta', toolId: tool.id, filters, panel: id })
+  const openPanel = (id: string) => navigate({ name: 'herramienta', toolId: tool.id, filters, panel: id })
+  // Sin seccion en la URL se ve solo el mapa; con seccion, solo esa seccion.
+  const focused = Boolean(activePanel)
 
   return (
     <div className={`st-page st-tool-page${focused ? ' is-focused' : ''}`}>
@@ -492,29 +488,25 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
 
       {focused && (
         <div className="st-inline-focusbar">
-          <button type="button" className="st-btn-ghost" onClick={() => setFocused(false)}>
+          <a className="st-btn-ghost" href={href({ name: 'herramienta', toolId: tool.id, filters })}>
             <ArrowLeft size={12} /> Volver al mapa de {tool.label}
-          </button>
+          </a>
           <span>{currentMapItem?.title || tool.label}</span>
         </div>
       )}
 
       <div className={`st-tool-focus-layout${focused ? ' focused' : ''}`}>
-      <section className="st-tool-map" aria-label={`Mapa de ${tool.label}`}>
-        {toolMapItems.map((item, index) => (
-          <button
-            key={item.id}
-            type="button"
-            className={currentPanel === item.id ? 'on' : ''}
-            onClick={() => openPanel(item.id)}
-            aria-pressed={currentPanel === item.id}
-          >
-            <span>{index + 1}</span>
-            <strong>{item.title}</strong>
-            <small>{item.detail}</small>
-          </button>
-        ))}
-      </section>
+      {!focused && (
+        <section className="st-tool-map" aria-label={`Mapa de ${tool.label}`}>
+          {toolMapItems.map((item, index) => (
+            <a key={item.id} href={panelHref(item.id)}>
+              <span>{index + 1}</span>
+              <strong>{item.title}</strong>
+              <small>{item.detail}</small>
+            </a>
+          ))}
+        </section>
+      )}
 
       <section className="st-tool-active-panel" aria-live="polite">
         {tool.guide && currentPanel === 'guia-herramienta' && (
@@ -546,9 +538,9 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
           </section>
         )}
 
-        {tool.guide && currentPanel === 'piezas' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="piezas" onSelectPanel={setActivePanel} />}
-        {tool.guide && currentPanel === 'prompts-herramienta' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="prompts" onSelectPanel={setActivePanel} />}
-        {tool.guide && currentPanel === 'automatizaciones' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="automatizaciones" onSelectPanel={setActivePanel} />}
+        {tool.guide && currentPanel === 'piezas' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="piezas" onSelectPanel={openPanel} />}
+        {tool.guide && currentPanel === 'prompts-herramienta' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="prompts" onSelectPanel={openPanel} />}
+        {tool.guide && currentPanel === 'automatizaciones' && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} section="automatizaciones" onSelectPanel={openPanel} />}
       </section>
       </div>
 

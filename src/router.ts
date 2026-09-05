@@ -34,7 +34,7 @@ export type Route =
   | { name: 'biblioteca' }
   | { name: 'carpeta'; folderId: string; filters: Filters }
   | { name: 'herramientas' }
-  | { name: 'herramienta'; toolId: string; filters: Filters }
+  | { name: 'herramienta'; toolId: string; filters: Filters; panel?: string }
   | { name: 'preguntas' }
   | { name: 'indice'; letter?: string }
   | { name: 'buscar'; query: string; filters: Filters }
@@ -120,7 +120,9 @@ export function parseHash(hash: string): Route {
     case 'herramientas':
       return { name: 'herramientas' }
     case 'herramienta':
-      return segments[1] ? { name: 'herramienta', toolId: segments[1], filters } : { name: 'herramientas' }
+      return segments[1]
+        ? { name: 'herramienta', toolId: segments[1], filters, panel: params.get('p') || undefined }
+        : { name: 'herramientas' }
     case 'preguntas':
       return { name: 'preguntas' }
     case 'indice':
@@ -174,8 +176,13 @@ export function href(route: Route): string {
       return `#/carpeta/${encodeURIComponent(route.folderId)}${writeFilters(route.filters)}`
     case 'herramientas':
       return '#/herramientas'
-    case 'herramienta':
-      return `#/herramienta/${encodeURIComponent(route.toolId)}${writeFilters(route.filters)}`
+    case 'herramienta': {
+      // La seccion abierta viaja en la query: cada apartado de una herramienta
+      // tiene su propio enlace y su propia pantalla.
+      const query = writeFilters(route.filters)
+      const panel = route.panel ? `${query ? '&' : '?'}p=${encodeURIComponent(route.panel)}` : ''
+      return `#/herramienta/${encodeURIComponent(route.toolId)}${query}${panel}`
+    }
     case 'preguntas':
       return '#/preguntas'
     case 'indice':

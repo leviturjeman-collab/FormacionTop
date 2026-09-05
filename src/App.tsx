@@ -395,8 +395,8 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
           <Menu size={15} />
         </button>
         {trail.map((part, index) => (
-          <span key={index} style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-            {index > 0 && '›'}
+          <span key={index} className="st-crumb">
+            {index > 0 && <i aria-hidden="true">›</i>}
             {index === trail.length - 1 ? <strong>{part}</strong> : part}
           </span>
         ))}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Ban, Check, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
+import { href } from '../router'
 import { store, useStudent } from '../store'
 
 type SearchResult = { prompt: PromptItem; family: PromptFamily }
@@ -140,7 +141,8 @@ export default function Prompts({ familyId }: { familyId?: string }) {
   const firstFamily = baseFamilias.find((item) => item.id === familyId) || baseFamilias[0]
   const [activeSection, setActiveSection] = useState(firstFamily?.sectionId || 'otros')
   const [cuantos, setCuantos] = useState(12)
-  const [focused, setFocused] = useState(false)
+  // Un bloque abierto es una pantalla propia, y la URL es quien lo dice.
+  const focused = Boolean(familyId)
 
   const activeId = active || familyId || baseFamilias[0]?.id || ''
   const familia = baseFamilias.find((item) => item.id === activeId) || baseFamilias[0]
@@ -198,7 +200,6 @@ export default function Prompts({ familyId }: { familyId?: string }) {
     setActive(id)
     setQuery('')
     setSelectedTool('all')
-    setFocused(true)
     const family = baseFamilias.find((item) => item.id === id)
     if (family?.sectionId) setActiveSection(family.sectionId)
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }))
@@ -211,9 +212,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
     setCuantos(12)
     setQuery('')
     setSelectedTool('all')
-    setFocused(true)
     if (first) setActive(first.id)
-    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }))
   }
 
   const searchResults = useMemo(() => {
@@ -320,9 +319,9 @@ export default function Prompts({ familyId }: { familyId?: string }) {
 
       {focused && (
         <div className="st-inline-focusbar">
-          <button type="button" className="st-btn-ghost" onClick={() => setFocused(false)}>
+          <a className="st-btn-ghost" href={href({ name: 'prompts' })}>
             <ArrowLeft size={12} /> Volver a todos los bloques
-          </button>
+          </a>
           <span>{familia?.title || selectedSection?.title || 'Prompts'}</span>
         </div>
       )}

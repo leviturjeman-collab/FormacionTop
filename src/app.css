@@ -40,8 +40,16 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
+/* La cabecera fija mide 58px. Sin este margen, cualquier `scrollIntoView` o
+   enlace a un ancla deja el destino debajo de ella y parece que el texto se
+   solapa con la barra. */
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+/* `overflow-x: clip` y no `hidden`. `hidden` obliga a `overflow-y: auto`, con
+   lo que el body pasa a ser contenedor de scroll y ningun `position: sticky`
+   de dentro vuelve a fijarse: la cabecera se iba hacia arriba al bajar y
+   dejaba el contenido pegado al borde. `clip` recorta igual sin crear
+   contenedor de scroll. */
+html, body, #root { width: 100%; max-width: 100%; overflow-x: clip; }
 
 body {
   margin: 0;
@@ -446,6 +454,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .st-header > div a:hover { color: var(--st-accent); text-decoration: underline; }
 .st-header > div strong { color: var(--st-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .st-header-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+
+/* Las migas. Estaban con estilo en linea, que ganaba a cualquier regla de la
+   hoja y hacia imposible recortarlas en movil: se encogian hasta solaparse
+   unas sobre otras dentro de la cabecera. */
+.st-crumb { display: inline-flex; align-items: center; gap: 7px; flex: none; }
+.st-crumb > i { font-style: normal; color: var(--st-line-dark); }
 .st-project-switch { min-height: 32px; padding: 0 10px; border: 1px solid var(--st-line); border-radius: var(--st-radius); background: var(--st-surface); display: flex; align-items: center; gap: 8px; font-size: 8px; text-decoration: none; }
 .st-project-switch:hover { border-color: var(--st-line-dark); }
 .st-project-switch.st-session-exit {
@@ -1089,9 +1103,11 @@ details.st-block { padding: 0; }
      idioma y el enlace de la ruta se quedaban en una cabecera de 58px y
      empujaban las migas a una segunda linea, encima del boton de menu. */
   .st-header > .st-header-actions { display: none; }
-  /* Las migas se quedan en una sola linea: en un movil solo cabe la ultima. */
+  /* Las migas se quedan en una sola linea. Solo la ultima puede encogerse: si
+     se encogen todas, se pisan entre ellas. */
   .st-header > div:first-child { flex-wrap: nowrap; white-space: nowrap; }
-  .st-header > div:first-child > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .st-header .st-crumb:last-child { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+  .st-header .st-crumb:last-child strong { min-width: 0; }
   .st-project-switch { min-width: 0; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .st-menu { width: 34px; height: 34px; padding: 0; border: 1px solid var(--st-line); background: white; display: grid; place-items: center; }
   .st-page, .st-lesson { padding: 28px 18px 55px; }
@@ -1103,7 +1119,8 @@ details.st-block { padding: 0; }
 
 @media (max-width: 520px) {
   /* Solo la ultima miga: el resto no cabe y era lo que provocaba el solape. */
-  .st-header > div:first-child > span:not(:last-child) { display: none; }
+  .st-header .st-crumb:not(:last-child) { display: none; }
+  .st-header .st-crumb > i { display: none; }
   .st-access-shell { padding: 0; place-items: stretch; }
   .st-access {
     width: 100%;
@@ -1117,7 +1134,9 @@ details.st-block { padding: 0; }
   .st-pin-card { padding: 14px; }
   .st-pin-input-wrap { min-height: 58px; }
   .st-pin-input-wrap input { font-size: 24px; letter-spacing: .16em; }
-  .student-main, .st-route-canvas, .st-page, .st-lesson, .st-start-panel, .st-home-grid, .st-next, .st-panel, .st-area-head, .st-block, .st-tool-prompts, .st-automation-library { max-width: 100%; overflow-x: hidden; }
+  /* `clip` en vez de `hidden`: `hidden` implica `overflow-y: auto`, lo que
+     convertia `.student-main` en contenedor de scroll y rompia la cabecera. */
+  .student-main, .st-route-canvas, .st-page, .st-lesson, .st-start-panel, .st-home-grid, .st-next, .st-panel, .st-area-head, .st-block, .st-tool-prompts, .st-automation-library { max-width: 100%; overflow-x: clip; }
   .st-route-canvas::before, .st-route-canvas::after, .st-motion-rail { display: none; }
   .st-section-head { flex-direction: column; gap: 8px; }
   .st-section-head > span { max-width: 100%; padding-top: 0; text-align: left; }
@@ -1296,7 +1315,11 @@ details.st-block { padding: 0; }
     100% { left: 130%; }
   }
 
-  body { animation: st-page-breathe .5s var(--st-motion-spring) both; }
+  /* El `body` no se anima. Con `both`, el transform del ultimo fotograma se
+     queda fijado, y un transform en un ancestro anula `position: fixed` y
+     `sticky` de todo lo de dentro: la cabecera dejaba de quedarse arriba y el
+     menu lateral perdia su anclaje. La entrada de pagina ya la hace
+     `.st-route-canvas`, que no contiene nada fijo. */
 
   .st-route-canvas {
     animation: st-route-enter .72s var(--st-motion-spring) both;
@@ -1816,7 +1839,7 @@ details.st-block-ejemplo { padding: 0; }
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
-.st-tool-map button {
+.st-tool-map a {
   min-height: 118px;
   padding: 14px;
   border: 0;
@@ -1827,9 +1850,10 @@ details.st-block-ejemplo { padding: 0; }
   gap: 5px;
   text-align: left;
   color: inherit;
+  text-decoration: none;
 }
-.st-tool-map button:last-child { border-right: 0; }
-.st-tool-map button:hover { background: var(--st-accent-soft); }
+.st-tool-map a:last-child { border-right: 0; }
+.st-tool-map a:hover { background: var(--st-accent-soft); }
 .st-tool-map span {
   width: 22px;
   height: 22px;
@@ -1841,6 +1865,12 @@ details.st-block-ejemplo { padding: 0; }
 }
 .st-tool-map strong { font: 600 12px/1.25 var(--display); }
 .st-tool-map small { color: var(--st-muted); font-size: 8px; line-height: 1.45; }
+/* Con una seccion abierta, la portada de la herramienta se reduce al titulo:
+   lo que el alumno ha pedido tiene que quedar a la vista sin deslizar. */
+.st-tool-page.is-focused .st-area-head { margin-bottom: 4px; }
+.st-tool-page.is-focused .st-area-head p,
+.st-tool-page.is-focused .st-area-stats { display: none; }
+
 .st-tool-guide, .st-tool-lessons { scroll-margin-top: 82px; }
 .st-tool-inside, .st-automation-library { margin-top: 38px; padding-top: 28px; border-top: 1px solid var(--st-line-dark); scroll-margin-top: 82px; }
 .st-tool-inside .st-section-head, .st-automation-library .st-section-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 28px; }
@@ -2237,8 +2267,8 @@ details.st-block-ejemplo { padding: 0; }
   .st-automation-principles > div:nth-child(-n+2) { border-bottom: 1px solid var(--st-line); }
   .st-tool-connection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .st-tool-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .st-tool-map button:nth-child(2) { border-right: 0; }
-  .st-tool-map button:nth-child(-n+2) { border-bottom: 1px solid var(--st-line); }
+  .st-tool-map a:nth-child(2) { border-right: 0; }
+  .st-tool-map a:nth-child(-n+2) { border-bottom: 1px solid var(--st-line); }
   .st-program-guide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .st-program-guide > div:nth-child(2) { border-right: 0; }
   .st-program-guide > div:nth-child(-n+2) { border-bottom: 1px solid var(--st-line); }
@@ -2758,7 +2788,7 @@ details.st-block-ejemplo { padding: 0; }
 
 /* --- Seguridad de ancho: nada se sale de la pantalla -------------------- */
 
-.st-lesson, .st-page { overflow-x: hidden; }
+.st-lesson, .st-page { overflow-x: clip; }
 h1, h2, h3, h4, .st-part-text, .st-part-list li, .st-lesson-row strong { overflow-wrap: anywhere; }
 .st-piece, .st-block, .st-cases, .st-calc, .st-term-grid, .st-lab-grid { min-width: 0; max-width: 100%; }
 .st-piece-head > div, .st-cases-tabs > *, .st-calc > *, .st-lab-grid > * { min-width: 0; }
@@ -3269,11 +3299,11 @@ details.st-block-primeros {
 .st-tool-focus-layout.focused .st-tool-map:focus-within {
   opacity: 1;
 }
-.st-tool-focus-layout.focused .st-tool-map button {
+.st-tool-focus-layout.focused .st-tool-map a {
   min-height: 64px;
   padding: 11px 12px;
 }
-.st-tool-map button {
+.st-tool-map a {
   min-height: 104px;
   border: 1px solid var(--st-line);
   background: var(--st-surface);
