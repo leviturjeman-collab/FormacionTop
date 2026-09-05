@@ -9,8 +9,18 @@ export function cleanPin(value, length = 6) {
   return String(value || '').replace(/\D/g, '').slice(0, length)
 }
 
+/**
+ * PIN de administrador. En produccion es obligatorio definir `ADMIN_PIN`: sin
+ * el, el valor por defecto seria un secreto conocido y publicado. Fuera de
+ * produccion se permite uno de desarrollo para poder levantar el proyecto.
+ */
 export function adminPin() {
-  return process.env.ADMIN_PIN || '5555'
+  const fromEnv = (process.env.ADMIN_PIN || '').trim()
+  if (fromEnv) return fromEnv
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    throw Object.assign(new Error('Falta la variable de entorno ADMIN_PIN.'), { status: 500 })
+  }
+  return '5555'
 }
 
 export function hashPin(pin) {

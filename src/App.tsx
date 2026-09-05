@@ -273,7 +273,9 @@ function StudentAccessGate() {
     setChecking(true)
     try {
       if (await store.unlockLearnerOnline(cleanPin)) {
-        if (cleanPin !== '5555' && route.name === 'admin') navigate({ name: 'inicio' })
+        // A quien entra como alumno no se le deja en la pantalla de admin.
+        // Quien es administrador lo dice el servidor, no un PIN escrito aqui.
+        if (route.name === 'admin' && !store.get().adminUnlocked) navigate({ name: 'inicio' })
         return
       }
       setError(t('access.pinNoEncontrado'))

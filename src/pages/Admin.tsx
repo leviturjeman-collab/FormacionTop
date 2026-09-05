@@ -77,9 +77,17 @@ function AdminAccess() {
     setChecking(true)
     try {
       const result = await unlockRemotePin(pin)
-      if (result.role === 'admin' && store.unlockAdmin(pin, result.sessionToken)) return
+      if (result.role === 'admin') {
+        store.unlockAdmin(pin, result.sessionToken)
+        return
+      }
     } catch {
-      if (store.unlockAdmin(pin)) return
+      // Sin respuesta del servidor no se abre el panel. El respaldo local que
+      // habia aqui aceptaba cualquier PIN desde que la comprobacion dejo de
+      // hacerse en el navegador.
+      setError('No se ha podido comprobar el PIN. Revisa la conexión.')
+      setPin('')
+      return
     } finally {
       setChecking(false)
     }
@@ -107,7 +115,7 @@ function AdminAccess() {
                 setError('')
                 setPin(event.target.value.replace(/\D/g, '').slice(0, 4))
               }}
-              placeholder="5555"
+              placeholder="••••"
               type="password"
             />
           </label>
@@ -135,7 +143,7 @@ function AdminPanel() {
   async function syncWithSupabase() {
     const adminAuth = getAdminAuthForSession()
     if (!adminAuth) {
-      setNotice('Entra de nuevo con el PIN 5555 para sincronizar Supabase.')
+      setNotice('Vuelve a entrar con tu PIN de administrador para sincronizar Supabase.')
       return
     }
 
@@ -241,7 +249,7 @@ function AdminPanel() {
     setDraft(emptyDraft(saved))
     const adminAuth = getAdminAuthForSession()
     if (!adminAuth) {
-      setNotice('Alumno guardado localmente. Entra de nuevo con 5555 para sincronizarlo con Supabase.')
+      setNotice('Alumno guardado en este navegador. Vuelve a entrar con tu PIN de administrador para sincronizarlo con Supabase.')
       return
     }
     try {
@@ -288,7 +296,7 @@ function AdminPanel() {
     setDraft((current) => ({ ...current, pin: generateLearnerPin(saved) }))
     const adminAuth = getAdminAuthForSession()
     if (!adminAuth) {
-      setNotice('Alumno borrado localmente. Entra de nuevo con 5555 para sincronizar Supabase.')
+      setNotice('Alumno borrado en este navegador. Vuelve a entrar con tu PIN de administrador para sincronizar Supabase.')
       return
     }
     try {
@@ -346,7 +354,7 @@ function AdminPanel() {
             })
             .catch(() => setNotice('Importados localmente, pero Supabase no respondio.'))
         } else {
-          setNotice(`Importados y guardados ${saved.length} alumnos localmente. Entra con 5555 para sincronizar Supabase.`)
+          setNotice(`Importados ${saved.length} alumnos en este navegador. Vuelve a entrar con tu PIN de administrador para sincronizar Supabase.`)
         }
       } catch {
         setNotice('No pude importar ese JSON. Usa el archivo exportado desde este panel.')

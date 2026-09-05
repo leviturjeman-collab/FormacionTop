@@ -70,7 +70,17 @@ export interface SavedPrompt {
   source?: string
 }
 
-const ADMIN_PIN = '5555'
+/**
+ * El PIN de administrador NO vive aqui. Estaba escrito a mano en este archivo,
+ * asi que viajaba en el paquete publico y cualquiera podia leerlo y entrar al
+ * panel privado, al modo profesor y a los solucionarios. Ahora lo comprueba
+ * `/api/auth/unlock` contra la variable de entorno `ADMIN_PIN`, con limite de
+ * intentos y cookie de sesion firmada. El navegador solo se cree que alguien es
+ * administrador cuando el servidor lo dice.
+ *
+ * Los PIN de alumno tienen 6 digitos; el de administrador no sigue ese formato,
+ * asi que no hay riesgo de que se genere uno igual por casualidad.
+ */
 let sessionAdminPin = ''
 let sessionAdminToken = ''
 const EMPTY: StudentState = {
@@ -161,7 +171,7 @@ export function generateLearnerPin(existing: Pick<StoredLearner, 'pin'>[] = []) 
   const used = new Set(existing.map((item) => item.pin))
   for (let attempt = 0; attempt < 80; attempt += 1) {
     const pin = String(Math.floor(100000 + Math.random() * 900000))
-    if (!used.has(pin) && pin !== ADMIN_PIN) return pin
+    if (!used.has(pin)) return pin
   }
   return String(Math.floor(100000 + Math.random() * 900000))
 }
@@ -169,7 +179,7 @@ export function generateLearnerPin(existing: Pick<StoredLearner, 'pin'>[] = []) 
 function normalizeLearner(item: StoredLearnerDraft, usedPins: Set<string>): StoredLearner {
   const createdAt = item.createdAt || new Date().toISOString()
   const rawPin = String(item.pin || '').replace(/\D/g, '').slice(0, 6)
-  const pin = /^\d{6}$/.test(rawPin) && !usedPins.has(rawPin) && rawPin !== ADMIN_PIN
+  const pin = /^\d{6}$/.test(rawPin) && !usedPins.has(rawPin)
     ? rawPin
     : generateLearnerPin([...usedPins].map((value) => ({ pin: value })))
   usedPins.add(pin)
@@ -248,7 +258,7 @@ function commitLearnerSession(
 }
 
 export function getAdminPinForSession() {
-  return sessionAdminPin || readRememberedAdminPin() || (state.adminUnlocked ? ADMIN_PIN : '')
+  return sessionAdminPin || readRememberedAdminPin()
 }
 
 export function getAdminAuthForSession() {
@@ -341,8 +351,8 @@ export const store = {
     commit({ ...state, teacher: !state.teacher })
   },
 
+  /** Solo la llama `unlockLearnerOnline` cuando el servidor responde `admin`. */
   unlockAdmin(pin: string, sessionToken = '') {
-    if (pin.trim() !== ADMIN_PIN) return false
     rememberAdminSession(pin.trim(), sessionToken)
     commit({
       ...state,
@@ -363,9 +373,12 @@ export const store = {
     commit({ ...state, adminUnlocked: false, teacher: false })
   },
 
+  /**
+   * Respaldo sin red, contra los alumnos guardados en este navegador. Nunca
+   * concede administrador: eso solo lo otorga el servidor.
+   */
   unlockLearner(pin: string) {
     const clean = pin.replace(/\D/g, '').trim()
-    if (clean === ADMIN_PIN) return this.unlockAdmin(clean)
     const learners = readAdminLearners()
     const learner = learners.find((item) => item.pin === clean)
     if (!learner) return false
@@ -390,6 +403,13 @@ export const store = {
         return true
       }
     } catch {
+      // En desarrollo no hay `/api`: `vite` sirve la carpeta como estatica, asi
+      // que la comprobacion real no existe y sin esto no se podria ni entrar.
+      // `import.meta.env.DEV` es una constante que Vite sustituye por `false`
+      // al compilar, de modo que este bloque desaparece del build publico.
+      if (import.meta.env.DEV && clean === (import.meta.env.VITE_DEV_ADMIN_PIN || '5555')) {
+        return this.unlockAdmin(clean)
+      }
       /* Si Supabase no responde, se prueba el respaldo local del navegador. */
     }
     return this.unlockLearner(clean)
