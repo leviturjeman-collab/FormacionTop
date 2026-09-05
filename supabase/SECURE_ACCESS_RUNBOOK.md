@@ -11,16 +11,16 @@ Este procedimiento acompaña la migración `20260905160000_verified_sessions_and
 
 ## Crear el primer administrador
 
-La aplicación no incluye una contraseña administrativa predeterminada. Desde una conexión administrativa del servidor, ejecutar una consulta parametrizada equivalente a:
+El identificador elegido para la primera cuenta administradora es **`admin`**. La aplicación no incluye una contraseña administrativa predeterminada. Desde una conexión administrativa del servidor, ejecutar una consulta parametrizada equivalente a:
 
 ```sql
 insert into public.academy_accounts(login, display_name, role, secret_hash)
-values ($1, $2, 'admin', extensions.crypt($3, extensions.gen_salt('bf', 10)));
+values ('admin', $1, 'admin', extensions.crypt($2, extensions.gen_salt('bf', 10)));
 ```
 
-- `$1`: identificador único en minúsculas de 3–120 caracteres, letras ASCII, números, punto, guion, guion bajo o arroba.
-- `$2`: nombre del administrador.
-- `$3`: secreto aleatorio individual, por ejemplo 32 caracteres hexadecimales generados criptográficamente; mínimo 10 caracteres, máximo 72 bytes UTF-8 por el límite de bcrypt. Guardarlo en un gestor de contraseñas, fuera del repositorio y del historial de terminal. No ejecutar un ejemplo con un secreto literal compartido.
+- `admin`: identificador de acceso fijado por el propietario; no es la contraseña ni concede permisos sin una cuenta verificada.
+- `$1`: nombre del administrador.
+- `$2`: secreto aleatorio individual, por ejemplo 32 caracteres hexadecimales generados criptográficamente; mínimo 10 caracteres, máximo 72 bytes UTF-8 por el límite de bcrypt. Guardarlo en un gestor de contraseñas, fuera del repositorio y del historial de terminal. No ejecutar un ejemplo con un secreto literal compartido.
 
 Cada profesor con funciones administrativas debe tener una cuenta individual. El cambio de vista «profesor» no otorga privilegios. No conceder acceso SQL ni claves service-role al navegador.
 
