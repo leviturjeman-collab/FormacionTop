@@ -60,7 +60,65 @@ const META_DOCUMENTS = [
   // El documento del ciclo CHECK → DO → BREAK → FIX → EXPLAIN queda fuera del
   // curso. Los "Checklist de …" sí se quedan: son material de trabajo.
   /^check\s*[-–—>→\s]+\s*do\b/i,
+
+  // Andamiaje del temario. Son los índices y las carpetas contenedoras del
+  // material, no temas: «Módulo 03 Claude y Claude Code», «Lecciones Claude y
+  // Claude Code», «Fuentes …». Al alumno le llegaban como lecciones con el
+  // nombre de la carpeta por título.
+  /^m[oó]dulo\s*\d/i,
+  /^lecciones\b/i,
+  /^laboratorios\b/i,
+  /^evaluaci[oó]n\b/i,
+  /^fuentes\b/i,
+  /^r[uú]brica/i,
+  /^proyectos?$/i,
+  /^ruta maestra/i,
+
+  // Documentos escritos para quien imparte, no para quien aprende. Hablan del
+  // alumno en tercera persona y del diseño del curso.
+  /^curr[ií]culo/i,
+  /^prerrequisitos/i,
+  /^itinerario\b/i,
+  /^competencias por nivel/i,
+  /^sistema pedag[oó]gico/i,
+  /^plantilla de lecci[oó]n/i,
+  /^dise[nñ]o de clases/i,
+  /^s[ií]ntesis de research/i,
+  /^research oficial/i,
+
+  // Plantillas en blanco, glosarios y hojas de evaluación: material de apoyo
+  // para montar el curso, no contenido que se estudie.
+  /^plantillas?\b/i,
+  /^evaluaciones$/i,
+  /^glosario/i,
+  /^defensa final$/i,
+
+  // Nombres de archivo que llegaron sin separar: «Skill01routermultillm».
+  /^skill\d+[a-z]{6,}$/i,
+
+  // Material del profesor. Los solucionarios traen las respuestas: que
+  // aparecieran como lección del alumno era, además, una fuga.
+  /^solucionarios?\b/i,
+  /^temario\b/i,
+  /^gui[oó]n(?:es)?$/i,
+
+  // Cualquier título que nombre la organización interna del material.
+  /\bb[oó]veda\b|\bvault\b/i,
 ]
+
+/**
+ * Un título que es una enumeración de palabras clave («Anthropic, Claude,
+ * Claude Code, prompt engineering, skills, hooks y subagents») es el nombre de
+ * una carpeta del vault, no el tema de una lección. Al alumno le aparecía tal
+ * cual como encabezado y como primera frase de la lección.
+ */
+function isFolderNameTitle(title) {
+  const clean = title.trim()
+  if ((clean.match(/,/g) || []).length < 3) return false
+  // Una frase de verdad acaba en punto o trae un verbo conjugado; una lista de
+  // carpetas, no.
+  return !/[.:?!]$/.test(clean) && !/\b(?:es|son|hace|sirve|vas|puedes|c[oó]mo|qu[eé])\b/i.test(clean)
+}
 
 /** Frases que mencionan la organización interna. Se eliminan una a una. */
 const META_SENTENCE = /\bb[oó]veda\b|\bvault\b|esta carpeta|este documento|este archivo|carpeta \d|\.md\b|documento maestro|navegaci[oó]n de la|dentro de la academia se organiza|estructura de carpetas|capa final de producto/i
@@ -71,6 +129,7 @@ export function isMetaSection(title) {
 
 export function isMetaDocument(title, relativePath) {
   if (META_DOCUMENTS.some((pattern) => pattern.test(title.trim()))) return true
+  if (isFolderNameTitle(title)) return true
   // Los índices de la carpeta de arranque son pura navegación.
   return /^00_EMPIEZA_AQUI\//.test(relativePath) && !/lecciones|ruta/i.test(title)
 }

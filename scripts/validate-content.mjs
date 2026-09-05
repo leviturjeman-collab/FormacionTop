@@ -21,7 +21,10 @@ const course = JSON.parse(await fs.readFile(path.join(publicDir, 'course.json'),
 const countWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
 const MANUAL_ONLY_TOOLS = new Set(['wispr-flow'])
 
-check(course.lessons.length >= 300, `Solo hay ${course.lessons.length} lecciones; se esperaban al menos 300.`)
+// El umbral bajó de 300 a 250 al dejar de convertir en lección el andamiaje
+// del vault (índices de módulo, plantillas, fuentes, rúbricas y solucionarios).
+// Son ~130 documentos menos, y ninguno era material de estudio.
+check(course.lessons.length >= 250, `Solo hay ${course.lessons.length} lecciones; se esperaban al menos 250.`)
 check(course.stages.length === 10, `Hay ${course.stages.length} etapas; se esperaban 10.`)
 check(course.folders.length > 0, 'No se ha generado ninguna carpeta para la biblioteca.')
 check(course.tools?.length > 0, 'Falta el catálogo de herramientas en course.json.')
