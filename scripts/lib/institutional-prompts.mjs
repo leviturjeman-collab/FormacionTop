@@ -1,3 +1,8 @@
+import {
+  TOOL_SECTIONS_EN, GENERAL_SECTION_EN, BASE_FILL_EN, BASE_MODEL_EN, FAMILY_GUIDANCE_EN,
+  EXTRA_TASKS_EN, TEMPLATES_EN, LABELS_EN,
+} from './institutional-prompts-en.mjs'
+
 const CATEGORY_META = [
   {
     id: 'aprender-desde-cero',
@@ -311,101 +316,147 @@ function chunks(items, size = 50) {
   return out
 }
 
-function sectionForTool(tool) {
-  return TOOL_SECTIONS.find((section) => section.toolIds.includes(tool.id)) || TOOL_SECTIONS[0]
+function sectionForTool(tool, locale = 'es') {
+  const section = TOOL_SECTIONS.find((item) => item.toolIds.includes(tool.id)) || TOOL_SECTIONS[0]
+  return locale === 'en' ? { ...section, ...(TOOL_SECTIONS_EN[section.id] || {}) } : section
 }
 
-function summarizeCategories(entries) {
+function summarizeCategories(entries, locale = 'es') {
   const counts = new Map()
   for (const entry of entries) {
-    const title = CATEGORY_BY_ID.get(entry.categoryId)?.title || entry.categoryId || 'General'
+    const meta = CATEGORY_BY_ID.get(entry.categoryId)
+    const title = (locale === 'en' ? CATEGORY_META_EN[entry.categoryId]?.title : null)
+      || meta?.title || entry.categoryId || 'General'
     counts.set(title, (counts.get(title) || 0) + 1)
   }
   return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], locale === 'en' ? 'en' : 'es'))
     .slice(0, 5)
     .map(([title, count]) => `${title} (${count})`)
     .join(', ')
 }
 
-function promptCore(tool, task, index) {
+/* --- Las mismas cinco plantillas, en español ------------------------ */
+
+const PLANTILLA_ES = {
+  core({ tool, outcome, rule, toolRole, internalPieces, usage }) {
+    return `Actúa como arquitecta institucional de sistemas de IA y operaciones. Tu tarea es ayudarme a usar ${tool.label} dentro de una organización real, con criterio de gobierno, privacidad, coste, mantenimiento y evidencia. No escribas una explicación genérica de la herramienta ni una lista bonita de posibilidades: convierte mi caso en una decisión, una prueba y una entrega que otra persona pueda revisar.\n\n## Contexto que debes usar\nInstitución: [INSTITUCION]. Área o equipo: [AREA_EQUIPO]. Persona que necesita entenderlo: [PERFIL_PERSONA]. Proceso o problema: [PROCESO_O_PROBLEMA]. Entrada real: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones: [RESTRICCIONES]. Datos sensibles o prohibidos: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Encargo institucional\nNecesito ${outcome} usando ${tool.label} solo si encaja. En esta herramienta, el papel de partida es este: ${toolRole} Piezas internas que debes tener presentes: ${internalPieces || 'entrada, salida, permisos, historial, exportación y forma de revisar resultados'}. Regla específica del encargo: ${rule}\n\n## Cómo debes trabajar\nPrimero revisa si los corchetes están completos. Si falta un dato que cambie la decisión, hazme una sola pregunta y espera mi respuesta. Si puedes avanzar con un supuesto menor, márcalo como SUPUESTO y explica cómo se comprobaría. Adapta el lenguaje a [PERFIL_PERSONA]: si es principiante, traduce cada palabra técnica; si es dirección, resume impacto, riesgo y coste; si es equipo técnico, añade contratos de datos, permisos y pruebas. No uses datos reales en ejemplos: inventa datos ficticios realistas y señala que son ficticios.\n\n## Salida obligatoria\nDevuelve la respuesta en este orden. Uno: ficha institucional de menos de 180 palabras con objetivo, usuario, entrada, salida, límite y criterio de éxito. Dos: decisión sobre si ${tool.label} es suficiente, excesiva o insuficiente, comparándola con una alternativa más simple y con la opción de hacerlo manualmente en la primera versión. Tres: pasos concretos para ejecutar el encargo, indicando pantalla, botón, campo, archivo, nodo o espacio de trabajo cuando aplique. Cuatro: prueba de aceptación con caso normal, incompleto, duplicado y extremo. Cinco: riesgos de privacidad, permisos, coste, dependencia del proveedor y mantenimiento. Seis: evidencia que debo guardar: archivo, captura, enlace, log, tabla o decisión escrita.\n\n## Control institucional\nAntes de recomendar activar, publicar, enviar, borrar, cobrar, cambiar permisos o compartir datos, marca APROBACIÓN HUMANA OBLIGATORIA. Define cómo se detiene el proceso si algo falla. Explica cómo se mide el consumo en ${tool.label}: ${usage} No inventes precios ni límites; si pueden haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL. Termina con una siguiente acción de menos de treinta minutos y una frase de cierre que empiece por: La decisión institucional es.`
+  },
+  coreExtra: `\n\nAñade también una mini matriz RACI con responsable, aprobador, persona consultada e informada. Incluye una versión para piloto con datos ficticios y una versión para uso real, separadas claramente. Si el uso real exige contrato, licencia, revisión legal, política interna o validación de seguridad, no lo des por resuelto: déjalo como bloqueo visible.`,
+
+  tool({ tool, basePrompt }) {
+    return `Actúa como responsable institucional y adapta este encargo de ${tool.label} a una organización real. Mantén el objetivo del prompt original, pero añade gobierno, privacidad, coste, evidencia, revisión humana y prueba con datos ficticios. Contexto obligatorio: institución [INSTITUCION], área [AREA_EQUIPO], persona [PERFIL_PERSONA], proceso [PROCESO_O_PROBLEMA], entrada [ENTRADA_REAL], salida [SALIDA_ESPERADA], volumen [VOLUMEN_Y_FRECUENCIA], restricciones [RESTRICCIONES], datos sensibles [DATOS_SENSIBLES] y fecha [FECHA_REVISION].\n\n## Prompt base que debes ejecutar\n${basePrompt}\n\n## Cierre institucional obligatorio\nAntes de terminar, convierte la respuesta en una ficha verificable: decisión, pasos, riesgos, prueba normal/incompleta/duplicada/extrema, evidencia que se guarda, responsable, coste o consumo que se mide y condición para no activar. Si algo depende de precios, planes, permisos o funciones actuales, escribe COMPROBAR EN LA WEB OFICIAL. No des el trabajo por listo para producción sin aprobación humana cuando haya datos sensibles, publicación, dinero o contacto con personas.`
+  },
+  toolExtra: `\n\nSi el resultado va dirigido a alguien que empieza desde cero, traduce cada término técnico y limita el siguiente paso a menos de treinta minutos. Si va dirigido a dirección, resume decisión, impacto, riesgo y coste. Si va dirigido a un equipo técnico, añade entrada, salida, contrato de datos y prueba repetible.`,
+
+  base({ basePrompt }) {
+    return `Actúa como responsable institucional y usa el siguiente prompt base dentro de una organización real. No respondas como si fuera una tarea personal suelta: adapta la salida a equipo, evidencias, permisos, coste, mantenimiento, revisión humana y trazabilidad. Contexto obligatorio antes de responder: institución [INSTITUCION], área [AREA_EQUIPO], persona [PERFIL_PERSONA], proceso [PROCESO_O_PROBLEMA], entrada [ENTRADA_REAL], salida [SALIDA_ESPERADA], volumen [VOLUMEN_Y_FRECUENCIA], restricciones [RESTRICCIONES], datos sensibles [DATOS_SENSIBLES] y fecha [FECHA_REVISION].\n\n## Prompt base de la biblioteca anterior\n${basePrompt}\n\n## Reglas institucionales\nConserva la intención del prompt base, pero termina siempre con una ficha de decisión, una prueba con datos ficticios, una evidencia que se guarda, un responsable, riesgos de privacidad y coste, una alternativa manual y una condición de parada. Si faltan datos, pregunta una sola cosa. Si algo puede haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL.`
+  },
+  baseExtra: `\n\nAdapta la explicación a [PERFIL_PERSONA]. Si es principiante, da instrucciones concretas sin jerga; si es dirección, prioriza decisión y riesgo; si es equipo técnico, añade formato de datos, permisos y comprobación. No uses datos reales en ejemplos; usa datos ficticios y dilo claramente.`,
+
+  course({ lesson, task, tool }) {
+    return `Actúa como responsable institucional de formación aplicada. Vas a usar un prompt que aparece dentro del Programa del curso, pero debes convertirlo en una tarea institucional completa: con contexto, salida verificable, evidencia, seguridad, coste, responsable y criterio de terminado. No respondas como ejercicio aislado ni como conversación informal.\n\n## Contexto obligatorio\nInstitución: [INSTITUCION]. Área o equipo: [AREA_EQUIPO]. Persona que aprende o ejecuta: [PERFIL_PERSONA]. Proceso o problema: [PROCESO_O_PROBLEMA]. Entrada real: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones: [RESTRICCIONES]. Datos sensibles: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Origen del prompt\nLección del Programa: ${lesson.title}. Tarea: ${task.title}. Dónde se trabaja: ${task.where}. Acción esperada: ${task.action}. Resultado que debería verse: ${task.expect}.${task.stuck ? ` Si no sale: ${task.stuck}.` : ''}${tool ? ` Herramienta relacionada: ${tool.label}.` : ''}\n\n## Prompt base del Programa\n${task.prompt}\n\n## Adaptación institucional obligatoria\nAntes de responder, comprueba si todos los corchetes están rellenados. Si falta un dato crítico, haz una sola pregunta y espera. Después devuelve: uno, explicación para [PERFIL_PERSONA] sin jerga innecesaria; dos, salida concreta que debe producirse; tres, pasos numerados para ejecutarlo; cuatro, prueba con caso normal, incompleto, duplicado y extremo; cinco, datos que no deben usarse todavía; seis, quién aprueba y quién conserva la evidencia; siete, cómo se mide el consumo o esfuerzo; ocho, qué haría manualmente si la herramienta o el proveedor falla.\n\nNo des por terminada la tarea porque la respuesta suene bien. Debe existir una evidencia: texto, captura, archivo, log, enlace, tabla o decisión escrita. Si toca activar, publicar, enviar, borrar, cobrar, conectar credenciales o compartir datos, marca APROBACIÓN HUMANA OBLIGATORIA. Termina con una siguiente acción de menos de treinta minutos.`
+  },
+  courseExtra: `\n\nIncluye una nota de transferencia: cómo explicaría este resultado una persona principiante, cómo lo revisaría una persona responsable y qué necesitaría una persona técnica para mantenerlo. Separa hechos, supuestos y puntos por comprobar. Si hay precios, límites o funciones de producto, escribe COMPROBAR EN LA WEB OFICIAL.`,
+
+  kit({ title, outcome }) {
+    return `Actúa como arquitecta institucional de sistemas de IA. Quiero diseñar el kit "${title}" para una organización real. No me des una colección de ideas sueltas: necesito una arquitectura de trabajo que combine prompts, herramientas, automatizaciones, datos, skills o procedimientos, gobierno, seguridad, coste, documentación y operación.\n\n## Contexto obligatorio\nInstitución: [INSTITUCION]. Área o equipo dueño del sistema: [AREA_EQUIPO]. Personas usuarias: [PERFIL_PERSONA]. Proceso o problema principal: [PROCESO_O_PROBLEMA]. Entradas disponibles: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones de tiempo, presupuesto y herramientas: [RESTRICCIONES]. Datos sensibles o prohibidos: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Objetivo del kit\nNecesito ${outcome}. Diseña el sistema como si tuviera que explicarlo a dirección, a una persona principiante y a un equipo técnico. La respuesta debe ayudar a decidir qué se hace primero, qué se automatiza, qué se deja manual, qué se prueba con datos ficticios y qué queda bloqueado hasta tener aprobación.\n\n## Salida obligatoria\nDevuelve: uno, mapa del sistema con módulos y responsabilidades; dos, lista de herramientas candidatas y por qué entra cada una; tres, familias de prompts que se necesitan y cuándo se usan; cuatro, automatizaciones posibles con disparador, validación, acción, registro y ruta de error; cinco, skills o procedimientos reutilizables que conviene documentar; seis, datos que entran, datos que salen y permisos mínimos; siete, fases de implantación de piloto a uso real; ocho, entregables que deben conservarse; nueve, riesgos de privacidad, coste, dependencia del proveedor y mantenimiento; diez, criterios para decir que el kit está listo o que debe seguir en pruebas.\n\n## Gobierno y prueba\nAntes de usar datos reales, diseña una prueba con cuatro casos: normal, incompleto, duplicado y extremo. Para cada caso indica entrada ficticia, resultado esperado, dónde se comprueba, quién aprueba y qué se guarda como evidencia. Marca APROBACIÓN HUMANA OBLIGATORIA si el kit publica, envía mensajes, cambia permisos, borra datos, cobra dinero o afecta a personas. No inventes precios ni límites de planes: escribe COMPROBAR EN LA WEB OFICIAL. Termina con un primer paso de menos de treinta minutos y una decisión que pueda quedar pegada en Mi proyecto.`
+  },
+  kitExtra: `\n\nAñade una matriz de operación con responsable, aprobador, frecuencia de revisión, señal de fallo, canal de aviso y plan de vuelta atrás. Si alguna parte puede hacerse manualmente durante el piloto, recomiéndala antes que una automatización compleja. Si hay una herramienta que parece atractiva pero no aporta evidencia o control, propón descartarla por ahora.`,
+}
+
+function promptCore(tool, task, index, locale = 'es') {
   const [categoryId, name, outcome, rule] = task
+  const en = locale === 'en'
+  const [, nameEn, outcomeEn, ruleEn] = en ? (EXTRA_TASKS_EN[EXTRA_TASKS.indexOf(task)] || task) : task
   const guide = tool.guide || {}
   const internalPieces = (guide.catalog?.items || [])
     .slice(0, 5)
     .map((item) => `${item.name}: ${item.what}`)
     .join('; ')
-  const toolRole = compact(guide.plain || `Herramienta institucional: ${tool.label}.`, 340)
-  const usage = compact(guide.usage?.explanation || `Revisa cómo ${tool.label} mide uso, límites, créditos, tokens, tareas, ejecuciones o almacenamiento antes de escalar.`, 260)
+  const toolRole = compact(guide.plain || (en ? `Institutional tool: ${tool.label}.` : `Herramienta institucional: ${tool.label}.`), 340)
+  const usage = compact(guide.usage?.explanation || (en
+    ? `Check how ${tool.label} measures usage, limits, credits, tokens, tasks, runs or storage before scaling up.`
+    : `Revisa cómo ${tool.label} mide uso, límites, créditos, tokens, tareas, ejecuciones o almacenamiento antes de escalar.`), 260)
 
-  let text = `Actúa como arquitecta institucional de sistemas de IA y operaciones. Tu tarea es ayudarme a usar ${tool.label} dentro de una organización real, con criterio de gobierno, privacidad, coste, mantenimiento y evidencia. No escribas una explicación genérica de la herramienta ni una lista bonita de posibilidades: convierte mi caso en una decisión, una prueba y una entrega que otra persona pueda revisar.\n\n## Contexto que debes usar\nInstitución: [INSTITUCION]. Área o equipo: [AREA_EQUIPO]. Persona que necesita entenderlo: [PERFIL_PERSONA]. Proceso o problema: [PROCESO_O_PROBLEMA]. Entrada real: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones: [RESTRICCIONES]. Datos sensibles o prohibidos: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Encargo institucional\nNecesito ${outcome} usando ${tool.label} solo si encaja. En esta herramienta, el papel de partida es este: ${toolRole} Piezas internas que debes tener presentes: ${internalPieces || 'entrada, salida, permisos, historial, exportación y forma de revisar resultados'}. Regla específica del encargo: ${rule}\n\n## Cómo debes trabajar\nPrimero revisa si los corchetes están completos. Si falta un dato que cambie la decisión, hazme una sola pregunta y espera mi respuesta. Si puedes avanzar con un supuesto menor, márcalo como SUPUESTO y explica cómo se comprobaría. Adapta el lenguaje a [PERFIL_PERSONA]: si es principiante, traduce cada palabra técnica; si es dirección, resume impacto, riesgo y coste; si es equipo técnico, añade contratos de datos, permisos y pruebas. No uses datos reales en ejemplos: inventa datos ficticios realistas y señala que son ficticios.\n\n## Salida obligatoria\nDevuelve la respuesta en este orden. Uno: ficha institucional de menos de 180 palabras con objetivo, usuario, entrada, salida, límite y criterio de éxito. Dos: decisión sobre si ${tool.label} es suficiente, excesiva o insuficiente, comparándola con una alternativa más simple y con la opción de hacerlo manualmente en la primera versión. Tres: pasos concretos para ejecutar el encargo, indicando pantalla, botón, campo, archivo, nodo o espacio de trabajo cuando aplique. Cuatro: prueba de aceptación con caso normal, incompleto, duplicado y extremo. Cinco: riesgos de privacidad, permisos, coste, dependencia del proveedor y mantenimiento. Seis: evidencia que debo guardar: archivo, captura, enlace, log, tabla o decisión escrita.\n\n## Control institucional\nAntes de recomendar activar, publicar, enviar, borrar, cobrar, cambiar permisos o compartir datos, marca APROBACIÓN HUMANA OBLIGATORIA. Define cómo se detiene el proceso si algo falla. Explica cómo se mide el consumo en ${tool.label}: ${usage} No inventes precios ni límites; si pueden haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL. Termina con una siguiente acción de menos de treinta minutos y una frase de cierre que empiece por: La decisión institucional es.`
+  let text = en
+    ? TEMPLATES_EN.core({ tool, name: nameEn, outcome: outcomeEn, rule: ruleEn, toolRole, internalPieces, usage })
+    : PLANTILLA_ES.core({ tool, outcome, rule, toolRole, internalPieces, usage })
 
-  if (wordCount(text) < 560) {
-    text += `\n\nAñade también una mini matriz RACI con responsable, aprobador, persona consultada e informada. Incluye una versión para piloto con datos ficticios y una versión para uso real, separadas claramente. Si el uso real exige contrato, licencia, revisión legal, política interna o validación de seguridad, no lo des por resuelto: déjalo como bloqueo visible.`
-  }
+  if (wordCount(text) < 560) text += en ? TEMPLATES_EN.coreExtra : PLANTILLA_ES.coreExtra
 
   return {
     id: `${categoryId}:${tool.id}:extra-${String(index + 1).padStart(2, '0')}`,
     categoryId,
     toolId: tool.id,
     toolLabel: tool.label,
-    source: 'Banco institucional',
-    name: `${tool.label} · ${name}`,
-    when: `Úsalo cuando necesites ${outcome}.`,
+    source: en ? LABELS_EN.sourceBank : 'Banco institucional',
+    name: `${tool.label} · ${en ? nameEn : name}`,
+    when: en ? LABELS_EN.whenCore(outcomeEn) : `Úsalo cuando necesites ${outcome}.`,
     prompt: text,
-    fill: BASE_FILL,
-    expect: `Una salida institucional con decisión, pasos, prueba, riesgos, evidencia y siguiente acción para ${tool.label}.`,
-    next: 'Guarda la decisión en Mi proyecto y usa la prueba con datos ficticios antes de tocar cuentas o datos reales.',
+    fill: en ? BASE_FILL_EN : BASE_FILL,
+    expect: en ? LABELS_EN.expectCore(tool.label)
+      : `Una salida institucional con decisión, pasos, prueba, riesgos, evidencia y siguiente acción para ${tool.label}.`,
+    next: en ? LABELS_EN.nextCore
+      : 'Guarda la decisión en Mi proyecto y usa la prueba con datos ficticios antes de tocar cuentas o datos reales.',
   }
 }
 
-function importToolPrompt(tool, prompt, index) {
+function importToolPrompt(tool, prompt, index, locale = 'es') {
+  const en = locale === 'en'
   const categoryId = categoryForToolPrompt(prompt.name)
-  let text = `Actúa como responsable institucional y adapta este encargo de ${tool.label} a una organización real. Mantén el objetivo del prompt original, pero añade gobierno, privacidad, coste, evidencia, revisión humana y prueba con datos ficticios. Contexto obligatorio: institución [INSTITUCION], área [AREA_EQUIPO], persona [PERFIL_PERSONA], proceso [PROCESO_O_PROBLEMA], entrada [ENTRADA_REAL], salida [SALIDA_ESPERADA], volumen [VOLUMEN_Y_FRECUENCIA], restricciones [RESTRICCIONES], datos sensibles [DATOS_SENSIBLES] y fecha [FECHA_REVISION].\n\n## Prompt base que debes ejecutar\n${prompt.prompt}\n\n## Cierre institucional obligatorio\nAntes de terminar, convierte la respuesta en una ficha verificable: decisión, pasos, riesgos, prueba normal/incompleta/duplicada/extrema, evidencia que se guarda, responsable, coste o consumo que se mide y condición para no activar. Si algo depende de precios, planes, permisos o funciones actuales, escribe COMPROBAR EN LA WEB OFICIAL. No des el trabajo por listo para producción sin aprobación humana cuando haya datos sensibles, publicación, dinero o contacto con personas.`
+  let text = en
+    ? TEMPLATES_EN.tool({ tool, basePrompt: prompt.prompt })
+    : PLANTILLA_ES.tool({ tool, basePrompt: prompt.prompt })
 
-  if (wordCount(text) < 560) {
-    text += `\n\nSi el resultado va dirigido a alguien que empieza desde cero, traduce cada término técnico y limita el siguiente paso a menos de treinta minutos. Si va dirigido a dirección, resume decisión, impacto, riesgo y coste. Si va dirigido a un equipo técnico, añade entrada, salida, contrato de datos y prueba repetible.`
-  }
+  if (wordCount(text) < 560) text += en ? TEMPLATES_EN.toolExtra : PLANTILLA_ES.toolExtra
 
   return {
     id: `${categoryId}:${tool.id}:tool-${String(index + 1).padStart(2, '0')}`,
     categoryId,
     toolId: tool.id,
     toolLabel: tool.label,
-    source: 'Ficha de herramienta',
+    source: en ? LABELS_EN.sourceTool : 'Ficha de herramienta',
     name: `${tool.label} · ${prompt.name}`,
-    when: prompt.when || `Úsalo cuando trabajes con ${tool.label} dentro de un proyecto institucional.`,
+    when: prompt.when || (en ? LABELS_EN.whenTool(tool.label)
+      : `Úsalo cuando trabajes con ${tool.label} dentro de un proyecto institucional.`),
     prompt: text,
-    fill: BASE_FILL,
-    expect: `El prompt de ${tool.label} convertido en salida institucional con prueba, evidencia, coste y límites.`,
-    next: 'Si el resultado sirve, guárdalo en Mi proyecto y deja marcada la fecha de revisión.',
+    fill: en ? BASE_FILL_EN : BASE_FILL,
+    expect: en ? LABELS_EN.expectTool(tool.label)
+      : `El prompt de ${tool.label} convertido en salida institucional con prueba, evidencia, coste y límites.`,
+    next: en ? LABELS_EN.nextTool : 'Si el resultado sirve, guárdalo en Mi proyecto y deja marcada la fecha de revisión.',
   }
 }
 
-function importBasePrompt(family, prompt, index) {
+function importBasePrompt(family, prompt, index, locale = 'es') {
+  const en = locale === 'en'
   const categoryId = BASE_FAMILY_CATEGORY[family.id] || 'proyecto-institucional'
-  let text = `Actúa como responsable institucional y usa el siguiente prompt base dentro de una organización real. No respondas como si fuera una tarea personal suelta: adapta la salida a equipo, evidencias, permisos, coste, mantenimiento, revisión humana y trazabilidad. Contexto obligatorio antes de responder: institución [INSTITUCION], área [AREA_EQUIPO], persona [PERFIL_PERSONA], proceso [PROCESO_O_PROBLEMA], entrada [ENTRADA_REAL], salida [SALIDA_ESPERADA], volumen [VOLUMEN_Y_FRECUENCIA], restricciones [RESTRICCIONES], datos sensibles [DATOS_SENSIBLES] y fecha [FECHA_REVISION].\n\n## Prompt base de la biblioteca anterior\n${prompt.prompt}\n\n## Reglas institucionales\nConserva la intención del prompt base, pero termina siempre con una ficha de decisión, una prueba con datos ficticios, una evidencia que se guarda, un responsable, riesgos de privacidad y coste, una alternativa manual y una condición de parada. Si faltan datos, pregunta una sola cosa. Si algo puede haber cambiado, escribe COMPROBAR EN LA WEB OFICIAL.`
+  let text = en
+    ? TEMPLATES_EN.base({ basePrompt: prompt.prompt })
+    : PLANTILLA_ES.base({ basePrompt: prompt.prompt })
 
-  if (wordCount(text) < 560) {
-    text += `\n\nAdapta la explicación a [PERFIL_PERSONA]. Si es principiante, da instrucciones concretas sin jerga; si es dirección, prioriza decisión y riesgo; si es equipo técnico, añade formato de datos, permisos y comprobación. No uses datos reales en ejemplos; usa datos ficticios y dilo claramente.`
-  }
+  if (wordCount(text) < 560) text += en ? TEMPLATES_EN.baseExtra : PLANTILLA_ES.baseExtra
 
   return {
     id: `${categoryId}:general:base-${family.id}-${index + 1}`,
     categoryId,
     toolId: 'general',
-    toolLabel: 'General institucional',
-    source: 'Biblioteca anterior',
+    toolLabel: en ? LABELS_EN.generalTool : 'General institucional',
+    source: en ? LABELS_EN.sourceLibrary : 'Biblioteca anterior',
     name: `${family.title} · ${prompt.name}`,
-    when: prompt.when || `Úsalo como prompt institucional general para ${family.title.toLowerCase()}.`,
+    when: prompt.when || (en ? LABELS_EN.whenBase(family.title)
+      : `Úsalo como prompt institucional general para ${family.title.toLowerCase()}.`),
     prompt: text,
-    fill: [...BASE_FILL, ...(prompt.fill || [])],
-    expect: prompt.expect || 'Una salida institucional con decisión, prueba, evidencia, riesgos y siguiente paso.',
-    next: prompt.next || 'Guarda el resultado útil en Mi proyecto y revisa qué dato falta antes de construir.',
+    fill: [...(en ? BASE_FILL_EN : BASE_FILL), ...(prompt.fill || [])],
+    expect: prompt.expect || (en ? LABELS_EN.expectBase
+      : 'Una salida institucional con decisión, prueba, evidencia, riesgos y siguiente paso.'),
+    next: prompt.next || (en ? LABELS_EN.nextBase
+      : 'Guarda el resultado útil en Mi proyecto y revisa qué dato falta antes de construir.'),
   }
 }
 
-function importCoursePrompt(lesson, task, index, toolById, origen) {
+function importCoursePrompt(lesson, task, index, toolById, origen, locale = 'es') {
+  const en = locale === 'en'
   const tool = lesson.tool ? toolById.get(lesson.tool) : null
   /* La categoria se decide SIEMPRE con el texto en español, aunque el build
    * sea el inglés. Si no, la misma lección cae en una categoría distinta en
@@ -414,60 +465,67 @@ function importCoursePrompt(lesson, task, index, toolById, origen) {
   const paraClasificar = origen || lesson
   const tareaOrigen = (paraClasificar.tasks || []).filter((item) => item.prompt)[index] || task
   const categoryId = categoryForToolPrompt(`${paraClasificar.title} ${tareaOrigen.title} ${tareaOrigen.action}`)
-  let text = `Actúa como responsable institucional de formación aplicada. Vas a usar un prompt que aparece dentro del Programa del curso, pero debes convertirlo en una tarea institucional completa: con contexto, salida verificable, evidencia, seguridad, coste, responsable y criterio de terminado. No respondas como ejercicio aislado ni como conversación informal.\n\n## Contexto obligatorio\nInstitución: [INSTITUCION]. Área o equipo: [AREA_EQUIPO]. Persona que aprende o ejecuta: [PERFIL_PERSONA]. Proceso o problema: [PROCESO_O_PROBLEMA]. Entrada real: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones: [RESTRICCIONES]. Datos sensibles: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Origen del prompt\nLección del Programa: ${lesson.title}. Tarea: ${task.title}. Dónde se trabaja: ${task.where}. Acción esperada: ${task.action}. Resultado que debería verse: ${task.expect}.${task.stuck ? ` Si no sale: ${task.stuck}.` : ''}${tool ? ` Herramienta relacionada: ${tool.label}.` : ''}\n\n## Prompt base del Programa\n${task.prompt}\n\n## Adaptación institucional obligatoria\nAntes de responder, comprueba si todos los corchetes están rellenados. Si falta un dato crítico, haz una sola pregunta y espera. Después devuelve: uno, explicación para [PERFIL_PERSONA] sin jerga innecesaria; dos, salida concreta que debe producirse; tres, pasos numerados para ejecutarlo; cuatro, prueba con caso normal, incompleto, duplicado y extremo; cinco, datos que no deben usarse todavía; seis, quién aprueba y quién conserva la evidencia; siete, cómo se mide el consumo o esfuerzo; ocho, qué haría manualmente si la herramienta o el proveedor falla.\n\nNo des por terminada la tarea porque la respuesta suene bien. Debe existir una evidencia: texto, captura, archivo, log, enlace, tabla o decisión escrita. Si toca activar, publicar, enviar, borrar, cobrar, conectar credenciales o compartir datos, marca APROBACIÓN HUMANA OBLIGATORIA. Termina con una siguiente acción de menos de treinta minutos.`
+  let text = en
+    ? TEMPLATES_EN.course({ lesson, task, tool })
+    : PLANTILLA_ES.course({ lesson, task, tool })
 
-  if (wordCount(text) < 560) {
-    text += `\n\nIncluye una nota de transferencia: cómo explicaría este resultado una persona principiante, cómo lo revisaría una persona responsable y qué necesitaría una persona técnica para mantenerlo. Separa hechos, supuestos y puntos por comprobar. Si hay precios, límites o funciones de producto, escribe COMPROBAR EN LA WEB OFICIAL.`
-  }
+  if (wordCount(text) < 560) text += en ? TEMPLATES_EN.courseExtra : PLANTILLA_ES.courseExtra
 
   return {
     id: `${categoryId}:${tool?.id || 'general'}:programa-${lesson.id}-${index + 1}`,
     categoryId,
     toolId: tool?.id || 'general',
-    toolLabel: tool?.label || 'General institucional',
-    source: 'Programa',
+    toolLabel: tool?.label || (en ? LABELS_EN.generalTool : 'General institucional'),
+    source: en ? LABELS_EN.sourceProgram : 'Programa',
     name: `${tool ? `${tool.label} · ` : ''}${lesson.title} · ${task.title}`,
-    when: `Úsalo cuando quieras repetir fuera de la lección la tarea «${task.title}» con formato institucional.`,
+    when: en ? LABELS_EN.whenCourse(task.title)
+      : `Úsalo cuando quieras repetir fuera de la lección la tarea «${task.title}» con formato institucional.`,
     prompt: text,
-    fill: BASE_FILL,
-    expect: 'Una versión institucional del prompt del Programa con pasos, prueba, evidencia, aprobación y siguiente acción.',
-    next: 'Guarda el resultado en Mi proyecto como evidencia de la lección o como decisión del proyecto.',
+    fill: en ? BASE_FILL_EN : BASE_FILL,
+    expect: en ? LABELS_EN.expectCourse
+      : 'Una versión institucional del prompt del Programa con pasos, prueba, evidencia, aprobación y siguiente acción.',
+    next: en ? LABELS_EN.nextCourse
+      : 'Guarda el resultado en Mi proyecto como evidencia de la lección o como decisión del proyecto.',
   }
 }
 
-function importKitPrompt(kit, index) {
+function importKitPrompt(kit, index, locale = 'es') {
+  const en = locale === 'en'
   const title = kit.title
-  const outcome = `diseñar e implantar este sistema: ${kit.promise || kit.title}`
-  let text = `Actúa como arquitecta institucional de sistemas de IA. Quiero diseñar el kit "${title}" para una organización real. No me des una colección de ideas sueltas: necesito una arquitectura de trabajo que combine prompts, herramientas, automatizaciones, datos, skills o procedimientos, gobierno, seguridad, coste, documentación y operación.\n\n## Contexto obligatorio\nInstitución: [INSTITUCION]. Área o equipo dueño del sistema: [AREA_EQUIPO]. Personas usuarias: [PERFIL_PERSONA]. Proceso o problema principal: [PROCESO_O_PROBLEMA]. Entradas disponibles: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones de tiempo, presupuesto y herramientas: [RESTRICCIONES]. Datos sensibles o prohibidos: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Objetivo del kit\nNecesito ${outcome}. Diseña el sistema como si tuviera que explicarlo a dirección, a una persona principiante y a un equipo técnico. La respuesta debe ayudar a decidir qué se hace primero, qué se automatiza, qué se deja manual, qué se prueba con datos ficticios y qué queda bloqueado hasta tener aprobación.\n\n## Salida obligatoria\nDevuelve: uno, mapa del sistema con módulos y responsabilidades; dos, lista de herramientas candidatas y por qué entra cada una; tres, familias de prompts que se necesitan y cuándo se usan; cuatro, automatizaciones posibles con disparador, validación, acción, registro y ruta de error; cinco, skills o procedimientos reutilizables que conviene documentar; seis, datos que entran, datos que salen y permisos mínimos; siete, fases de implantación de piloto a uso real; ocho, entregables que deben conservarse; nueve, riesgos de privacidad, coste, dependencia del proveedor y mantenimiento; diez, criterios para decir que el kit está listo o que debe seguir en pruebas.\n\n## Gobierno y prueba\nAntes de usar datos reales, diseña una prueba con cuatro casos: normal, incompleto, duplicado y extremo. Para cada caso indica entrada ficticia, resultado esperado, dónde se comprueba, quién aprueba y qué se guarda como evidencia. Marca APROBACIÓN HUMANA OBLIGATORIA si el kit publica, envía mensajes, cambia permisos, borra datos, cobra dinero o afecta a personas. No inventes precios ni límites de planes: escribe COMPROBAR EN LA WEB OFICIAL. Termina con un primer paso de menos de treinta minutos y una decisión que pueda quedar pegada en Mi proyecto.`
+  const outcome = en
+    ? `design and roll out this system: ${kit.promise || kit.title}`
+    : `diseñar e implantar este sistema: ${kit.promise || kit.title}`
+  let text = en ? TEMPLATES_EN.kit({ title, outcome }) : PLANTILLA_ES.kit({ title, outcome })
 
-  if (wordCount(text) < 560) {
-    text += `\n\nAñade una matriz de operación con responsable, aprobador, frecuencia de revisión, señal de fallo, canal de aviso y plan de vuelta atrás. Si alguna parte puede hacerse manualmente durante el piloto, recomiéndala antes que una automatización compleja. Si hay una herramienta que parece atractiva pero no aporta evidencia o control, propón descartarla por ahora.`
-  }
+  if (wordCount(text) < 560) text += en ? TEMPLATES_EN.kitExtra : PLANTILLA_ES.kitExtra
 
   return {
-    id: `proyecto-institucional:general:kit-${index + 1}`,
+    id: `proyecto-institucional:general:kit-${kit.id || index + 1}`,
     categoryId: 'proyecto-institucional',
     toolId: 'general',
-    toolLabel: 'General institucional',
-    source: 'Kits institucionales',
-    name: `Kit institucional · ${title}`,
-    when: `Úsalo cuando quieras montar o revisar el kit «${title}» como sistema completo.`,
+    toolLabel: en ? LABELS_EN.generalTool : 'General institucional',
+    source: en ? LABELS_EN.sourceKits : 'Kits institucionales',
+    name: en ? LABELS_EN.kitName(title) : `Kit institucional · ${title}`,
+    when: en ? LABELS_EN.whenKit(title)
+      : `Úsalo cuando quieras montar o revisar el kit «${title}» como sistema completo.`,
     prompt: text,
-    fill: BASE_FILL,
-    expect: 'Una arquitectura institucional completa con herramientas, prompts, automatizaciones, gobierno, pruebas y entregables.',
-    next: 'Guarda el mapa del sistema en Mi proyecto y convierte la primera fase en tareas pequeñas.',
+    fill: en ? BASE_FILL_EN : BASE_FILL,
+    expect: en ? LABELS_EN.expectKit
+      : 'Una arquitectura institucional completa con herramientas, prompts, automatizaciones, gobierno, pruebas y entregables.',
+    next: en ? LABELS_EN.nextKit
+      : 'Guarda el mapa del sistema en Mi proyecto y convierte la primera fase en tareas pequeñas.',
   }
 }
 
-function makeFamily(meta, extra = {}) {
+function makeFamily(meta, extra = {}, locale = 'es') {
   return {
     id: meta.id,
     title: meta.title,
     intro: meta.intro,
-    model: BASE_MODEL,
+    model: locale === 'en' ? BASE_MODEL_EN : BASE_MODEL,
     prompts: [],
     categoryId: meta.categoryId || meta.id,
-    ...FAMILY_GUIDANCE,
+    ...(locale === 'en' ? FAMILY_GUIDANCE_EN : FAMILY_GUIDANCE),
     ...extra,
   }
 }
@@ -491,19 +549,19 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
 
   for (const family of baseFamilies || []) {
     for (const [index, prompt] of (family.prompts || []).entries()) {
-      pushGeneral(importBasePrompt(family, prompt, index))
+      pushGeneral(importBasePrompt(family, prompt, index, locale))
     }
   }
 
   // Un prompt de arranque por cada kit institucional real, sin lista paralela
   // que se desincronice cuando se añadan kits.
   for (const [index, kit] of (kits || []).entries()) {
-    pushGeneral(importKitPrompt(kit, index))
+    pushGeneral(importKitPrompt(kit, index, locale))
   }
 
   for (const lesson of cursoFiles || []) {
     for (const [index, task] of (lesson.tasks || []).filter((item) => item.prompt).entries()) {
-      pushGeneral(importCoursePrompt(lesson, task, index, toolById, origenPorId.get(lesson.id)))
+      pushGeneral(importCoursePrompt(lesson, task, index, toolById, origenPorId.get(lesson.id), locale))
     }
   }
 
@@ -515,6 +573,8 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
   for (const [categoria, cuantos] of descartados) {
     console.warn(`  aviso: ${cuantos} prompts descartados por categoria desconocida «${categoria}».`)
   }
+
+  const general = locale === 'en' ? { ...GENERAL_SECTION, ...GENERAL_SECTION_EN } : GENERAL_SECTION
 
   for (const metaEs of CATEGORY_META) {
     const entries = generalEntries.filter((entry) => entry.categoryId === metaEs.id)
@@ -534,22 +594,27 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
         {
           id: `general-${metaEs.id}${groups.length > 1 ? `-${index + 1}` : ''}`,
           title: `${meta.title}${suffix}`,
-          intro: `${group.length} prompts institucionales para ${purpose}`,
+          intro: locale === 'en'
+          ? `${group.length} institutional prompts for ${purpose}`
+          : `${group.length} prompts institucionales para ${purpose}`,
           categoryId: metaEs.id,
         },
         {
           sectionId: GENERAL_SECTION.id,
-          sectionTitle: GENERAL_SECTION.title,
-          sectionDescription: GENERAL_SECTION.description,
+          sectionTitle: general.title,
+          sectionDescription: general.description,
           blockTitle: `${meta.title}${suffix}`,
-          blockDescription: `${group.length} prompts listos para copiar, para ${purpose}`,
-          useCase: GENERAL_SECTION.useCase,
-          audience: GENERAL_SECTION.audience,
+          blockDescription: locale === 'en'
+            ? `${group.length} prompts ready to copy, for ${purpose}`
+            : `${group.length} prompts listos para copiar, para ${purpose}`,
+          useCase: general.useCase,
+          audience: general.audience,
           toolId: 'general',
-          toolLabel: 'General institucional',
+          toolLabel: locale === 'en' ? LABELS_EN.generalTool : 'General institucional',
           source: 'General',
           prompts: group,
         },
+        locale,
       ))
     }
   }
@@ -557,54 +622,71 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
   for (const tool of toolPages || []) {
     if (MANUAL_ONLY_TOOLS.has(tool.id)) continue
 
-    const section = sectionForTool(tool)
-    const allowedCategories = SECTION_CATEGORY_IDS[section.id] || SECTION_CATEGORY_IDS['asistentes-modelos']
+    const seccion = sectionForTool(tool, locale)
+    const allowedCategories = SECTION_CATEGORY_IDS[seccion.id] || SECTION_CATEGORY_IDS['asistentes-modelos']
 
     const imported = (tool.guide?.prompts || [])
       .slice(0, 20)
-      .map((prompt, index) => importToolPrompt(tool, prompt, index))
+      .map((prompt, index) => importToolPrompt(tool, prompt, index, locale))
     // Solo los encargos que tienen sentido con esta herramienta: nada de
     // rellenar hasta una cifra fija con combinaciones absurdas.
     const extras = EXTRA_TASKS
       .filter((task) => allowedCategories.has(task[0]))
-      .map((task, index) => promptCore(tool, task, index))
+      .map((task, index) => promptCore(tool, task, index, locale))
     const prompts = [...imported, ...extras].slice(0, 50)
 
     output.push(makeFamily(
       {
         id: `herramienta-${tool.id}`,
         title: `${tool.label} · ${prompts.length} prompts`,
-        intro: `${prompts.length} prompts institucionales para usar ${tool.label} dentro de proyectos reales, con corchetes rellenables, prueba, evidencia, coste, privacidad y entrega.`,
+        intro: locale === 'en'
+          ? `${prompts.length} institutional prompts for using ${tool.label} in real projects, with brackets to fill in, a test, evidence, cost, privacy and delivery.`
+          : `${prompts.length} prompts institucionales para usar ${tool.label} dentro de proyectos reales, con corchetes rellenables, prueba, evidencia, coste, privacidad y entrega.`,
         categoryId: 'herramienta',
       },
       {
-        sectionId: section.id,
-        sectionTitle: section.title,
-        sectionDescription: section.description,
+        sectionId: seccion.id,
+        sectionTitle: seccion.title,
+        sectionDescription: seccion.description,
         blockTitle: tool.label,
-        blockDescription: `${prompts.length} prompts pertinentes para ${tool.label}. Reparte el trabajo entre ${summarizeCategories(prompts)}.`,
-        useCase: section.useCase,
-        audience: section.audience,
+        blockDescription: locale === 'en'
+          ? `${prompts.length} prompts that fit ${tool.label}. The work is split across ${summarizeCategories(prompts, locale)}.`
+          : `${prompts.length} prompts pertinentes para ${tool.label}. Reparte el trabajo entre ${summarizeCategories(prompts, locale)}.`,
+        useCase: seccion.useCase,
+        audience: seccion.audience,
         toolId: tool.id,
         toolLabel: tool.label,
-        source: 'Herramienta',
+        source: locale === 'en' ? 'Tool' : 'Herramienta',
         prompts,
-        canDo: [
+        canDo: locale === 'en' ? [
+          `Work with ${tool.label} without starting from loose buttons: first the problem, the input, the output, the test and the evidence.`,
+          'Pick the prompt by what you actually want, and match the language to beginners, management or a technical team.',
+          'Connect the tool to the rest of the project without forgetting privacy, cost and maintenance.',
+        ] : [
           `Trabajar con ${tool.label} sin empezar por botones sueltos: primero problema, entrada, salida, prueba y evidencia.`,
           'Elegir el prompt por intención concreta y adaptar el lenguaje a principiantes, dirección o equipo técnico.',
           'Conectar la herramienta con el resto del proyecto institucional sin olvidar privacidad, coste y mantenimiento.',
         ],
-        cantDo: [
+        cantDo: locale === 'en' ? [
+          'It does not replace an official check of the provider\'s prices, plans, permissions or recent features.',
+          'It does not turn a personal account into an institutional system without a data policy, approval and a log.',
+          'It does not switch on sensitive actions without a test with made-up data and human approval.',
+        ] : [
           'No sustituye la revisión oficial de precios, planes, permisos o funciones recientes del proveedor.',
           'No convierte una cuenta personal en sistema institucional sin política de datos, aprobación y registro.',
           'No activa acciones sensibles sin prueba con datos ficticios y aprobación humana.',
         ],
-        tips: [
+        tips: locale === 'en' ? [
+          `If you do not know where to start with ${tool.label}, use the prompts for learning, comparing and defining a project first.`,
+          'Then filter inside the batch by automating, data, agents, security, testing or delivery.',
+          'Only keep the prompts that produce evidence worth putting in My project.',
+        ] : [
           `Si no sabes por dónde empezar con ${tool.label}, usa primero los prompts de aprender, comparar y definir proyecto.`,
           'Después filtra dentro del lote por automatizar, datos, agentes, seguridad, prueba o entrega.',
           'Guarda solo los prompts que produzcan una evidencia útil para Mi proyecto.',
         ],
       },
+      locale,
     ))
   }
 
