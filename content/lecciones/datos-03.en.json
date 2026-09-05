@@ -1,0 +1,142 @@
+{
+  "id": "datos-03",
+  "number": 32,
+  "stageId": "datos",
+  "title": "Building your document search without programming",
+  "promise": "You'll upload your clean folder to a tool and ask it the first real question, the one that used to come back wrong. By the end you'll have it working and you'll know whether the simple version is enough for you or you need the next one.",
+  "minutes": 40,
+  "why": "Nuria spent two weeks reading about vector databases, Docker and embedding models. She hadn't uploaded a single file. One Monday she decided to try the daft way: she dragged her 192 documents into a Claude Project and asked about her registration deadline. It took eleven minutes, upload included. The answer came back right, with the name of the 2011 circular beside it. The two weeks of reading had done nothing for her. The hard part she had already done: cleaning up the paperwork.",
+  "theory": [
+    {
+      "title": "Start with what you don't have to install",
+      "text": "There's a middle rung almost nobody tries because it doesn't sound like a serious project: uploading your documents straight into a Claude or ChatGPT Project. Underneath they do exactly what we saw in lesson 30 — chunk, search and answer with what they found — except they don't show you the screws and don't let you turn them. You build it by dragging files into a window and it works well up to a few hundred documents, which is where most people doing this course are. The real limits are three and they're worth facing squarely: how many files each plan accepts, that you can't change how it chunks, and that your documents live on that company's servers. If those three limits are fine for you, you've finished the build today and the rest of the block still helps you tune it. Going straight to the complicated thing when the simple one would do is the most common way of never finishing a project, and it has nothing to do with ability: it's that the complicated thing has more steps at which to give up.",
+      "analogy": "It's the difference between assembling a shop-bought shelf and having one made to measure in a workshop. If the shop-bought one fits and does the job, having it made only costs you more work for the same books.",
+      "example": "Nuria: 192 documents, personal use, client information but no medical or banking data because she set those aside in the previous lesson. The Project suits her. Eleven minutes from the first drag to her first answer with the source beside it."
+    },
+    {
+      "title": "When you really do have to build it yourself",
+      "text": "There are four signals that force you down to your own setup, and none of them has anything to do with how advanced you are or how good you are at this. The first is volume: past a few hundred documents, Projects run short and start refusing files. The second is that the documents can't leave your premises for legal reasons or because of a contract with your clients; that's a decision you don't take on instinct, and it's covered in lesson 41. The third is that you need other people or a program to query the system, and not just you from a screen: the moment you want it to answer from a website, a form or a workflow, you need something with its own front door. And the fourth is that you want control over the chunking because your documents are unusual: big tables, minutes with a fixed structure, transcripts with no punctuation. If you're in none of those four cases, don't go down. And if you're in one, don't panic either: your own setup takes an afternoon with tools that don't ask you to program.",
+      "example": "A practice with 4,000 case files and a contractual obligation not to let them out: own setup, no argument. A freelancer with 150 PDFs: a Project, and on with something else."
+    },
+    {
+      "title": "The three pieces, so you know what you're looking at",
+      "text": "When you open any of these tools you'll see three things, and it's worth knowing what they do even if you never touch them. The first reads your files and chunks them. The second turns each chunk into a list of numbers representing its meaning; that's what lets a search for «registration deadline» find a paragraph saying «period for registering», which shares not a single word with your question. It's the piece that makes this work and the one that's hardest to believe the first time you see it land. The third is the store where those numbers are kept so they can be searched very quickly among hundreds of thousands. That's all. When you read «embedding model» or «vector database» in any tutorial, they're talking about the second and the third. You don't need to understand how they work inside, any more than you need to understand a combustion engine to drive, and in this case the specific choice doesn't change the result at your scale.",
+      "analogy": "It's the index at the back of a book, but by meaning instead of by word. You look up «car» and it also takes you to the pages about automobiles and vehicles.",
+      "example": "Nuria asks «how long do I have for the registration?» and it finds a document saying «the deadline for filing form 036». Not a word in common. That's what the second piece does."
+    },
+    {
+      "title": "The first question is chosen, not improvised",
+      "text": "Once you have it running you'll be tempted to ask it anything to see what it says. Don't, not yet. Your first question has to be one where you already know the exact answer and you also know which document it's in. That's the only way you can judge whether the system works or only looks like it does. If you ask something you don't know, you'll get an answer that sounds right and no way to check it, which is exactly the problem we've been running from since the first lesson of the block. Prepare three questions you know the answers to before uploading anything, and write them down with the answer and the file beside them. That little exam is what separates «seems to be working» from «is working», and it's the seed of the full question set you build in lesson 34.",
+      "example": "Nuria prepared: the registration deadline (15 days, 2011 circular), the discount for partner practices (12%, 2019 email) and the renewal clause for Ferretería Beltrán (automatic annual, 2019 contract). Three questions, three known answers."
+    },
+    {
+      "title": "Make it cite its source, from day one",
+      "text": "An answer without a source is worth nothing in this setup, because you can't check it and we already know how good the invented ones sound. Get into the habit from the first minute of asking for the name of the file each statement comes from, and of asking it to say explicitly when it hasn't found anything. That second part is the important one and the one almost nobody adds: by default, if it finds nothing, many tools answer anyway from general knowledge, and there you're back to the starting point without noticing you've gone back. «It isn't in your documents» is a correct, valuable and perfectly useful answer: it tells you that you'll have to look yourself, which is exactly what you wanted to know. Lesson 33 is entirely about achieving this and about the other three ways a setup like this fails.",
+      "example": "Bad answer: «The deadline is 15 days.» Good answer: «15 calendar days, according to internal-circular-2011.pdf, section 3. I found no later document modifying it.»"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Write your three control questions",
+      "where": "In your working note",
+      "action": "Before uploading anything. Write three questions you know the exact answer to, and next to each the answer and the name of the file it's in. Make them different kinds: one about a specific fact (a figure, a deadline), one about something that changed over time (to see whether it picks the right version), and one from a long document (to see whether it finds the right paragraph among many).",
+      "expect": "Three lines with question, answer and file. This is your exam: without it you won't know whether the system works or only looks like it.",
+      "stuck": "If none come to mind, think about the last times you went looking through your paperwork by hand. What you went looking for is exactly what this system has to solve for you."
+    },
+    {
+      "title": "Upload the folder to a Project",
+      "where": "In Claude (claude.ai) or ChatGPT",
+      "action": "In Claude: left menu, Projects, «Create project», give it a name. Inside you'll see a project knowledge area where you can drag files. Drag in the contents of your clean folder (the main folder, not the «out» or «no-text» subfolders). In ChatGPT it's the same: Projects, new one, and upload files. Wait for them to finish processing; with two hundred documents it takes a few minutes. If it warns you you've hit the file limit, upload the ones you consult most first.",
+      "expect": "The list of your documents inside the project, each with its processed marker. If any of them errors, note it down: it's usually a protected PDF or one of the text-free scans.",
+      "stuck": "If it tells you they don't fit, don't start deleting at random: sort by what you consult most and upload that first stretch. With that you can already run your three control questions and see whether the setup serves you before wrestling with volume."
+    },
+    {
+      "title": "Give it the instructions that force it to cite",
+      "where": "In the project's instructions field",
+      "action": "Without this, the system answers from memory when it finds nothing, and you don't notice. Paste these instructions into the project's instructions field and save.",
+      "prompt": "You answer ONLY with what is written in the documents in this project. I work in [YOUR SECTOR].\n\nRULES, in this order:\n\n1. Before answering, search the documents. If the answer isn't in them, your entire answer is: «It isn't in your documents.» And you stop there. Don't fill in with general knowledge, or with what's usual in the sector, or with an estimate.\n\n2. After each statement, put in brackets the name of the file you took it from. If it comes from two, put both.\n\n3. If you find two documents saying different things, don't choose: tell me. Show me both, with their dates and their status if they carry one, and say which one appears to govern and why.\n\n4. If the document holding the answer is marked as superseded or historical only, warn me before giving me the fact.\n\n5. Don't dress it up. No introduction, no closing summary, no offering to help with something else.",
+      "expect": "Instructions saved. From now on answers carry the file name beside them, and when it doesn't know something it says so instead of filling in.",
+      "stuck": "If it still tells you things that aren't in your documents, say in the question itself: «Only from my documents. If it isn't there, tell me.» And if it persists, check you're asking inside the project and not in a loose chat: that's the most common mistake."
+    },
+    {
+      "title": "Give it the exam",
+      "where": "Inside the project",
+      "action": "Ask your three control questions, one at a time, in separate conversations. Compare each answer with the one you wrote down: not just the fact, but whether it cited the right file. Note next to each whether it got it right, got it wrong, or got it right but cited badly.",
+      "expect": "Two out of three right on the first attempt is normal. The one that fails is usually the version question, and it's almost always because that document is missing the status label from the previous lesson.",
+      "stuck": "If the fact is wrong: find by hand which file holds it and check that file uploaded and processed properly. If the fact is right but the file is wrong: usually the fact is in several places, and it isn't serious. If it says «it isn't in your documents» about something that is: try asking with the words the document uses, not yours."
+    },
+    {
+      "title": "Ask the trick question",
+      "where": "Inside the project",
+      "action": "This is the most important test and the one almost nobody runs. Ask it something from your sector that sounds entirely reasonable but isn't in any of your documents. A procedure you've never written down, say, or a fact about a client you don't have. What you're watching for isn't whether it gets it right: it's whether it admits it doesn't have it.",
+      "expect": "«It isn't in your documents.» If instead it hands you a reasonable, well-written answer, you have a serious problem: the system is filling gaps and you won't be able to tell when. Go back to task 3 and check the instructions saved.",
+      "stuck": "If it insists on answering, try putting rule 1 in capitals and repeating it at the end of the instructions too. Models pay more attention to what's at the start and at the end. If it still fails, switch tools: there are real differences between them on this."
+    },
+    {
+      "title": "Decide whether you stay here or go down a rung",
+      "where": "In your working note",
+      "action": "Go back over the four signals in the theory: volume, whether the documents can leave your premises, whether anyone besides you has to query it, and whether your documents are awkward to chunk. Write one sentence saying whether you're staying with the Project or need your own setup, with the reason.",
+      "expect": "One clear sentence. If you're staying with the Project, you've finished the build: lesson 33 teaches you to sharpen the answers and 34 to check them, and both apply to you just the same. If you need your own setup, note it and carry on: you'll see it in the document system kit.",
+      "stuck": "If you're hesitating over privacy, don't settle it on instinct and don't settle it now: that's lesson 41 in full. Meanwhile, upload only what has no personal data and work with that."
+    },
+    {
+      "title": "Note your plan's limits before uploading",
+      "where": "On the tool's website",
+      "action": "Look in the help pages or the pricing page for how many files and how much weight a project accepts on the plan you have. Write it down in your working file with today's date, because these numbers change every few months. Compare that number with the documents you were left with after the clean-up.",
+      "expect": "Two figures side by side: what it accepts and what you have. If yours fits with room to spare, go ahead. If it's tight, decide now what goes up first instead of finding out halfway through the upload.",
+      "stuck": "If you can't find the figure, do it the blunt way: upload files until it warns you. That's just as good a piece of information and it takes less time than looking it up."
+    },
+    {
+      "title": "Upload in batches and check each one",
+      "where": "In your project",
+      "action": "Don't upload all two hundred at once. Upload a first batch of twenty, the ones you consult most, and wait for them to finish processing. Ask a control question. Then upload the next batch and repeat. It sounds slower and it's faster: if something fails you know which batch it was in, and if the system already serves you with sixty files, you've saved yourself uploading the rest.",
+      "expect": "Batches uploaded with a check in between. Note which batch you stopped noticing improvement at: that number is how many documents you actually needed.",
+      "stuck": "If a file errors while processing, note it and carry on with the rest. Don't stop the batch for one. It's almost always a password-protected PDF or one of the text-free scans that slipped through."
+    },
+    {
+      "title": "Check what happens with a new document",
+      "where": "In your project",
+      "action": "Your folder isn't frozen: tomorrow you'll sign a new contract. Test the full cycle now, which is what you'll be repeating every week. Take a recent document you haven't uploaded, give it its three-line label, upload it, wait for it to process and ask it a question only it can answer. Time how long it takes from dragging to being able to ask.",
+      "expect": "A time noted down, usually between one and five minutes. That's the cost of keeping the system current, and it's the figure that decides whether you'll actually keep it up or abandon it in three weeks.",
+      "stuck": "If it takes a while or you keep forgetting, build the habit rather than relying on willpower: a folder called «to upload» on your desktop and a reminder on Fridays. Five minutes a week."
+    },
+    {
+      "title": "Write your setup's index card",
+      "where": "In a file called «my-system.txt»",
+      "action": "Six lines so you remember in three months: which tool you use and with which account, how many documents are in it and which folder they came from, where the original clean folder is, what instructions you've given it, how to add a new document, and today's date.",
+      "expect": "A short file. It's the first piece of the deliverable you build in lesson 45, and the day you want to change tools it's the only thing that will let you rebuild without starting from scratch.",
+      "stuck": "If it feels like paperwork, think about the real scenario: in six months the tool changes its price or its terms and you want to move. Without this card, moving starts with reconstructing what you did."
+    }
+  ],
+  "matters": [
+    "That a Claude or ChatGPT Project is already one of these systems, built in minutes and with nothing installed.",
+    "That there are four concrete signals that force your own setup, and none of them is «being more advanced».",
+    "That the first question has to be one whose answer you already know, or you can't judge anything.",
+    "That the real test is the trick question: checking that it admits what it doesn't know."
+  ],
+  "ignore": [
+    "Which embedding model is best. The default ones work well in Spanish and English.",
+    "Vector database comparisons. At your scale they're all far more than enough.",
+    "Setting up Docker on day one. If the Project serves you, you don't need it."
+  ],
+  "canDo": [
+    "Have your documents queryable and working today.",
+    "Force the system to cite the file behind every answer.",
+    "Check with your own exam whether it works or only looks like it.",
+    "Know whether your case stays with the simple version or needs your own setup."
+  ],
+  "cantDo": [
+    "Query it from another program or from a website of yours: that needs your own setup.",
+    "Change how the documents are chunked.",
+    "Put sensitive personal data in with any confidence: that's lesson 41.",
+    "Ask things that have to be added up or compared across documents."
+  ],
+  "words": [
+    ["Project (Claude or ChatGPT)", "A space with documents and fixed instructions where the assistant searches before answering."],
+    ["Embedding", "The list of numbers representing the meaning of a piece of text. It's what allows searching by sense rather than exact word."],
+    ["Vector database", "The store for those numbers, built to find the closest ones very fast."],
+    ["Source / citation", "The name of the file a statement comes from. Without it, the answer can't be checked."],
+    ["Trick question", "Asking something that isn't in your documents, to see whether it admits it or makes it up."]
+  ],
+  "next": "You have it working. In lesson 33 you'll sharpen the part that decides the quality of everything: how you ask, and what instructions to give it so it doesn't fill gaps or mix up versions."
+}

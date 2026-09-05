@@ -1,0 +1,119 @@
+{
+  "id": "datos-04",
+  "number": 33,
+  "stageId": "datos",
+  "title": "Making it answer only from your data, and say where from",
+  "promise": "You'll get the system to stop filling gaps: to cite the file behind every fact, to warn you when two documents contradict each other, and to say «I don't have it» without dressing it up. By the end you'll have your instructions tuned and tested against the real failures.",
+  "minutes": 35,
+  "why": "It was working fine for Nuria until a client asked about the surcharge for filing late. The system answered «20% with a 25% reduction if paid within the voluntary period», citing one of her files. She forwarded it to the client. The file was a 2017 email in which she was copying out the rule as it stood then, and it had since changed. The system did its job: it found the document and cited it correctly. The failure was that nobody had told it to check the date before treating a rule as current. That warning goes in the instructions, and that's this lesson.",
+  "theory": [
+    {
+      "title": "The four failures, and there are only four",
+      "text": "When a setup like this fails, it's almost always for one of four reasons, and they're worth keeping in mind because each is fixed somewhere different. One: it doesn't find the document, even though it's there. Two: it finds it but picks the wrong chunk. Three: it finds the right one and still words the conclusion badly. And four, the worst: it finds nothing and invents the answer from general knowledge. The first two are search problems and get fixed by how you ask and how the documents are prepared. The third gets fixed with instructions. The fourth does too, and it's the only one of the four that can have you sending a false fact to a client without noticing. That's why it gets attacked first.",
+      "example": "Nuria's case was a fifth kind, born of the fourth: it found the correct document for what she asked, but the document had expired and nobody had told it to check."
+    },
+    {
+      "title": "Banning the filler is an instruction, not a hope",
+      "text": "The default behaviour of these models is to always answer. If they find nothing in your documents, they don't go quiet: they draw on what they know about the world, which is usually correct in general and usually false in your case. To make it stop, you have to say so explicitly and without hedging, and you also have to tell it what to do instead. «If it isn't in the documents, answer exactly: it isn't in your documents» works far better than «don't make things up», because you're giving it a concrete way out rather than a vague prohibition. And you have to put it at the start and repeat it at the end: models pay more attention to the extremes of a long text.",
+      "analogy": "It's the difference between telling someone «don't lie to me» and telling them «if you don't know, say to me literally: I don't know». The first is a principle; the second is an instruction they can follow.",
+      "example": "«Don't make things up» → it still fills in from time to time. «If it isn't in the documents, your entire answer is: It isn't in your documents» → it stops almost every time."
+    },
+    {
+      "title": "Have it show the chunk, not just the file name",
+      "text": "Citing the file name is good but falls short: in a forty-page contract, knowing the answer is «in that contract» doesn't help much, and besides, the file name can be cited correctly even when the conclusion is invented. What genuinely lets you check is having it paste you the literal fragment each thing came from, in quotes. With that you can read the original in two seconds and see whether the conclusion holds. It's also the most effective brake on the third failure, the badly worded conclusion: when it has to paste the sentence it came from, it sticks much closer to what that sentence says.",
+      "example": "«The deadline is 15 days (circular-2011.pdf)» is citing. «The deadline is 15 days. Document says verbatim: “the filing period shall be fifteen calendar days from the start of activity” (circular-2011.pdf, section 3)» is being able to check it."
+    },
+    {
+      "title": "Dates: the warning Nuria didn't have",
+      "text": "Your documents span different years and some of them describe rules or prices that have since changed. The system has no way of knowing that on its own: to it, a 2017 email and one from yesterday count the same. You have to tell it to look at the date and to warn you. The instruction that works has two parts: always say what date the source document is from, and if that date is more than a couple of years old and the topic is one that changes (rules, prices, official deadlines), say so expressly before giving the fact. It isn't that the system knows whether something expired. It's that it puts in front of you the fact you need in order to decide that yourself.",
+      "example": "«According to an email of yours from May 2017, the surcharge is 20%. Warning: this document is more than two years old and concerns a rule. Confirm it before using it.» That's what would have saved Nuria the trouble."
+    },
+    {
+      "title": "Contradictions: don't let it choose for you",
+      "text": "When two of your documents say different things, the worst thing the system can do is decide in silence. What's correct is for it to show you both, with their dates, and tell you which appears to govern and why. That turns an invisible failure into a decision of yours, which is exactly what you want. And it doubles as a detector: every contradiction it shows you is a place in your filing that needs fixing. Over time those warnings drop off, and that drop is the sign your documents are getting better.",
+      "example": "«I find two: circular-2011 says 15 days and a 2015 email says 20. The circular is marked as in force and the email carries no status. The circular appears to govern, but confirm it.»"
+    },
+    {
+      "title": "Asking well is half the result too",
+      "text": "There's something you can do yourself in every question that fixes the second failure, the wrong chunk. The search works by similarity, so if you ask in your everyday words and your documents use the formal ones, the match is worse. The solution isn't to learn to talk oddly: it's to put both versions in the question. «What's my deadline for registering a self-employed person (registration, form 036, start of activity)?» finds far more than the same question on its own. And when something doesn't turn up, try asking with the exact words you know the document uses.",
+      "example": "«What do I charge practices?» found nothing. «What discount or special terms do I apply to partner practices?» found the email first time."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Provoke the four failures on purpose",
+      "where": "In your project with the documents",
+      "action": "Before fixing anything you need to see what's broken in your particular case. Ask these four questions in a row and note what happens with each. First: something you know is in your documents but asked in your own colloquial words. Second: something inside your longest document. Third: something from an old document about a rule or a price. Fourth: something that sounds reasonable for your sector but isn't in any document of yours.",
+      "expect": "Four answers and four notes. Typically the first and the fourth fail. Keep them as they are: they're your baseline and you'll be comparing against them.",
+      "stuck": "If all four come out fine, don't trust it yet: raise the difficulty. Ask about something that exists in two documents with different versions. That's where almost everyone falls over."
+    },
+    {
+      "title": "Put in the full instructions",
+      "where": "In your project's instructions field",
+      "action": "Replace the instructions from the previous lesson with these, which already cover the four failures and the dates. Fill in your sector and save.",
+      "prompt": "You are my assistant for consulting MY documents. I work in [YOUR SECTOR].\n\nMAIN RULE: you answer only with what is written in the documents in this project. If the answer isn't in them, your entire answer is: «It isn't in your documents.» You don't fill in with general knowledge, with what's usual in the sector, or with estimates.\n\nFORMAT FOR EVERY ANSWER, in this order:\n1. The answer, in one or two sentences.\n2. VERBATIM: the exact fragment of the document it comes from, in quotes and unaltered.\n3. SOURCE: file name and, if it carries them, the document's date and section.\n\nMANDATORY WARNINGS:\n- If the document is more than two years old and the topic is one that changes (rules, official deadlines, prices, rates), write before the answer: «WARNING: fact from [year], check it before using it.»\n- If the document is marked as superseded or historical only, warn me before giving me the fact.\n- If two documents say different things, DON'T choose. Show me both with their dates and status, say which appears to govern and why, and let me decide.\n- If you only find something similar but not exactly what I asked, say so: «I can't find this exactly. The closest I have is…»\n\nNo introduction, no closing summary, and don't offer to help with anything else.\n\nREMEMBER: if it isn't in my documents, the answer is «It isn't in your documents».",
+      "expect": "Instructions saved. Notice that the main rule appears at the start and repeated at the end: that isn't an oversight, it's what makes it stick.",
+      "stuck": "If your tool limits the size of the instructions, drop the last of the warnings first («if you only find something similar»), which is the least critical. The main rule and the format don't get touched."
+    },
+    {
+      "title": "Repeat the four questions and compare",
+      "where": "In your project",
+      "action": "Ask exactly the same four questions from task 1 again, in new conversations, and put the answers next to the earlier ones. Look for three things: whether it now cites the verbatim fragment, whether the fourth admits it doesn't have it, and whether the third produces the date warning.",
+      "expect": "The fourth has to give «It isn't in your documents». The third has to carry the year warning. If those two land, you've fixed what matters. The first may still fail: that gets fixed in the next task, by asking better.",
+      "stuck": "If the fourth keeps inventing after you've put the instructions in, check the obvious first: that you're asking inside the project. If you are, try a different tool for that task; there are real differences between Claude and ChatGPT here and it's worth trying both with your own documents."
+    },
+    {
+      "title": "Learn to ask with both sets of words",
+      "where": "In your project",
+      "action": "Take the first question, the colloquial one that failed. Rewrite it putting in brackets the formal words you know your documents use, and ask again. If you don't know what words they use, open the document and look: that's part of the work too.",
+      "prompt": "[YOUR USUAL QUESTION, in your own words] (also search for: [FORMAL WORD 1], [FORMAL WORD 2], [OFFICIAL NAME OF THE DOCUMENT OR FORM])",
+      "expect": "Now it finds it. Repeat the trick with two or three questions you ask often and note down the word pairs: within a week it becomes automatic.",
+      "stuck": "If it still can't find it with the formal words, the problem isn't the question: it's that the document wasn't uploaded, didn't process, or is a text-free scan. Check in the project's file list."
+    },
+    {
+      "title": "Set the contradiction trap",
+      "where": "In your project",
+      "action": "This test is done deliberately and it teaches a lot. Create a new text document that contradicts one of yours on a specific fact, give it a recent date in its three-line label, and upload it to the project. Then ask about that fact.",
+      "expect": "It has to show you both documents, with their dates, and tell you which appears to govern. If instead it picks one and hands it over as though there were nothing else, the contradiction instruction isn't working and you have an invisible failure running.",
+      "stuck": "If it chooses in silence, reinforce that rule by putting it at the start of the instructions too, just under the main rule. When you've finished the test, remember to delete the fake document from the project: it's exactly the kind of file that sits there forever and answers on your behalf a year later."
+    },
+    {
+      "title": "Keep your instructions outside the tool",
+      "where": "In a text file in your working folder",
+      "action": "Copy the tuned instructions into a file called «document-query-instructions.txt» and keep it next to your clean folder. Note the date underneath and a line saying what you changed and why.",
+      "expect": "A file with your instructions. It serves three purposes: if you change tools you have them ready, if someone else builds the same thing you can hand them over, and when something starts failing in three months you can see what you had in place.",
+      "stuck": "If you can't be bothered, consider this: the instructions you've just written are the result of this entire lesson. They live inside another company's website, in a text field that can be emptied with one click. Five seconds of copy and paste."
+    }
+  ],
+  "matters": [
+    "That there are four possible failures and the dangerous one is the one that fills gaps without warning.",
+    "That banning the filler works when you give it a concrete way out, not when you ask it not to invent.",
+    "That asking for the verbatim fragment is the only thing that lets you genuinely check an answer.",
+    "That faced with two contradictory documents, the system should show them to you, not choose."
+  ],
+  "ignore": [
+    "Tuning how many fragments it retrieves. The factory value is fine to start.",
+    "Rerankers and other advanced search pieces. You don't need them at this scale.",
+    "The model's temperature. That isn't what causes the inventions here."
+  ],
+  "canDo": [
+    "Force it to say «it isn't in your documents» instead of filling in.",
+    "Get the verbatim fragment for every fact and check it against the original.",
+    "Have it warn you when a fact comes from an old document.",
+    "Have it show you contradictions instead of resolving them on its own."
+  ],
+  "cantDo": [
+    "Rule out entirely that it words some conclusion badly. You have to read the answers.",
+    "Know whether a rule changed: it can only tell you when the document is from.",
+    "Find what you didn't upload or what's a text-free scan.",
+    "Measure how often it gets things right: that's lesson 34."
+  ],
+  "words": [
+    ["Filling the gap", "Answering from general knowledge when nothing is found in your documents. The most dangerous failure because it doesn't show."],
+    ["Verbatim", "The exact fragment of the document, in quotes and unaltered. It's what makes an answer checkable."],
+    ["Date warning", "Flagging what year the document is from when the topic is one that changes."],
+    ["Contradiction", "Two of your documents saying different things about the same matter. They get shown, not resolved in silence."],
+    ["Query with synonyms", "Putting both your words and the document's formal ones into the question, so the similarity search lands."]
+  ],
+  "next": "It answers well and cites. What's missing is what turns this into something you can rely on: measuring it. In lesson 34 you build a set of questions with their correct answers and check how often it gets them right, so you know what to trust and what not to."
+}
