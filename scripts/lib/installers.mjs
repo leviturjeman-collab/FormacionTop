@@ -11,6 +11,15 @@ const mac = (code) => ({ os: 'mac', label: 'Mac', shell: 'Terminal', code })
 const linux = (code) => ({ os: 'linux', label: 'Linux', shell: 'bash', code })
 
 export const INSTALLERS = {
+  codex: {
+    id: 'codex', title: 'Instalar Codex CLI',
+    what: 'Cliente de terminal de OpenAI. Requiere Node.js; también puedes usar la aplicación de Codex.',
+    tools: ['codex'], stages: ['asistentes', 'entorno'],
+    variants: [win('npm install -g @openai/codex\ncodex --version\ncodex'), mac('npm install -g @openai/codex\ncodex --version\ncodex'), linux('npm install -g @openai/codex\ncodex --version\ncodex')],
+    verify: 'codex --version muestra una versión y codex permite iniciar sesión.',
+    fails: [['No se encuentra npm', 'Instala Node.js LTS y abre otra terminal.'], ['No aparece el modelo esperado', 'Comprueba las opciones disponibles en tu cuenta; no todos los modelos están habilitados para todos los usuarios.']],
+    warning: 'Guía oficial: https://developers.openai.com/codex/quickstart',
+  },
   entorno: {
     id: 'entorno',
     title: 'Dejar el ordenador listo para trabajar',
@@ -65,7 +74,7 @@ python3 --version && node --version && git --version`),
     id: 'ia',
     title: 'Instalar los asistentes de IA y configurar las claves',
     what: 'Deja instalados Claude Code y Ollama, y configura las claves de API en tu sistema para que cualquier proyecto las encuentre.',
-    tools: ['claude', 'claude-code', 'anthropic', 'openai', 'ollama', 'codex'],
+    tools: ['claude-code', 'ollama'],
     stages: ['asistentes', 'fundamentos', 'agentes'],
     variants: [
       win(`# Requiere Node.js ya instalado (bloque anterior).
@@ -120,7 +129,7 @@ claude --version && ollama --version`),
     id: 'automatizacion',
     title: 'Levantar n8n y una base de datos en tu ordenador',
     what: 'Deja n8n funcionando en local junto a PostgreSQL con búsqueda vectorial, todo con Docker y en un solo comando.',
-    tools: ['n8n', 'docker', 'postgres', 'supabase'],
+    tools: ['n8n'],
     stages: ['automatizacion', 'datos', 'entorno'],
     variants: [
       win(`# 1. Instala Docker Desktop y ÁBRELO (tiene que estar arrancado)
@@ -345,6 +354,8 @@ vercel --prod`),
 /** Instaladores que corresponden a una lección, por herramientas y área. */
 export function installersFor({ stageId, tools, title }) {
   const scored = Object.values(INSTALLERS).map((installer) => {
+    // An area match alone must never attach another product's installer.
+    if (!installer.tools.some((tool) => tools.includes(tool))) return { installer, score: 0 }
     let score = 0
     if (installer.stages.includes(stageId)) score += 3
     score += installer.tools.filter((tool) => tools.includes(tool)).length * 3

@@ -10,6 +10,15 @@
  */
 
 export const APPS = {
+  codex: {
+    label: 'Codex', icon: 'codex',
+    what: 'Agente de OpenAI que trabaja con los archivos de tu proyecto y ejecuta pruebas.',
+    open: 'Consulta developers.openai.com/codex/quickstart para elegir aplicación, editor o terminal.',
+    steps: [['Abrir el proyecto', 'Selecciona su carpeta y pide que identifique cómo se ejecuta.'], ['Definir el cambio', 'Describe el problema y un resultado que puedas comprobar.'], ['Revisar', 'Comprueba los cambios y el resultado de las pruebas.']],
+    matters: ['Conserva una versión recuperable antes de editar.', 'Publica solo después de revisar el resultado.'],
+    ignore: ['Pedir cambios generales sin un criterio de éxito.'],
+    example: { title: 'Corregir un formulario', steps: ['Reproduce el fallo con datos de prueba.', 'Pide a Codex una corrección y una prueba del caso.', 'Revisa el formulario y los archivos modificados.'], time: 'Depende del alcance; mide el primer caso.' },
+  },
   n8n: {
     label: 'n8n',
     icon: 'n8n',
@@ -288,10 +297,7 @@ export const APPS = {
 
 const ALIASES = {
   openai: 'chatgpt',
-  claude: 'claude-code',
-  anthropic: 'claude-code',
-  codex: 'claude-code',
-  postgres: 'supabase',
+  anthropic: 'claude',
   node: null,
   python: null,
 }
@@ -308,7 +314,7 @@ export function appGuideFor(tools, stageId, title = '') {
     const key = tool in ALIASES ? ALIASES[tool] : tool
     if (!key || !APPS[key]) continue
     // Tiene que nombrarse en el título: es la señal de que la lección va de eso.
-    if (enTitulo.includes(APPS[key].label.toLowerCase()) || enTitulo.includes(tool)) return APPS[key]
+    if (enTitulo.includes(APPS[key].label.toLowerCase())) return APPS[key]
   }
   return null
 }

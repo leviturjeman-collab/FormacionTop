@@ -190,7 +190,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
       </section>
       )}
 
-      {student.teacher && <TeacherPanel lesson={lesson} level={active} />}
+      {student.access === 'admin' && <TeacherPanel lesson={lesson} level={active} />}
 
       {lesson.assets && lesson.assets.length > 0 && (
         <section className="st-lesson-assets">

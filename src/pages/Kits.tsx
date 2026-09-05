@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { useMemo, useState } from 'react'
 import {
   AlertTriangle, ArrowRight, BookMarked, Check, Clipboard, Coins, Download, FileText,
@@ -102,18 +103,26 @@ function kitAutomations(tools: ToolPage[]) {
 function CopyButton({ text, label, ghost }: { text: string; label?: string; ghost?: boolean }) {
   const locale = useLocale()
   const [done, setDone] = useState(false)
+  const [failed, setFailed] = useState(false)
   const defaultLabel = locale === 'en' ? 'Copy' : 'Copiar'
   return (
     <button
       type="button"
       className={ghost ? 'st-btn-ghost' : 'st-btn'}
-      onClick={() => {
-        navigator.clipboard?.writeText(text)
-        setDone(true)
-        window.setTimeout(() => setDone(false), 1600)
+      onClick={async () => {
+        setFailed(false)
+        setDone(false)
+        try {
+          await copyText(text)
+          setDone(true)
+          window.setTimeout(() => setDone(false), 1600)
+        } catch {
+          setFailed(true)
+        }
       }}
+      aria-live="polite"
     >
-      {done ? <Check size={12} /> : <Clipboard size={12} />} {done ? (locale === 'en' ? 'Copied' : 'Copiado') : (label ?? defaultLabel)}
+      {done ? <Check size={12} /> : <Clipboard size={12} />} {done ? (locale === 'en' ? 'Copied' : 'Copiado') : failed ? (locale === 'en' ? 'Copy failed. Retry' : 'No se pudo copiar. Reintentar') : (label ?? defaultLabel)}
     </button>
   )
 }
@@ -219,7 +228,7 @@ export default function Kits() {
       projectType: previous?.projectType || 'institucional',
       promptBrief: previous?.promptBrief || '',
       savedPrompts: [
-        ...(previous?.savedPrompts || []),
+        ...(previous?.savedPrompts || []).filter((saved) => saved.prompt !== kit.brief.prompt),
         {
           id: `kit-${kit.id}-${Date.now()}`,
           family: locale === 'en' ? 'Institutional kit' : 'Kit institucional',

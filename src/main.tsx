@@ -11,6 +11,7 @@ import './project.css'
 import './prompts.css'
 import './curso.css'
 import './kits.css'
+import './responsive.css'
 import App from './App'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

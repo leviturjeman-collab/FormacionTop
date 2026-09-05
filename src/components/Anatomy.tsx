@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 import type { AnatomyPiece } from '../types'
@@ -54,7 +55,7 @@ export default function Anatomy({ piece }: { piece: AnatomyPiece }) {
           type="button"
           className="st-btn-ghost"
           onClick={() => {
-            navigator.clipboard?.writeText(piece.code).then(
+            copyText(piece.code).then(
               () => {
                 setCopied(true)
                 window.setTimeout(() => setCopied(false), 1600)

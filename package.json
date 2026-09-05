@@ -8,11 +8,18 @@
     "index:es": "node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs",
     "index:en": "cross-env LOCALE=en node scripts/build-content-index.mjs",
     "dev": "npm run index && vite",
-    "build": "npm run index && tsc -b && vite build",
+    "build": "npm run index && npm run typecheck && vite build",
     "preview": "vite preview",
-    "validate": "npm run index && node scripts/validate-content.mjs && node scripts/validate-student-ui.mjs",
+    "validate": "npm run index && node scripts/validate-content.mjs && cross-env LOCALE=en node scripts/validate-content.mjs && node scripts/validate-student-ui.mjs && node scripts/validate-tool-identity.mjs",
     "test:automations": "node scripts/validate-workflows.mjs && node scripts/validate-tool-automation-guides.mjs",
-    "test": "npm run validate && npm run test:automations && tsc -b && vite build"
+    "test": "npm run validate && npm run test:automations && npm run test:security && npm run test:quality && npm run test:content && npm run typecheck && vite build",
+    "typecheck": "tsc -b && tsc -p tsconfig.server.json",
+    "test:security": "node scripts/test-store.mjs && node scripts/test-session-client.mjs && node scripts/test-session-server.mjs",
+    "test:quality": "node scripts/test-clipboard.mjs",
+    "test:mobile": "node scripts/test-mobile-layout.mjs && node scripts/test-touch-layout.mjs && node scripts/test-touch-roles.mjs",
+    "test:backend:live": "node scripts/test-backend-live.mjs",
+    "test:access:live": "node scripts/test-access-ui.mjs",
+    "test:content": "node scripts/test-content-shards.mjs"
   },
   "dependencies": {
     "@fontsource/fraunces": "^5.2.5",
@@ -20,6 +27,7 @@
     "@fontsource/inter-tight": "^5.3.0",
     "@fontsource/manrope": "^5.2.5",
     "@supabase/supabase-js": "^2.115.0",
+    "@vercel/functions": "^3.9.5",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -27,6 +35,8 @@
     "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@types/node": "^24.13.3",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

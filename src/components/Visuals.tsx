@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { useMemo, useState } from 'react'
 import { ArrowDownUp, CircleCheck, Circle, FileCode, Folder, RotateCw, Sparkles, User, Wrench } from 'lucide-react'
 import type { BarsPiece, ChatPiece, ChecklistPiece, FileTreePiece, FlashcardsPiece } from '../types'
@@ -28,7 +29,7 @@ export function FileTree({ piece }: { piece: FileTreePiece }) {
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard?.writeText(node.path).then(() => {
+                copyText(node.path).then(() => {
                   setCopied(node.path)
                   window.setTimeout(() => setCopied(null), 1400)
                 }, () => undefined)

@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Ban, Check, CheckCircle2, Circle, Clock, Copy, HelpCircle, Languages, Lightbulb, List, Quote } from 'lucide-react'
 import type { Guide } from '../types'
@@ -20,7 +21,7 @@ function TaskPrompt({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => {
-          navigator.clipboard?.writeText(text).then(
+          copyText(text).then(
             () => {
               setCopied(true)
               window.setTimeout(() => setCopied(false), 1800)

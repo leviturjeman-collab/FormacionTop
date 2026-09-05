@@ -26,7 +26,8 @@ export type BlockKind =
   | 'cuenta' | 'palabras' | 'primeros'
 
 export interface Part {
-  type: 'p' | 'sub' | 'ul' | 'ol' | 'code' | 'table'
+  links?: { label: string; href: string }[]
+  type: 'p' | 'sub' | 'ul' | 'ol' | 'code' | 'table' | 'links'
   text?: string
   items?: string[]
   code?: string
@@ -394,6 +395,7 @@ export interface ToolAutomation {
 }
 
 export interface ToolGuide {
+  counts?: { prompts: number; automations: number }
   plain: string
   account: { url: string; free: string; steps: [string, string][]; warning?: string }
   first: string[]
@@ -412,7 +414,7 @@ export interface ToolGuide {
   /** Prompts específicos de esta herramienta. */
   prompts?: { name: string; prompt: string; when?: string; model?: string; lesson?: string }[]
   /** Mapa de las piezas que el alumno encontrará dentro de la herramienta. */
-  catalog?: { intro: string; items: ToolCatalogItem[] }
+  catalog?: { intro: string; items: ToolCatalogItem[]; sources?: { title: string; url: string; checkedAt: string }[] }
   /** Automatizaciones relacionadas, alojadas dentro de la ficha de la herramienta. */
   automations?: ToolAutomation[]
   /** Cómo se mide el uso: tokens, créditos, tareas, ejecuciones o tiempo. */

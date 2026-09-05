@@ -108,7 +108,7 @@ function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle
 
   return (
     <li className={`st-term${open ? ' open' : ''}`}>
-      <button className="st-term-head" onClick={onToggle} aria-expanded={open} disabled={!hasDetail}>
+      <button type="button" className="st-term-head" onClick={onToggle} aria-expanded={open} disabled={!hasDetail}>
         <ChevronRight size={11} className="st-term-caret" aria-hidden />
         <span className="st-term-name">{entry.term}</span>
         <span className="st-term-short">{entry.meaning}</span>

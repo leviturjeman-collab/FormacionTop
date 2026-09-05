@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { copyText } from '../clipboard'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
@@ -18,13 +19,41 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState(false)
   const [open, setOpen] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const previous = document.activeElement as HTMLElement | null
+    const dialog = dialogRef.current
+    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex="0"]') || [])
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    focusable()[0]?.focus()
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); setOpen(false) }
+      if (event.key !== 'Tab') return
+      const elements = focusable()
+      const first = elements[0], last = elements[elements.length - 1]
+      if (!first) { event.preventDefault(); return }
+      if (event.shiftKey && (document.activeElement === first || !dialog?.contains(document.activeElement))) {
+        event.preventDefault(); last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog?.contains(document.activeElement))) {
+        event.preventDefault(); first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKey)
+      if (previous?.isConnected) previous.focus({ preventScroll: true })
+    }
+  }, [open])
   const student = useStudent()
   const locale = useLocale()
 
   function saveToProject() {
     const previous = student.project
     const savedPrompts = [
-      ...(previous?.savedPrompts || []),
+      ...(previous?.savedPrompts || []).filter((saved) => saved.prompt !== prompt.prompt),
       {
         id: prompt.id || `${Date.now()}-${prompt.name}`,
         family: familyTitle,
@@ -68,7 +97,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
       </button>
 
       {open && (
-        <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={`Prompt ${prompt.name}`}>
+        <div ref={dialogRef} className="st-focus-modal" role="dialog" aria-modal="true" aria-label={`Prompt ${prompt.name}`}>
           <button type="button" className="st-focus-backdrop" onClick={() => setOpen(false)} aria-label={locale === 'en' ? 'Close' : 'Cerrar'} />
           <div className="st-focus-sheet st-prompt-modal">
             <header>
@@ -85,7 +114,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
                   type="button"
                   className="st-prompt-copy"
                   onClick={() => {
-                    navigator.clipboard?.writeText(prompt.prompt).then(
+                    copyText(prompt.prompt).then(
                       () => {
                         setCopied(true)
                         window.setTimeout(() => setCopied(false), 1800)

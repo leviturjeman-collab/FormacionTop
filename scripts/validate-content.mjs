@@ -149,6 +149,9 @@ for (const lesson of course.lessons) {
 
 // Toda lección pertenece a una etapa real y aparece en ella.
 const stageIds = new Set(course.stages.map((stage) => stage.id))
+for (const lesson of course.curso || []) {
+  if (!stageIds.has(lesson.stageId)) problems.push(`${lesson.id}: etapa del programa desconocida «${lesson.stageId}».`)
+}
 for (const lesson of course.lessons) {
   if (!stageIds.has(lesson.stageId)) problems.push(`${lesson.slug}: etapa desconocida «${lesson.stageId}».`)
 

@@ -1,4 +1,6 @@
 import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS } from './automations-reales.mjs'
+import { addVerifiedModels } from './verified-models.mjs'
+import { addToolUsage } from './tool-usage.mjs'
 
 const MAX_TOOL_AUTOMATIONS = 25
 
@@ -359,7 +361,7 @@ export const TOOL_GUIDES = {
  */
 const DISCOVERED_TOOL_META = {
   'nano-banana': { label: 'Nano Banana', url: 'ai.google.dev', kind: 'image', plain: 'Nano Banana aparece aquí como una herramienta independiente del curso para crear y editar imágenes con instrucciones y referencias. En la documentación actual se trata como la familia/capacidad de imagen de Gemini, incluyendo Gemini 2.5 Flash Image y versiones posteriores; por eso el curso obliga a comprobar el modelo exacto antes de presupuestar o entregar. Sirve para pasar de una idea visual a variantes controladas, pero hay que revisar composición, texto, identidad, derechos, marcas de agua y consumo antes de publicar.' },
-  'seedance-2-5': { label: 'Seedance 2.5', url: 'seed.bytedance.com', kind: 'video', plain: 'Seedance 2.5 aparece aquí como herramienta independiente de vídeo generativo. Sirve para convertir una idea, una imagen o una secuencia de planos en vídeo con movimiento, audio y continuidad, pero hay que revisar créditos, derechos, personas identificables, coherencia entre planos, sonido y uso comercial antes de enseñar o publicar.' },
+  'seedance-2-5': { label: 'Seedance 2.5', url: 'seed.bytedance.com', kind: 'video', plain: 'Seedance 2.5 es un modelo de generación audiovisual de ByteDance que se utiliza desde las plataformas que lo ofrecen. Sirve para convertir una idea, una imagen o una secuencia de planos en vídeo con movimiento, audio y continuidad, pero hay que revisar créditos, derechos, personas identificables, coherencia entre planos, sonido y uso comercial antes de enseñar o publicar.' },
   base44: { label: 'Base44', url: 'base44.com', kind: 'apps', plain: 'Un constructor de aplicaciones que convierte una descripción en una aplicación funcional con pantallas, datos y lógica. Sirve para prototipos y productos pequeños, pero hay que revisar qué ha creado antes de usarlo con datos reales.' },
   bolt: { label: 'Bolt.new', url: 'bolt.new', kind: 'apps', plain: 'Un constructor web que trabaja desde el navegador: describes una página o aplicación y genera una primera versión que puedes ver, editar y publicar. Es útil para prototipos rápidos, siempre que guardes el código y revises cada cambio.' },
   replit: { label: 'Replit', url: 'replit.com', kind: 'apps', plain: 'Un entorno de programación en el navegador con un agente que puede crear aplicaciones a partir de una conversación. Te da una ruta rápida de idea a demo, pero la versión que entregues debe quedar respaldada en GitHub y probada fuera del chat.' },
@@ -637,7 +639,7 @@ const TOOL_PROFILES = {
     ],
   },
   'seedance-2-5': {
-    intro: 'Seedance 2.5 es una herramienta de vídeo generativo que debe aprenderse como una mesa de montaje: brief, plano, movimiento, duración, continuidad, audio, revisión y exportación. La ficha evita tratar el vídeo como magia; cada generación tiene coste, descarte y criterio de aprobación.',
+    intro: 'Seedance 2.5 es un modelo de generación audiovisual. Para trabajar con él prepara: brief, plano, movimiento, duración, continuidad, audio, revisión y exportación. La ficha evita tratar el vídeo como magia; cada generación tiene coste, descarte y criterio de aprobación.',
     units: 'créditos, segundos generados, resolución, audio, variantes y límites del plan',
     selection: 'empieza con un plano corto y una referencia visual cuando exista; usa texto a vídeo solo para explorar, imagen a vídeo cuando necesites continuidad visual, y secuencia/storyboard cuando el resultado tenga varios planos conectados',
     catalog: [
@@ -848,9 +850,9 @@ function automationFor(tool, profile, blueprint, index) {
 }
 
 export function completeToolGuide(existing, tool) {
-  const guide = existing || baseGuideFor(tool)
+  const guide = existing ? structuredClone(existing) : baseGuideFor(tool)
   const profile = profileFor(tool.id)
-  guide.catalog = { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: 'Pieza interna', name: group, what, useWhen, avoidWhen, model })) }
+  guide.catalog ??= { intro: profile.intro, items: profile.catalog.map(([group, what, useWhen, avoidWhen, model]) => ({ group: 'Pieza interna', name: group, what, useWhen, avoidWhen, model })) }
   if (!Array.isArray(guide.prompts)) guide.prompts = generatedPromptsFor(tool, profile)
   guide.prompts = ensureMinimumToolPrompts(guide, tool, profile)
   guide.prompts = enrichToolPrompts(guide.prompts, tool, profile)
@@ -867,7 +869,7 @@ export function completeToolGuide(existing, tool) {
   } else {
     guide.automations = []
   }
-  return guide
+  return addToolUsage(addVerifiedModels(guide, tool.id), tool.id)
 }
 
 /** Añade guías escritas fuera del código, en content/toolguides/. */
@@ -882,8 +884,18 @@ export function registerGuides(list) {
 export function toolGuideFor(toolId) {
   const direct = TOOL_GUIDES[toolId]
   if (direct) return direct
-  const alias = { openai: 'chatgpt', anthropic: 'claude-code', claude: 'claude-code', codex: 'claude-code', git: 'github' }
-  return TOOL_GUIDES[alias[toolId]] || null
+  const alias = { openai: 'chatgpt', anthropic: 'claude' }
+  const application = TOOL_GUIDES[alias[toolId]]
+  if (!application) return null
+  const en = process.env.LOCALE === 'en'
+  const context = toolId === 'openai'
+    ? (en
+      ? 'OpenAI is the provider behind ChatGPT, Codex and the OpenAI API. ChatGPT is the chat application; Codex is the project agent; the API lets your software call models. This quickstart uses ChatGPT. API access and billing are configured separately in the developer platform. '
+      : 'OpenAI es el proveedor de ChatGPT, Codex y la API de OpenAI. ChatGPT es la aplicación de chat; Codex es el agente para proyectos; la API permite que tu programa llame a los modelos. Esta guía rápida utiliza ChatGPT. El acceso y la facturación de API se configuran por separado en la plataforma de desarrolladores. ')
+    : (en
+      ? 'Anthropic is the provider of the Claude model family. Claude is also the name of its chat application; Claude Code is its coding agent, and the API connects models to your software. This quickstart uses the Claude chat application. API access and billing are separate from the chat subscription. '
+      : 'Anthropic es el proveedor de la familia de modelos Claude. Claude también da nombre a su aplicación de chat; Claude Code es su agente de programación y la API conecta los modelos con tu software. Esta guía rápida utiliza la aplicación de chat Claude. El acceso y la facturación de API son independientes de la suscripción del chat. ')
+  return { ...structuredClone(application), id: toolId, tool: toolId, plain: context + application.plain }
 }
 
 export const GUIDED_TOOLS = Object.entries(TOOL_GUIDES).map(([id, guide]) => ({ id, tool: guide.tool }))

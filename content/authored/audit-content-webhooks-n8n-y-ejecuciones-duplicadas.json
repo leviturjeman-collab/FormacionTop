@@ -1,0 +1,330 @@
+{
+  "sourcePath": "21_TROUBLESHOOTING_Y_ERRORES_REALES/Webhooks_n8n_y_ejecuciones_duplicadas.md",
+  "levels": {
+    "basico": {
+      "blocks": [
+        {
+          "kind": "seccion",
+          "title": "Webhooks, n8n y ejecuciones duplicadas",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Los webhooks son puertas de entrada. Si se configuran mal, disparan workflows incorrectos, duplicados o inseguros."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Errores comunes",
+          "parts": [
+            {
+              "type": "ul",
+              "items": [
+                "Usar URL de test en produccion.",
+                "No validar metodo HTTP.",
+                "No comprobar payload.",
+                "Ejecutar dos veces por reintentos.",
+                "No responder a tiempo.",
+                "No guardar idempotency key.",
+                "No diferenciar entorno dev/prod."
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Diagnostico",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Revisar ejecuciones, timestamp, body, headers, status code y origen. Comparar payload correcto contra payload roto."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Reparacion",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Validar campos obligatorios, guardar ID de evento, evitar duplicados, responder rapido, registrar errores y separar webhooks de prueba y produccion."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Practica",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Enviar dos veces el mismo payload. BREAK: se crean dos registros. FIX: guardar ID y bloquear duplicado."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Laboratorio: un evento, una sola operación",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Objetivo: demostrar que reenviar un evento no duplica el trabajo. Crea un flujo de prueba cuyo único efecto sea escribir en una tabla de pruebas. Mantén desactivados correos, pagos y mensajes externos."
+            },
+            {
+              "type": "p",
+              "text": "Usa este cuerpo como entrada: `{ \"event_id\": \"prueba-001\", \"email\": \"alumno@example.com\", \"importe\": 25 }`."
+            },
+            {
+              "type": "ol",
+              "items": [
+                "Define qué campo identifica un evento de forma estable. El identificador debe venir del emisor; no generes uno nuevo en cada reintento.",
+                "Valida que event_id exista antes de escribir. Envía también un caso sin ese campo: debe devolver un error controlado y no crear registros.",
+                "Guarda event_id con una restricción única. Dos ramas separadas de «buscar y después insertar» pueden ejecutarse a la vez; la base de datos debe impedir físicamente el duplicado.",
+                "Envía prueba-001 dos veces seguidas y después dos veces de manera concurrente. Verifica una sola operación y una respuesta documentada para el duplicado.",
+                "Prueba prueba-002: debe producir otra operación. Si se bloquea, la clave de deduplicación es demasiado amplia."
+              ]
+            },
+            {
+              "type": "p",
+              "text": "Comprobación: entrega el recuento antes/después y los registros de ambas solicitudes. Explica qué ocurriría si el proceso fallara después de reservar el evento pero antes de terminar: registra estados pendiente/completado/error y permite recuperar un pendiente sin ejecutar dos veces la acción final. No marques un trabajo como completado antes de comprobar su resultado."
+            }
+          ]
+        }
+      ],
+      "practice": {
+        "goal": "Probar que un evento repetido no duplica la operación",
+        "steps": [
+          {
+            "title": "Probar que un evento repetido no duplica la operación",
+            "where": "En el material de esta ficha y tu proyecto de prueba",
+            "action": "Sigue el laboratorio con prueba-001, un caso sin event_id y prueba-002. Repite prueba-001 de forma concurrente dentro de la tabla de pruebas.",
+            "expected": "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+          }
+        ],
+        "evidence": "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+      },
+      "objectives": [
+        "Probar que un evento repetido no duplica la operación"
+      ],
+      "checklist": [
+        "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+      ]
+    },
+    "intermedio": {
+      "blocks": [
+        {
+          "kind": "seccion",
+          "title": "Webhooks, n8n y ejecuciones duplicadas",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Los webhooks son puertas de entrada. Si se configuran mal, disparan workflows incorrectos, duplicados o inseguros."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Errores comunes",
+          "parts": [
+            {
+              "type": "ul",
+              "items": [
+                "Usar URL de test en produccion.",
+                "No validar metodo HTTP.",
+                "No comprobar payload.",
+                "Ejecutar dos veces por reintentos.",
+                "No responder a tiempo.",
+                "No guardar idempotency key.",
+                "No diferenciar entorno dev/prod."
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Diagnostico",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Revisar ejecuciones, timestamp, body, headers, status code y origen. Comparar payload correcto contra payload roto."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Reparacion",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Validar campos obligatorios, guardar ID de evento, evitar duplicados, responder rapido, registrar errores y separar webhooks de prueba y produccion."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Practica",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Enviar dos veces el mismo payload. BREAK: se crean dos registros. FIX: guardar ID y bloquear duplicado."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Laboratorio: un evento, una sola operación",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Objetivo: demostrar que reenviar un evento no duplica el trabajo. Crea un flujo de prueba cuyo único efecto sea escribir en una tabla de pruebas. Mantén desactivados correos, pagos y mensajes externos."
+            },
+            {
+              "type": "p",
+              "text": "Usa este cuerpo como entrada: `{ \"event_id\": \"prueba-001\", \"email\": \"alumno@example.com\", \"importe\": 25 }`."
+            },
+            {
+              "type": "ol",
+              "items": [
+                "Define qué campo identifica un evento de forma estable. El identificador debe venir del emisor; no generes uno nuevo en cada reintento.",
+                "Valida que event_id exista antes de escribir. Envía también un caso sin ese campo: debe devolver un error controlado y no crear registros.",
+                "Guarda event_id con una restricción única. Dos ramas separadas de «buscar y después insertar» pueden ejecutarse a la vez; la base de datos debe impedir físicamente el duplicado.",
+                "Envía prueba-001 dos veces seguidas y después dos veces de manera concurrente. Verifica una sola operación y una respuesta documentada para el duplicado.",
+                "Prueba prueba-002: debe producir otra operación. Si se bloquea, la clave de deduplicación es demasiado amplia."
+              ]
+            },
+            {
+              "type": "p",
+              "text": "Comprobación: entrega el recuento antes/después y los registros de ambas solicitudes. Explica qué ocurriría si el proceso fallara después de reservar el evento pero antes de terminar: registra estados pendiente/completado/error y permite recuperar un pendiente sin ejecutar dos veces la acción final. No marques un trabajo como completado antes de comprobar su resultado."
+            }
+          ]
+        }
+      ],
+      "practice": {
+        "goal": "Probar que un evento repetido no duplica la operación",
+        "steps": [
+          {
+            "title": "Probar que un evento repetido no duplica la operación",
+            "where": "En el material de esta ficha y tu proyecto de prueba",
+            "action": "Sigue el laboratorio con prueba-001, un caso sin event_id y prueba-002. Repite prueba-001 de forma concurrente dentro de la tabla de pruebas.",
+            "expected": "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+          }
+        ],
+        "evidence": "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+      },
+      "objectives": [
+        "Probar que un evento repetido no duplica la operación"
+      ],
+      "checklist": [
+        "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+      ]
+    },
+    "avanzado": {
+      "blocks": [
+        {
+          "kind": "seccion",
+          "title": "Webhooks, n8n y ejecuciones duplicadas",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Los webhooks son puertas de entrada. Si se configuran mal, disparan workflows incorrectos, duplicados o inseguros."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Errores comunes",
+          "parts": [
+            {
+              "type": "ul",
+              "items": [
+                "Usar URL de test en produccion.",
+                "No validar metodo HTTP.",
+                "No comprobar payload.",
+                "Ejecutar dos veces por reintentos.",
+                "No responder a tiempo.",
+                "No guardar idempotency key.",
+                "No diferenciar entorno dev/prod."
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Diagnostico",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Revisar ejecuciones, timestamp, body, headers, status code y origen. Comparar payload correcto contra payload roto."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Reparacion",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Validar campos obligatorios, guardar ID de evento, evitar duplicados, responder rapido, registrar errores y separar webhooks de prueba y produccion."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Practica",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Enviar dos veces el mismo payload. BREAK: se crean dos registros. FIX: guardar ID y bloquear duplicado."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Laboratorio: un evento, una sola operación",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Objetivo: demostrar que reenviar un evento no duplica el trabajo. Crea un flujo de prueba cuyo único efecto sea escribir en una tabla de pruebas. Mantén desactivados correos, pagos y mensajes externos."
+            },
+            {
+              "type": "p",
+              "text": "Usa este cuerpo como entrada: `{ \"event_id\": \"prueba-001\", \"email\": \"alumno@example.com\", \"importe\": 25 }`."
+            },
+            {
+              "type": "ol",
+              "items": [
+                "Define qué campo identifica un evento de forma estable. El identificador debe venir del emisor; no generes uno nuevo en cada reintento.",
+                "Valida que event_id exista antes de escribir. Envía también un caso sin ese campo: debe devolver un error controlado y no crear registros.",
+                "Guarda event_id con una restricción única. Dos ramas separadas de «buscar y después insertar» pueden ejecutarse a la vez; la base de datos debe impedir físicamente el duplicado.",
+                "Envía prueba-001 dos veces seguidas y después dos veces de manera concurrente. Verifica una sola operación y una respuesta documentada para el duplicado.",
+                "Prueba prueba-002: debe producir otra operación. Si se bloquea, la clave de deduplicación es demasiado amplia."
+              ]
+            },
+            {
+              "type": "p",
+              "text": "Comprobación: entrega el recuento antes/después y los registros de ambas solicitudes. Explica qué ocurriría si el proceso fallara después de reservar el evento pero antes de terminar: registra estados pendiente/completado/error y permite recuperar un pendiente sin ejecutar dos veces la acción final. No marques un trabajo como completado antes de comprobar su resultado."
+            }
+          ]
+        }
+      ],
+      "practice": {
+        "goal": "Probar que un evento repetido no duplica la operación",
+        "steps": [
+          {
+            "title": "Probar que un evento repetido no duplica la operación",
+            "where": "En el material de esta ficha y tu proyecto de prueba",
+            "action": "Sigue el laboratorio con prueba-001, un caso sin event_id y prueba-002. Repite prueba-001 de forma concurrente dentro de la tabla de pruebas.",
+            "expected": "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+          }
+        ],
+        "evidence": "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+      },
+      "objectives": [
+        "Probar que un evento repetido no duplica la operación"
+      ],
+      "checklist": [
+        "Existe una operación por evento válido, el caso incompleto se rechaza y el duplicado no produce otro efecto."
+      ]
+    }
+  },
+  "interactive": []
+}

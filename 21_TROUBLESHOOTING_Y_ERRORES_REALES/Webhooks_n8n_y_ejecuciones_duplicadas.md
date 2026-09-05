@@ -37,3 +37,17 @@ Enviar dos veces el mismo payload. BREAK: se crean dos registros. FIX: guardar I
 
 
 ---
+
+## Laboratorio: un evento, una sola operación
+
+Objetivo: demostrar que reenviar un evento no duplica el trabajo. Crea un flujo de prueba cuyo único efecto sea escribir en una tabla de pruebas. Mantén desactivados correos, pagos y mensajes externos.
+
+Usa este cuerpo como entrada: `{ "event_id": "prueba-001", "email": "alumno@example.com", "importe": 25 }`.
+
+1. Define qué campo identifica un evento de forma estable. El identificador debe venir del emisor; no generes uno nuevo en cada reintento.
+2. Valida que event_id exista antes de escribir. Envía también un caso sin ese campo: debe devolver un error controlado y no crear registros.
+3. Guarda event_id con una restricción única. Dos ramas separadas de «buscar y después insertar» pueden ejecutarse a la vez; la base de datos debe impedir físicamente el duplicado.
+4. Envía prueba-001 dos veces seguidas y después dos veces de manera concurrente. Verifica una sola operación y una respuesta documentada para el duplicado.
+5. Prueba prueba-002: debe producir otra operación. Si se bloquea, la clave de deduplicación es demasiado amplia.
+
+Comprobación: entrega el recuento antes/después y los registros de ambas solicitudes. Explica qué ocurriría si el proceso fallara después de reservar el evento pero antes de terminar: registra estados pendiente/completado/error y permite recuperar un pendiente sin ejecutar dos veces la acción final. No marques un trabajo como completado antes de comprobar su resultado.

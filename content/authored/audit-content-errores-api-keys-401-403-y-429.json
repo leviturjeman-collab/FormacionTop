@@ -1,0 +1,324 @@
+{
+  "sourcePath": "21_TROUBLESHOOTING_Y_ERRORES_REALES/Errores_API_keys_401_403_429.md",
+  "levels": {
+    "basico": {
+      "blocks": [
+        {
+          "kind": "seccion",
+          "title": "Errores API keys, 401, 403 y 429",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Los errores de API son inevitables. El alumno debe aprender a leerlos sin pánico."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "401",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar autenticacion invalida o ausente. Revisar: variable de entorno, key copiada, comillas, prefijo, cuenta correcta y si la herramienta realmente esta leyendo la variable."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "403",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar autenticacion valida pero permiso insuficiente. Revisar scopes, rol, organizacion, proyecto, plan, region o recurso bloqueado."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "429",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar limite de rate o cuota. Revisar frecuencia, concurrencia, plan, reintentos, batch, backoff y coste."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Practica",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Configurar una llamada de prueba y romperla tres veces: key vacia, permiso incorrecto y exceso de llamadas. Documentar sintoma, evidencia y solucion."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Prevencion",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Usar nombres claros de variables, no pegar secretos en notas, separar dev/prod, limitar permisos y registrar errores sin exponer claves."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Laboratorio: diagnosticar sin exponer la clave",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Objetivo: distinguir una credencial rechazada, un permiso insuficiente y un límite de uso antes de cambiar la configuración. Usa el entorno de pruebas del proyecto y datos ficticios. No provoques una ráfaga de solicitudes para fabricar un 429: utiliza una respuesta simulada."
+            },
+            {
+              "type": "ol",
+              "items": [
+                "Guarda una solicitud que ya funcione, quitando Authorization, cookies y cualquier dato personal del registro que entregarás.",
+                "Prepara tres respuestas de prueba: estado 401 con mensaje de credencial inválida; estado 403 con recurso denegado; estado 429 con aviso de límite. El mensaje concreto depende del proveedor: conserva el cuerpo para decidir la causa.",
+                "Para 401, comprueba que el proceso recibe la variable esperada sin imprimir su valor. Reinicia el proceso si cambiaste su entorno y vuelve a enviar una sola solicitud.",
+                "Para 403, compara el recurso solicitado con los permisos de esa cuenta. Usa un recurso permitido; no amplíes todos los permisos para ocultar el fallo.",
+                "Para 429, respeta el tiempo de espera indicado por el servicio, si lo incluye, y limita los reintentos. Si el mensaje señala cuota agotada, repetir no recupera cuota: pausa el proceso y revisa el consumo."
+              ]
+            },
+            {
+              "type": "p",
+              "text": "Comprobación: entrega una tabla con estado, mensaje sin secretos, hipótesis, cambio y resultado. El tratamiento del 429 debe terminar tras un número acotado de intentos; los demás errores no deben entrar en un bucle. Si sigue fallando, conserva el identificador de solicitud y la hora para soporte, sin adjuntar la clave."
+            }
+          ]
+        }
+      ],
+      "practice": {
+        "goal": "Diagnosticar una respuesta de API sin revelar secretos",
+        "steps": [
+          {
+            "title": "Diagnosticar una respuesta de API sin revelar secretos",
+            "where": "En el material de esta ficha y tu proyecto de prueba",
+            "action": "Sigue el laboratorio con respuestas simuladas 401, 403 y 429. Registra la hipótesis y una reparación diferente para cada caso. No provoques tráfico excesivo.",
+            "expected": "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+          }
+        ],
+        "evidence": "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+      },
+      "objectives": [
+        "Diagnosticar una respuesta de API sin revelar secretos"
+      ],
+      "checklist": [
+        "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+      ]
+    },
+    "intermedio": {
+      "blocks": [
+        {
+          "kind": "seccion",
+          "title": "Errores API keys, 401, 403 y 429",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Los errores de API son inevitables. El alumno debe aprender a leerlos sin pánico."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "401",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar autenticacion invalida o ausente. Revisar: variable de entorno, key copiada, comillas, prefijo, cuenta correcta y si la herramienta realmente esta leyendo la variable."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "403",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar autenticacion valida pero permiso insuficiente. Revisar scopes, rol, organizacion, proyecto, plan, region o recurso bloqueado."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "429",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar limite de rate o cuota. Revisar frecuencia, concurrencia, plan, reintentos, batch, backoff y coste."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Practica",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Configurar una llamada de prueba y romperla tres veces: key vacia, permiso incorrecto y exceso de llamadas. Documentar sintoma, evidencia y solucion."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Prevencion",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Usar nombres claros de variables, no pegar secretos en notas, separar dev/prod, limitar permisos y registrar errores sin exponer claves."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Laboratorio: diagnosticar sin exponer la clave",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Objetivo: distinguir una credencial rechazada, un permiso insuficiente y un límite de uso antes de cambiar la configuración. Usa el entorno de pruebas del proyecto y datos ficticios. No provoques una ráfaga de solicitudes para fabricar un 429: utiliza una respuesta simulada."
+            },
+            {
+              "type": "ol",
+              "items": [
+                "Guarda una solicitud que ya funcione, quitando Authorization, cookies y cualquier dato personal del registro que entregarás.",
+                "Prepara tres respuestas de prueba: estado 401 con mensaje de credencial inválida; estado 403 con recurso denegado; estado 429 con aviso de límite. El mensaje concreto depende del proveedor: conserva el cuerpo para decidir la causa.",
+                "Para 401, comprueba que el proceso recibe la variable esperada sin imprimir su valor. Reinicia el proceso si cambiaste su entorno y vuelve a enviar una sola solicitud.",
+                "Para 403, compara el recurso solicitado con los permisos de esa cuenta. Usa un recurso permitido; no amplíes todos los permisos para ocultar el fallo.",
+                "Para 429, respeta el tiempo de espera indicado por el servicio, si lo incluye, y limita los reintentos. Si el mensaje señala cuota agotada, repetir no recupera cuota: pausa el proceso y revisa el consumo."
+              ]
+            },
+            {
+              "type": "p",
+              "text": "Comprobación: entrega una tabla con estado, mensaje sin secretos, hipótesis, cambio y resultado. El tratamiento del 429 debe terminar tras un número acotado de intentos; los demás errores no deben entrar en un bucle. Si sigue fallando, conserva el identificador de solicitud y la hora para soporte, sin adjuntar la clave."
+            }
+          ]
+        }
+      ],
+      "practice": {
+        "goal": "Diagnosticar una respuesta de API sin revelar secretos",
+        "steps": [
+          {
+            "title": "Diagnosticar una respuesta de API sin revelar secretos",
+            "where": "En el material de esta ficha y tu proyecto de prueba",
+            "action": "Sigue el laboratorio con respuestas simuladas 401, 403 y 429. Registra la hipótesis y una reparación diferente para cada caso. No provoques tráfico excesivo.",
+            "expected": "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+          }
+        ],
+        "evidence": "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+      },
+      "objectives": [
+        "Diagnosticar una respuesta de API sin revelar secretos"
+      ],
+      "checklist": [
+        "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+      ]
+    },
+    "avanzado": {
+      "blocks": [
+        {
+          "kind": "seccion",
+          "title": "Errores API keys, 401, 403 y 429",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Los errores de API son inevitables. El alumno debe aprender a leerlos sin pánico."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "401",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar autenticacion invalida o ausente. Revisar: variable de entorno, key copiada, comillas, prefijo, cuenta correcta y si la herramienta realmente esta leyendo la variable."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "403",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar autenticacion valida pero permiso insuficiente. Revisar scopes, rol, organizacion, proyecto, plan, region o recurso bloqueado."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "429",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Suele indicar limite de rate o cuota. Revisar frecuencia, concurrencia, plan, reintentos, batch, backoff y coste."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Practica",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Configurar una llamada de prueba y romperla tres veces: key vacia, permiso incorrecto y exceso de llamadas. Documentar sintoma, evidencia y solucion."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Prevencion",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Usar nombres claros de variables, no pegar secretos en notas, separar dev/prod, limitar permisos y registrar errores sin exponer claves."
+            }
+          ]
+        },
+        {
+          "kind": "seccion",
+          "title": "Laboratorio: diagnosticar sin exponer la clave",
+          "parts": [
+            {
+              "type": "p",
+              "text": "Objetivo: distinguir una credencial rechazada, un permiso insuficiente y un límite de uso antes de cambiar la configuración. Usa el entorno de pruebas del proyecto y datos ficticios. No provoques una ráfaga de solicitudes para fabricar un 429: utiliza una respuesta simulada."
+            },
+            {
+              "type": "ol",
+              "items": [
+                "Guarda una solicitud que ya funcione, quitando Authorization, cookies y cualquier dato personal del registro que entregarás.",
+                "Prepara tres respuestas de prueba: estado 401 con mensaje de credencial inválida; estado 403 con recurso denegado; estado 429 con aviso de límite. El mensaje concreto depende del proveedor: conserva el cuerpo para decidir la causa.",
+                "Para 401, comprueba que el proceso recibe la variable esperada sin imprimir su valor. Reinicia el proceso si cambiaste su entorno y vuelve a enviar una sola solicitud.",
+                "Para 403, compara el recurso solicitado con los permisos de esa cuenta. Usa un recurso permitido; no amplíes todos los permisos para ocultar el fallo.",
+                "Para 429, respeta el tiempo de espera indicado por el servicio, si lo incluye, y limita los reintentos. Si el mensaje señala cuota agotada, repetir no recupera cuota: pausa el proceso y revisa el consumo."
+              ]
+            },
+            {
+              "type": "p",
+              "text": "Comprobación: entrega una tabla con estado, mensaje sin secretos, hipótesis, cambio y resultado. El tratamiento del 429 debe terminar tras un número acotado de intentos; los demás errores no deben entrar en un bucle. Si sigue fallando, conserva el identificador de solicitud y la hora para soporte, sin adjuntar la clave."
+            }
+          ]
+        }
+      ],
+      "practice": {
+        "goal": "Diagnosticar una respuesta de API sin revelar secretos",
+        "steps": [
+          {
+            "title": "Diagnosticar una respuesta de API sin revelar secretos",
+            "where": "En el material de esta ficha y tu proyecto de prueba",
+            "action": "Sigue el laboratorio con respuestas simuladas 401, 403 y 429. Registra la hipótesis y una reparación diferente para cada caso. No provoques tráfico excesivo.",
+            "expected": "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+          }
+        ],
+        "evidence": "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+      },
+      "objectives": [
+        "Diagnosticar una respuesta de API sin revelar secretos"
+      ],
+      "checklist": [
+        "El registro no contiene claves, los reintentos tienen límite y el mensaje del proveedor justifica la reparación."
+      ]
+    }
+  },
+  "interactive": []
+}

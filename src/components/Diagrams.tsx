@@ -38,7 +38,7 @@ export function Canvas({ piece }: { piece: CanvasPiece }) {
       <div className="st-canvas-track" role="list">
         {piece.nodes.map((node, index) => (
           <div className="st-canvas-slot" key={node.label} role="listitem">
-            <button
+            <button type="button"
               className={`st-canvas-node${open === index ? ' open' : ''}${node.role ? ` role-${node.role}` : ''}`}
               onClick={() => setOpen(open === index ? null : index)}
               aria-expanded={open === index}
@@ -125,7 +125,7 @@ export function DataFlow({ piece }: { piece: DataFlowPiece }) {
 
       <div className="st-dataflow-nav">
         {piece.steps.map((step, i) => (
-          <button
+          <button type="button"
             key={step.label}
             className={i === paso ? 'on' : ''}
             onClick={() => setPaso(i)}
@@ -164,7 +164,7 @@ export function Decision({ piece }: { piece: DecisionPiece }) {
 
       <div className="st-decision-options">
         {piece.branches.map((branch, index) => (
-          <button
+          <button type="button"
             key={branch.answer}
             className={`st-decision-option${elegido === index ? ' on' : ''}`}
             onClick={() => setElegido(elegido === index ? null : index)}
@@ -214,7 +214,7 @@ export function ScreenMap({ piece }: { piece: ScreenMapPiece }) {
 
       <div className="st-screenmap-frame">
         {piece.areas.map((area, index) => (
-          <button
+          <button type="button"
             key={area.name}
             className={`st-screenmap-area area-${area.place}${zona === index ? ' on' : ''}`}
             onClick={() => setZona(index)}

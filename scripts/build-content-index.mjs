@@ -1,3 +1,4 @@
+import { writeCourseShards } from './lib/course-shards.mjs'
 /**
  * Generador del curso.
  *
@@ -762,6 +763,7 @@ const course = {
 }
 
 await fs.writeFile(path.join(publicDir, outputFile), JSON.stringify(course), 'utf8')
+await writeCourseShards(course, publicDir, LOCALE)
 
 console.log(
   `Curso generado: ${lessons.length} lecciones x 3 niveles en ${categories.length} categorias.

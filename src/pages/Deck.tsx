@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, NotebookPen, X } from 'lucide-react'
 import { useCourse } from '../course'
 import { href } from '../router'
-import { store, useStudent } from '../store'
+import { useStudent } from '../store'
 import { useLocale } from '../i18n'
 
 /**
@@ -15,7 +15,7 @@ import { useLocale } from '../i18n'
 export default function Deck({ deckId }: { deckId: string }) {
   const course = useCourse()
   const locale = useLocale()
-  const { teacher } = useStudent()
+  const teacher = useStudent().access === 'admin'
   const [index, setIndex] = useState(0)
   const [showNotes, setShowNotes] = useState(teacher)
 
@@ -61,7 +61,6 @@ export default function Deck({ deckId }: { deckId: string }) {
             type="button"
             className={`st-btn-ghost${showNotes ? ' on' : ''}`}
             onClick={() => {
-              if (!teacher) store.toggleTeacher()
               setShowNotes((value) => !value)
             }}
           >

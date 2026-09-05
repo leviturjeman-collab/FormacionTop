@@ -338,8 +338,8 @@ export function Herramientas() {
       <div className="st-tool-grid">
         {course.toolPages.map((tool) => {
           const escritas = tool.itinerary?.length || 0
-          const promptCount = tool.guide?.prompts?.length || 0
-          const automationCount = tool.guide?.automations?.length || 0
+          const promptCount = tool.guide?.counts?.prompts ?? tool.guide?.prompts?.length ?? 0
+          const automationCount = tool.guide?.counts?.automations ?? tool.guide?.automations?.length ?? 0
           return (
             <a key={tool.id} className="st-tool-card" href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
               <BrandMark icon={tool.icon} size={24} />
@@ -401,8 +401,8 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const filters = 'filters' in route ? route.filters : {}
   const shown = applyFilters(all, filters, doneSlugs)
   const progress = useProgressOf(tool.lessonSlugs)
-  const promptCount = tool.guide?.prompts?.length || 0
-  const automationCount = tool.guide?.automations?.length || 0
+  const promptCount = tool.guide?.counts?.prompts ?? tool.guide?.prompts?.length ?? 0
+  const automationCount = tool.guide?.counts?.automations ?? tool.guide?.automations?.length ?? 0
   const toolMapItems = [
     {
       id: 'guia-herramienta',
@@ -642,6 +642,12 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
             <span>{guide.catalog.items.length} {locale === 'en' ? 'pieces explained' : 'piezas explicadas'}</span>
           </div>
           <p className="st-tool-inside-intro">{guide.catalog.intro}</p>
+          {guide.catalog.sources?.map(source => (
+            <p key={source.url}>
+              <a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>
+              {' · '}{locale === 'en' ? 'Checked' : 'Revisado'} {source.checkedAt}
+            </p>
+          ))}
           <div className="st-inside-grid">
             {guide.catalog.items.map((item) => (
               <button key={`${item.group}-${item.name}`} type="button" className="st-inside-card" onClick={() => setSelected(item)}>

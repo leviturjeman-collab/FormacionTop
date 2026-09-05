@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import type { Part } from '../types'
@@ -19,7 +20,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
       <button
         type="button"
         onClick={() => {
-          navigator.clipboard?.writeText(code).then(
+          copyText(code).then(
             () => {
               setCopied(true)
               window.setTimeout(() => setCopied(false), 1600)
@@ -68,6 +69,9 @@ export default function Parts({ parts }: { parts: Part[] }) {
 
           case 'code':
             return <Code key={index} code={part.code || ''} lang={part.lang} />
+
+          case 'links':
+            return <ul key={index} className="st-part-list">{(part.links || []).filter(link => /^(#\/|https?:\/\/)/i.test(link.href)).map(link => <li key={link.href}><a href={link.href} {...(link.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{link.label}</a></li>)}</ul>
 
           case 'table':
             return (

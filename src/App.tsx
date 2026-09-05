@@ -1,28 +1,35 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { BookOpen, BookMarked, Bot, Boxes, Compass, Globe, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, LogOut, Menu, Presentation, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { BookOpen, BookMarked, Bot, Boxes, Compass, Globe, GraduationCap, HelpCircle, Home, KeyRound, ListOrdered, Loader2, LogOut, Menu, Puzzle, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import type { CursoLesson, LevelId } from './types'
 import { CourseContext, useCourse, useCourseLoader } from './course'
 import { href, navigate, useRoute, type Route } from './router'
-import { store, useStudent } from './store'
+import { store, useStudent, usePersistence } from './store'
 import { LOCALES, useLocale, useT } from './i18n'
-import { supabase } from './supabase'
-import Inicio from './pages/Inicio'
-import MiProyecto from './pages/MiProyecto'
-import Leccion from './pages/Leccion'
-import Buscar from './pages/Buscar'
-import Indice from './pages/Indice'
-import Preguntas from './pages/Preguntas'
-import Progreso from './pages/Progreso'
-import Presentar from './pages/Presentar'
-import Proyecto from './pages/Proyecto'
-import Deck from './pages/Deck'
-import Prompts from './pages/Prompts'
-import Kits from './pages/Kits'
-import Agentes from './pages/Agentes'
-import Admin from './pages/Admin'
-import Guia from './pages/Guia'
-import { CursoIndice, CursoLeccion } from './pages/Curso'
-import { Area, Biblioteca, Carpeta, Categoria, Herramienta, Herramientas, Ruta } from './pages/Listados'
+import { signInWithPin, signOutRemoteSession, restoreRemoteSession, useSession } from './session'
+const Inicio = lazy(() => import('./pages/Inicio'))
+const MiProyecto = lazy(() => import('./pages/MiProyecto'))
+const Leccion = lazy(() => import('./pages/Leccion'))
+const Buscar = lazy(() => import('./pages/Buscar'))
+const Indice = lazy(() => import('./pages/Indice'))
+const Preguntas = lazy(() => import('./pages/Preguntas'))
+const Progreso = lazy(() => import('./pages/Progreso'))
+const Presentar = lazy(() => import('./pages/Presentar'))
+const Proyecto = lazy(() => import('./pages/Proyecto'))
+const Deck = lazy(() => import('./pages/Deck'))
+const Prompts = lazy(() => import('./pages/Prompts'))
+const Kits = lazy(() => import('./pages/Kits'))
+const Agentes = lazy(() => import('./pages/Agentes'))
+const Admin = lazy(() => import('./pages/Admin'))
+const Guia = lazy(() => import('./pages/Guia'))
+const CursoIndice = lazy(() => import('./pages/Curso').then(module => ({ default: module.CursoIndice })))
+const CursoLeccion = lazy(() => import('./pages/Curso').then(module => ({ default: module.CursoLeccion })))
+const Area = lazy(() => import('./pages/Listados').then(module => ({ default: module.Area })))
+const Biblioteca = lazy(() => import('./pages/Listados').then(module => ({ default: module.Biblioteca })))
+const Carpeta = lazy(() => import('./pages/Listados').then(module => ({ default: module.Carpeta })))
+const Categoria = lazy(() => import('./pages/Listados').then(module => ({ default: module.Categoria })))
+const Herramienta = lazy(() => import('./pages/Listados').then(module => ({ default: module.Herramienta })))
+const Herramientas = lazy(() => import('./pages/Listados').then(module => ({ default: module.Herramientas })))
+const Ruta = lazy(() => import('./pages/Listados').then(module => ({ default: module.Ruta })))
 
 const LEVEL_SHORT: Record<LevelId, string> = { basico: 'Bás', intermedio: 'Int', avanzado: 'Avz' }
 
@@ -90,7 +97,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
   const percent = cursoBase.length ? Math.round((mainDone / cursoBase.length) * 100) : 0
 
   return (
-    <aside className={`st-sidebar${open ? ' open' : ''}`}>
+    <aside id="academy-navigation" aria-label={locale === 'en' ? 'Main navigation' : 'Navegación principal'} className={`st-sidebar${open ? ' open' : ''}`}><button type="button" className="st-sidebar-close" onClick={onClose} aria-label={locale === 'en' ? 'Close menu' : 'Cerrar menú'}><X size={20} /></button>
       <a className="st-brand" href={href({ name: 'inicio' })} onClick={onClose}>
         <span className="st-brand-mark" aria-hidden="true"><GraduationCap size={19} /></span>
         <div>
@@ -144,7 +151,7 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
         <a className={is('agentes') ? 'active' : ''} href={href({ name: 'agentes' })} onClick={onClose}>
           <Bot size={14} /> {t('nav.agentes')}
         </a>
-        {(student.teacher || is('admin')) && (
+        {student.access === 'admin' && (
           <a className={is('admin') ? 'active' : ''} href={href({ name: 'admin' })} onClick={onClose}>
             <KeyRound size={14} /> {t('nav.superAdmin')}
           </a>
@@ -247,7 +254,6 @@ function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClos
 
 function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const course = useCourse()
-  const { teacher } = useStudent()
   const t = useT()
   const locale = useLocale()
 
@@ -308,12 +314,12 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
 
   return (
     <header className="st-header">
-      <div>
+      <div className="st-header-trail">
         <button type="button" className="st-menu" onClick={onMenu} aria-label={locale === 'en' ? 'Open menu' : 'Abrir menú'}>
           <Menu size={15} />
         </button>
         {trail.map((part, index) => (
-          <span key={index} style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+          <span key={index} className="st-breadcrumb">
             {index > 0 && '›'}
             {index === trail.length - 1 ? <strong>{part}</strong> : part}
           </span>
@@ -321,24 +327,14 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       </div>
       <div className="st-header-actions">
         <LanguageSwitch compact />
-        <a className="st-project-switch" href={href({ name: 'buscar', query: '', filters: {} })}>
+        <a className="st-project-switch" href={href({ name: 'curso' })}>
           <BookOpen size={12} />
           {t('header.rutaGuiada')}
         </a>
         <button
           type="button"
-          className={`st-project-switch${teacher ? ' on' : ''}`}
-          onClick={() => store.toggleTeacher()}
-          aria-pressed={teacher}
-          title={locale === 'en' ? 'Shows the class script and presentation access. Students do not see it.' : 'Muestra el guion de clase y el acceso a presentar. El alumno no lo ve.'}
-        >
-          <Presentation size={12} />
-          {teacher ? t('sidebar.modoProfesor') : t('sidebar.modoAlumno')}
-        </button>
-        <button
-          type="button"
           className="st-project-switch danger"
-          onClick={() => store.logout()}
+          onClick={() => void signOutRemoteSession()}
           title={locale === 'en' ? 'Exit this profile' : 'Salir de este perfil'}
         >
           <LogOut size={12} />
@@ -360,39 +356,12 @@ function AccessGate() {
     const value = pin.trim()
     if (!value) return
     setError('')
-    if (value === '5555') {
-      store.enter({ name: 'Levi', teacher: true, access: 'admin', preferredLevel: 'intermedio', locale })
-      return
-    }
-    if (!supabase) {
-      setError(locale === 'en' ? 'Student PINs need Supabase configured.' : 'Los PINs de alumnos necesitan Supabase configurado.')
-      return
-    }
     setBusy(true)
-    const { data, error: rpcError } = await supabase.rpc('verify_learner_pin', { learner_pin: value })
-    setBusy(false)
-    const learner = Array.isArray(data) ? data[0] : null
-    if (rpcError || !learner) {
-      setError(locale === 'en' ? 'That PIN is not active.' : 'Ese PIN no está activo.')
-      return
-    }
-    store.enter({
-      id: learner.id,
-      name: learner.name,
-      teacher: false,
-      access: 'learner',
-      preferredLevel: learner.level || 'basico',
-      locale: learner.locale || locale,
-      project: {
-        name: learner.goal || '',
-        goal: learner.goal || '',
-        audience: '',
-        problem: '',
-        outcome: '',
-        tools: learner.tools || '',
-        updatedAt: new Date().toISOString(),
-      },
-    })
+    try {
+      await signInWithPin({ pin: value })
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'No se pudo comprobar el acceso.')
+    } finally { setBusy(false) }
   }
 
   return (
@@ -403,13 +372,15 @@ function AccessGate() {
           <LanguageSwitch compact />
         </div>
         <h1>{locale === 'en' ? 'Enter with your PIN' : 'Entra con tu PIN'}</h1>
-        <p>{locale === 'en' ? 'Use the PIN your teacher gave you. Admin access uses the teacher PIN.' : 'Usa el PIN que te ha dado tu profesor. El acceso admin usa el PIN de profesor.'}</p>
+        <p>{locale === 'en' ? 'Use the access code your teacher gave you.' : 'Usa la clave de acceso que te ha dado tu profesor.'}</p>
         <form onSubmit={enter} className="st-access-form">
           <label>
-            <span>{locale === 'en' ? 'Student or admin PIN' : 'PIN de alumno o administrador'}</span>
+            <span>{locale === 'en' ? 'Access code' : 'Clave de acceso'}</span>
             <input
               value={pin}
-              onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 8))}
+              onChange={(event) => setPin(event.target.value)}
+              type="password"
+              maxLength={72}
               inputMode="numeric"
               autoComplete="one-time-code"
               placeholder="••••••"
@@ -428,6 +399,8 @@ function AccessGate() {
 }
 
 function Pages({ route }: { route: Route }) {
+  const session = useSession()
+  if (['admin', 'presentar', 'deck'].includes(route.name) && session.profile?.role !== 'admin') return <RestrictedAccess />
   switch (route.name) {
     case 'inicio': return <Inicio />
     case 'mi-proyecto': return <MiProyecto />
@@ -462,6 +435,26 @@ function Shell() {
   const t = useT()
   const student = useStudent()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const previous = document.activeElement as HTMLElement | null
+    const overflow = document.body.style.overflow
+    const sidebar = document.getElementById('academy-navigation')
+    const controls = () => Array.from(sidebar?.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input') || []).filter(el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden')
+    document.body.style.overflow = 'hidden'
+    controls()[0]?.focus()
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); setMenuOpen(false) }
+      if (event.key === 'Tab') {
+        const items = controls(), first = items[0], last = items[items.length - 1]
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = overflow; document.removeEventListener('keydown', onKey); previous?.focus() }
+  }, [menuOpen])
 
   useEffect(() => {
     document.documentElement.lang = locale
@@ -566,10 +559,12 @@ function Shell() {
     return () => observer.disconnect()
   }, [route])
 
+  if (['admin', 'presentar', 'deck'].includes(route.name) && student.access !== 'admin') return <div className="student-app"><div className="st-page"><RestrictedAccess /></div></div>
+
   // Las presentaciones ocupan la pantalla entera: sin barra lateral ni cabecera.
   if (route.name === 'presentar') return <Presentar slug={route.slug} level={route.level} />
   if (route.name === 'deck') return <Deck deckId={route.deckId} />
-  if (!student.access && !student.teacher) return <AccessGate />
+  if (!student.access) return <AccessGate />
 
   return (
     <div className="student-app">
@@ -578,6 +573,7 @@ function Shell() {
 
       <div className="student-main">
         <Header route={route} onMenu={() => setMenuOpen(true)} />
+        <PersistenceNotice />
         <main>
           <div key={routeKey} className="st-route-canvas" data-route={route.name}>
             <span className="st-motion-rail rail-a" aria-hidden="true" />
@@ -600,7 +596,7 @@ function Shell() {
   )
 }
 
-export default function App() {
+function AuthenticatedApp() {
   const locale = useLocale()
   const t = useT()
   const { course, error } = useCourseLoader(locale)
@@ -634,7 +630,44 @@ export default function App() {
 
   return (
     <CourseContext.Provider value={course}>
-      <Shell />
+      <Suspense fallback={<div className="st-loading" role="status">{t('common.cargando')}</div>}><Shell /></Suspense>
     </CourseContext.Provider>
   )
+}
+
+function RestrictedAccess() {
+  const locale = useLocale()
+  return <section className="st-page"><h1>{locale === 'en' ? 'Restricted access' : 'Acceso restringido'}</h1><p>{locale === 'en' ? 'This page is reserved for your teacher.' : 'Esta página está reservada al profesor.'}</p><a className="st-btn" href={href({ name: 'inicio' })}>{locale === 'en' ? 'Go to my space' : 'Ir a mi espacio'}</a></section>
+}
+
+function downloadRecovery() {
+  const url = URL.createObjectURL(new Blob([store.export()], { type: 'application/json' }))
+  const link = document.createElement('a')
+  link.href = url; link.download = 'academia-recuperacion.json'; link.click()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+function PersistenceNotice() {
+  const persistence = usePersistence()
+  const locale = useLocale()
+  const [error, setError] = useState('')
+  if (persistence.status === 'saved' || persistence.status === 'saving') return null
+  return <section className="st-persistence" role="status" aria-live="polite">
+    <p>{persistence.message}</p>{error && <p role="alert">{error}</p>}
+    <div className="st-actions">
+      <button type="button" className="st-btn-ghost" onClick={downloadRecovery}>{locale === 'en' ? 'Download recovery copy' : 'Descargar copia de recuperación'}</button>
+      {persistence.conflict ? <button type="button" className="st-btn-ghost" onClick={() => {
+        if (window.confirm(locale === 'en' ? 'Load the server version? Your current version will be kept in a recovery copy.' : '¿Cargar la versión del servidor? La versión actual se conservará en una copia de recuperación.')) void store.resolveRemoteConflict('use-remote').catch(error => setError(String(error)))
+      }}>{locale === 'en' ? 'Recover server version' : 'Recuperar versión del servidor'}</button> : <button type="button" className="st-btn-ghost" onClick={() => store.retrySave()}>{locale === 'en' ? 'Retry saving' : 'Reintentar guardado'}</button>}
+    </div>
+  </section>
+}
+
+export default function App() {
+  const session = useSession()
+  const locale = useLocale()
+  useEffect(() => { void restoreRemoteSession() }, [])
+  if (session.status === 'checking') return <div className="st-loading" role="status">{locale === 'en' ? 'Checking access…' : 'Comprobando acceso…'}</div>
+  if (session.status === 'error') return <div className="st-access"><section className="st-access-card"><p role="alert">{session.message}</p><button type="button" className="st-btn" onClick={() => void restoreRemoteSession()}>{locale === 'en' ? 'Retry' : 'Reintentar'}</button><button type="button" className="st-btn-ghost" onClick={downloadRecovery}>{locale === 'en' ? 'Download recovery copy' : 'Descargar copia de recuperación'}</button></section></div>
+  return session.status === 'authenticated' ? <AuthenticatedApp /> : <AccessGate />
 }

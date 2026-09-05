@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { useState } from 'react'
 import {
   ArrowLeft, ArrowRight, Ban, BookOpen, Check, CheckCircle2, Circle, Clock, Copy,
@@ -26,7 +27,7 @@ function Prompt({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => {
-          navigator.clipboard?.writeText(text).then(
+          copyText(text).then(
             () => {
               setCopied(true)
               window.setTimeout(() => setCopied(false), 1800)
