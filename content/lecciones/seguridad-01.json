@@ -1,0 +1,117 @@
+{
+  "id": "seguridad-01",
+  "number": 40,
+  "stageId": "seguridad",
+  "title": "Las claves: dónde no se ponen nunca",
+  "promise": "Vas a sacar tus claves de donde no deben estar, dejarlas en un solo sitio seguro y saber qué hacer en los diez minutos siguientes a filtrar una. Al terminar habrás hecho el repaso completo y tendrás una clave rotada.",
+  "minutes": 25,
+  "why": "Un alumno subió su proyecto a GitHub para enseñárselo a un cliente. Dentro de un archivo de configuración estaba su clave de OpenAI, escrita a mano porque «era solo para probar». En nueve horas tenía 340 dólares de consumo. Los robots que rastrean GitHub buscando claves no tardan días: tardan minutos. No fue mala suerte ni un ataque dirigido a él. Fue el funcionamiento normal de internet aplicado a un archivo que no debió salir de su ordenador.",
+  "theory": [
+    {
+      "title": "Qué es una clave y por qué vale dinero",
+      "text": "Una clave de acceso, lo que verás llamado API key, es una contraseña que le das a un programa para que actúe en tu nombre en otro servicio. No es tu contraseña personal: es un permiso que puede usar cualquiera que lo tenga, desde cualquier sitio, sin que te avise. No hay una segunda comprobación, ni un correo de aviso, ni un código al móvil. Quien la tiene, es tú. Y en los servicios que se pagan por uso, ser tú significa gastar tu dinero. Esa es la diferencia importante con una contraseña normal: una contraseña robada te la roban a ti; una clave robada te la usan, y el cargo llega igualmente.",
+      "analogy": "Es una copia de la llave del almacén con tu nombre en la factura. Da igual quién abra: lo que se lleven lo pagas tú, y nadie te llama para preguntar si eras tú el que entró a las cuatro de la mañana.",
+      "example": "340 dólares en nueve horas, con la clave en un archivo dentro de un repositorio público. Ningún aviso hasta el correo del cargo."
+    },
+    {
+      "title": "Los cuatro sitios donde acaban siempre",
+      "text": "Las claves se filtran casi siempre por los mismos cuatro caminos, y ninguno es sofisticado. El primero, escritas dentro de un archivo del proyecto que luego se sube a GitHub. El segundo, pegadas en un chat con una IA para pedir ayuda con un error, con la clave dentro del mensaje. El tercero, en una captura de pantalla mandada por WhatsApp o puesta en un tutorial. Y el cuarto, en un mensaje de error copiado tal cual en un foro, porque muchos errores incluyen la petición completa. En los cuatro el patrón es el mismo: la clave viaja pegada a otra cosa, y tú estabas mirando la otra cosa.",
+      "example": "«He copiado el error entero para que me ayuden» es la forma número tres de filtrar una clave, y la que menos gente ve venir."
+    },
+    {
+      "title": "El único sitio donde van: las variables de entorno",
+      "text": "La solución no es esconderlas mejor dentro del proyecto: es que no estén dentro. Las claves van en variables de entorno, que es un sitio aparte del que el programa las lee al arrancar. En un proyecto local eso es un archivo llamado punto env, que nunca se sube porque va anotado en el archivo de exclusiones. En Vercel, Netlify o cualquier hosting, es una pantalla de la configuración del proyecto donde las pegas y ya. En n8n o Make, es la sección de credenciales, que las guarda cifradas y las muestra como puntitos. La regla es de una línea: si una clave aparece escrita en un archivo que puedes abrir con el bloc de notas y ver, está mal puesta.",
+      "example": "Mal: una línea en el código con la clave escrita. Bien: la línea lee una variable, y el valor de esa variable vive en el panel de configuración, fuera del proyecto."
+    },
+    {
+      "title": "Una clave por sitio, y con el permiso justo",
+      "text": "Dos costumbres que cuestan un minuto y valen mucho. La primera: una clave distinta por cada sitio donde la uses. Una para tu ordenador, otra para lo que está publicado, otra para cada flujo. Así, si se filtra una, anulas esa y lo demás sigue funcionando, en vez de tener que reconectarlo todo a la vez con las prisas. La segunda: dar el permiso mínimo. Muchos servicios dejan crear claves de solo lectura, o limitadas a una parte concreta. Si tu montaje solo lee, la clave no tiene por qué poder borrar. Y ponles nombre al crearlas, porque una lista de ocho claves llamadas «key1» es imposible de gestionar el día que tengas prisa.",
+      "example": "«ordenador-nuria», «n8n-avisos», «web-publicada». Cuando salta el aviso de consumo raro, sabes cuál anular sin tocar las otras dos."
+    },
+    {
+      "title": "Los diez minutos después de filtrar una",
+      "text": "Va a pasar, y lo que importa es la reacción. El orden correcto es este y es importante que sea este. Primero: anular la clave en la web del servicio, botón de revocar o eliminar. No cambiarla, anularla. Segundo: crear una nueva y ponerla donde tocaba, en la variable de entorno. Tercero: mirar el consumo de las últimas horas por si ya la han usado. Y cuarto, el que casi todo el mundo se salta: si estaba en un repositorio de git, borrarla del archivo no la borra del historial. Sigue ahí, recuperable, para siempre. Por eso el primer paso es anular y no borrar el archivo: mientras la clave esté anulada, da igual quién la encuentre.",
+      "example": "Borrar la clave y hacer un commit que diga «quitada la clave» es peor que no hacer nada: no la quita del historial y encima señala dónde estaba."
+    },
+    {
+      "title": "Lo que no se le pega a una IA",
+      "text": "Cuando le pides ayuda a una IA con un error, es muy fácil pegar más de lo que crees. Antes de dar a enviar, mira el texto buscando cuatro cosas: cadenas largas de letras y números que empiecen por sk-, api-, ghp- o parecidos; direcciones internas de tu empresa; datos de personas con nombre y apellidos; y contenidos de archivos de configuración. Sustituirlos por algo tipo CLAVE-QUITADA no le quita nada a la ayuda que vas a recibir: para diagnosticar un error, el valor de la clave no aporta nada. Lo que aporta es el mensaje y el código de tres cifras.",
+      "example": "«Error 401 con la clave sk-proj-abc123...» → «Error 401 con la clave CLAVE-QUITADA». La ayuda es exactamente la misma."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Haz el inventario de tus claves",
+      "where": "En un archivo de texto, y en las webs de tus servicios",
+      "action": "Escribe la lista de todos los servicios donde tienes una clave creada: OpenAI, Anthropic, n8n, GitHub, el hosting, lo que sea. Al lado de cada uno pon dónde está esa clave metida ahora mismo, con sinceridad. Si está escrita en un archivo del proyecto, escríbelo. Esta lista no lleva las claves dentro, solo los nombres y los sitios.",
+      "expect": "Una lista de entre tres y ocho servicios. La sorpresa habitual es descubrir claves creadas hace meses para una prueba y que siguen activas.",
+      "stuck": "Para encontrarlas, entra en cada servicio y busca la sección de API keys. Verás cuántas tienes y cuándo se usó cada una por última vez. Las que no se usen desde hace meses, anúlalas ahora mismo: es la limpieza más rentable del bloque."
+    },
+    {
+      "title": "Busca claves donde no deben estar",
+      "where": "En tu carpeta de proyecto",
+      "action": "Abre la carpeta de tu proyecto y usa el buscador para localizar textos sospechosos. En el buscador de Windows o en Spotlight busca dentro de los archivos por «sk-», «api_key», «apikey», «token» y «password». Mira también los archivos de configuración y los cuadernos de notas donde hayas ido apuntando cosas. Apunta cada sitio donde encuentres una clave escrita.",
+      "expect": "Con suerte, cero resultados. Lo normal es encontrar una o dos, casi siempre en un archivo de pruebas de los primeros días.",
+      "stuck": "Si usas git, mira también el historial: en GitHub Desktop, pestaña History, y repasa los commits antiguos buscando archivos de configuración. Una clave puede estar fuera del proyecto de hoy y seguir dentro del historial de ayer."
+    },
+    {
+      "title": "Sácalas a variables de entorno",
+      "where": "En tu proyecto y en tu hosting",
+      "action": "Por cada clave que hayas encontrado escrita: crea o abre el archivo «.env» en la raíz de tu proyecto y pon dentro una línea con el nombre y el valor. Comprueba que «.env» está en el archivo «.gitignore»; si no existe ese archivo, créalo y escribe .env dentro. En el código, sustituye la clave escrita por la lectura de esa variable. Y si el proyecto está publicado, pega el mismo valor en la pantalla de variables de entorno de tu hosting.",
+      "expect": "Ninguna clave escrita en ningún archivo del proyecto. Comprueba en GitHub Desktop que el archivo «.env» no aparece en la lista de cambios: si aparece, el .gitignore no está bien puesto y volverías a subirla.",
+      "stuck": "Si no sabes cómo se lee una variable en tu caso, pregúntaselo a la IA diciendo qué lenguaje o herramienta usas, pero sin pegarle la clave. Y si tu montaje es de n8n o Make, esto es todavía más fácil: usa la sección de credenciales de la propia herramienta, que ya las guarda cifradas."
+    },
+    {
+      "title": "Ensaya la anulación de una clave",
+      "where": "En la web de uno de tus servicios",
+      "action": "Esto es un simulacro, como el de la lección 37. Coge una clave que uses y anúlala de verdad: entra en el servicio, revócala, crea una nueva, y ponla en su sitio. Cronometra. Lo que estás midiendo es cuánto tardarías el día que se te filtre una, y de paso descubres cuántos sitios había que actualizar, que casi siempre son más de los que creías.",
+      "expect": "Todo funcionando otra vez y un tiempo apuntado. Anota también en cuántos sitios tuviste que pegar la clave nueva: ese número te dice si te conviene tener claves separadas por sitio.",
+      "stuck": "Si al anularla se rompen tres cosas a la vez y tardas media hora, acabas de descubrir por qué conviene una clave por sitio. Créalas separadas ahora que estás con ello."
+    },
+    {
+      "title": "Pon el límite de gasto, si no lo hiciste ya",
+      "where": "En cada servicio que cobre por uso",
+      "action": "Es la red que te salva si todo lo anterior falla. Si ya lo hiciste en la lección 38, revísalo. Si no, entra en la sección de facturación de cada servicio y pon un límite duro mensual y un aviso a la mitad. Esta es la única medida que convierte una filtración de 340 dólares en una de 30.",
+      "expect": "Límite y aviso puestos en cada servicio, con la dirección de correo que miras de verdad.",
+      "stuck": "Si un servicio no permite límite duro, compensa por otro lado: usa una tarjeta de prepago con poco saldo o revisa el consumo cada semana. Y ten esa cuenta muy vigilada, porque es la que puede hacerte daño."
+    },
+    {
+      "title": "Escribe tu protocolo de filtración",
+      "where": "En un archivo llamado «si-se-filtra-una-clave.txt»",
+      "action": "Cuatro líneas escritas para leerlas con el pulso acelerado: dónde se anula cada clave (la dirección web exacta de cada servicio), dónde hay que pegar la nueva, dónde se mira el consumo, y el recordatorio de que borrar el archivo no la borra del historial de git. Guárdalo junto a los otros archivos del curso.",
+      "expect": "Cuatro líneas con enlaces concretos. El día que pase no vas a estar para buscar en qué menú estaba el botón de revocar.",
+      "stuck": "Si te parece que no te va a pasar, ten en cuenta que la forma más común no es un descuido gordo: es pegar un mensaje de error largo en un chat sin mirar qué llevaba dentro. Es cuestión de tiempo."
+    }
+  ],
+  "matters": [
+    "Que una clave es un permiso para actuar en tu nombre y gastar tu dinero, sin segunda comprobación.",
+    "Que se filtran por cuatro caminos y el más común es pegar un error largo en un chat.",
+    "Que van en variables de entorno, fuera de cualquier archivo del proyecto.",
+    "Que lo primero al filtrarse es anular, no borrar: borrar el archivo no la quita del historial."
+  ],
+  "ignore": [
+    "Los gestores de secretos profesionales. Con variables de entorno y credenciales de la herramienta vas bien.",
+    "Cifrar tú las claves. El sitio correcto ya las guarda como toca.",
+    "Cambiarlas cada mes por costumbre. Mejor pocas, bien puestas y con límite de gasto."
+  ],
+  "canDo": [
+    "Saber cuántas claves tienes vivas y dónde está cada una.",
+    "Sacarlas de los archivos del proyecto a variables de entorno.",
+    "Anular y sustituir una clave en pocos minutos, porque lo has ensayado.",
+    "Acotar el daño de una filtración con un límite de gasto."
+  ],
+  "cantDo": [
+    "Recuperar el dinero ya gastado con una clave filtrada.",
+    "Quitar una clave del historial de git borrando el archivo.",
+    "Enterarte de que te la están usando si no tienes avisos de consumo.",
+    "Evitar del todo el riesgo: solo reducirlo y reaccionar rápido."
+  ],
+  "words": [
+    ["Clave de acceso (API key)", "Un permiso para que un programa actúe en tu nombre en otro servicio. Quien la tiene, es tú."],
+    ["Variable de entorno", "El sitio aparte donde vive una clave, fuera de los archivos del proyecto."],
+    [".env", "El archivo local donde se ponen esas variables. Nunca se sube: va en el .gitignore."],
+    ["Revocar", "Anular una clave para que deje de funcionar. Lo primero que se hace ante una filtración."],
+    ["Permiso mínimo", "Dar a cada clave solo lo que necesita. Si tu montaje solo lee, la clave no debería poder borrar."]
+  ],
+  "next": "Las claves ya están donde deben. En la lección 41 vas a lo que más problemas legales da: los datos de otras personas que metes en estas herramientas, y qué se puede meter y qué no."
+}
