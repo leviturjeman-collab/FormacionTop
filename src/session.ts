@@ -74,10 +74,10 @@ export async function restoreRemoteSession(): Promise<void> {
   })()
   try { await restoring } finally { restoring = undefined }
 }
-export async function signInWithPin({ identifier, pin }: { identifier: string; pin: string }): Promise<SessionProfile> {
+export async function signInWithPin({ pin }: { pin: string }): Promise<SessionProfile> {
   const generation = ++sessionGeneration
-  const result = await academyRpc<Verified>('academy_sign_in', { login_identifier: identifier.trim().toLowerCase(), login_secret: pin })
-  if (!result.ok) throw new Error(result.error === 'rate_limited' ? 'Demasiados intentos. Espera 15 minutos antes de volver a intentar.' : 'Identificador o clave incorrectos, o acceso suspendido.')
+  const result = await academyRpc<Verified>('academy_sign_in_code', { access_code: pin })
+  if (!result.ok) throw new Error(result.error === 'rate_limited' ? 'Demasiados intentos. Espera 15 minutos antes de volver a intentar.' : 'Clave incorrecta o acceso suspendido.')
   if (!result.token || !result.profile) throw new Error('Respuesta de acceso no válida.')
   await install(result, generation)
   return result.profile

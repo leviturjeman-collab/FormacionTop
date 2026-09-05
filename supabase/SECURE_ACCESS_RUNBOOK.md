@@ -62,3 +62,63 @@ Referencias verificadas para implementación: [Vercel Routing Middleware API](ht
 ## Consultas y respuestas de soporte
 
 La migración `20260905170000_support_requests.sql` añade consultas privadas por cuenta y respuestas con historial. Aplicarla en ensayo después de la migración de sesiones y antes de habilitar el formulario FAQ. La cola del administrador se carga explícitamente y no envía correo ni mensajes a proveedores externos. Un alumno solo puede ver sus propias consultas; únicamente el rol administrador verificado puede responder. La cola conserva respuestas anteriores y limita a 100 consultas no cerradas por cuenta. Incluir estas tablas en backup/retención y probar dos alumnos aislados y la respuesta desde Administración.
+
+## Acceso con un solo código (migración 180000)
+
+El formulario usa únicamente `academy_sign_in_code(access_code)`. La búsqueda utiliza `academy_accounts.code_digest` con índice único SHA256; después se verifica bcrypt y se aplican las mismas comprobaciones de rol, estado, caducidad y sesión. No se recorren hashes bcrypt de todas las cuentas. El identificador queda como metadato interno y la RPC de dos campos permanece compatible.
+
+Las claves de alumnos creados o restablecidos desde Administración generan el digest en la misma transacción. Un código ya asignado a cualquier cuenta se rechaza; no se comparten códigos entre profesor y alumnos. Los bcrypt anteriores no permiten reconstruir el digest: restablecer esos accesos explícitamente.
+
+Para activar o rotar el código del administrador autorizado, usar exclusivamente conexión SQL privilegiada y parámetros, nunca insertar el valor en una migración, frontend, log o URL:
+
+```sql
+select public.academy_bootstrap_admin($1, $2, $3);
+```
+
+Los parámetros son identificador interno, nombre visible y código recibido por canal privado. Esta función está revocada a PUBLIC/anon/authenticated, solo el propietario SQL la ejecuta; rotar revoca sesiones previas. No altera una cuenta alumno cuyo identificador coincida. No hay credencial por defecto en el repositorio. La puesta en servicio debe confirmar código administrador, creación de dos alumnos, código de cada alumno y rechazo de RPC/pantalla administrativa desde alumno. El límite por IP sigue siendo responsabilidad del gateway; identificadores desconocidos aleatorios no pueden limitarse por cuenta.
+
+## Preservar códigos de alumnos históricos al migrar
+
+Realizar primero backup privado de base de datos. Antes de la migración 160000 (que elimina `pin_visible`), ejecutar con conexión SQL propietaria. No imprimir la tabla ni incluirla en exportaciones públicas. Si hay códigos ausentes/inválidos/duplicados, abortar antes de modificar el esquema y recuperar/restablecer esos accesos expresamente.
+
+```sql
+begin;
+create schema if not exists academy_migration_private;
+revoke all on schema academy_migration_private from public,anon,authenticated;
+create table academy_migration_private.access_backup as
+  select id,pin_visible as access_code from public.learners;
+revoke all on academy_migration_private.access_backup from public,anon,authenticated;
+do $$ begin
+  if exists(select 1 from academy_migration_private.access_backup
+    where access_code is null or length(access_code)<4 or octet_length(access_code)>72)
+    then raise exception 'legacy_codes_need_recovery'; end if;
+  if exists(select 1 from academy_migration_private.access_backup
+    group by access_code having count(*)>1)
+    then raise exception 'legacy_codes_not_unique'; end if;
+end $$;
+commit;
+```
+
+Después de aplicar migraciones hasta 180000, ejecutar esta operación en una sola transacción, enviando los tres parámetros del bootstrap por driver SQL (no sustitución de texto). El código administrador autorizado se proporciona privadamente. El índice único aborta la transacción si el código administrador coincide con el de un alumno. No convertir ese alumno en administrador ni cambiar silenciosamente su código.
+
+```sql
+begin;
+select public.academy_bootstrap_admin($1,$2,$3);
+update public.academy_accounts a set
+  secret_hash=extensions.crypt(b.access_code,extensions.gen_salt('bf',10)),
+  code_digest=encode(extensions.digest(b.access_code,'sha256'),'hex'),
+  enabled=true
+from academy_migration_private.access_backup b
+where a.learner_id=b.id and a.role='learner';
+update public.learners l set pin_hash=a.secret_hash,pin_visible=null
+from public.academy_accounts a where a.learner_id=l.id;
+do $$ begin
+  if exists(select 1 from academy_migration_private.access_backup b
+    left join public.academy_accounts a on a.learner_id=b.id
+    where a.id is null or a.code_digest is distinct from encode(extensions.digest(b.access_code,'sha256'),'hex'))
+    then raise exception 'legacy_code_restore_incomplete'; end if;
+end $$;
+commit;
+```
+
+Los estados pausado/archivado y fechas de caducidad siguen siendo comprobados. La tabla de progreso no se modifica. Verificar los códigos por llamadas parametrizadas sin registrar petición/token/respuesta completa; registrar solo ID/rol/resultado booleano y conteos. Confirmada recuperación y backup, borrar la tabla privada temporal con conexión propietaria. La longitud mínima requerida es cuatro caracteres; generar códigos de alumnos aleatorios largos sigue siendo la opción del panel. El código por sí mismo nunca determina un rol: la búsqueda única lleva a una cuenta y el rol proviene de esa cuenta; las RPC de administración vuelven a comprobarlo en servidor.

@@ -57,7 +57,8 @@ select p.learner_id,p.state from public.learner_progress p
 join public.academy_accounts a on a.id=p.learner_id
 on conflict (account_id) do nothing;
 
--- Remove legacy anonymous entry points and clear the reversible PIN copies.
+-- Remove legacy anonymous entry points. Reversible PIN copies are cleared by
+-- the single-code migration after it has converted them into hashed lookups.
 revoke all on function public.is_admin_pin(text) from public, anon, authenticated;
 revoke all on function public.verify_learner_pin(text) from public, anon, authenticated;
 revoke all on function public.list_learners_admin(text) from public, anon, authenticated;
@@ -65,7 +66,6 @@ revoke all on function public.create_learner_with_pin(text,text,text,text,text,t
 revoke all on function public.delete_learner_admin(text,uuid) from public, anon, authenticated;
 revoke all on public.learners, public.learner_sessions, public.learner_progress, public.app_settings, public.audit_log from anon, authenticated;
 delete from public.app_settings where key='admin_pin_hash';
-update public.learners set pin_visible=null;
 do $$ begin
   if exists(select 1 from information_schema.columns where table_schema='public' and table_name='learners' and column_name='pin') then
     -- Legacy column may have NOT NULL; remove it rather than keeping plaintext.

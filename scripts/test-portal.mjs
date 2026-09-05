@@ -37,7 +37,6 @@ try {
   await page.goto(base + '#/deck/' + course.decks[0].id)
   await page.locator('input[type="password"]').waitFor()
   check(contentRequests === 0, 'Guest deep link must not fetch protected content')
-  await page.locator('input[autocomplete="username"]').fill('portal-test')
   await page.locator('input[type="password"]').fill('test-secret')
   await page.locator('button[type="submit"]').click()
   await page.locator('.st-deck').waitFor()

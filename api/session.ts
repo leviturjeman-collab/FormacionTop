@@ -1,4 +1,4 @@
-import { cookie, privateHeaders, verifyRemote } from '../server/session'
+import { cookie, privateHeaders, verifyRemote } from '../server/session.js'
 
 async function handler(request: Request): Promise<Response> {
   const origin = request.headers.get('origin')

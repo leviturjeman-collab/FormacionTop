@@ -26,7 +26,7 @@ try {
   const session = await import(pathToFileURL(output).href)
   await session.restoreRemoteSession()
   check(session.getSession().status === 'anonymous' && calls.length === 0, 'No local role or state grants a session')
-  await session.signInWithPin({ identifier: 'student', pin: 'example-test-secret' })
+  await session.signInWithPin({ pin: 'example-test-secret' })
   check(session.getSession().status === 'authenticated' && entered === 1, 'Remote verified profile activates the store')
   check(saved.has('academia.session.v2'), 'Opaque session can restore the current tab')
   await assert.rejects(() => session.adminRpc('academy_admin_learners')); checks++
@@ -40,7 +40,7 @@ try {
   check(session.getSession().status === 'anonymous' && closed === 1, 'A late validation response cannot resurrect a logged-out session')
   check(!saved.has('academia.session.v2'), 'Logout removes the persisted token')
   globalThis.__testRpc = async () => ({ ok: false, error: 'invalid_credentials' })
-  await assert.rejects(() => session.signInWithPin({ identifier: 'student', pin: 'wrong' })); checks++
+  await assert.rejects(() => session.signInWithPin({ pin: 'wrong' })); checks++
   check(session.getSession().status === 'anonymous', 'Invalid login remains anonymous')
   console.log(`PASS session client: ${checks} assertions; verified login, role denial and logout race.`)
 } finally { delete globalThis.__testStore; delete globalThis.__testRpc; await rm(temp, { recursive: true, force: true }) }

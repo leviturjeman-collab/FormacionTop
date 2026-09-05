@@ -23,26 +23,24 @@ export function RecoveryDownload() {
 
 export default function AccessGate({ message, canRetry = false }: { message?: string; canRetry?: boolean }) {
   const locale = useLocale(), en = locale === 'en'
-  const [identifier, setIdentifier] = useState(''), [pin, setPin] = useState('')
-  const minimumCredentialLength = identifier.trim().toLowerCase() === 'admin' ? 4 : 10
+  const [pin, setPin] = useState('')
   const [busy, setBusy] = useState(false), [error, setError] = useState('')
   async function enter(event: FormEvent) {
     event.preventDefault()
-    if (busy || !identifier.trim() || !pin) return
+    if (busy || !pin) return
     if (new TextEncoder().encode(pin).length > 72) { setError(en ? 'The credential must not exceed 72 UTF-8 bytes.' : 'La clave no puede superar 72 bytes UTF-8.'); return }
     setBusy(true); setError('')
-    try { await signInWithPin({ identifier: identifier.trim(), pin }) }
+    try { await signInWithPin({ pin }) }
     catch (cause) { setError(cause instanceof Error ? cause.message : en ? 'Unable to sign in.' : 'No se ha podido iniciar sesión.') }
     finally { setBusy(false); setPin('') }
   }
   return <div className="st-access"><section className="st-access-card">
     <div className="st-access-head"><span className="st-kicker">AI Professional Academy</span><div role="group" aria-label={en ? 'Language' : 'Idioma'}>{(['es','en'] as const).map(l => <button className="st-btn-ghost" type="button" key={l} aria-pressed={locale === l} onClick={() => store.setLocale(l)}>{l.toUpperCase()}</button>)}</div></div>
     <h1>{en ? 'Sign in to your workspace' : 'Entra en tu espacio de trabajo'}</h1>
-    <p>{en ? 'Use the identifier and access credential provided by your teacher. Your saved work remains available when you sign out.' : 'Usa el identificador y la clave de acceso que te ha dado tu profesor. Tu trabajo guardado se conserva al cerrar sesión.'}</p>
+    <p>{en ? 'Enter your access code. Your saved work remains available when you sign out.' : 'Introduce tu clave de acceso. Tu trabajo guardado se conserva al cerrar sesión.'}</p>
     <form className="st-access-form" onSubmit={enter}>
-      <label><span>{en ? 'Identifier' : 'Identificador'}</span><input value={identifier} onChange={e => setIdentifier(e.target.value)} autoComplete="username" minLength={3} maxLength={120} required autoFocus /></label>
-      <label><span>{en ? 'Access credential' : 'Clave de acceso'}</span><input type="password" value={pin} onChange={e => setPin(e.target.value)} autoComplete="current-password" minLength={minimumCredentialLength} maxLength={72} required /></label>
-      <button type="submit" className="st-btn" disabled={busy || identifier.trim().length < 3 || pin.length < minimumCredentialLength}>{busy ? (en ? 'Checking…' : 'Comprobando…') : (en ? 'Sign in' : 'Entrar')}</button>
+      <label><span>{en ? 'Access credential' : 'Clave de acceso'}</span><input type="password" value={pin} onChange={e => setPin(e.target.value)} autoComplete="current-password" autoFocus minLength={4} maxLength={72} required /></label>
+      <button type="submit" className="st-btn" disabled={busy || pin.length < 4}>{busy ? (en ? 'Checking…' : 'Comprobando…') : (en ? 'Sign in' : 'Entrar')}</button>
       {(error || message) && <p className="st-access-error" role="alert">{error || message}</p>}
     </form>
     {canRetry && <button type="button" className="st-btn-ghost" disabled={busy} onClick={() => { setBusy(true); void restoreRemoteSession().finally(() => setBusy(false)) }}>{en ? 'Check connection and session again' : 'Comprobar de nuevo conexión y sesión'}</button>}
