@@ -723,7 +723,7 @@ function ToolConnections({ tool }: { tool: string }) {
     <section className="st-tool-connections">
       <div className="st-section-head"><div><span className="st-kicker">También puedes hacerlo con</span><h2>Herramientas relacionadas</h2></div><span>Selecciona una para ver su guía</span></div>
       <div className="st-tool-connection-grid">
-        {connected.map((item) => <a key={item.id} href={href({ name: 'herramienta', toolId: item.id, filters: {} })}><strong>{item.label}</strong><span>{item.guide ? 'Guía disponible' : `${item.count} lecciones`}</span><ArrowRight size={13} /></a>)}
+        {connected.map((item) => <a key={item.id} href={href({ name: 'herramienta', toolId: item.id, filters: {} })}><strong>{item.label}</strong><span>{item.itinerary?.length ? `${item.itinerary.length} lecciones` : 'Guía disponible'}</span><ArrowRight size={13} /></a>)}
       </div>
     </section>
   )

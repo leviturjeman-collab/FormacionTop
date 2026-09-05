@@ -834,24 +834,23 @@ export interface Course {
   levels: LevelMeta[]
   kinds: Record<string, { label: string; hint: string }>
   sections: SectionMeta[]
+  /** Solo se cuenta lo que el alumno puede abrir. Si un número sale a
+   *  pantalla, aquí está el campo; si no está aquí, no se enseña. */
   stats: {
-    lessons: number
+    lecciones: number
+    itinerarios: number
     fichas: number
     stages: number
-    categories: number
-    folders: number
     workflows: number
-    authored: number
     terms: number
     projects: number
     decks: number
     kits: number
+    agents: number
+    guias: number
+    herramientas: number
+    prompts: number
     preguntas: number
-    sourceWords: number
-    quizQuestions: number
-    blocks: number
-    interactivePieces: number
-    agents?: number
   }
   stages: Stage[]
   categories: Category[]

@@ -70,7 +70,15 @@ if (sinDefinir.size) avisos.push(`${sinDefinir.size} términos del vocabulario d
 
 // 5. Diccionario huérfano: términos que ninguna lección explica.
 const huerfanos = curso.glossaryIndex.filter((t) => !t.lessons.length)
-if (huerfanos.length) avisos.push(`${huerfanos.length} de ${curso.glossaryIndex.length} términos del diccionario no los explica ninguna lección.`)
+/* Que un término no tenga lección NO es un fallo: el diccionario también se
+ * consulta suelto. Lo que sí sería un fallo es un término sin definición. */
+const sinDefinicion = curso.glossaryIndex.filter((entrada) => (entrada.meaning || '').trim().length < 20)
+if (sinDefinicion.length) {
+  problemas.push(`${sinDefinicion.length} términos del diccionario no tienen definición: ${sinDefinicion.slice(0, 5).map((e) => e.term).join(', ')}.`)
+}
+if (huerfanos.length) {
+  avisos.push(`${huerfanos.length} de ${curso.glossaryIndex.length} términos son solo de consulta: tienen definición, pero ninguna lección los desarrolla.`)
+}
 
 // 6. Duración declarada frente a contenido real.
 for (const l of programa) {
