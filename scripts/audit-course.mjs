@@ -79,6 +79,43 @@ for (const l of programa) {
   }
 }
 
+// 6b. El mismo producto no puede tener dos precios distintos en el curso.
+//     Claude Pro llegó a aparecer como 20, 22 y 23 € en ocho archivos.
+const PRODUCTOS = ['Claude Pro', 'Claude Max', 'ChatGPT Plus', 'ChatGPT Pro', 'Google AI Pro', 'Copilot Pro']
+const preciosDe = new Map(PRODUCTOS.map((nombre) => [nombre, new Map()]))
+
+const buscarPrecios = (donde, texto) => {
+  if (typeof texto !== 'string') return
+  for (const nombre of PRODUCTOS) {
+    // El precio tiene que estar en la misma cláusula que el producto: sin
+    // punto, punto y coma ni dos puntos por medio, y a menos de 45 caracteres.
+    // Si no, «Claude Pro; ... planes altos de 115 €» se leería como el precio
+    // de Pro cuando es el de Max.
+    const re = new RegExp(`${nombre}[^.;:]{0,45}?(\\d+(?:,\\d+)?)\\s*€`, 'g')
+    for (const m of texto.matchAll(re)) {
+      const lista = preciosDe.get(nombre)
+      if (!lista.has(m[1])) lista.set(m[1], donde)
+    }
+  }
+}
+
+for (const l of curso.curso || []) {
+  buscarPrecios(`lección ${l.number}`, textoDe(l))
+}
+for (const g of curso.guides || []) {
+  buscarPrecios(`guía «${g.title}»`, [g.intro, ...(g.theory || []).map((b) => b.text)].join(' '))
+}
+for (const t of curso.toolPages || []) {
+  if (t.guide?.plain) buscarPrecios(`herramienta ${t.label}`, t.guide.plain)
+}
+
+for (const [nombre, lista] of preciosDe) {
+  if (lista.size > 1) {
+    const detalle = [...lista.entries()].map(([precio, donde]) => `${precio} € (${donde})`).join(', ')
+    problemas.push(`${nombre} aparece con precios distintos: ${detalle}.`)
+  }
+}
+
 // 7. Kits y agentes deben apuntar a herramientas que existen.
 const herramientas = new Set(curso.toolPages.map((t) => t.id))
 for (const k of curso.kits) for (const t of k.tools || []) {
