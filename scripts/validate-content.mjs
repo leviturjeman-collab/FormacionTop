@@ -241,6 +241,32 @@ check((cursoEn.guides || []).length === (course.guides || []).length,
 check((cursoEn.agents || []).length === (course.agents || []).length,
   `Hay ${course.agents?.length || 0} agentes en español y ${cursoEn.agents?.length || 0} en inglés.`)
 
+/* Las fichas de herramienta también son la misma ficha en los dos idiomas. */
+const toolsEn = new Map((cursoEn.toolPages || []).map((tool) => [tool.id, tool]))
+for (const tool of course.toolPages || []) {
+  const traducida = toolsEn.get(tool.id)
+  if (!traducida) { problems.push(`La herramienta «${tool.id}» no existe en inglés.`); continue }
+  check((traducida.itinerary?.length || 0) === (tool.itinerary?.length || 0),
+    `${tool.label} tiene ${tool.itinerary?.length || 0} lecciones en español y ${traducida.itinerary?.length || 0} en inglés.`)
+  check((traducida.guide?.automations?.length || 0) === (tool.guide?.automations?.length || 0),
+    `${tool.label} tiene ${tool.guide?.automations?.length || 0} automatizaciones en español y ${traducida.guide?.automations?.length || 0} en inglés.`)
+  check((traducida.guide?.prompts?.length || 0) === (tool.guide?.prompts?.length || 0),
+    `${tool.label} tiene ${tool.guide?.prompts?.length || 0} prompts en español y ${traducida.guide?.prompts?.length || 0} en inglés.`)
+}
+
+/* Nada de la versión inglesa puede seguir escrito en español. Se busca por
+ * palabras que no existen en inglés; con veinte en la misma ficha, es texto
+ * español, no una coincidencia. */
+const SOLO_ESPANOL = /\b(?:que|para|con|una|los|las|del|como|cuando|debe|puede|sin|tiene|datos|prueba)\b/g
+const enEspanol = (valor) => (JSON.stringify(valor || '').match(SOLO_ESPANOL) || []).length
+for (const tool of cursoEn.toolPages || []) {
+  check(enEspanol(tool.guide) < 20, `La ficha de ${tool.label} sigue en español en la versión inglesa.`)
+}
+for (const familia of cursoEn.prompts || []) {
+  const primero = familia.prompts?.[0]
+  if (primero) check(enEspanol(primero.prompt) < 25, `Los prompts de «${familia.title}» siguen en español en la versión inglesa.`)
+}
+
 // Los iconos de marca referenciados existen en el módulo generado.
 const iconModule = await fs.readFile(path.join(projectDir, 'src', 'brand-icons.ts'), 'utf8')
 for (const tool of course.tools || []) {

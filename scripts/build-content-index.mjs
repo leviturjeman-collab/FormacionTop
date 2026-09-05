@@ -116,6 +116,14 @@ registerGuides(extraGuides)
  * o poner datos reales en una prueba. La ampliación se hace en build para que
  * las fuentes editoriales sigan siendo legibles y fáciles de revisar. */
 const promptWords = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length
+const QUALITY_SECTIONS_EN = (context) => [
+  `\n\n## Before you start\nWork with this context: ${context}. Do not fill gaps with imagination. If a fact is missing that would change the decision, ask me a specific question and wait for the answer. If several readings are possible, list them and tell me which fact separates one from another. Always separate what I have told you, what you are inferring, and what still has to be checked. Do not use a technical word without translating it first.`,
+  `\n\n## Quality bar\nDo not hand me an answer that merely sounds good. Turn every recommendation into an action I can take, an output I can observe, and a condition that lets me say whether it worked. Say what is out of scope for this version. If you recommend a tool, explain why it fits the input, the output, the volume, the budget and the person who will have to maintain it. Compare at least one simpler alternative and the option of not automating yet.`,
+  `\n\n## Test it before using it\nDesign a test with made-up data and four cases: a normal one, an incomplete one, a duplicate and an extreme one. Explain what should appear after each step and on which screen or in which record I check it. If something fails, tell me how to tell whether the problem is in the input, the instruction, a permission, a limit or the destination tool. Do not tell me to try again without saying which variable to change.`,
+  `\n\n## Security and cost\nClearly mark every irreversible action: sending a message, publishing, deleting, charging money, sharing data or spending credit. Propose a way to test it without affecting anyone, and a point where a person has to approve it. Explain how tokens, credits, tasks, runs or storage get measured, which figure I should note before and after, and how I work out the monthly cost. If a price or a feature may have changed, write CHECK THE OFFICIAL WEBSITE instead of inventing a number.`,
+  `\n\n## Handover and continuity\nFinish with a short record someone else can understand without having seen this conversation: the goal, the inputs, the output, the steps, the tools, the permissions, the cases it does not cover, the test you ran, the result, the rough cost and how to stop it. Add which file, screenshot, link or log I should keep as evidence. Include one small next action I can finish in under thirty minutes, and a clear signal that it is time to move on.`,
+]
+
 const qualitySections = (context) => [
   `\n\n## Antes de empezar\nTrabaja con este contexto: ${context}. No rellenes huecos con imaginación. Si falta un dato que cambie la decisión, hazme una pregunta concreta y espera la respuesta. Si hay varias interpretaciones posibles, enuméralas y dime qué dato separa una de otra. Distingue siempre entre lo que te he contado, lo que estás deduciendo y lo que todavía hay que comprobar. No uses una palabra técnica sin traducirla primero.`,
   `\n\n## Criterio de calidad\nNo me entregues una respuesta que solo suene bien. Convierte cada recomendación en una acción que pueda realizar, una salida que pueda observar y una condición que me permita decir si ha funcionado. Señala qué queda fuera de esta versión. Si recomiendas una herramienta, explica por qué encaja con la entrada, la salida, el volumen, el presupuesto y la persona que tendrá que mantenerla. Compara al menos una alternativa más sencilla y la opción de no automatizar todavía.`,
@@ -127,7 +135,8 @@ const qualitySections = (context) => [
 function enrichPrompts(items, context) {
   for (const item of items || []) {
     if (!item?.prompt || promptWords(item.prompt) >= 520) continue
-    for (const section of qualitySections(`${context} · ${item.name || 'este encargo'}`)) {
+    const secciones = LOCALE === 'en' ? QUALITY_SECTIONS_EN : qualitySections
+    for (const section of secciones(`${context} · ${item.name || (LOCALE === 'en' ? 'this assignment' : 'este encargo')}`)) {
       if (promptWords(item.prompt) >= 520) break
       item.prompt += section
     }

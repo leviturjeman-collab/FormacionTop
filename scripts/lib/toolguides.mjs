@@ -3,6 +3,7 @@ import {
   PROFILE_DEFAULT_EN, TOOL_PROFILES_EN, promptForEn, PROMPT_DETAILS_EN, PROMPT_PADDING_EN,
   ENRICH_SECTIONS_EN, ENRICH_PADDING_EN, automationForEn, AUTOMATION_CODE_EN, PLATFORM_EN,
 } from './toolguides-en.mjs'
+import { REAL_AUTOMATIONS_EN } from './automations-reales-en.mjs'
 
 import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS } from './automations-reales.mjs'
 
@@ -618,7 +619,8 @@ export function completeToolGuide(existing, tool, locale = 'es') {
   } else if (AUTOMATION_PLATFORMS.has(tool.id)) {
     guide.automations = TASK_AUTOMATIONS.slice(0, MAX_TOOL_AUTOMATIONS).map((item, index) => automationFor(tool, profile, item, index, locale))
   } else if (REAL_AUTOMATIONS[tool.id]) {
-    guide.automations = REAL_AUTOMATIONS[tool.id].slice(0, MAX_TOOL_AUTOMATIONS)
+    const recetas = (locale === 'en' && REAL_AUTOMATIONS_EN[tool.id]) || REAL_AUTOMATIONS[tool.id]
+    guide.automations = recetas.slice(0, MAX_TOOL_AUTOMATIONS)
   } else {
     guide.automations = []
   }
