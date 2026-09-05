@@ -13,6 +13,8 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
 const curso = JSON.parse(await fs.readFile('public/course.json', 'utf8'))
+// La versión inglesa es la mitad del producto: se audita igual que la española.
+const cursoEn = JSON.parse(await fs.readFile('public/course.en.json', 'utf8'))
 const programa = curso.curso.filter((l) => !l.tool).sort((a, b) => a.number - b.number)
 const porNumero = new Map(programa.map((l) => [l.number, l]))
 const problemas = []
@@ -109,10 +111,49 @@ for (const t of curso.toolPages || []) {
   if (t.guide?.plain) buscarPrecios(`herramienta ${t.label}`, t.guide.plain)
 }
 
+const preciosEn = new Map(PRODUCTOS.map((nombre) => [nombre, new Map()]))
+const buscarPreciosEn = (donde, texto) => {
+  if (typeof texto !== 'string') return
+  for (const nombre of PRODUCTOS) {
+    const re = new RegExp(`${nombre}[^.;:]{0,45}?\\$\\s?(\\d+(?:\\.\\d+)?)`, 'g')
+    for (const m of texto.matchAll(re)) {
+      const lista = preciosEn.get(nombre)
+      if (!lista.has(m[1])) lista.set(m[1], donde)
+    }
+  }
+}
+for (const l of cursoEn.curso || []) buscarPreciosEn(`lesson ${l.number}`, textoDe(l))
+for (const g of cursoEn.guides || []) {
+  buscarPreciosEn(`guide «${g.title}»`, [g.intro, ...(g.theory || []).map((b) => b.text)].join(' '))
+}
+for (const t of cursoEn.toolPages || []) {
+  if (t.guide?.plain) buscarPreciosEn(`tool ${t.label}`, t.guide.plain)
+}
+for (const [nombre, lista] of preciosEn) {
+  if (lista.size > 1) {
+    const detalle = [...lista.entries()].map(([precio, donde]) => `$${precio} (${donde})`).join(', ')
+    problemas.push(`En inglés, ${nombre} aparece con precios distintos: ${detalle}.`)
+  }
+}
+
 for (const [nombre, lista] of preciosDe) {
   if (lista.size > 1) {
     const detalle = [...lista.entries()].map(([precio, donde]) => `${precio} € (${donde})`).join(', ')
     problemas.push(`${nombre} aparece con precios distintos: ${detalle}.`)
+  }
+}
+
+// 6c. Las dos versiones tienen que traer las mismas piezas.
+for (const clave of ['curso', 'guides', 'kits', 'agents', 'toolPages', 'prompts']) {
+  const a = (curso[clave] || []).length, b = (cursoEn[clave] || []).length
+  if (a !== b) problemas.push(`«${clave}»: ${a} en español y ${b} en inglés.`)
+}
+for (const l of curso.curso || []) {
+  const en = (cursoEn.curso || []).find((x) => x.id === l.id)
+  if (!en) { problemas.push(`La lección ${l.number} no existe en la versión inglesa.`); continue }
+  if (en.title === l.title) avisos.push(`La lección ${l.number} «${l.title}» tiene el mismo título en los dos idiomas.`)
+  if ((en.tasks || []).length !== (l.tasks || []).length) {
+    problemas.push(`La lección ${l.number} tiene ${(l.tasks || []).length} tareas en español y ${(en.tasks || []).length} en inglés.`)
   }
 }
 

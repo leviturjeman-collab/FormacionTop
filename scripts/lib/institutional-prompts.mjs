@@ -228,18 +228,71 @@ function compact(value, max = 280) {
   return `${text.slice(0, max).replace(/\s+\S*$/, '')}...`
 }
 
+/**
+ * Clasifica un prompt en una de las categorías por las palabras de su nombre.
+ *
+ * Reconoce español e inglés. Antes solo miraba el español, así que en la
+ * versión inglesa casi nada encajaba y todo caía en la categoría por defecto:
+ * 164 prompts en «Aprender desde cero» frente a 41 en español, y dos
+ * categorías vacías. Un alumno en inglés se encontraba la biblioteca de
+ * prompts sin ordenar.
+ */
 function categoryForToolPrompt(name) {
   const text = String(name || '').toLowerCase()
-  if (/investigar|comparar|opciones|decisi/.test(text)) return 'elegir-herramienta'
-  if (/automatizar|workflow|flujo/.test(text)) return 'automatizar'
-  if (/agente|l[ií]mites|permisos/.test(text)) return 'crear-agentes'
-  if (/calidad|error|diagnosticar|evaluar|reparar/.test(text)) return 'probar-reparar'
-  if (/dato|documento|extraer|informaci[oó]n/.test(text)) return 'conectar-datos'
-  if (/c[oó]digo|cambio|programar/.test(text)) return 'programar'
-  if (/texto|imagen|v[ií]deo|storyboard|pieza/.test(text)) return 'crear-contenido'
-  if (/documentar|entregar/.test(text)) return 'entregar-equipo-cliente'
-  if (/web|aplicaci[oó]n|interfaz|proyecto/.test(text)) return 'crear-proyecto'
+  if (/investigar|comparar|opciones|decisi|research|compare|choose|decide|option/.test(text)) return 'elegir-herramienta'
+  if (/automatizar|workflow|flujo|automate|automation|pipeline/.test(text)) return 'automatizar'
+  if (/agente|l[ií]mites|permisos|agent|limits|permission/.test(text)) return 'crear-agentes'
+  if (/calidad|error|diagnosticar|evaluar|reparar|quality|debug|diagnos|evaluate|fix|test/.test(text)) return 'probar-reparar'
+  if (/dato|documento|extraer|informaci[oó]n|data|document|extract|information|source/.test(text)) return 'conectar-datos'
+  if (/c[oó]digo|cambio|programar|code|coding|refactor|commit|diff/.test(text)) return 'programar'
+  if (/texto|imagen|v[ií]deo|storyboard|pieza|text|image|video|copy|content|script/.test(text)) return 'crear-contenido'
+  if (/documentar|entregar|document|deliver|handover|hand over/.test(text)) return 'entregar-equipo-cliente'
+  if (/web|aplicaci[oó]n|interfaz|proyecto|app|interface|project|screen/.test(text)) return 'crear-proyecto'
   return 'aprender-desde-cero'
+}
+
+/** Cabeceras de las categorías de prompts en inglés. */
+const CATEGORY_META_EN = {
+  'aprender-desde-cero': {
+    title: 'Learning from scratch',
+    intro: 'Institutional prompts for understanding a tool, explaining its value to non-technical people and deciding where to start without turning training into a list of buttons.',
+  },
+  'elegir-herramienta': {
+    title: 'Choosing a tool',
+    intro: 'Prompts for comparing options, justifying a decision and avoiding picking technology by fashion when the project needs judgement, cost and maintenance.',
+  },
+  'crear-proyecto': {
+    title: 'Building a project',
+    intro: 'Prompts for turning an institutional need into a first version, with users, scope, screens, data, states and a definition of done.',
+  },
+  automatizar: {
+    title: 'Automating',
+    intro: 'Prompts for turning a repeated task into a flow that runs on its own, with its triggers, its checks and its warnings.',
+  },
+  'crear-contenido': {
+    title: 'Creating content',
+    intro: 'Prompts for producing text, images, video and presentations with a consistent voice and a criterion for what gets published.',
+  },
+  programar: {
+    title: 'Coding',
+    intro: 'Prompts for asking for code, reviewing changes and understanding what an assistant did before approving it.',
+  },
+  'conectar-datos': {
+    title: 'Connecting your data',
+    intro: 'Prompts for turning internal documents into something you can query, with sources and clear limits.',
+  },
+  'crear-agentes': {
+    title: 'Building agents',
+    intro: 'Prompts for defining what an agent can do, what it must never do, and which step needs a person to approve it.',
+  },
+  'probar-reparar': {
+    title: 'Testing and fixing',
+    intro: 'Prompts for checking something works, reading an error and getting back to how it was.',
+  },
+  'entregar-equipo-cliente': {
+    title: 'Delivering to a team or client',
+    intro: 'Prompts for packaging, explaining, handing over and charging for what you built.',
+  },
 }
 
 function slug(value) {
@@ -412,7 +465,7 @@ function makeFamily(meta, extra = {}) {
   }
 }
 
-export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFiles = [], kits = []) {
+export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFiles = [], kits = [], locale = 'es') {
   const toolById = new Map((toolPages || []).map((tool) => [tool.id, tool]))
   const generalEntries = []
   const output = []
@@ -444,21 +497,26 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
    * anterior»...) con el mismo contenido de fondo. Ahora hay UNA familia por
    * tema; solo se parte en lotes numerados cuando supera los 50 prompts.
    */
-  for (const meta of CATEGORY_META) {
-    const entries = generalEntries.filter((entry) => entry.categoryId === meta.id)
+  for (const metaEs of CATEGORY_META) {
+    const entries = generalEntries.filter((entry) => entry.categoryId === metaEs.id)
     if (!entries.length) continue
+    // En inglés la cabecera se traduce: antes salía «Aprender desde cero ·
+    // lote 1 de 4» dentro de la versión inglesa.
+    const meta = locale === 'en' ? { ...metaEs, ...(CATEGORY_META_EN[metaEs.id] || {}) } : metaEs
     const groups = chunks(entries, 50)
     // «Prompts institucionales para entender…» → «entender…», para no repetirse
     // al componer las frases de la ficha.
-    const purpose = meta.intro.replace(/^Prompts (institucionales )?para /i, '').toLowerCase()
+    const purpose = meta.intro.replace(/^(?:Prompts (?:institucionales )?para |Institutional prompts for |Prompts for )/i, '').toLowerCase()
     for (const [index, group] of groups.entries()) {
-      const suffix = groups.length > 1 ? ` · lote ${index + 1} de ${groups.length}` : ''
+      const suffix = groups.length > 1
+        ? (locale === 'en' ? ` · batch ${index + 1} of ${groups.length}` : ` · lote ${index + 1} de ${groups.length}`)
+        : ''
       output.push(makeFamily(
         {
-          id: `general-${meta.id}${groups.length > 1 ? `-${index + 1}` : ''}`,
+          id: `general-${metaEs.id}${groups.length > 1 ? `-${index + 1}` : ''}`,
           title: `${meta.title}${suffix}`,
           intro: `${group.length} prompts institucionales para ${purpose}`,
-          categoryId: meta.id,
+          categoryId: metaEs.id,
         },
         {
           sectionId: GENERAL_SECTION.id,
