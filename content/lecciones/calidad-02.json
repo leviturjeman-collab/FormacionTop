@@ -1,0 +1,119 @@
+{
+  "id": "calidad-02",
+  "number": 36,
+  "stageId": "calidad",
+  "title": "Leer un error sin saber programar",
+  "promise": "Vas a entender qué te está diciendo un mensaje de error, sacar de él las tres piezas que importan y pedir ayuda de forma que te la puedan dar. Al terminar habrás resuelto uno de los tuyos siguiendo el método, sin adivinar.",
+  "minutes": 25,
+  "why": "Álvaro vio esto en su flujo: «ERROR: 401 Unauthorized - invalid api key». Se bloqueó, hizo captura y la mandó a un grupo de WhatsApp preguntando «¿alguien sabe qué es esto?». Nadie contestó. Estuvo cuatro días parado. El mensaje decía literalmente lo que pasaba: la clave que estaba usando no valía. Se le había caducado la de OpenAI dos semanas antes. Cuatro días de parón por no leer una línea que estaba escrita en su pantalla, en inglés pero con tres palabras que se entienden.",
+  "theory": [
+    {
+      "title": "Un error no es un castigo, es la única pista que tienes",
+      "text": "Cuando algo falla, casi todo el mundo hace lo mismo: se agobia, cierra la ventana y prueba otra vez a ver si suena la flauta. Y así se tira días. El mensaje de error es lo único que separa «no funciona» de «no funciona por esto». No está escrito para asustarte: está escrito por alguien que quería decirte qué ha pasado, en un idioma raro y sin adornos. Casi siempre son cuatro o cinco palabras útiles rodeadas de ruido. El trabajo consiste en encontrar esas palabras, no en entenderlo todo.",
+      "analogy": "Es el ruido que hace el coche antes de pararse. Puedes agobiarte o puedes fijarte en si es un chirrido, un golpeteo o un pitido. Los tres significan cosas distintas y el mecánico te va a preguntar por eso.",
+      "example": "«401 Unauthorized - invalid api key» tiene tres palabras útiles: 401, unauthorized, api key. Las demás sobran."
+    },
+    {
+      "title": "Las tres piezas que hay que sacar siempre",
+      "text": "De cualquier error, por largo que sea, hay que sacar tres cosas y anotarlas. La primera: dónde ha pasado, es decir en qué paso concreto de tu montaje. La segunda: qué dice literalmente, copiado y pegado, no resumido con tus palabras. Y la tercera: qué estabas haciendo justo antes. Con esas tres, un error deja de ser una pared y pasa a ser un problema concreto. Sin ellas no hay forma de ayudarte, ni siquiera de que te ayudes tú. Y la segunda es la que la gente hace peor: resumir un error con tus palabras pierde justo el dato que lo identificaba.",
+      "example": "Álvaro, bien hecho: «En el paso de Llamar a OpenAI. Dice: 401 Unauthorized - invalid api key. Estaba probando el formulario con datos normales, y ayer funcionaba.»"
+    },
+    {
+      "title": "Los números que vienen en los errores de internet",
+      "text": "Cuando el fallo es al hablar con otro servicio, viene con un número de tres cifras y ese número ya te dice de quién es la culpa. Los que empiezan por 4 significan que el problema está en lo que has mandado tú: el 401 es que no te has identificado o tu clave no vale; el 403, que te has identificado pero no tienes permiso para eso; el 404, que lo que pides no existe, casi siempre una dirección mal escrita; y el 429, que has hecho demasiadas peticiones muy rápido y te han frenado. Los que empiezan por 5 significan que el problema es del otro: su servidor se ha roto o está saturado. Esa distinción es la más útil de todas, porque te dice si tienes que arreglar algo o simplemente esperar.",
+      "analogy": "Los 4xx son «lo que has traído no vale». Los 5xx son «lo que has traído está bien, pero se nos ha roto la máquina a nosotros». En el primer caso trabajas tú; en el segundo, esperas.",
+      "example": "429 en un flujo que manda cien correos de golpe: no está roto, es que va demasiado deprisa. Se arregla metiendo una espera, no cambiando la clave."
+    },
+    {
+      "title": "Los cinco errores que te vas a encontrar de verdad",
+      "text": "En un montaje sin programar, el noventa por ciento de los fallos son cinco. Uno: la clave caducada o mal copiada, que da 401 y se arregla generando una nueva y pegándola entera, sin espacios delante ni detrás. Dos: ir demasiado rápido, que da 429 y se arregla poniendo una espera entre pasos. Tres: falta un dato que el paso siguiente esperaba, que suele decir «undefined», «null» o «cannot read property», y significa que algo llegó vacío. Cuatro: el formato no es el que esperaba, típico con fechas y con números que llegan como texto. Y cinco: el otro servicio está caído, que da 5xx y se arregla esperando. Con reconocer esos cinco vas a resolver solo casi todo lo que te pase.",
+      "example": "«Cannot read property name of undefined» suena a chino y quiere decir algo muy simple: le pediste el nombre a algo que llegó vacío. Casi siempre es un campo del formulario que nadie rellenó."
+    },
+    {
+      "title": "Pegarle el error a la IA es la mejor jugada, si se lo pegas bien",
+      "text": "Los mensajes de error son justo lo que mejor se le da a una IA: son texto técnico, repetitivo y muy documentado. Pero la mayoría de la gente le pega el error a secas y recibe una respuesta general que no sirve. Lo que hay que darle son las tres piezas de antes más el contexto de qué herramienta usas y que no eres programador. Y sobre todo hay que pedirle una cosa concreta: que te dé la causa más probable y cómo comprobarla, no una lista de diez posibilidades. Una lista de diez posibilidades es lo mismo que no tener nada.",
+      "example": "Mal: «me sale 401, ayuda». Bien: «En n8n, en el paso de OpenAI, sale 401 invalid api key. Ayer funcionaba, no he tocado nada. ¿Cuál es la causa más probable y cómo la compruebo en dos minutos?»"
+    },
+    {
+      "title": "Un cambio cada vez",
+      "text": "Cuando algo no va, la tentación es tocar cuatro cosas a la vez a ver si con eso se arregla. Si funciona, no sabes cuál era y no vas a poder repetirlo. Si no funciona, has añadido tres problemas nuevos a lo que ya tenías. La disciplina que hay que coger es aburrida y es la que funciona: cambias una cosa, pruebas, apuntas si mejora o no, y sigues. Parece más lento y es mucho más rápido, porque cada intento te da información en vez de ruido.",
+      "example": "Álvaro cambió a la vez la clave, la URL y el formato de la fecha. Empezó a funcionar. Al mes siguiente volvió a fallar y no tenía ni idea de cuál de las tres había sido la buena."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Monta tu cuaderno de averías",
+      "where": "En un archivo junto a tu proyecto",
+      "action": "Crea un archivo llamado «averias.txt» con esta plantilla arriba, para copiarla cada vez: Fecha. Dónde ha pasado (paso exacto). Qué dice literalmente (copiado, no resumido). Qué estaba haciendo. Qué he probado. Qué lo arregló. Suena a burocracia y es la herramienta que más tiempo te va a ahorrar, porque los errores se repiten: dentro de tres meses el mismo fallo lo resuelves en un minuto en vez de en un día.",
+      "expect": "Un archivo con la plantilla. Vacío de momento.",
+      "stuck": "Si te parece exagerado, hazlo solo con los que te tengan parado más de diez minutos. Con esos ya merece la pena de sobra."
+    },
+    {
+      "title": "Provoca un error y sácale las tres piezas",
+      "where": "En tu montaje",
+      "action": "Si tienes uno pendiente, úsalo. Si no, provoca uno a propósito: cambia una letra de tu clave de acceso y ejecuta. Cuando salte, apunta en el cuaderno las tres piezas. La segunda tiene que ser copiar y pegar el mensaje entero, con el número si lo trae, sin resumirlo ni «arreglar» las palabras. Después vuelve a poner bien la clave.",
+      "expect": "Una entrada completa en el cuaderno. Si el mensaje trae número de tres cifras, mira en la teoría de quién es la culpa antes de seguir.",
+      "stuck": "Si no encuentras el mensaje completo, busca en la herramienta un botón de ver detalles, ver ejecución o ver registro. Casi siempre lo que se ve en pantalla es un resumen y el bueno está un clic más abajo."
+    },
+    {
+      "title": "Descifra tu error con ayuda",
+      "where": "En ChatGPT o Claude",
+      "action": "Coge la entrada del cuaderno y pásasela con este prompt. Fíjate en que le pides una sola causa, no una lista.",
+      "prompt": "Se me ha roto algo y no soy programador. Uso [HERRAMIENTA: n8n / Make / Zapier / la que sea].\n\nDÓNDE: [el paso exacto]\nMENSAJE, copiado literal: [PEGA EL ERROR ENTERO]\nQUÉ HACÍA: [qué estabas haciendo]\nDESDE CUÁNDO: [ayer funcionaba / es la primera vez / falla a veces]\n\nRESPONDE ASÍ, sin nada más:\n1. Qué significa ese mensaje, en una frase y en español de andar por casa.\n2. LA causa más probable en mi caso. Una sola, la más probable. No me des una lista.\n3. Cómo compruebo en menos de dos minutos si es esa causa. Dime dónde tengo que hacer clic.\n4. Cómo se arregla, paso a paso, con los nombres de los botones tal como se ven en la pantalla.\n\nSi el mensaje no da para saberlo, dime qué dato adicional te hace falta y dónde lo busco. No me sueltes diez posibilidades.",
+      "expect": "Una explicación en una frase y una comprobación concreta que puedes hacer ahora mismo. Si la causa que te da no es, vuelve y dile: «He comprobado eso y no era. ¿Cuál es la siguiente más probable?»",
+      "stuck": "Si te da igualmente una lista de posibilidades, insiste: «Elige una. Si tuvieras que apostar, ¿cuál es?» Y si te dice que necesita más información, dásela: normalmente pide el registro de la ejecución, que está en el mismo sitio donde viste el error."
+    },
+    {
+      "title": "Arréglalo cambiando una sola cosa",
+      "where": "En tu montaje",
+      "action": "Aplica el arreglo que te ha dicho, solo ese, y prueba. Apunta en el cuaderno si funcionó o no antes de tocar nada más. Si no funcionó, deshaz ese cambio antes de probar el siguiente. Deshacer lo que no sirvió es la mitad de la disciplina.",
+      "expect": "El cuaderno con una línea de «qué he probado» y su resultado. Si funcionó, rellena «qué lo arregló» y ya tienes la avería documentada para siempre.",
+      "stuck": "Si llevas cinco cambios y sigue roto, para. Vuelve a leer el mensaje original entero, incluida la parte que te saltaste por parecer relleno: muchas veces el dato bueno está en la segunda línea."
+    },
+    {
+      "title": "Aprende a distinguir tu culpa de la suya",
+      "where": "En tu cuaderno",
+      "action": "Repasa los errores que hayas tenido en el curso hasta ahora, o provoca dos: uno de clave mal (401) y otro pidiendo una dirección que no existe (404, cambia una letra de la URL). Anota al lado de cada uno si el número empieza por 4 o por 5, y por tanto si es cosa tuya o del otro.",
+      "expect": "Dos entradas con la clasificación hecha. Esta distinción te va a ahorrar horas: cuando veas un 5xx, la respuesta correcta muchas veces es esperar veinte minutos y volver a probar.",
+      "stuck": "Si tu error no trae número de tres cifras, es que no es un fallo de comunicación entre servicios: será un dato que falta o un formato equivocado. Mira los cinco errores de la teoría y busca «undefined» o «null» en el mensaje."
+    },
+    {
+      "title": "Escribe tu chuleta de errores",
+      "where": "Al final del cuaderno",
+      "action": "Escribe una tabla corta con los cinco errores de la teoría: el mensaje típico, qué significa y qué haces tú. Añade los que te hayan pasado a ti con sus arreglos reales. Esta chuleta es tuya y es la que vas a mirar antes de agobiarte la próxima vez.",
+      "expect": "Cinco o seis líneas al final del archivo. La próxima vez que algo se rompa, primero miras aquí. Vas a resolver la mitad sin salir del archivo.",
+      "stuck": "Si aún no te ha pasado ninguno de los cinco, escribe igualmente los cinco de la teoría. Te van a pasar todos, y cuando pase reconocerás el mensaje."
+    }
+  ],
+  "matters": [
+    "Que el mensaje de error es la única pista y hay que copiarlo entero, no resumirlo.",
+    "Que un número que empieza por 4 es cosa tuya y uno que empieza por 5 es del otro.",
+    "Que hay cinco errores que cubren casi todo lo que te va a pasar.",
+    "Que se cambia una cosa cada vez, o no sabrás nunca cuál era."
+  ],
+  "ignore": [
+    "Los rastros de error larguísimos con nombres de archivos internos. La línea útil suele ser la primera o la última.",
+    "Aprenderte todos los códigos. Con 401, 403, 404, 429 y «empieza por 5» vas servido.",
+    "Los foros de hace seis años. Las herramientas han cambiado; pregunta a la IA con tu versión."
+  ],
+  "canDo": [
+    "Sacar de cualquier error las tres piezas que permiten resolverlo.",
+    "Saber si el problema es tuyo o del servicio con el que hablas.",
+    "Pedir ayuda de forma que te puedan ayudar de verdad.",
+    "Tener un cuaderno donde las averías repetidas se resuelven en un minuto."
+  ],
+  "cantDo": [
+    "Resolver todos los errores. Algunos son del otro y solo cabe esperar.",
+    "Evitar que aparezcan.",
+    "Volver a la versión de antes cuando lo has roto tú: eso es la 37.",
+    "Enterarte de un fallo si no encendiste los avisos en la lección 35."
+  ],
+  "words": [
+    ["Código 4xx", "El problema está en lo que mandaste tú: no identificado (401), sin permiso (403), no existe (404), demasiado rápido (429)."],
+    ["Código 5xx", "El problema está en el otro servicio. Se espera y se vuelve a probar."],
+    ["undefined / null", "Algo llegó vacío cuando el paso siguiente esperaba un dato. El error más común en flujos."],
+    ["Registro (log)", "El detalle de lo que pasó paso a paso. Donde está el mensaje completo, no el resumen."],
+    ["Cuaderno de averías", "El archivo donde apuntas qué se rompió y qué lo arregló. Los errores se repiten."]
+  ],
+  "next": "Ya sabes leer lo que se rompe. En la lección 37 vas al caso peor: has cambiado algo, se ha roto todo y necesitas volver a como estaba hace veinte minutos."
+}
