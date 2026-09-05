@@ -9,20 +9,19 @@ Este procedimiento acompaña la migración `20260905160000_verified_sessions_and
 3. Revisar todas las migraciones pendientes y aplicarlas en orden dentro de una ventana de mantenimiento. La última revoca el acceso anónimo a funciones antiguas y tablas, elimina el hash administrativo predeterminado y borra copias visibles de PIN. Las cuentas legacy se importan deshabilitadas, conservando sus perfiles y progreso remoto; requieren restablecer credencial antes de entrar.
 4. Si existía una columna legacy `learners.pin` con vistas dependientes, revisar esas dependencias antes de migrar. La migración no usa CASCADE para no destruirlas silenciosamente; puede bloquearse y debe corregirse el plan de transición. No omitir la revocación de las funciones antiguas.
 
-## Crear el primer administrador
+## Acceso de profesor y superadmin
 
-El identificador elegido para la primera cuenta administradora es **`admin`**. La aplicación no incluye una contraseña administrativa predeterminada. Desde una conexión administrativa del servidor, ejecutar una consulta parametrizada equivalente a:
+Profesor y superadmin son el mismo acceso operativo en servidor: una cuenta interna de rol `admin` que abre el panel de alumnos y el modo profesor. El código configurado por el propietario es `5555`; no se guarda en el frontend ni en migraciones, solo como hash/digest en base de datos.
+
+Desde una conexión administrativa del servidor, activar o rotar ese acceso con:
 
 ```sql
-insert into public.academy_accounts(login, display_name, role, secret_hash)
-values ('admin', $1, 'admin', extensions.crypt($2, extensions.gen_salt('bf', 10)));
+select public.academy_bootstrap_admin('admin', 'Profesor / Superadmin', $1);
 ```
 
-- `admin`: identificador de acceso fijado por el propietario; no es la contraseña ni concede permisos sin una cuenta verificada.
-- `$1`: nombre del administrador.
-- `$2`: clave individual del administrador, máximo 72 bytes UTF-8 por el límite de bcrypt. Para la cuenta `admin`, el propietario ha elegido una clave de cuatro caracteres; su valor de preparación está en `ADMIN_PIN` de `.env.local` (archivo privado excluido de Git). La migración `20260905180000_admin_credential_length.sql` permite esa longitud únicamente para el administrador `admin`; los alumnos conservan el mínimo de diez. No introducir la clave en el frontend ni en migraciones. Esta configuración local no crea la cuenta remota.
+`$1` es el código recibido por canal privado. En producción actual ese valor es `5555`. La función revoca las sesiones previas de esa cuenta al rotar el código.
 
-Cada profesor con funciones administrativas debe tener una cuenta individual. El cambio de vista «profesor» no otorga privilegios. No conceder acceso SQL ni claves service-role al navegador.
+Los alumnos se crean desde el panel y reciben códigos propios. Un alumno que entra con su código conserva su trabajo, pero no ve el enlace de profesor/admin y sus RPC administrativas son rechazadas en servidor. El cambio de vista «profesor» solo aparece después de entrar con la cuenta `admin`. No conceder acceso SQL ni claves service-role al navegador.
 
 Para rotar un secreto administrativo, desde servidor: actualizar `secret_hash` con la misma función y borrar sus filas de `academy_sessions` en la misma transacción. La UI permite restablecer alumnos, no administradores.
 

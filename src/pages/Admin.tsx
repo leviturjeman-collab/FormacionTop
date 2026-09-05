@@ -21,7 +21,7 @@ export default function Admin() {
   const [editing, setEditing] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
-  const [issued, setIssued] = useState<{ login: string; secret: string } | null>(null)
+  const [issued, setIssued] = useState<{ secret: string } | null>(null)
   const authorized = session.status === 'authenticated' && session.profile?.role === 'admin'
   async function load() { setLearners(await adminRpc<Learner[]>('academy_admin_learners')) }
   async function loadSupport() { setTickets(await adminRpc<Ticket[]>('academy_support_list')) }
@@ -38,7 +38,7 @@ export default function Admin() {
     else { setLearners([]); setTickets([]); setAnswers({}); setIssued(null) }
   }, [authorized])
 
-  if (!authorized) return <div className="st-page"><h1>{tr('Acceso restringido', 'Restricted access')}</h1><p>{tr('La gestión de alumnos requiere una sesión de administrador verificada.', 'Student management requires a verified administrator session.')}</p></div>
+  if (!authorized) return <div className="st-page"><h1>{tr('Acceso restringido', 'Restricted access')}</h1><p>{tr('La gestión de alumnos requiere la clave de profesor/superadmin.', 'Student management requires the teacher/super admin credential.')}</p></div>
 
   async function save() {
     await act(async () => {
@@ -48,7 +48,7 @@ export default function Admin() {
       } else {
         const secret = temporarySecret()
         await adminRpc('academy_admin_create', { learner: { ...draft, login: 'student-' + crypto.randomUUID() }, initial_secret: secret })
-        setIssued({ login: draft.login.trim().toLowerCase(), secret })
+        setIssued({ secret })
         setMessage(tr('Alumno creado. Entrega la clave una vez y después cierra su visualización.', 'Student created. Deliver the credential once, then hide it.'))
       }
       setDraft(EMPTY); setEditing(null); await load()
@@ -60,14 +60,14 @@ export default function Admin() {
   }
   async function resetSecret(learner: Learner) {
     if (!window.confirm(tr(`Restablecer la clave de ${learner.name}? Sus sesiones abiertas dejarán de ser válidas.`, `Reset the credential for ${learner.name}? Their current sessions will be revoked.`))) return
-    await act(async () => { const secret = temporarySecret(); await adminRpc('academy_admin_reset_secret', { learner_id: learner.id, new_secret: secret }); setIssued({ login: learner.login, secret }); await load(); setMessage(tr('Clave restablecida. Entrega la nueva clave por un canal adecuado.', 'Credential reset. Deliver it through an appropriate channel.')) })
+    await act(async () => { const secret = temporarySecret(); await adminRpc('academy_admin_reset_secret', { learner_id: learner.id, new_secret: secret }); setIssued({ secret }); await load(); setMessage(tr('Clave restablecida. Entrega la nueva clave por un canal adecuado.', 'Credential reset. Deliver it through an appropriate channel.')) })
   }
   function exportLearners() {
     const url = URL.createObjectURL(new Blob([JSON.stringify({ schemaVersion: 1, exportedAt: new Date().toISOString(), learners }, null, 2)], { type: 'application/json' }))
     const a = document.createElement('a'); a.href = url; a.download = 'alumnos-sin-credenciales.json'; a.click(); URL.revokeObjectURL(url)
   }
   return <div className="st-page">
-    <div className="st-page-title"><span className="st-kicker">{tr('Administración', 'Administration')}</span><h1>{tr('Alumnos y acceso', 'Students and access')}</h1><p>{tr('Perfiles remotos, credenciales individuales y cambios verificados por el servidor. Suspender y archivar conservan el trabajo del alumno.', 'Remote profiles, individual credentials and server-verified changes. Suspending or archiving preserves student work.')}</p></div>
+    <div className="st-page-title"><span className="st-kicker">{tr('Profesor / superadmin', 'Teacher / super admin')}</span><h1>{tr('Alumnos y acceso', 'Students and access')}</h1><p>{tr('Este panel se abre con la clave 5555. Desde aquí creas alumnos y les entregas su propia clave.', 'This panel opens with the 5555 credential. From here you create students and give them their own credential.')}</p></div>
     <div className="st-actions"><button className="st-btn-ghost" disabled={busy} onClick={() => void act(load)}>{tr('Actualizar alumnos', 'Refresh students')}</button><button className="st-btn-ghost" disabled={busy || !learners.length} onClick={exportLearners}>{tr('Exportar fichas sin claves', 'Export profiles without credentials')}</button></div>
     <p role="status" aria-live="polite">{busy ? tr('Comprobando operación…', 'Checking operation…') : message}</p>
     {issued && <section className="st-panel" aria-label={tr('Credencial recién creada', 'New credential')}><h2>{tr('Entrega de acceso', 'Deliver access')}</h2><p>{tr('Esta clave solo se muestra ahora. No se incluye en fichas ni exportaciones.', 'This credential is only shown now. Profiles and exports never include it.')}</p><input aria-label={tr('Clave inicial', 'Initial credential')} readOnly value={issued.secret} onFocus={(event) => event.currentTarget.select()} /><div className="st-actions"><button className="st-btn-ghost" onClick={() => void act(async () => { await navigator.clipboard.writeText(issued.secret); setMessage(tr('Credencial copiada. Entrégala solo a su destinatario.', 'Credential copied. Deliver it only to its recipient.')) })}>{tr('Copiar acceso', 'Copy access')}</button><button className="st-btn-ghost" onClick={() => setIssued(null)}>{tr('Ya la he entregado: ocultar', 'Delivered: hide credential')}</button></div></section>}

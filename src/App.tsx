@@ -393,7 +393,7 @@ function Pages({ route }: { route: Route }) {
     case 'prompts': return <Prompts familyId={route.familyId} promptId={route.promptId} />
     case 'kits': return <Kits kitId={route.kitId} tabId={route.tab} />
     case 'agentes': return <Agentes agentId={route.agentId} />
-    case 'admin': return session.profile?.role === 'admin' ? <Admin /> : <section className="st-page" role="alert"><h1>Acceso restringido / Restricted access</h1><a href="#/">Inicio / Home</a></section>
+    case 'admin': return session.profile?.role === 'admin' ? <Admin /> : <section className="st-page" role="alert"><h1>Acceso restringido / Restricted access</h1><p>Necesitas la clave de profesor/superadmin.</p><a href="#/">Inicio / Home</a></section>
     case 'guia': return <Guia guideId={route.guideId} />
     case 'curso': return route.lessonId ? <CursoLeccion lessonId={route.lessonId} /> : <CursoIndice />
     case 'biblioteca': return <Biblioteca />
