@@ -66,7 +66,7 @@ export default function Admin() {
     setPins((data || []).map((item: any) => ({
       id: item.id,
       name: item.name,
-      pin: '',
+      pin: item.pin || '',
       level: item.level,
       goal: item.goal || '',
       tools: item.tools || '',
@@ -74,7 +74,7 @@ export default function Admin() {
       createdAt: item.created_at,
       synced: true,
     })))
-    setSyncMessage(locale === 'en' ? 'Students loaded from Supabase.' : 'Alumnos cargados desde Supabase.')
+    setSyncMessage(locale === 'en' ? 'Students loaded from Supabase with visible PINs.' : 'Alumnos cargados desde Supabase con PIN visible.')
   }
 
   async function createPin() {
@@ -109,7 +109,7 @@ export default function Admin() {
         createdAt: data.created_at,
         synced: true,
       }, ...current])
-      setSyncMessage(locale === 'en' ? 'Student created in Supabase. Copy the PIN now: it is not stored in plain text.' : 'Alumno creado en Supabase. Copia el PIN ahora: no se guarda en texto claro.')
+      setSyncMessage(locale === 'en' ? 'Student created in Supabase. The PIN stays visible in super admin.' : 'Alumno creado en Supabase. El PIN queda visible en súper admin.')
       setDraft(EMPTY)
       return
     }
@@ -245,7 +245,7 @@ export default function Admin() {
                   <strong>{item.name}</strong>
                   <small>{item.goal || (locale === 'en' ? 'Goal pending' : 'Objetivo pendiente')} · {locale === 'en' ? 'level' : 'nivel'} {item.level}</small>
                 </div>
-                <code>{item.pin || (locale === 'en' ? 'Hidden' : 'Oculto')}</code>
+                <code>{item.pin || (locale === 'en' ? 'No PIN' : 'Sin PIN')}</code>
                 <span>{item.tools || (locale === 'en' ? 'Tools to be defined' : 'Herramientas por definir')}</span>
                 <button type="button" onClick={() => item.pin && copy(item.pin, item.id)} disabled={!item.pin}>{copied === item.id ? <Check size={13} /> : <Clipboard size={13} />}</button>
                 <button type="button" onClick={() => deletePin(item)} disabled={syncing}><Trash2 size={13} /></button>
