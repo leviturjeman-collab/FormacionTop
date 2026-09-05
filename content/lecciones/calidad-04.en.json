@@ -1,0 +1,118 @@
+{
+  "id": "calidad-04",
+  "number": 38,
+  "stageId": "calidad",
+  "title": "Watching it keeps working without checking every day",
+  "promise": "You'll set up three warnings that tell you something has stopped, is running slow, or is costing more than planned, without you opening anything. By the end you'll have tested them by triggering the failures deliberately.",
+  "minutes": 35,
+  "why": "Álvaro built his form properly, switched the error warning on and relaxed. Two months later he realised he'd had no bookings through the website for three weeks. There was no error: the form had stayed published on a page he himself had moved, so quite simply nobody was reaching it. Nothing failed. Something that was supposed to happen just stopped happening, and there's no error message for that. That's the second kind of breakdown and it needs a different kind of warning.",
+  "theory": [
+    {
+      "title": "There are two different breakdowns and you're only watching one",
+      "text": "The first breakdown is the noisy one: something runs, fails, and an error fires. That's covered by the error warning from lesson 35 and it's the easy one. The second is the silent one: nothing fails because nothing runs. The workflow is switched off, the link is broken, the account expired, the page moved. There's no error to report because it never got as far as trying. It's the dangerous one, because silence looks a great deal like everything being fine. The way to catch it is the opposite of the other: instead of waiting for something to shout, you check every so often that something has happened, and you raise a warning if it hasn't.",
+      "analogy": "The error warning is the fire alarm. This other thing is taking the register: if nobody came to class on Tuesday, the alarm isn't going to sound, but something is wrong.",
+      "example": "Álvaro had not a single error in three weeks. He also had not a single booking. Both facts were the same problem."
+    },
+    {
+      "title": "The three warnings you need and no more",
+      "text": "Three cover what matters and they take an afternoon to set up. First, that something has failed: you've had that since lesson 35. Second, that nothing has happened in X time: a warning if no booking has come in for three days, if the workflow hasn't run in twenty-four hours, if nobody has filled in the form in a week. And third, that spending has jumped: a cost cap with a warning, because pay-per-use services can multiply by twenty from one bad loop and you don't find out until the charge lands. More warnings than those three don't make you safer: they train you to ignore them, which is worse than not having them.",
+      "example": "Álvaro set: warn if it fails, warn if 3 days pass with no booking, and a $25 monthly cap on his OpenAI account with a warning at $15."
+    },
+    {
+      "title": "The threshold comes from what's normal, not from instinct",
+      "text": "To set a «nothing has happened» warning you need to know what's normal in your case, and that gets looked up, not guessed. If you get about eight bookings a week, three days with none is odd; if you get two a month, three days with none is an ordinary Tuesday. Look at the last two months, work out the longest gap that has occurred normally, and set the warning a little above it. Set it too tight and it'll fire every week for no reason, and within a month you'll be ignoring it. A warning that gets ignored is exactly the same as not having one, with the added bonus of false reassurance.",
+      "example": "Álvaro looked: his longest normal gap was two days, four during holidays. He set the warning at three days with an exception in August."
+    },
+    {
+      "title": "Money is watched with a cap, not an alarm",
+      "text": "With cost there's an important difference: warnings arrive late. By the time they tell you you've spent $80, you've spent $80. What actually stops it is the hard limit, the one that switches the service off at a given figure. Nearly every pay-per-use platform has one and it ships switched off. It takes two minutes to set and it's what separates a $25 scare from a $400 invoice. The combination that works is always the same: a warning at half of what you're willing to spend and a hard cut at the maximum. And the maximum is set by thinking about the worst case: what would happen if something went into a loop tonight.",
+      "example": "Hard cap at $35 and a warning at $18. If a workflow runs away at three in the morning, the damage is bounded and you find out in the morning."
+    },
+    {
+      "title": "Make the warning tell you what to do",
+      "text": "A warning saying «error in the workflow» is no use at eleven at night. A useful warning brings four things: what has broken in plain language, when, whether it's urgent or can wait until tomorrow, and where you have to look. You write that once, in the warning's text, and you thank yourself every time it fires. The urgent-or-not part is the most valuable: it distinguishes «you've stopped receiving bookings» from «one row didn't copy to the spreadsheet», and it stops you getting up for something that could have waited.",
+      "example": "«The bookings workflow has stopped. Patients can't request appointments. URGENT. Look in n8n, Bookings workflow, last execution.» You read that at a glance and you know what to do."
+    },
+    {
+      "title": "Testing the warnings, because half of them don't work",
+      "text": "The most common failure in all of this is having the warnings set and them not arriving: they go to spam, the address was mistyped, the warning was only enabled in a test mode, or the condition was wrong and never triggers. And since a warning that doesn't arrive is indistinguishable from everything being fine, you can spend months believing you're covered. Every warning you set has to be fired deliberately once and the message watched arriving. And repeated every few months, because addresses and permissions expire.",
+      "example": "Álvaro's cost warning was set on his old email address, the one he doesn't check. He found out by testing it, not by receiving the invoice."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Find out what's normal in your case",
+      "where": "In your tool's history or your spreadsheet",
+      "action": "Before setting any threshold, look at the data. Open your workflow's execution history, or the sheet where results are stored, and answer three questions with numbers: how many times it happens per day or week normally, what the longest gap with nothing has been, and whether there are times of year when it drops a lot.",
+      "expect": "Three numbers written down. Without this you'll set thresholds by eye and the warning will fire so often you'll end up silencing it.",
+      "stuck": "If you've not been running long and have no history, set a generous threshold now (say three times what you think) and note a reminder to revise it in a month with real data."
+    },
+    {
+      "title": "Build the «nothing has happened» warning",
+      "where": "In your automation tool",
+      "action": "You need something that runs on its own every day and checks whether there's been activity. In n8n: a new workflow with a Schedule Trigger at a fixed time, a step that reads your sheet or database and counts the rows from the last X days, a condition step (IF) comparing against zero, and an email send if the condition is met. In Make or Zapier it's the same shape with different names. Set the time to first thing in the morning so you find it as you start work.",
+      "expect": "A new workflow, activated, that runs once a day. Check it tomorrow: an execution has to appear even if it sent you nothing.",
+      "stuck": "If you get stuck building it, there's a simpler version that also works: a formula in your spreadsheet that turns a cell red if the last recorded date is more than X days old, and a weekly reminder to look at it. Less automatic, just as effective."
+    },
+    {
+      "title": "Write the warning's text for your eleven-at-night self",
+      "where": "In your warning's send step",
+      "action": "Replace the default text with one carrying the four things: what's happening in plain language, since when, whether it's urgent, and where to look. Write it the way you'd say it to someone who doesn't know the setup, because in six months that someone is going to be you.",
+      "prompt": "WARNING: [What has stopped happening, in one sentence, in plain language]\nSince: [date or how many days]\nConsequence: [what my business is losing while this continues]\nUrgency: [URGENT, today / Can wait until tomorrow]\nWhere to look: [tool, workflow or screen name]",
+      "expect": "A warning text you understand at a glance. Compare it with the default one and you'll see the difference.",
+      "stuck": "If you don't know what to put in the consequence, that's a signal: perhaps that warning isn't needed. If you can't explain what you lose while the problem continues, it probably wasn't important."
+    },
+    {
+      "title": "Set the spending cap and the warning",
+      "where": "On each pay-per-use service's website",
+      "action": "Go into the account of every service that charges by consumption (OpenAI, Anthropic, whichever you use) and find the billing or limits section. Set two things: a hard limit at the maximum you're willing to spend in a month, and a warning at half. Check which email address the warnings are set to, which is where half of people come unstuck.",
+      "expect": "A limit and a warning set on each service, with the email address you actually read. Note the figures in your working file.",
+      "stuck": "To choose the maximum, think about the worst case: if something looped one night, how much would you be willing to lose without it hurting? That figure is your cap. Start low: if it cuts you off sometime, you raise it, and you'll have learned what you actually spend."
+    },
+    {
+      "title": "Fire every warning deliberately",
+      "where": "In your workflows",
+      "action": "One at a time. The error one: break the key and run it. The inactivity one: lower the threshold temporarily to zero days, let it run, and check. The cost one: if you can, lower the warning to a figure below what you've already spent this month and wait for it to fire. Then put every value back as it was, which is the part people forget.",
+      "expect": "Three emails in your inbox, one per warning. If any doesn't arrive, check spam first and then the configuration. Note in your file the date you tested them.",
+      "stuck": "If the inactivity one doesn't fire when you lower the threshold, check the workflow is actually activated: that's the most common cause. A saved but unactivated workflow never runs, and that same mistake is what will leave you unwatched without knowing it."
+    },
+    {
+      "title": "Put the monthly review in your calendar",
+      "where": "In your calendar",
+      "action": "Create a repeating event, the first Monday of every month, fifteen minutes. In the event's description paste this list: run the checklist from lesson 35, check the three warnings are still active, look at last month's spending and make a fresh copy per lesson 37. Having the list inside the event is what makes it actually happen.",
+      "expect": "A repeating event with its list inside. Fifteen minutes a month is what it costs to find things out before your clients do.",
+      "stuck": "If you know you'll ignore it, set it at a time when you're at the computer without pressure, and not first thing on a Monday. A reminder at the wrong hour gets dismissed unread."
+    }
+  ],
+  "matters": [
+    "That there are two breakdowns: the one that shouts and the silent one, and the silent one does more damage.",
+    "That a warning's threshold comes from the history, not from instinct.",
+    "That with money the warning arrives late: what stops it is the hard limit.",
+    "That a warning you haven't fired deliberately, you don't know works."
+  ],
+  "ignore": [
+    "Dashboards with charts. At your scale three email warnings are more than enough.",
+    "Professional monitoring tools. They're built for a different scale.",
+    "Watching metrics that won't make you change anything."
+  ],
+  "canDo": [
+    "Find out something stopped happening even though there's no error.",
+    "Set thresholds that won't fire at you for no reason.",
+    "Bound how much you can end up spending if something runs away.",
+    "Know your warnings work, because you've fired them."
+  ],
+  "cantDo": [
+    "Stop things breaking.",
+    "Watch anything that leaves no trace anywhere.",
+    "Find out the answer was wrong but arrived fine: that's measured by the exam in lesson 34.",
+    "Trust a warning you haven't tested."
+  ],
+  "words": [
+    ["Silent breakdown", "When nothing fails because nothing runs. There's no error to report and that's why it goes unnoticed."],
+    ["Threshold", "The number above which a warning fires. It comes from looking at the history of what's normal."],
+    ["Hard limit", "The cap that switches the service off at a given figure. The only thing that genuinely stops spending."],
+    ["False positive", "A warning that fires when nothing is wrong. If it repeats, you end up ignoring every warning."],
+    ["Schedule trigger", "The step that makes a workflow run on its own at a set time each day, without anyone launching it."]
+  ],
+  "next": "That closes the part about not breaking without noticing. In lesson 39 you close the block: how to save what works with a name and a date, so you can say which version you have running and what changed between one and the next."
+}

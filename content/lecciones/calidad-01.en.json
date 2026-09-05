@@ -1,0 +1,119 @@
+{
+  "id": "calidad-01",
+  "number": 35,
+  "stageId": "calidad",
+  "title": "Knowing whether what you built actually works",
+  "promise": "You'll write your project's checklist: what has to happen before you call something done, phrased so it can be looked at and answered yes or no. By the end you'll have your list written and you'll have run it once.",
+  "minutes": 40,
+  "why": "Álvaro built a form so his patients could book appointments. He tested it himself, the email arrived, and he called it finished. Two weeks later he discovered he hadn't received anything for eleven days: a patient had typed her phone number with spaces and the workflow had stopped at the first error, and since nobody was watching, it stayed stopped. He hadn't tested with an odd phone number, and he hadn't set anything up to warn him. His test was «it works for me», which is the test we all run and the only one that never catches anything.",
+  "theory": [
+    {
+      "title": "«It works for me» is the test that doesn't work",
+      "text": "When you test something you built yourself, you test it the way you know it's meant to be used. You type the phone number properly, fill in every field, upload a file of the right size and press the buttons in the expected order. That's natural: you have the happy path in your head. The problem is that whoever's going to use it doesn't, and things break precisely outside that path. Testing properly isn't using your setup: it's trying to break it deliberately. And it doesn't take technical skill, it takes being a bit of a swine for fifteen minutes.",
+      "analogy": "It's like testing a door by opening it slowly, with the key already in, standing square to it. What's going to fail is the day someone shoves it with their hands full, with a foot, or tries to open it while someone else pulls from the other side.",
+      "example": "Álvaro tested with «600123456». The patient typed «600 12 34 56». Same phone number, and the workflow stopped."
+    },
+    {
+      "title": "The acceptance criterion: what you look at, not what you hope for",
+      "text": "Before calling something done you have to have written what «right» means, and it has to be something you can look at. «That it works properly» can't be looked at. «That on submitting the form an email reaches me in under two minutes with the name, phone number and requested date» can be looked at: you open it and it's either there or it isn't. That sentence is called an acceptance criterion and it's the single most useful tool in this whole block. It always has three parts: what you do, what has to happen, and within how long. If one of the three is missing, the sentence can't check anything.",
+      "example": "Bad: «the form has to work». Good: «I fill the form in with correct data → an email reaches me in under 2 minutes with name, phone and date → and the row appears in the spreadsheet.»"
+    },
+    {
+      "title": "Test the happy path, the bad path and the empty one",
+      "text": "For everything you build there are three minimum tests, and those three catch most of the failures. The first is the happy path: everything correct, as intended. The second is the bad path: odd but possible data, which is where nearly everything breaks. Phone numbers with spaces, names with accents or apostrophes, badly typed emails, enormous blocks of text, huge files, dates from three years ago. And the third is the empty one: pressing submit without filling in anything. That third is the one most people skip and the one that most often brings a setup down, because hardly anyone thinks about what should happen when nothing arrives.",
+      "example": "Álvaro tested all three. The happy path passed. The one with spaces in the phone number broke. And the empty form created a ghost appointment with no name in his diary."
+    },
+    {
+      "title": "Make failure visible",
+      "text": "There's an enormous difference between a setup that fails and warns you and one that fails in silence. The second is the dangerous one, because however long you take to find out is time spent losing things. The rule is that no important step may fail without someone finding out, and at the start that someone is you. It doesn't take anything sophisticated: when something breaks, an email or a message reaches you saying what broke and when. Most automation tools ship with this and it's switched off by default. Switching it on takes two minutes and it's what separates «it was stopped for eleven days» from «I found out in five minutes».",
+      "analogy": "It's the oil light. It doesn't fix the engine, but it tells you to pull over before you seize it. A car without that light isn't more reliable: you just find out later.",
+      "example": "Álvaro switched the error notification on. The next time it broke, he knew the same day and fixed it in twenty minutes."
+    },
+    {
+      "title": "Test with what's actually going to arrive",
+      "text": "When you test, don't use «test», «aaa» or «asdf». Use data that resembles the real thing, dirt and all: the full name with two surnames and an accent, the long address with odd abbreviations, the comment that runs to a paragraph. Clean data always passes. Real data is what teaches you something. And save that test data in a file, because you'll use it every time you change something: having five grubby cases to hand saves an enormous amount of time.",
+      "example": "Álvaro's set: «María José Ferrández-Ollé», phone «600 12 34 56», an email with an extra dot, a two-hundred-word comment, and a completely empty submission. Five cases he runs in three minutes."
+    },
+    {
+      "title": "When to test: whenever you touch anything",
+      "text": "You tested it the day you built it, it worked, and you haven't tested it since. That's the normal pattern and it's the one that leads to nasty surprises. Things break without you touching them: a tool changes underneath, a password expires, someone renames a folder. The habit to build is running the full list whenever you change anything, however small the change, and once a month even when you change nothing. If your list has five checks, that's five minutes. And five minutes a month saves you finding out from a client that you haven't received anything for a fortnight.",
+      "example": "Álvaro runs it on the first Monday of every month and whenever he touches the form. It takes him four minutes and it has caught two breakages before his patients did."
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Write down what has to happen before you call it done",
+      "where": "In a text file next to your project",
+      "action": "Take whatever you've built so far (the form, the workflow, the website, whatever) and write between three and five sentences in the three-part format: «When [I do this] → it has to [do this] → within [time].» Each sentence should be answerable yes or no by looking. If on rereading it you wouldn't know how to check it, rewrite it.",
+      "expect": "Between three and five sentences. Save them in a file called «checks.txt». This is your list and you'll use it for the rest of the course.",
+      "stuck": "If you end up with something like «that it be fast», turn it into a number: is fast two seconds or two minutes? Write the number even if you're guessing; you can adjust later. A wrong number can be corrected, a vague sentence can't be checked."
+    },
+    {
+      "title": "Prepare your five grubby cases",
+      "where": "In the same file",
+      "action": "Write five sets of test data and keep them forever. One correct and realistic. One with spaces and odd symbols where they don't belong (phone with spaces, name with a hyphen and an accent). One with a very long text in a text field. One with a clearly wrong value (an email with no @, a date from last year). And one completely empty.",
+      "expect": "Five data sets written and ready to copy. What matters is that you save them: the point is reusing exactly the same ones every time.",
+      "stuck": "If you don't know what odd data to include, look at the last ten pieces of real data that came in from real people. Every oddity you need is in there, and more."
+    },
+    {
+      "title": "Break your own setup",
+      "where": "In your form, workflow or website",
+      "action": "Run the five cases, one at a time, and note what happens with each. Don't fix anything as you go: get the full picture first. Pay particular attention to two things most people don't look at: whether the failure is visible anywhere or happens in silence, and whether failing leaves something half-done (an empty row, an appointment with no name, a truncated email).",
+      "expect": "Five results. Typically two fail: the odd-symbols one and the empty one. If none fails, raise the difficulty: try submitting twice in quick succession, or from a phone rather than a computer.",
+      "stuck": "If something breaks and you don't understand the message that appears, don't fix it blind: copy it out in full and save it. Lesson 36 is precisely about that, reading an error without knowing how to program."
+    },
+    {
+      "title": "Switch the error notifications on",
+      "where": "In the tool where your setup lives",
+      "action": "Look in the settings for the option to notify you when something fails. In n8n it's in the workflow settings, with an error workflow; in Zapier or Make, in the account notifications; on a web form, in the notification settings. Switch it on and put your email in. Then trigger a failure deliberately, using the bad-data case, and check that the warning reaches you.",
+      "expect": "An email in your inbox saying something failed. If it doesn't arrive, check the spam folder and then the configuration: a warning that doesn't arrive is the same as no warning.",
+      "stuck": "If your tool has no error notifications, build the dumbest thing that works: a calendar reminder, every Monday, to run the checklist. It's worse than the automatic warning, and it's infinitely better than nothing."
+    },
+    {
+      "title": "Have the AI find the holes you can't see",
+      "where": "In ChatGPT or Claude",
+      "action": "Tell it what you've built and give it your checklist. What you want isn't praise: it's to be told what you forgot to test.",
+      "prompt": "I've built this and I'm not a programmer: [DESCRIBE WHAT IT DOES, end to end: what goes in, what happens and what comes out].\n\nMy checklist is:\n[PASTE YOUR SENTENCES]\n\nI want you to act as a hard reviewer, not a cheerleader:\n\n1. Tell me which realistic situations my list does NOT cover. Five at most, ordered by how likely they are to actually happen to me. Nothing far-fetched.\n2. For each one: exactly what data I'd use to trigger it and what should happen if it were handled properly.\n3. Tell me which of them would leave me losing things without noticing, which is the one that worries me most.\n\nDon't explain what testing is and don't give me general advice. Just the list.",
+      "expect": "Between three and five situations you hadn't thought of. The usual ones: two submissions at once, someone pressing the button twice, a file that's too big, a field arriving empty from a phone.",
+      "stuck": "If it gives you generic things like «test the security», say: «Be concrete: give me the exact value I'd type into the phone field to trigger the failure.» When you ask for the literal value it stops theorising."
+    },
+    {
+      "title": "Extend the list and date it",
+      "where": "In your checks file",
+      "action": "Add the new checks that came up, fix whatever broke in task 3, and run the whole list again from the start. At the end of the file write today's date and the result: how many pass out of how many.",
+      "expect": "A longer list and a dated result line. That file, with its accumulated dates, is the proof your setup works: if anyone ever asks you whether this is reliable, you show them.",
+      "stuck": "If fixing one thing breaks another, that isn't bad luck: it's normal, and it's exactly why you run the whole list rather than only the bit you touched."
+    }
+  ],
+  "matters": [
+    "That testing your own setup the way you know how to use it catches nothing.",
+    "That an acceptance criterion has three parts: what you do, what happens and within how long.",
+    "That the empty path is the one people skip most and the one that breaks things most often.",
+    "That a silent failure costs days, and switching the warnings on takes two minutes."
+  ],
+  "ignore": [
+    "Test types with technical names. Happy path, bad path and empty cover nearly everything.",
+    "Automating the tests. Five manual checks is plenty at this scale.",
+    "Coverage percentages. They mean nothing in a setup like yours."
+  ],
+  "canDo": [
+    "Write criteria you can look at instead of hoping it works.",
+    "Break your setup deliberately with five saved data sets.",
+    "Find out about failures the same day instead of through a client.",
+    "Have a dated history showing your setup works."
+  ],
+  "cantDo": [
+    "Understand the error messages yet: that's lesson 36.",
+    "Go back when a change breaks everything: that's lesson 37.",
+    "Cover every possible situation. You cover the likely ones.",
+    "Stop things breaking. Only find out sooner."
+  ],
+  "words": [
+    ["Acceptance criterion", "The sentence saying what has to happen before something counts as done, with its time limit. You look at it and answer yes or no."],
+    ["Happy path", "Using the setup as intended, everything correct. The test that always passes."],
+    ["Edge case", "The odd but possible value: spaces, accents, very long texts, empty fields. Where nearly everything breaks."],
+    ["Silent failure", "When something breaks and nobody finds out. The worst kind, because the damage accumulates."],
+    ["Test data set", "The five cases you save and repeat exactly every time you change something."]
+  ],
+  "next": "You know how to trigger the failures. In lesson 36 you learn to read what comes out when something breaks: error messages always take the same shape and they're understandable without knowing how to program."
+}
