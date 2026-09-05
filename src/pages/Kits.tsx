@@ -148,15 +148,16 @@ function PromptCard({ prompt, open }: { prompt: KitPrompt; open?: boolean }) {
   )
 }
 
-export default function Kits() {
+export default function Kits({ kitId }: { kitId?: string }) {
   const course = useCourse()
   const student = useStudent()
   const kits = course.kits || []
-  const [active, setActive] = useState(kits[0]?.id || '')
   const [tab, setTab] = useState<TabId>('resumen')
   const [saved, setSaved] = useState(false)
-  const [focused, setFocused] = useState(false)
-  const kit = kits.find((item) => item.id === active) || kits[0]
+  // El kit abierto se decide por la URL, no por estado interno: asi cada kit
+  // tiene su propia pantalla, se puede enlazar y el movil no obliga a bajar
+  // por toda la lista antes de llegar al contenido.
+  const kit = kitId ? kits.find((item) => item.id === kitId) || null : null
 
   const tools = useMemo(() => (kit ? kitTools(course, kit) : []), [course, kit])
   const promptFamilies = useMemo(() => (kit ? kitPromptFamilies(course, kit) : []), [course, kit])
@@ -172,7 +173,7 @@ export default function Kits() {
     [kit],
   )
 
-  if (!kit) {
+  if (!kits.length) {
     return (
       <div className="st-page">
         <div className="st-page-title">
@@ -183,7 +184,42 @@ export default function Kits() {
     )
   }
 
-  function saveToProject() {
+  // Sin kit en la URL se muestra solo el índice. Nada de contenido debajo: el
+  // alumno elige un caso y entra en su pantalla.
+  if (!kit) {
+    return (
+      <div className="st-page">
+        <div className="st-page-title">
+          <span className="st-kicker"><Sparkles size={12} /> Proyectos grandes</span>
+          <h1>Kits institucionales</h1>
+          <p>
+            Cada kit es un proyecto completo, de principio a fin. Elige el que se parezca a lo que
+            necesitas y se abre entero: el brief para definir tu caso, las fases en orden, los prompts
+            listos para copiar y lo que tienes que ver en pantalla para saber que va bien.
+          </p>
+        </div>
+        <div className="st-kit-cards">
+          {kits.map((item) => {
+            const pasos = (item.phases || []).reduce((sum, phase) => sum + phase.steps.length, 0)
+            return (
+              <a key={item.id} className="st-kit-card" href={href({ name: 'kits', kitId: item.id })}>
+                <span className="st-kicker">{item.kicker}</span>
+                <strong>{item.title}</strong>
+                <p>{item.promise}</p>
+                <small>
+                  {item.phases.length} fases · {pasos} pasos
+                  {item.workflows.length ? ' · flujo importable' : ''}
+                </small>
+                <i aria-hidden="true"><ArrowRight size={14} /></i>
+              </a>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  const saveToProject = () => {
     const previous = student.project
     store.setProject({
       name: previous?.name || kit.title,
@@ -214,49 +250,11 @@ export default function Kits() {
 
   const flowText = (index: number) => JSON.stringify(kit.workflows[index].flow, null, 2)
 
-  function openKit(id: string) {
-    setActive(id)
-    setTab('resumen')
-    setFocused(true)
-    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }))
-  }
-
   return (
-    <div className={`st-page st-kit-page${focused ? ' is-focused' : ''}`}>
-      <div className="st-page-title">
-        <span className="st-kicker"><Sparkles size={12} /> Proyectos grandes</span>
-        <h1>Kits institucionales</h1>
-        <p>
-          Cada kit es un proyecto completo: define tu caso con el brief, sigue las fases, copia los prompts
-          y monta el sistema sin salir de esta página. La ruta principal no exige programar; el código está
-          debajo para quien quiera bajar. Los flujos importables necesitan tus credenciales reales antes de activarse.
-        </p>
-      </div>
+    <div className="st-page st-kit-page">
+      <a className="st-volver" href={href({ name: 'kits' })}><ArrowLeft size={11} /> Todos los kits</a>
 
-      {focused && (
-        <div className="st-kit-focusbar">
-          <button type="button" className="st-btn-ghost" onClick={() => setFocused(false)}>
-            <ArrowLeft size={12} /> Volver a todos los casos
-          </button>
-          <span>{kit.title}</span>
-        </div>
-      )}
-
-      <div className={`st-kit-layout${focused ? ' focused' : ''}`}>
-        <aside className="st-kit-index" aria-label="Kits disponibles">
-          {kits.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={item.id === kit.id ? 'on' : ''}
-              onClick={() => openKit(item.id)}
-            >
-              <span>{item.kicker}</span>
-              <strong>{item.title}</strong>
-            </button>
-          ))}
-        </aside>
-
+      <div className="st-kit-layout">
         <section className="st-kit-board">
           <header className="st-kit-head">
             <span className="st-kicker">{kit.kicker}</span>

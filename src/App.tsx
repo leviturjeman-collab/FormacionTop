@@ -365,7 +365,11 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'deck': return [t('nav.presentacion')]
       case 'prompts': return [t('nav.prompts')]
       case 'skills': return [t('nav.skills')]
-      case 'kits': return [t('nav.kits')]
+      case 'kits': {
+        if (!route.kitId) return [t('nav.kits')]
+        const kit = (course.kits || []).find((item) => item.id === route.kitId)
+        return [t('nav.kits'), kit?.title || route.kitId]
+      }
       case 'agentes': {
         if (!route.agentId) return [t('nav.agentes')]
         const agent = (course.agents || []).find((item) => item.id === route.agentId)
@@ -421,7 +425,7 @@ function Pages({ route }: { route: Route }) {
     case 'deck': return <Deck deckId={route.deckId} />
     case 'prompts': return <Prompts familyId={route.familyId} />
     case 'skills': return <Skills />
-    case 'kits': return <Kits />
+    case 'kits': return <Kits key={route.kitId || 'indice'} kitId={route.kitId} />
     case 'agentes': return <Agentes agentId={route.agentId} />
     case 'admin': return <Admin />
     case 'guia': return <Guia guideId={route.guideId} />

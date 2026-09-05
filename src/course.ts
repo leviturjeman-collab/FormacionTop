@@ -37,14 +37,24 @@ function canUseLocalCourseFallback() {
   return ['localhost', '127.0.0.1'].includes(window.location.hostname)
 }
 
+function localCourseFile(locale: 'es' | 'en') {
+  const file = locale === 'en' ? 'course.en.json' : 'course.json'
+  return fetch(`${import.meta.env.BASE_URL}${file}`, { cache: 'no-cache' })
+}
+
+/**
+ * En produccion el curso llega por `/api/course`, detras de la sesion por PIN.
+ * En desarrollo esa ruta no existe: `vite` sirve la carpeta `api/` como
+ * archivos estaticos y devuelve el codigo fuente de la funcion con un 200. Por
+ * eso no basta con mirar el estado: hay que comprobar que lo que llega es JSON
+ * de verdad antes de darlo por bueno.
+ */
 async function fetchPrivateCourse(locale: 'es' | 'en') {
   const suffix = locale === 'en' ? '?locale=en' : ''
   const response = await fetch(`${import.meta.env.BASE_URL}api/course${suffix}`, { cache: 'no-cache' })
-  if (response.ok) return response
-  if (canUseLocalCourseFallback() && response.status === 404) {
-    const file = locale === 'en' ? 'course.en.json' : 'course.json'
-    return fetch(`${import.meta.env.BASE_URL}${file}`, { cache: 'no-cache' })
-  }
+  const isJson = (response.headers.get('content-type') || '').includes('json')
+  if (response.ok && isJson) return response
+  if (canUseLocalCourseFallback()) return localCourseFile(locale)
   return response
 }
 

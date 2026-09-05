@@ -1084,7 +1084,14 @@ details.st-block { padding: 0; }
   .st-scrim { position: fixed; z-index: 25; inset: 0; border: 0; background: rgba(0,0,0,.5); }
   .student-main, .st-foot { margin-left: 0; }
   .st-header { max-width: 100vw; padding: 0 14px; overflow: hidden; }
-  .st-header-actions { display: none; }
+  /* `.st-header > div` (0,1,1) le gana a `.st-header-actions` (0,1,0), asi que
+     ocultarlo exige al menos la misma especificidad. Sin esto, el selector de
+     idioma y el enlace de la ruta se quedaban en una cabecera de 58px y
+     empujaban las migas a una segunda linea, encima del boton de menu. */
+  .st-header > .st-header-actions { display: none; }
+  /* Las migas se quedan en una sola linea: en un movil solo cabe la ultima. */
+  .st-header > div:first-child { flex-wrap: nowrap; white-space: nowrap; }
+  .st-header > div:first-child > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .st-project-switch { min-width: 0; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .st-menu { width: 34px; height: 34px; padding: 0; border: 1px solid var(--st-line); background: white; display: grid; place-items: center; }
   .st-page, .st-lesson { padding: 28px 18px 55px; }
@@ -1095,6 +1102,8 @@ details.st-block { padding: 0; }
   }
 
 @media (max-width: 520px) {
+  /* Solo la ultima miga: el resto no cabe y era lo que provocaba el solape. */
+  .st-header > div:first-child > span:not(:last-child) { display: none; }
   .st-access-shell { padding: 0; place-items: stretch; }
   .st-access {
     width: 100%;
@@ -2271,7 +2280,21 @@ details.st-block-ejemplo { padding: 0; }
 
 /* --- Kits institucionales ----------------------------------------------- */
 
-.st-kit-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+/* La ficha de un kit ocupa la pantalla entera: el indice vive en #/kits. */
+.st-kit-layout { display: block; }
+
+/* Indice de kits: una tarjeta por caso, cada una con su propia pantalla. */
+.st-kit-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 12px; }
+.st-kit-card {
+  position: relative; padding: 16px 40px 15px 16px;
+  border: 1px solid var(--st-line-dark); background: var(--st-surface);
+  color: inherit; text-decoration: none; display: grid; gap: 6px; align-content: start;
+}
+.st-kit-card:hover { border-color: var(--st-accent); background: var(--st-accent-soft); }
+.st-kit-card strong { font: 600 16px/1.22 var(--display); overflow-wrap: anywhere; }
+.st-kit-card p { margin: 0; color: var(--st-muted); font-size: 9px; line-height: 1.5; }
+.st-kit-card small { color: var(--st-muted); font-size: 8px; }
+.st-kit-card i { position: absolute; right: 14px; top: 16px; color: var(--st-accent); }
 .st-kit-index { position: sticky; top: 76px; border: 1px solid var(--st-line-dark); background: var(--st-surface); max-height: calc(100vh - 110px); overflow: auto; }
 .st-kit-index button { width: 100%; min-height: 82px; padding: 13px; border: 0; border-bottom: 1px solid var(--st-line); background: transparent; text-align: left; color: inherit; display: grid; gap: 5px; }
 .st-kit-index button:hover, .st-kit-index button.on { background: var(--st-accent-soft); }
