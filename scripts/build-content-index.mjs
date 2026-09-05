@@ -1,32 +1,23 @@
 /**
  * Generador del curso.
  *
- * Lee el vault de Obsidian, extrae la señal de cada documento y produce
- * public/course.json: la Ruta, la Biblioteca y cada lección en tres niveles
- * con sus piezas interactivas.
+ * Lee el contenido escrito a mano de `content/` (lecciones, guías, kits,
+ * agentes, prompts, preguntas, glosario, proyectos y decks) y escribe
+ * public/course.json, que es lo único que carga la aplicación.
  *
- * El vault NO se modifica nunca. Este script solo lee.
- *
- * Ruta del vault, por orden de prioridad:
- *   1. variable de entorno VAULT_DIR
- *   2. course.config.json en la raíz del proyecto  { "vaultDir": "…" }
- *   3. rutas candidatas conocidas
+ * Aquí no se genera contenido: si algo tiene que salir en pantalla, alguien
+ * lo ha escrito antes en `content/`. Este script lo ordena, lo enlaza y
+ * cuenta lo que hay.
  */
 
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { STAGES, stageFor, KINDS, TOOLS } from './lib/taxonomy.mjs'
-import { extract } from './lib/extract.mjs'
-import { analyzeSections, isMetaDocument } from './lib/sections.mjs'
+import { STAGES, TOOLS } from './lib/taxonomy.mjs'
 import { completeToolGuide, registerGuides, toolGuideFor } from './lib/toolguides.mjs'
-import { registerRecipes } from './lib/recipes.mjs'
-import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
-import { buildInteractive } from './lib/interactive.mjs'
-import { buildCategories, buildGlossaryIndex, categoryKeyFor, sectionFor, SECTIONS } from './lib/categories.mjs'
 import { buildInstitutionalPromptLibrary } from './lib/institutional-prompts.mjs'
-import { STAGE_EN, KIND_EN, SECTION_EN, translateFolderLabel } from './lib/i18n-taxonomy.mjs'
+import { STAGE_EN } from './lib/i18n-taxonomy.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const projectDir = path.resolve(scriptDir, '..')
@@ -42,145 +33,65 @@ const generatedDir = path.join(publicDir, 'generated')
 const LOCALE = process.env.LOCALE === 'en' || process.argv.includes('--locale=en') ? 'en' : 'es'
 const outputFile = LOCALE === 'en' ? 'course.en.json' : 'course.json'
 
-/*
- * Carpetas que no forman parte del curso: infraestructura, documentación
- * interna del proyecto (backlog, auditorías, planes de QA) y `content/`,
- * que se carga de forma explícita con loadContent(). Lo que está aquí no
- * llega nunca al alumno como lección.
- */
-const IGNORED = new Set([
-  'node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '.claude',
-  '36_PORTAL_WEB_FORMACION', '99_PENDIENTE_Y_MEJORAS', '23_AUDITORIA_PROFESIONAL',
-  'content', 'scripts', 'src',
-])
-
 async function exists(target) {
   try { await fs.access(target); return true } catch { return false }
 }
-
-async function resolveVaultDir() {
-  if (process.env.VAULT_DIR) {
-    const dir = path.resolve(process.env.VAULT_DIR)
-    if (await exists(dir)) return dir
-    throw new Error(`VAULT_DIR apunta a una carpeta que no existe: ${dir}`)
-  }
-
-  const configPath = path.join(projectDir, 'course.config.json')
-  if (await exists(configPath)) {
-    const config = JSON.parse(await fs.readFile(configPath, 'utf8'))
-    if (config.vaultDir) {
-      const dir = path.resolve(projectDir, config.vaultDir)
-      if (await exists(dir)) return dir
-      throw new Error(`course.config.json apunta a una carpeta que no existe: ${dir}`)
-    }
-  }
-
-  const candidates = [
-    path.resolve(projectDir, '..', 'Formacion', 'Formacion'),
-    path.resolve(projectDir, '..', 'Formacion'),
-    path.resolve(projectDir, '..'),
-  ]
-  for (const candidate of candidates) {
-    if (await exists(path.join(candidate, '00_EMPIEZA_AQUI'))) return candidate
-  }
-
-  throw new Error(
-    'No encuentro el vault de Obsidian.\n' +
-      'Crea course.config.json en la raíz del proyecto con:\n' +
-      '  { "vaultDir": "../Formacion/Formacion" }\n' +
-      'o define la variable de entorno VAULT_DIR.',
-  )
-}
-
-async function walk(directory, output = []) {
-  const entries = await fs.readdir(directory, { withFileTypes: true })
-  for (const entry of entries) {
-    if (IGNORED.has(entry.name)) continue
-    const absolute = path.join(directory, entry.name)
-    if (entry.isDirectory()) await walk(absolute, output)
-    else output.push(absolute)
-  }
-  return output
-}
-
-const toPosix = (value) => value.split(path.sep).join('/')
-
-function slugify(value) {
-  return value
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 70) || 'leccion'
-}
-
-/** Nombre legible de una carpeta del vault. */
-function folderLabel(name) {
-  return name
-    .replace(/^\d+_?/, '')
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/^\w/, (char) => char.toUpperCase())
-    .trim()
-}
-
-/**
- * Tipo de lección. El orden importa: las señales más específicas primero.
- * Lo que sea índice, resumen o listado de fuentes se marca como referencia
- * para que no abra una etapa por delante del material que sí enseña.
- */
-function kindFor(relativePath, title) {
-  if (/workflows_n8n_40/.test(relativePath)) return 'workflow'
-  if (/skills_40|skills\//i.test(relativePath)) return 'skill'
-  if (/^(?:fuentes|readme|resumen|[ií]ndice|mapa|documento maestro|changelog|decisiones|inicio|qu[eé] es cada|estructura)/i.test(title)) return 'referencia'
-  if (/diccionario|glosario|plantilla|matriz|r[uú]brica|checklist|solucionario|importables/i.test(title)) return 'referencia'
-  if (/proyecto|capstone|caso[_ ]/i.test(title)) return 'proyecto'
-  if (/gu[ií]a|setup|instal|configur/i.test(title)) return 'guia'
-  if (/laboratorio|sesi[oó]n|clase|lecci[oó]n|pr[aá]ctica|ejercicio|evaluaci[oó]n|examen/i.test(title)) return 'practica'
-  return 'concepto'
-}
-
-/* ------------------------------------------------------------------ */
-
-const vaultDir = await resolveVaultDir()
-console.log(`Vault: ${vaultDir}`)
 
 
 /* --- Contenido escrito por fuera del código ------------------------ */
 
 /**
- * Carga todos los .json de una carpeta de `content/`. Es el mecanismo con el
- * que se amplía el curso sin tocar el generador: guías de herramienta, recetas
- * de código, proyectos de área y presentaciones.
+ * Carga todos los .json de una carpeta de `content/`. Es el único mecanismo
+ * por el que entra contenido: lecciones, guías, kits, agentes, prompts,
+ * preguntas, glosario, proyectos de área y presentaciones.
  */
-async function loadContent(folder) {
+/**
+ * Campos que NO se traducen: son la misma pieza en los dos idiomas, así que
+ * una duración, un orden o un identificador distinto en la traducción es
+ * siempre un error. Se toman del archivo original y la traducción no los pisa.
+ *
+ * Sin esto, 55 de 58 lecciones anunciaban una duración en español y otra en
+ * inglés (la lección 1 decía 50 minutos en español y 25 en inglés).
+ */
+const NO_SE_TRADUCE = ['id', 'number', 'slot', 'order', 'minutes', 'stageId', 'tool', 'categoryId', 'toolId', 'level']
+
+async function loadContent(folder, forzarLocale = null) {
+  const idioma = forzarLocale || LOCALE
   const dir = path.join(projectDir, 'content', folder)
   if (!(await exists(dir))) return []
   const out = []
   const names = (await fs.readdir(dir)).filter((file) => file.endsWith('.json') && !file.endsWith('.en.json'))
   for (const name of names) {
-    // En build en inglés, si existe "nombre.en.json" se usa esa traducción;
-    // si no existe todavía, se sirve el español antes que dejar un hueco.
-    const target = LOCALE === 'en' && (await exists(path.join(dir, name.replace(/\.json$/, '.en.json'))))
-      ? name.replace(/\.json$/, '.en.json')
-      : name
     try {
-      out.push(JSON.parse(await fs.readFile(path.join(dir, target), 'utf8')))
+      const original = JSON.parse(await fs.readFile(path.join(dir, name), 'utf8'))
+      if (idioma !== 'en') { out.push(original); continue }
+
+      // En inglés se sirve la traducción si existe; si no, el español antes
+      // que dejar un hueco vacío en la aplicación.
+      const enName = name.replace(/\.json$/, '.en.json')
+      if (!(await exists(path.join(dir, enName)))) { out.push(original); continue }
+
+      const traducido = JSON.parse(await fs.readFile(path.join(dir, enName), 'utf8'))
+      for (const campo of NO_SE_TRADUCE) {
+        if (campo in original) traducido[campo] = original[campo]
+      }
+      out.push(traducido)
     } catch (error) {
-      console.warn(`  aviso: ${folder}/${target} no es JSON válido (${error.message}). Se ignora.`)
+      console.warn(`  aviso: ${folder}/${name} no se pudo leer (${error.message}). Se ignora.`)
     }
   }
   return out
 }
 
 const extraGuides = await loadContent('toolguides')
-const extraRecipes = await loadContent('recipes')
 const areaProjects = await loadContent('projects')
 const deckFiles = await loadContent('decks')
 const promptFiles = await loadContent('prompts')
 const guideFiles = await loadContent('guias')
 const cursoFiles = await loadContent('lecciones')
+/* Las lecciones en español, siempre. Se usan para clasificar los prompts por
+ * categoría: la categoría de una lección no puede depender del idioma. */
+const cursoEnEspanol = LOCALE === 'en' ? await loadContent('lecciones', 'es') : cursoFiles
 const kitFiles = await loadContent('kits')
 const agentFiles = await loadContent('agentes')
 const faqFiles = await loadContent('preguntas')
@@ -199,7 +110,6 @@ for (const grupo of faqFiles) {
 faqFiles.sort((a, b) => a.orden - b.orden)
 
 registerGuides(extraGuides)
-registerRecipes(extraRecipes)
 
 /* Los prompts son piezas de trabajo, no eslóganes. Si uno es demasiado corto,
  * se completa con el protocolo profesional que evita adivinar, gastar dinero
@@ -238,60 +148,6 @@ const institutionalKits = [...kitFiles].sort((a, b) => (a.order || 0) - (b.order
 // workflows retirados se quedarían huérfanos en public/generated.
 await fs.rm(generatedDir, { recursive: true, force: true })
 await fs.mkdir(generatedDir, { recursive: true })
-const allFiles = await walk(vaultDir)
-const markdownFiles = allFiles.filter((file) => file.toLowerCase().endsWith('.md'))
-const fileByRelative = new Map(allFiles.map((file) => [toPosix(path.relative(vaultDir, file)), file]))
-
-if (!markdownFiles.length) {
-  throw new Error(`No hay archivos .md en ${vaultDir}. ¿Es la carpeta correcta?`)
-}
-
-// Workflows de n8n: se leen para construir los diagramas reales.
-const workflowJson = new Map()
-for (const file of allFiles) {
-  if (!file.toLowerCase().endsWith('.json')) continue
-  if (!/workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/.test(file)) continue
-  try {
-    workflowJson.set(path.basename(file), JSON.parse(await fs.readFile(file, 'utf8')))
-  } catch {
-    console.warn(`  aviso: ${path.basename(file)} no es JSON válido, se ignora en los diagramas.`)
-  }
-}
-
-const ASSET_EXTENSIONS = new Set(['.py', '.js', '.mjs', '.ts', '.tsx', '.sh', '.sql', '.json'])
-const assetLanguage = (relativePath) => {
-  const extension = path.extname(relativePath).toLowerCase()
-  return ({ '.py': 'python', '.js': 'javascript', '.mjs': 'javascript', '.ts': 'typescript', '.tsx': 'tsx', '.sh': 'bash', '.sql': 'sql', '.json': 'json' })[extension] || 'text'
-}
-const assetKind = (relativePath) => /workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/i.test(relativePath) && path.extname(relativePath).toLowerCase() === '.json' ? 'workflow' : 'code'
-const assetStem = (relativePath) => path.basename(relativePath)
-  .replace(/\.md$/i, '')
-  .replace(/\.(py|js|mjs|ts|tsx|sh|sql|json)$/i, '')
-  .replace(/^\d+[_-]/, '')
-  .toLowerCase()
-  .replace(/[^a-z0-9]+/g, '_')
-const assetSourcesFor = (relativePath) => {
-  const sources = new Set()
-  const base = path.basename(relativePath).replace(/\.md$/i, '')
-  const parent = path.dirname(relativePath)
-  if (parent.endsWith('/docs') || parent.endsWith('\\docs')) {
-    const sibling = toPosix(path.join(parent.replace(/[\\/]docs$/, ''), base))
-    if (fileByRelative.has(sibling)) sources.add(sibling)
-  }
-  const stem = assetStem(relativePath)
-  for (const candidate of fileByRelative.keys()) {
-    const extension = path.extname(candidate).toLowerCase()
-    if (!ASSET_EXTENSIONS.has(extension) || assetStem(candidate) !== stem) continue
-    if (/node_modules|\.git|36_PORTAL_WEB_FORMACION/i.test(candidate)) continue
-    sources.add(candidate)
-  }
-  return [...sources]
-}
-
-const titleOverrides = new Map([
-  ['35_AUTOMATIZACIONES_SKILLS_BIBLIOTECA/automatizaciones_codigo_40/docs/02_email_summarizer.py.md', 'Email summarizer: resumen y acciones desde Python'],
-])
-
 /**
  * El vault dejó de ser fuente de lecciones.
  *
@@ -309,35 +165,12 @@ const titleOverrides = new Map([
  * los agentes. Los archivos del vault siguen en el repositorio como material
  * de origen para escribir lecciones nuevas, pero no se publican como tales.
  */
-const lessons = []
-const authoredCount = 0
+/* --- Ruta: las diez etapas ----------------------------------------- */
 
-/* --- Ruta: etapas ordenadas ---------------------------------------- */
-
-const KIND_ORDER = { concepto: 0, guia: 1, practica: 2, workflow: 3, skill: 4, proyecto: 5, referencia: 6 }
-
-const baseStages = STAGES.map((stage) => {
-  const inStage = lessons
-    .filter((lesson) => lesson.stageId === stage.id)
-    .sort((a, b) =>
-      (KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) ||
-      (b.sourceWords - a.sourceWords) ||
-      a.title.localeCompare(b.title, 'es'),
-    )
-  return {
-    ...stage,
-    lessonSlugs: inStage.map((lesson) => lesson.slug),
-    // Las esenciales abren la etapa; el resto queda como ampliacion.
-    coreSlugs: inStage.filter((lesson) => lesson.kind !== 'referencia').slice(0, 8).map((lesson) => lesson.slug),
-    minutes: inStage.reduce((sum, lesson) => sum + lesson.levels.intermedio.minutes, 0),
-  }
-})
-
-/* --- Categorias: el nivel intermedio del arbol --------------------- */
-
-const { categories, stages } = buildCategories(lessons, baseStages)
-
-const categoryQuizCount = 0
+/* Las etapas son las diez del programa, tal cual. Lo que cuelga de cada una
+ * son las lecciones de content/lecciones, y eso lo resuelve la interfaz
+ * filtrando por stageId: aqui no hace falta precalcular listas. */
+const stages = STAGES
 
 /* --- Indice alfabetico de conceptos -------------------------------- */
 
@@ -420,10 +253,7 @@ const glossaryIndex = glosarioManual?.terms?.length
       seeAlso: entry.seeAlso || [],
       lessons: leccionesDelTermino(entry.term),
     }))
-  : buildGlossaryIndex(
-      lessons.map((lesson) => ({ slug: lesson.slug, title: lesson.title, terms: lesson.indexTerms || [] })),
-    )
-for (const lesson of lessons) delete lesson.indexTerms
+  : []
 
 // Se completa con el vocabulario de las lecciones y se reordena alfabéticamente.
 const yaEnDiccionario = new Set(glossaryIndex.map((entrada) => sinTildes(entrada.term.split(' (')[0]).trim()))
@@ -432,130 +262,66 @@ glossaryIndex.sort((a, b) => a.term.localeCompare(b.term, 'es'))
 
 /* --- Paginas por herramienta --------------------------------------- */
 
-const conItinerario = new Set(cursoFiles.map((leccion) => leccion.tool).filter(Boolean))
-const MAX_TOOL_LESSONS = 25
-
-function toolLessonScore(lesson) {
-  let score = 0
-  if (lesson.authored) score += 1000
-  if (lesson.format === 'leccion') score += 260
-  if (lesson.kind === 'workflow') score += 220
-  if (lesson.assets?.some((asset) => asset.kind === 'workflow')) score += 180
-  if (lesson.interactive?.some((piece) => piece.kind === 'flow' || piece.kind === 'canvas')) score += 120
-  if (/automatizaci[oó]n|workflow|n8n|webhook|agente|deploy|datos/i.test(`${lesson.title} ${lesson.search}`)) score += 70
-  score += Math.min(lesson.realWords || 0, 2000) / 10
-  return score
-}
-
+/* Una herramienta tiene pagina si alguien le escribio una guia o un itinerario
+ * de lecciones (content/lecciones con `tool: <id>`). No hay otra fuente: el
+ * baul ya no genera lecciones, asi que tampoco puede llenar estas fichas. */
 const toolPages = TOOLS
   .map((tool) => {
-    const inTool = lessons.filter((lesson) => lesson.tools.includes(tool.id))
-    const selectedLessons = [...inTool]
-      .sort((a, b) =>
-        toolLessonScore(b) - toolLessonScore(a) ||
-        (b.sourceWords - a.sourceWords) ||
-        a.title.localeCompare(b.title, 'es'),
-      )
-      .slice(0, MAX_TOOL_LESSONS)
-    const guide = completeToolGuide(toolGuideFor(tool.id), tool)
+    const itinerary = cursoFiles
+      .filter((leccion) => leccion.tool === tool.id)
+      .sort((a, b) => (a.slot || 0) - (b.slot || 0))
+      .map((leccion) => ({ id: leccion.id, slot: leccion.slot, title: leccion.title, minutes: leccion.minutes }))
     return {
       id: tool.id,
       label: tool.label,
       icon: tool.icon,
-      count: selectedLessons.length,
-      totalCount: inTool.length,
-      maxLessons: MAX_TOOL_LESSONS,
-      // Las lecciones del itinerario escrito a mano cuentan aparte.
-      itinerary: cursoFiles
-        .filter((leccion) => leccion.tool === tool.id)
-        .sort((a, b) => (a.slot || 0) - (b.slot || 0))
-        .map((leccion) => ({ id: leccion.id, slot: leccion.slot, title: leccion.title, minutes: leccion.minutes })),
-      lessonSlugs: selectedLessons.map((lesson) => lesson.slug),
-      stageIds: [...new Set(selectedLessons.map((lesson) => lesson.stageId))],
-      guide,
+      itinerary,
+      guide: completeToolGuide(toolGuideFor(tool.id), tool),
     }
   })
-  // Una herramienta tiene página si el material la menciona, si tiene guía
-  // escrita, o si tiene itinerario propio de lecciones en content/lecciones.
-  .filter((tool) => tool.count > 0 || tool.guide || conItinerario.has(tool.id))
-  .sort((a, b) => b.count - a.count)
+  .filter((tool) => tool.guide || tool.itinerary.length)
+  .sort((a, b) => b.itinerary.length - a.itinerary.length || a.label.localeCompare(b.label, 'es'))
 
-const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles, institutionalKits, LOCALE)
+const promptLibrary = buildInstitutionalPromptLibrary(promptFiles, toolPages, cursoFiles, institutionalKits, LOCALE, cursoEnEspanol)
 for (const family of promptLibrary) enrichPrompts(family.prompts, family.title)
-
-/* --- Biblioteca: carpetas del vault -------------------------------- */
-
-const folders = [...new Set(lessons.map((lesson) => lesson.folder))]
-  .sort((a, b) => a.localeCompare(b, 'es'))
-  .map((folder) => ({
-    id: slugify(folder),
-    folder,
-    label: LOCALE === 'en' ? translateFolderLabel(folderLabel(folder)) : folderLabel(folder),
-    count: lessons.filter((lesson) => lesson.folder === folder).length,
-    lessonSlugs: lessons.filter((lesson) => lesson.folder === folder).map((lesson) => lesson.slug),
-  }))
 
 /* --- Traducción de la taxonomía fija (solo texto de código) --------- */
 
 const localizedStages = LOCALE === 'en'
   ? stages.map((stage) => ({ ...stage, ...(STAGE_EN[stage.id] || {}) }))
   : stages
-const localizedKinds = LOCALE === 'en'
-  ? Object.fromEntries(Object.entries(KINDS).map(([id, value]) => [id, { ...value, ...(KIND_EN[id] || {}) }]))
-  : KINDS
-const localizedSections = SECTIONS.map(({ id, label, hint }) =>
-  LOCALE === 'en' && SECTION_EN[id] ? { id, ...SECTION_EN[id] } : { id, label, hint },
-)
-
-/* --- Workflows importables ----------------------------------------- */
-
-let copiedWorkflows = 0
-const workflowTarget = path.join(generatedDir, 'workflows')
-await fs.mkdir(workflowTarget, { recursive: true })
-for (const file of allFiles) {
-  if (!file.toLowerCase().endsWith('.json')) continue
-  if (!/workflows_n8n_40|workflows_n8n_importables|workflows[\\/]/.test(file)) continue
-  await fs.copyFile(file, path.join(workflowTarget, path.basename(file)))
-  copiedWorkflows += 1
-}
-
 /* --- Escritura ------------------------------------------------------ */
+
+const leccionesDelPrograma = cursoFiles.filter((leccion) => !leccion.tool)
 
 const course = {
   generatedAt: new Date().toISOString(),
-  vaultName: path.basename(vaultDir),
-  levels: LEVELS.map((id) => ({ id, ...LEVEL_META[id] })),
   locale: LOCALE,
-  kinds: localizedKinds,
-  sections: localizedSections,
   tools: TOOLS.map(({ id, label, icon }) => ({ id, label, icon })),
   stats: {
-    lessons: lessons.filter((lesson) => lesson.format === 'leccion').length,
-    fichas: lessons.filter((lesson) => lesson.format === 'ficha').length,
+    /* Todos estos numeros salen a pantalla, asi que cuentan contenido real que
+     * el alumno puede abrir. Nada de contadores heredados del baul. */
+    lecciones: leccionesDelPrograma.length,
+    itinerarios: cursoFiles.length - leccionesDelPrograma.length,
+    fichas:
+      toolPages.length +
+      guideFiles.length +
+      institutionalKits.length +
+      agentFiles.length +
+      promptLibrary.reduce((suma, familia) => suma + familia.prompts.length, 0),
     stages: stages.length,
-    categories: categories.length,
-    folders: folders.length,
-    workflows: copiedWorkflows,
-    authored: authoredCount,
+    workflows: institutionalKits.reduce((suma, kit) => suma + (kit.workflows?.length || 0), 0),
     terms: glossaryIndex.length,
     projects: areaProjects.length,
     decks: deckFiles.length,
     kits: institutionalKits.length,
     agents: agentFiles.length,
+    guias: guideFiles.length,
+    herramientas: toolPages.length,
+    prompts: promptLibrary.reduce((suma, familia) => suma + familia.prompts.length, 0),
     preguntas: faqFiles.reduce((suma, grupo) => suma + (grupo.preguntas?.length || 0), 0),
-    sourceWords: lessons.reduce((sum, lesson) => sum + lesson.sourceWords, 0),
-    quizQuestions: lessons.reduce(
-      (sum, lesson) => sum + LEVELS.reduce((acc, level) => acc + lesson.levels[level].quiz.length, 0),
-      0,
-    ),
-    blocks: lessons.reduce(
-      (sum, lesson) => sum + LEVELS.reduce((acc, level) => acc + lesson.levels[level].blocks.length, 0),
-      0,
-    ),
-    interactivePieces: lessons.reduce((sum, lesson) => sum + lesson.interactive.length, 0),
   },
   stages: localizedStages,
-  categories,
   projects: areaProjects,
   decks: deckFiles,
   prompts: promptLibrary,
@@ -566,13 +332,10 @@ const course = {
   preguntas: faqFiles,
   toolPages,
   glossaryIndex,
-  folders,
-  lessons,
 }
 
 await fs.writeFile(path.join(publicDir, outputFile), JSON.stringify(course), 'utf8')
 
-const leccionesDelPrograma = cursoFiles.filter((leccion) => !leccion.tool)
 const sinEnlace = glossaryIndex.filter((entrada) => !entrada.lessons.length).length
 
 console.log(

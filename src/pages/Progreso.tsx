@@ -1,11 +1,10 @@
 import { Download, Trash2 } from 'lucide-react'
-import { useCourse, useIndexes } from '../course'
+import { useCourse } from '../course'
 import { href } from '../router'
 import { store, useStudent } from '../store'
 
 export default function Progreso() {
   const course = useCourse()
-  const { bySlug } = useIndexes()
   const student = useStudent()
 
   const entries = Object.entries(student.lessons)
@@ -15,6 +14,8 @@ export default function Progreso() {
     )
     .sort((a, b) => b[1].updatedAt.localeCompare(a[1].updatedAt))
 
+  /* Una lección se da por terminada cuando el alumno pulsa «hecha». Solo hay
+   * un nivel, así que aquí se cuentan lecciones, no niveles. */
   const totalDone = Object.values(student.lessons).reduce((sum, item) => sum + item.done.length, 0)
   const totalChecks = Object.values(student.lessons).reduce(
     (sum, item) => sum + Object.values(item.checks || {}).reduce((acc, checks) => acc + (checks || []).length, 0),
@@ -59,7 +60,7 @@ export default function Progreso() {
       <div className="st-stat-row">
         <div>
           <strong>{totalDone}</strong>
-          <span>niveles completados de {course.stats.lessons * 3}</span>
+          <span>lecciones terminadas de {course.stats.lecciones}</span>
         </div>
         <div>
           <strong>{entries.length}</strong>

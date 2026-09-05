@@ -409,10 +409,10 @@ function AdminPanel() {
       {tab === 'estado' && (
         <section className="st-admin-status">
           <div><span>Ruta principal</span><strong>{mainLessons.length}</strong><small>lecciones que el alumno debe seguir en orden.</small></div>
-          <div><span>Biblioteca</span><strong>{course.stats.lessons}</strong><small>lecciones de consulta, no obligatorias.</small></div>
+          <div><span>Programa</span><strong>{course.stats.lecciones}</strong><small>lecciones escritas, en diez bloques.</small></div>
           <div><span>Herramientas</span><strong>{course.toolPages.length}</strong><small>fichas, prompts, automatizaciones y guías.</small></div>
           <div><span>Kits</span><strong>{course.stats.kits}</strong><small>proyectos institucionales listos para adaptar.</small></div>
-          <div><span>Workflows</span><strong>{course.stats.workflows}</strong><small>flujos generados/importables que aún requieren credenciales.</small></div>
+          <div><span>Workflows</span><strong>{course.stats.workflows}</strong><small>flujos de los kits, importables en n8n con tus credenciales.</small></div>
           <div><span>Bloques pendientes</span><strong>{blocksWithoutMainRoute.length}</strong><small>con biblioteca, pero sin ruta principal curada.</small></div>
           <div><span>Alumnos guardados</span><strong>{learnerStats.total}</strong><small>{learnerStats.pending} sin entregar · {learnerStats.delivered} con PIN · {learnerStats.active} activos.</small></div>
         </section>

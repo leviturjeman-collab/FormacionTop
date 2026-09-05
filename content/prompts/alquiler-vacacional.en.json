@@ -1,0 +1,103 @@
+{
+  "id": "alquiler-vacacional",
+  "title": "Prompts for Airbnb and holiday rentals",
+  "intro": "Prompts for hosts and property managers: guest messages, check-in, cleaning, incidents, reviews and owner reports. They are written to produce drafts that a human reviews, not automatic replies fired off blindly.",
+  "model": "ChatGPT for quick replies and guest-facing text, Claude for long reports and policies, and Gemini when you start from documents, exported reviews or large calendars.",
+  "categoryId": "contenido-negocio",
+  "blockTitle": "Airbnb and holiday rentals",
+  "blockDescription": "Messages, operations and reports for short-term rental properties.",
+  "useCase": "Handle bookings, guests, cleanings and incidents without losing the paper trail.",
+  "audience": "Hosts, property managers and holiday-rental agencies.",
+  "toolId": "n8n",
+  "toolLabel": "n8n",
+  "source": "Holiday rentals",
+  "prompts": [
+    {
+      "name": "Draft reply to a guest",
+      "when": "When a message comes in through Airbnb, Booking, WhatsApp or email and you want to answer fast without promising anything you have not checked.",
+      "prompt": "Act as the guest-services lead for a holiday rental business. You are going to prepare a DRAFT reply, not a message that gets sent.\n\nBooking details:\n- Property: [PROPERTY]\n- Platform: [AIRBNB / BOOKING / WHATSAPP / EMAIL]\n- Dates: [DATES]\n- Number of guests: [NUMBER]\n- Check-in/check-out time: [TIMES]\n- Important house rules: [RULES]\n- Cleaning status: [READY / PENDING / I DON'T KNOW]\n- The guest's message, word for word: [MESSAGE]\n\nGive me back:\n1. Type of message: pre-booking / before arrival / during the stay / check-out / incident / review.\n2. Facts that must be checked before replying.\n3. A draft reply in the same language as the guest's message, warm and plain, 120 words maximum.\n4. Does it need human review: YES/NO and why.\n5. The risk if it is sent without review.\n\nRules: do not promise early check-in, refunds, discounts, booking changes, invoices or compensation unless it is already confirmed. If a fact is missing, say so inside the draft as something still to be confirmed.",
+      "fill": [
+        ["[PROPERTY]", "Your internal name for it. Example: \"Las Canteras Apartment 2B\""],
+        ["[AIRBNB / BOOKING / WHATSAPP / EMAIL]", "The channel the message arrived through."],
+        ["[DATES]", "Example: \"12 to 16 October\""],
+        ["[NUMBER]", "Example: \"3 adults and 1 child\""],
+        ["[TIMES]", "Example: \"check-in from 15:00, check-out before 11:00\""],
+        ["[RULES]", "Example: \"no parties, no smoking, quiet after 22:00\""],
+        ["[READY / PENDING / I DON'T KNOW]", "The real status, not the one you assume."],
+        ["[MESSAGE]", "The guest's message copied word for word."]
+      ],
+      "expect": "A reply ready to review, with the risks spelled out and nothing delicate promised.",
+      "next": "Check the pending facts and only send it once everything it promises is confirmed."
+    },
+    {
+      "name": "Turnover cleaning checklist",
+      "when": "When a check-out and a check-in fall on the same day, or when the cleaning team needs a clear list on their phone.",
+      "prompt": "Act as the operations coordinator for holiday rentals. Build a cleaning and restocking checklist for this property:\n\nProperty: [PROPERTY]\nBedrooms: [BEDROOMS]\nBathrooms: [BATHROOMS]\nSpecial areas: [TERRACE / POOL / GARAGE / COT / SOFA BED]\nCheck-out time: [CHECK-OUT TIME]\nNext check-in time: [CHECK-IN TIME]\nKnown problems: [PROBLEMS]\n\nI want a table with these columns: AREA | EXACT TASK | PHOTO REQUIRED | ITEM TO RESTOCK | BLOCKS CHECK-IN YES/NO | WHO TO ALERT.\n\nCover beds, bathroom, kitchen, rubbish, towels, sheets, wifi, lock or door code, air conditioning, smells, noise, stains, crockery and forgotten belongings. Never write \"check\" without saying what exactly is being looked at.",
+      "fill": [
+        ["[PROPERTY]", "Example: \"Puerto Studio 4A\""],
+        ["[BEDROOMS]", "Example: \"1 bedroom plus a sofa bed\""],
+        ["[BATHROOMS]", "Example: \"1\""],
+        ["[TERRACE / POOL / GARAGE / COT / SOFA BED]", "Whatever this property actually has."],
+        ["[CHECK-OUT TIME]", "Example: \"11:00\""],
+        ["[CHECK-IN TIME]", "Example: \"15:00\""],
+        ["[PROBLEMS]", "Example: \"the previous guest reported a broken blind\""]
+      ],
+      "expect": "A short, workable table you can use on a phone, with the check-in blockers clearly marked.",
+      "next": "Move that table into Sheets, Airtable or Notion and add a column for who is responsible."
+    },
+    {
+      "name": "Incident report with photos and a decision",
+      "when": "When a breakdown, damage, missed cleaning, neighbour complaint or any problem appears that could affect the next booking.",
+      "prompt": "Act as the incident lead for a holiday rental business. I want to turn an incident into a clear report so we can decide what to do.\n\nDetails:\n- Property: [PROPERTY]\n- Booking affected: [BOOKING]\n- Who reported it: [GUEST / CLEANER / NEIGHBOUR / OWNER]\n- Their description, word for word: [DESCRIPTION]\n- Photos available: [PHOTOS YES/NO AND WHAT THEY SHOW]\n- Next check-in: [DATE AND TIME]\n- Estimated cost, if there is one: [COST]\n\nGive me back:\n1. A one-sentence summary.\n2. Severity: low / medium / high / blocks check-in.\n3. What still needs checking before we reply.\n4. A draft message to the guest, if one is needed.\n5. A draft message to the supplier or maintenance, if one is needed.\n6. An internal message for the owner, if one is needed.\n7. What must NOT be done automatically.\n\nRules: do not blame the guest without evidence, do not promise money, do not file a damage claim automatically, and do not share personal data that is not needed.",
+      "fill": [
+        ["[PROPERTY]", "Your internal name for the property."],
+        ["[BOOKING]", "Reference or dates, without personal data unless it is needed."],
+        ["[GUEST / CLEANER / NEIGHBOUR / OWNER]", "Where the incident came from."],
+        ["[DESCRIPTION]", "Copy what they said word for word."],
+        ["[PHOTOS YES/NO AND WHAT THEY SHOW]", "Example: \"yes, a photo of a broken table and a stained wall\""],
+        ["[DATE AND TIME]", "Example: \"tomorrow at 15:00\""],
+        ["[COST]", "Example: \"locksmith 80 €\" or \"I don't know\""]
+      ],
+      "expect": "An orderly report that helps you decide, instead of turning the incident into an argument over chat.",
+      "next": "File the report in that property's log and mark whether it blocks the next check-in."
+    },
+    {
+      "name": "Monthly report for the owner",
+      "when": "When you manage other people's properties and need to explain results without sending ten loose screenshots.",
+      "prompt": "Act as a holiday rental manager preparing the monthly report for a property owner. I want a clear one-page report; use placeholder numbers if I do not give you real ones.\n\nThis month's data:\n- Property: [PROPERTY]\n- Month: [MONTH]\n- Nights booked: [NIGHTS BOOKED]\n- Nights empty: [NIGHTS EMPTY]\n- Revenue: [REVENUE]\n- Cleaning costs: [CLEANING]\n- Maintenance costs: [MAINTENANCE]\n- Incidents: [INCIDENTS]\n- Reviews: [REVIEWS]\n- Decisions coming up: [DECISIONS]\n\nGive me a template with these blocks: executive summary, occupancy, revenue and costs, incidents, reviews, work done, open decisions and the recommendation of the month.\n\nEach block must include: the figure, an example written for an owner to read, the decision it helps them make, and the detail that should not be shown for privacy reasons.",
+      "fill": [
+        ["[PROPERTY]", "Example: \"Centro Penthouse 1\""],
+        ["[MONTH]", "Example: \"August 2026\""],
+        ["[NIGHTS BOOKED]", "Example: \"24\""],
+        ["[NIGHTS EMPTY]", "Example: \"7\""],
+        ["[REVENUE]", "Example: \"2,840 €\""],
+        ["[CLEANING]", "Example: \"360 €\""],
+        ["[MAINTENANCE]", "Example: \"95 €\""],
+        ["[INCIDENTS]", "Example: \"2: air conditioning and replacing bed linen\""],
+        ["[REVIEWS]", "Example: \"4.8 average; guests keep saying check-in was easy\""],
+        ["[DECISIONS]", "Example: \"raise weekend prices in September\""]
+      ],
+      "expect": "A report an owner can read in two minutes, with privacy respected and the open decisions clear.",
+      "next": "Turn the template into a PDF or a private page and always use the same structure."
+    }
+  ],
+  "canDo": [
+    "Prepare draft messages for guests.",
+    "Create cleaning and check-in checklists.",
+    "Sort incidents by severity, photos and who is responsible.",
+    "Summarize reviews to spot problems that keep repeating.",
+    "Prepare reports for property owners."
+  ],
+  "cantDo": [
+    "Promise refunds or compensation without review.",
+    "Accuse a guest of damage without evidence.",
+    "Change prices or availability without checking the calendar and the margin.",
+    "Share full personal data with suppliers.",
+    "Replace local legal or tourism regulations."
+  ],
+  "tips": [
+    "Always start with drafts you review. Once weeks go by without you correcting a given type of reply, that is when you consider letting it send on its own.",
+    "Every automation in a holiday rental needs a log: booking, property, channel, decision, who is responsible and the date.",
+    "If money, damage, a claim, an ID document or a booking change is involved, it is not automatic: it gets escalated."
+  ]
+}

@@ -405,9 +405,15 @@ function importBasePrompt(family, prompt, index) {
   }
 }
 
-function importCoursePrompt(lesson, task, index, toolById) {
+function importCoursePrompt(lesson, task, index, toolById, origen) {
   const tool = lesson.tool ? toolById.get(lesson.tool) : null
-  const categoryId = categoryForToolPrompt(`${lesson.title} ${task.title} ${task.action}`)
+  /* La categoria se decide SIEMPRE con el texto en español, aunque el build
+   * sea el inglés. Si no, la misma lección cae en una categoría distinta en
+   * cada idioma: «Automatizar» tenía 18 prompts en español y 9 en inglés, y
+   * «Entregar a cliente o equipo» se quedaba vacía y desaparecía del menú. */
+  const paraClasificar = origen || lesson
+  const tareaOrigen = (paraClasificar.tasks || []).filter((item) => item.prompt)[index] || task
+  const categoryId = categoryForToolPrompt(`${paraClasificar.title} ${tareaOrigen.title} ${tareaOrigen.action}`)
   let text = `Actúa como responsable institucional de formación aplicada. Vas a usar un prompt que aparece dentro del Programa del curso, pero debes convertirlo en una tarea institucional completa: con contexto, salida verificable, evidencia, seguridad, coste, responsable y criterio de terminado. No respondas como ejercicio aislado ni como conversación informal.\n\n## Contexto obligatorio\nInstitución: [INSTITUCION]. Área o equipo: [AREA_EQUIPO]. Persona que aprende o ejecuta: [PERFIL_PERSONA]. Proceso o problema: [PROCESO_O_PROBLEMA]. Entrada real: [ENTRADA_REAL]. Salida esperada: [SALIDA_ESPERADA]. Volumen y frecuencia: [VOLUMEN_Y_FRECUENCIA]. Restricciones: [RESTRICCIONES]. Datos sensibles: [DATOS_SENSIBLES]. Fecha de revisión: [FECHA_REVISION].\n\n## Origen del prompt\nLección del Programa: ${lesson.title}. Tarea: ${task.title}. Dónde se trabaja: ${task.where}. Acción esperada: ${task.action}. Resultado que debería verse: ${task.expect}.${task.stuck ? ` Si no sale: ${task.stuck}.` : ''}${tool ? ` Herramienta relacionada: ${tool.label}.` : ''}\n\n## Prompt base del Programa\n${task.prompt}\n\n## Adaptación institucional obligatoria\nAntes de responder, comprueba si todos los corchetes están rellenados. Si falta un dato crítico, haz una sola pregunta y espera. Después devuelve: uno, explicación para [PERFIL_PERSONA] sin jerga innecesaria; dos, salida concreta que debe producirse; tres, pasos numerados para ejecutarlo; cuatro, prueba con caso normal, incompleto, duplicado y extremo; cinco, datos que no deben usarse todavía; seis, quién aprueba y quién conserva la evidencia; siete, cómo se mide el consumo o esfuerzo; ocho, qué haría manualmente si la herramienta o el proveedor falla.\n\nNo des por terminada la tarea porque la respuesta suene bien. Debe existir una evidencia: texto, captura, archivo, log, enlace, tabla o decisión escrita. Si toca activar, publicar, enviar, borrar, cobrar, conectar credenciales o compartir datos, marca APROBACIÓN HUMANA OBLIGATORIA. Termina con una siguiente acción de menos de treinta minutos.`
 
   if (wordCount(text) < 560) {
@@ -466,7 +472,10 @@ function makeFamily(meta, extra = {}) {
   }
 }
 
-export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFiles = [], kits = [], locale = 'es') {
+export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFiles = [], kits = [], locale = 'es', cursoEnEspanol = null) {
+  // Las lecciones en español mandan sobre la clasificación: el curso es el
+  // mismo en los dos idiomas, así que las categorías también.
+  const origenPorId = new Map((cursoEnEspanol || cursoFiles || []).map((leccion) => [leccion.id, leccion]))
   const toolById = new Map((toolPages || []).map((tool) => [tool.id, tool]))
   const generalEntries = []
   const output = []
@@ -494,7 +503,7 @@ export function buildInstitutionalPromptLibrary(baseFamilies, toolPages, cursoFi
 
   for (const lesson of cursoFiles || []) {
     for (const [index, task] of (lesson.tasks || []).filter((item) => item.prompt).entries()) {
-      pushGeneral(importCoursePrompt(lesson, task, index, toolById))
+      pushGeneral(importCoursePrompt(lesson, task, index, toolById, origenPorId.get(lesson.id)))
     }
   }
 

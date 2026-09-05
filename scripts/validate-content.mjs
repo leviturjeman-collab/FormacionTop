@@ -23,7 +23,6 @@ const MANUAL_ONLY_TOOLS = new Set(['wispr-flow'])
 
 check(course.stages.length === 10, `Hay ${course.stages.length} etapas; se esperaban 10.`)
 check(course.tools?.length > 0, 'Falta el catálogo de herramientas en course.json.')
-check(course.lessons.length === 0, `El vault ha vuelto a generar ${course.lessons.length} lecciones; debería generar 0.`)
 
 /* --- Voz: se le habla al alumno, no se habla de él ------------------ */
 
@@ -135,8 +134,6 @@ for (const family of course.prompts || []) {
 }
 const libraryPrompts = (course.prompts || []).flatMap((family) => family.prompts || [])
 for (const tool of course.toolPages || []) {
-  const maxLessons = tool.maxLessons || 25
-  check((tool.lessonSlugs || []).length <= maxLessons, `${tool.label} muestra ${tool.lessonSlugs?.length || 0} lecciones; el máximo es ${maxLessons}.`)
   if (MANUAL_ONLY_TOOLS.has(tool.id)) continue
 
   const count = libraryPrompts.filter((prompt) => prompt.toolId === tool.id).length
@@ -191,69 +188,8 @@ for (const agent of course.agents || []) {
   }
 }
 
-check((course.stats?.workflows || 0) >= 40, `Hay ${course.stats?.workflows || 0} workflows importables; se esperaban al menos 40.`)
+check((course.stats?.workflows || 0) >= 20, `Hay ${course.stats?.workflows || 0} flujos importables en los kits; se esperaba uno por kit.`)
 check((course.guides || []).length >= 7, `Hay ${course.guides?.length || 0} guías fundamentales; se esperaban al menos 7.`)
-
-// Cada lección tiene sus tres niveles completos.
-const LEVELS = ['basico', 'intermedio', 'avanzado']
-const slugs = new Set()
-for (const lesson of course.lessons) {
-  if (slugs.has(lesson.slug)) problems.push(`Slug duplicado: ${lesson.slug}`)
-  slugs.add(lesson.slug)
-
-  // Una lección y una ficha de consulta no se miden igual. La lección
-  // enseña, así que necesita objetivos y práctica; la ficha se consulta,
-  // y lo que se le exige es tener contenido y algo que comprobar.
-  const esLeccion = lesson.format !== 'ficha'
-
-  for (const level of LEVELS) {
-    const content = lesson.levels?.[level]
-    if (!content) { problems.push(`${lesson.slug}: falta el nivel ${level}.`); continue }
-    if (!content.headline) problems.push(`${lesson.slug} (${level}): sin titular.`)
-    if (!content.blocks?.length) problems.push(`${lesson.slug} (${level}): sin contenido.`)
-    if (!content.checklist?.length) problems.push(`${lesson.slug} (${level}): sin checklist.`)
-    if (esLeccion && !content.objectives?.length) problems.push(`${lesson.slug} (${level}): sin objetivos.`)
-    if (esLeccion && !content.practice?.steps?.length) problems.push(`${lesson.slug} (${level}): sin práctica.`)
-  }
-}
-
-// Las etapas y carpetas apuntan a lecciones que existen.
-for (const stage of course.stages) {
-  for (const slug of stage.lessonSlugs) {
-    if (!slugs.has(slug)) problems.push(`La etapa ${stage.id} apunta a «${slug}», que no existe.`)
-  }
-}
-for (const folder of course.folders) {
-  for (const slug of folder.lessonSlugs) {
-    if (!slugs.has(slug)) problems.push(`La carpeta ${folder.id} apunta a «${slug}», que no existe.`)
-  }
-}
-for (const lesson of course.lessons) {
-  for (const slug of lesson.related || []) {
-    if (!slugs.has(slug)) problems.push(`${lesson.slug} enlaza con «${slug}», que no existe.`)
-  }
-}
-
-// Toda lección pertenece a una etapa real y aparece en ella.
-const stageIds = new Set(course.stages.map((stage) => stage.id))
-for (const lesson of course.lessons) {
-  if (!stageIds.has(lesson.stageId)) problems.push(`${lesson.slug}: etapa desconocida «${lesson.stageId}».`)
-
-  // Las automatizaciones con código deben enseñar el archivo que se ejecuta;
-  // una ficha sin su fuente real es un fallo de contenido, no de diseño.
-  if (/automatizaciones_codigo_40\/docs\//i.test(lesson.sourcePath)) {
-    const codeAssets = (lesson.assets || []).filter((asset) => asset.kind === 'code' && asset.code?.trim())
-    if (!codeAssets.length) problems.push(`${lesson.slug}: la documentación de código no tiene archivo ejecutable asociado.`)
-  }
-  for (const asset of lesson.assets || []) {
-    if (!asset.code?.trim()) problems.push(`${lesson.slug}: el asset ${asset.name} está vacío.`)
-    if (!asset.sourcePath || !asset.language) problems.push(`${lesson.slug}: el asset ${asset.name} no tiene origen o lenguaje.`)
-    if (asset.downloadPath) {
-      const target = path.join(publicDir, asset.downloadPath.replace(/^\//, ''))
-      try { await fs.access(target) } catch { problems.push(`${lesson.slug}: el asset ${asset.name} no tiene descarga generada.`) }
-    }
-  }
-}
 
 // El Programa curado es la ruta que se presenta a una persona que empieza de cero.
 const cursoIds = new Set()
@@ -266,23 +202,44 @@ for (const lesson of course.curso || []) {
   }
 }
 
-// Los diagramas de workflow apuntan a un JSON descargable que existe.
-let downloads = 0
-for (const lesson of course.lessons) {
-  for (const piece of lesson.interactive || []) {
-    if (piece.kind !== 'flow' || !piece.download) continue
-    downloads += 1
-    const target = path.join(publicDir, piece.download.replace(/^\//, ''))
-    try { await fs.access(target) } catch { problems.push(`${lesson.slug}: el diagrama enlaza con ${piece.download}, que no existe.`) }
-  }
-  for (const piece of lesson.interactive || []) {
-    if (piece.kind !== 'flow') continue
-    const ids = new Set(piece.nodes.map((node) => node.id))
-    for (const edge of piece.edges) {
-      if (!ids.has(edge.from) || !ids.has(edge.to)) problems.push(`${lesson.slug}: el diagrama tiene una conexión hacia un nodo inexistente.`)
-    }
+/* --- Español e inglés son la misma formación ------------------------ */
+
+/**
+ * Una traducción cambia el texto, nunca la estructura. Si la lección 1 dura
+ * 50 minutos en español, dura 50 en inglés; si tiene 6 tareas, tiene 6.
+ *
+ * Esta comprobación existe porque no era así: 55 de las 58 lecciones
+ * anunciaban una duración distinta en cada idioma.
+ */
+const cursoEn = JSON.parse(await fs.readFile(path.join(publicDir, 'course.en.json'), 'utf8'))
+const enPorId = new Map((cursoEn.curso || []).map((leccion) => [leccion.id, leccion]))
+
+for (const leccion of course.curso || []) {
+  const traducida = enPorId.get(leccion.id)
+  if (!traducida) { problems.push(`La lección «${leccion.id}» no existe en el curso en inglés.`); continue }
+  const donde = `La lección ${leccion.number} «${leccion.title}»`
+  check(traducida.minutes === leccion.minutes,
+    `${donde} dura ${leccion.minutes} min en español y ${traducida.minutes} en inglés.`)
+  check(traducida.stageId === leccion.stageId,
+    `${donde} está en el bloque «${leccion.stageId}» en español y en «${traducida.stageId}» en inglés.`)
+  check((traducida.tasks?.length || 0) === (leccion.tasks?.length || 0),
+    `${donde} tiene ${leccion.tasks?.length || 0} tareas en español y ${traducida.tasks?.length || 0} en inglés.`)
+  check((traducida.theory?.length || 0) === (leccion.theory?.length || 0),
+    `${donde} tiene ${leccion.theory?.length || 0} apartados de teoría en español y ${traducida.theory?.length || 0} en inglés.`)
+  check((traducida.words?.length || 0) === (leccion.words?.length || 0),
+    `${donde} tiene ${leccion.words?.length || 0} términos de vocabulario en español y ${traducida.words?.length || 0} en inglés.`)
+}
+for (const leccion of cursoEn.curso || []) {
+  if (!(course.curso || []).some((item) => item.id === leccion.id)) {
+    problems.push(`La lección «${leccion.id}» solo existe en inglés.`)
   }
 }
+check((cursoEn.kits || []).length === (course.kits || []).length,
+  `Hay ${course.kits?.length || 0} kits en español y ${cursoEn.kits?.length || 0} en inglés.`)
+check((cursoEn.guides || []).length === (course.guides || []).length,
+  `Hay ${course.guides?.length || 0} guías en español y ${cursoEn.guides?.length || 0} en inglés.`)
+check((cursoEn.agents || []).length === (course.agents || []).length,
+  `Hay ${course.agents?.length || 0} agentes en español y ${cursoEn.agents?.length || 0} en inglés.`)
 
 // Los iconos de marca referenciados existen en el módulo generado.
 const iconModule = await fs.readFile(path.join(projectDir, 'src', 'brand-icons.ts'), 'utf8')
@@ -295,8 +252,7 @@ const minutosTotales = delPrograma.reduce((suma, leccion) => suma + (leccion.min
 const tareasTotales = delPrograma.reduce((suma, leccion) => suma + (leccion.tasks?.length || 0), 0)
 console.log(
   `Programa: ${delPrograma.length} lecciones · ${Math.round(minutosTotales / 60)} h · ${tareasTotales} tareas · ` +
-    `${course.guides.length} guías · ${course.kits.length} kits · ${course.toolPages.length} herramientas · ` +
-    `${downloads} diagramas descargables`,
+    `${course.guides.length} guías · ${course.kits.length} kits · ${course.toolPages.length} herramientas`,
 )
 for (const warning of warnings.slice(0, 10)) console.warn(`  aviso: ${warning}`)
 if (warnings.length > 10) console.warn(`  … y ${warnings.length - 10} avisos más.`)

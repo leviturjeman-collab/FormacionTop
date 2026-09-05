@@ -1,6 +1,5 @@
 import { ArrowRight, BookMarked, BookOpen, BrainCircuit, Clock, FolderSearch, PlayCircle, Puzzle, Search, Sparkles, Workflow } from 'lucide-react'
-import type { LevelId } from '../types'
-import { useCourse, useIndexes } from '../course'
+import { useCourse } from '../course'
 import { href } from '../router'
 import { useStudent } from '../store'
 import { BrandMark } from '../components/Brand'
@@ -9,9 +8,7 @@ const SHOWCASE = ['claude', 'openai', 'n8n', 'github', 'googlegemini', 'githubco
 
 export default function Inicio() {
   const course = useCourse()
-  const { bySlug } = useIndexes()
   const student = useStudent()
-  const level: LevelId = student.preferredLevel || 'basico'
 
   const cursoLessons = course.curso || []
   const core = cursoLessons.filter((item) => !item.tool)
@@ -107,10 +104,10 @@ export default function Inicio() {
           <h2>Qué hay detrás</h2>
           <div className="st-support-map">
             <a href={href({ name: 'curso' })}><BookMarked size={14} /><span><strong>{coreLessons} lecciones guiadas</strong><small>La ruta que sí conviene seguir en orden.</small></span></a>
-            <a href={href({ name: 'herramientas' })}><FolderSearch size={14} /><span><strong>{organizedTools} herramientas organizadas</strong><small>Cada ficha muestra como máximo 25 lecciones para evitar paredes de scroll.</small></span></a>
+            <a href={href({ name: 'herramientas' })}><FolderSearch size={14} /><span><strong>{organizedTools} herramientas organizadas</strong><small>Una ficha por herramienta: para qué sirve, qué cuesta y cómo empezar.</small></span></a>
             <a href={href({ name: 'skills' })}><BrainCircuit size={14} /><span><strong>100 skills de GitHub</strong><small>Ordenadas por estrellas y seleccionadas para Claude, ChatGPT, Codex, Cursor y Copilot.</small></span></a>
-            <a href={href({ name: 'buscar', query: '', filters: {} })}><Search size={14} /><span><strong>{course.stats.fichas} fichas de consulta</strong><small>Para buscar algo concreto cuando te atasques.</small></span></a>
-            <a href={href({ name: 'herramienta', toolId: 'n8n', filters: {} })}><Workflow size={14} /><span><strong>{course.stats.workflows} ejemplos ya hechos</strong><small>Automatizaciones que puedes copiar y usar.</small></span></a>
+            <a href={href({ name: 'prompts' })}><Search size={14} /><span><strong>{course.stats.prompts} prompts listos</strong><small>Textos ya escritos que copias, rellenas y usas.</small></span></a>
+            <a href={href({ name: 'kits' })}><Workflow size={14} /><span><strong>{course.stats.workflows} automatizaciones montadas</strong><small>Flujos de n8n que se importan y funcionan.</small></span></a>
           </div>
           <div className="st-brand-row" aria-label="Herramientas que cubre el curso">
             {SHOWCASE.map((icon) => <BrandMark key={icon} icon={icon} size={16} />)}

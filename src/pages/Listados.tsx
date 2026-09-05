@@ -23,18 +23,16 @@ function useDoneSet() {
 }
 
 function toolContentSummary(tool: ToolPage) {
-  const selected = tool.count || 0
   const itinerary = tool.itinerary?.length || 0
   const prompts = tool.guide?.prompts?.length || 0
   const automations = tool.guide?.automations?.length || 0
   const pieces = [
-    itinerary ? `${itinerary} paso a paso` : '',
-    selected ? `${selected} de consulta` : '',
+    itinerary ? `${itinerary} lecciones paso a paso` : '',
     prompts ? `${prompts} prompts` : '',
     automations ? `${automations} automatizaciones` : '',
   ].filter(Boolean)
   if (pieces.length) return pieces.join(' · ')
-  return tool.guide ? 'Guia manual' : 'Sin contenido curado'
+  return 'Guia escrita a mano'
 }
 
 function automationReality(automation: ToolAutomation) {
@@ -201,7 +199,7 @@ export function Herramientas() {
                 ) : escritas > 0 ? (
                   <span className="st-tool-itinerary">Itinerario · {escritas} lecciones</span>
                 ) : (
-                  <span>{tool.count} lecciones seleccionadas</span>
+                  <span>Ficha de la herramienta</span>
                 )}
               </div>
             </a>

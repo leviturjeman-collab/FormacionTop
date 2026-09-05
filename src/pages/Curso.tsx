@@ -88,17 +88,14 @@ export function CursoIndice() {
         id: pagina.id,
         label: pagina.label,
         icon: pagina.icon,
-        count: pagina.count,
-        totalCount: pagina.totalCount ?? pagina.count,
-        maxLessons: pagina.maxLessons ?? 25,
         guidePrompts: pagina.guide?.prompts?.length || 0,
         automations: pagina.guide?.automations?.length || 0,
         hasGuide: Boolean(pagina.guide),
         items,
       }
     })
-    .filter((tool) => tool.items.length || tool.count || tool.hasGuide)
-    .sort((a, b) => Number(Boolean(b.items.length)) - Number(Boolean(a.items.length)) || b.count - a.count || a.label.localeCompare(b.label, 'es'))
+    .filter((tool) => tool.items.length || tool.hasGuide)
+    .sort((a, b) => b.items.length - a.items.length || a.label.localeCompare(b.label, 'es'))
 
   const herramientasConRuta = porHerramienta.filter((tool) => tool.items.length)
 
@@ -253,7 +250,7 @@ export function CursoIndice() {
         </summary>
         <section className="st-program-tools" aria-label="Herramientas disponibles">
           <div className="st-program-tools-grid">
-            {porHerramienta.map(({ id, label, icon, count, totalCount, maxLessons, guidePrompts, automations, items }) => (
+            {porHerramienta.map(({ id, label, icon, guidePrompts, automations, items }) => (
               <a
                 key={id}
                 className="st-program-tool-card"
@@ -266,15 +263,12 @@ export function CursoIndice() {
                   <small>
                     {items.length
                       ? `${countText(items.length, 'lección', 'lecciones')} paso a paso`
-                      : count
-                        ? `${countText(count, 'lección seleccionada', 'lecciones seleccionadas')}${totalCount > count ? ` de ${totalCount}` : ''}`
-                        : 'Guía práctica disponible'}
+                      : 'Guía práctica disponible'}
                   </small>
                 </span>
                 <em>
                   {guidePrompts ? <b>{guidePrompts} prompts</b> : null}
                   {automations ? <b>{automations} automatizaciones</b> : null}
-                  {count ? <b>máx. {maxLessons} lecciones</b> : null}
                 </em>
                 <ArrowRight size={13} />
               </a>

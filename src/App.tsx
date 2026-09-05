@@ -512,7 +512,7 @@ function Shell() {
 
       <footer className="st-foot">
         <p>
-          {t('footer.generadoDesde')} «{course.vaultName}» {t('footer.el')}{' '}
+          {t('footer.generadoDesde')}{' '}
           {new Date(course.generatedAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES')}
         </p>
         <p>

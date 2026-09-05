@@ -234,7 +234,6 @@ if (DEFAULT_SCAN) {
   scanEmbedded('content/agentes', 'content/agentes')
   scanEmbedded('content/automatizaciones', 'content/automatizaciones')
   scanEmbedded('content/toolguides', 'content/toolguides')
-  scanEmbedded('content/recipes', 'content/recipes')
 }
 
 // -- 1b-bis. Rutas explicitas pasadas por linea de comandos ----------------
