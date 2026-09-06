@@ -1,3 +1,4 @@
+import SaveResourceButton from '../components/SaveResourceButton'
 import { useMemo, useState } from 'react'
 import { BookOpen, ChevronRight, Search } from 'lucide-react'
 import type { GlossaryEntry } from '../types'
@@ -17,11 +18,10 @@ type Entry = GlossaryEntry
  * término solo se ve el nombre y una línea. El desarrollo (explicación,
  * analogía, con qué no confundirlo y dónde se estudia) se abre al pulsar.
  */
-export default function Indice({ letter }: { letter?: string }) {
+export default function Indice({ letter, termId }: { letter?: string; termId?: string }) {
   const course = useCourse()
   const locale = useLocale()
   const active = letter?.toUpperCase()
-  const [open, setOpen] = useState<string | null>(null)
   const [query, setQuery] = useState('')
 
   const entries = course.glossaryIndex
@@ -45,6 +45,12 @@ export default function Indice({ letter }: { letter?: string }) {
     ? conContenido
     : conContenido.filter((item) => item === (active || conContenido[0]))
 
+  const term = entries.find(item => item.term === termId)
+  if (termId) return <article className="st-page st-dictionary-detail">
+    <a className="st-btn-ghost" href={href({ name: 'indice', letter })}>{locale === 'en' ? 'Back to dictionary' : 'Volver al diccionario'}</a>
+    <h1>{term?.term || (locale === 'en' ? 'Word not found' : 'Palabra no encontrada')}</h1>
+    {term && <><p className="st-lesson-headline">{term.meaning}</p><SaveResourceButton resource={{ id: `term:${term.term}`, kind: 'term', title: term.term, href: href({ name: 'indice', letter: term.letter, termId: term.term }) }} /><ul className="st-index-list"><Term entry={term} open onToggle={() => {}} detail /></ul></>}
+  </article>
   return (
     <div className="st-page">
       <div className="st-page-title">
@@ -86,8 +92,8 @@ export default function Indice({ letter }: { letter?: string }) {
               <Term
                 key={entry.term}
                 entry={entry}
-                open={open === entry.term}
-                onToggle={() => setOpen(open === entry.term ? null : entry.term)}
+                open={false}
+                onToggle={() => {}}
               />
             ))}
           </ul>
@@ -102,17 +108,17 @@ export default function Indice({ letter }: { letter?: string }) {
   )
 }
 
-function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle: () => void }) {
+function Term({ entry, open, detail }: { entry: Entry; open: boolean; onToggle: () => void; detail?: boolean }) {
   const locale = useLocale()
   const hasDetail = Boolean(entry.long || entry.analogy || entry.confusion || entry.seeAlso?.length || entry.lessons.length)
 
   return (
     <li className={`st-term${open ? ' open' : ''}`}>
-      <button type="button" className="st-term-head" onClick={onToggle} aria-expanded={open} disabled={!hasDetail}>
+      {!detail && <a className="st-term-head" href={href({ name: 'indice', letter: entry.letter, termId: entry.term })}>
         <ChevronRight size={11} className="st-term-caret" aria-hidden />
         <span className="st-term-name">{entry.term}</span>
         <span className="st-term-short">{entry.meaning}</span>
-      </button>
+      </a>}
 
       {open && hasDetail && (
         <div className="st-term-body">
@@ -137,7 +143,7 @@ function Term({ entry, open, onToggle }: { entry: Entry; open: boolean; onToggle
               <span>{locale === 'en' ? 'See also' : 'Ver también'}</span>
               <div>
                 {(entry.seeAlso || []).map((related) => (
-                  <a key={related} href={href({ name: 'indice', letter: related[0].toUpperCase() })}>
+                  <a key={related} href={href({ name: 'indice', letter: related[0].toUpperCase(), termId: related })}>
                     {related}
                   </a>
                 ))}

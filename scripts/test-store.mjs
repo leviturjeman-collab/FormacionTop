@@ -69,5 +69,12 @@ try {
   store.enter({ id: 'legacy-owner', name: 'Owner', access: 'learner' }, empty)
   check(store.get().lessons.old.notes.basico.task === 'legacy evidence', 'Same learner recovers old browser progress')
   check(files.has('academia.progreso.v1'), 'Original legacy recovery bytes are preserved')
+  const saved = { id: 'tool-path:codex:01', kind: 'lesson', title: 'Codex lesson', href: '#/herramienta/codex/lecciones-herramienta/01', savedAt: '2026-09-06', locale: 'en' }
+  const bookmarked = validateStudent({ lessons: {}, projects: [{ id: 'saved-project', name: 'Saved', savedResources: [saved, {...saved, id:'unsafe', href:'javascript:alert(1)'}] }] })
+  check(bookmarked.project.savedResources.length === 1 && bookmarked.project.savedResources[0].locale === 'en', 'Bookmark validation preserves safe routes and locale, rejects executable URLs')
+  const mergedBookmarks = mergeProgress([], [saved], [{...saved, id:'term:API', kind:'term', href:'#/indice/A/API'}])
+  check(mergedBookmarks.length === 2, 'Bookmarks added independently on two devices merge by identity')
+  const restoredBookmarks = validateStudent(JSON.parse(JSON.stringify(bookmarked)))
+  check(restoredBookmarks.project.savedResources[0].href === saved.href, 'Bookmarks survive export and import validation')
   console.log(`PASS store: ${checks} assertions; isolation, recovery, import, conflicts and synchronization.`)
 } finally { await rm(temp, { recursive: true, force: true }) }

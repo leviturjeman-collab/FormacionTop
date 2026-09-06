@@ -1,3 +1,4 @@
+import SavedResources from '../components/SavedResources'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
@@ -195,7 +196,7 @@ export default function MiProyecto() {
   }, [student.project])
 
   function save() {
-    store.setProject({ ...draft, audience, outcome, goal: selectedLabel(GOALS, goal), tools: chosenTools.map((tool) => tool.label).join(', '), toolIds: selectedTools, projectType: goal, promptBrief: prompt, savedPrompts: student.project?.savedPrompts || draft.savedPrompts || [], updatedAt: new Date().toISOString() })
+    store.setProject({ ...draft, audience, outcome, goal: selectedLabel(GOALS, goal), tools: chosenTools.map((tool) => tool.label).join(', '), toolIds: selectedTools, projectType: goal, promptBrief: prompt, savedResources: student.project?.savedResources || [], savedPrompts: student.project?.savedPrompts || draft.savedPrompts || [], updatedAt: new Date().toISOString() })
     setSaved(true)
   }
 
@@ -245,6 +246,7 @@ export default function MiProyecto() {
 
       {step === 5 && <ProjectWorkspace />}
 
+      <SavedResources />
       <SavedPromptsPanel prompts={savedPrompts} locale={locale} />
 
       <p className="st-project-storage">{locale === 'en' ? 'Your profile, deliverables and progress are saved in your account. Connection errors appear on screen.' : 'Tu ficha, entregables y progreso se guardan en tu cuenta. Si falla la conexión, verás un aviso en pantalla.'}</p>

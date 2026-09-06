@@ -12,6 +12,10 @@ import './prompts.css'
 import './curso.css'
 import './kits.css'
 import './responsive.css'
+import '@fontsource/manrope/400.css'
+import '@fontsource/manrope/600.css'
+import '@fontsource/fraunces/600.css'
+import './learning.css'
 import App from './App'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

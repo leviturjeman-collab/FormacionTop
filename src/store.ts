@@ -20,8 +20,10 @@ export interface StudentState {
 export interface ProjectProfile {
   id?: string; name: string; goal: string; audience: string; problem: string; outcome: string; tools: string
   toolIds?: string[]; projectType?: string; promptBrief?: string; savedPrompts?: SavedPrompt[]
+  savedResources?: SavedResource[]
   workspace?: ProjectWorkspace; updatedAt: string
 }
+export interface SavedResource { id: string; kind: 'lesson' | 'term' | 'kit'; title: string; href: string; savedAt: string; locale?: 'es' | 'en' }
 export interface SavedPrompt { id: string; family: string; name: string; prompt: string; savedAt: string; source?: string }
 export type PersistenceState = { status: 'saved' | 'saving' | 'error' | 'offline'; message: string; remote: boolean; conflict?: boolean }
 class ProgressConflictError extends Error {}
@@ -92,6 +94,7 @@ export function validateStudent(raw: unknown): StudentState {
     p.projectType = text(candidate.projectType); p.promptBrief = text(candidate.promptBrief)
     p.savedPrompts = Array.isArray(candidate.savedPrompts) ? candidate.savedPrompts.filter((v) => record(v) && typeof v.prompt === 'string' && typeof v.name === 'string').map((v) => ({ id: text(v.id, crypto.randomUUID()), family: text(v.family), name: text(v.name), prompt: text(v.prompt), savedAt: text(v.savedAt, stamp()), source: text(v.source) })) : []
     if (record(candidate.workspace)) p.workspace = validateWorkspace(candidate.workspace)
+    p.savedResources = Array.isArray(candidate.savedResources) ? candidate.savedResources.filter((v) => record(v) && ['lesson', 'term', 'kit'].includes(text(v.kind)) && /^#\/(curso|leccion|indice|kits|herramienta)\//.test(text(v.href))).map((v) => ({ id: text(v.id), kind: v.kind as SavedResource['kind'], title: text(v.title), href: text(v.href), savedAt: text(v.savedAt), locale: v.locale === 'en' ? 'en' : 'es' })) : []
     if (!next.projects.some((item) => item.id === p.id)) next.projects.push(p)
   }
   next.activeProjectId = next.projects.some((p) => p.id === value.activeProjectId) ? String(value.activeProjectId) : next.projects[0]?.id

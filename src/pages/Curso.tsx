@@ -1,3 +1,4 @@
+import SaveResourceButton from '../components/SaveResourceButton'
 import { copyText } from '../clipboard'
 import { useState } from 'react'
 import {
@@ -240,17 +241,13 @@ export function CursoIndice() {
                 <span>
                   <strong>{label}</strong>
                   <small>
-                    {items.length
-                      ? `${countText(items.length, 'lección', 'lecciones')} paso a paso`
-                      : count
-                        ? `${countText(count, 'lección seleccionada', 'lecciones seleccionadas')}${totalCount > count ? ` de ${totalCount}` : ''}`
-                        : 'Guía práctica disponible'}
+                    {locale === 'en' ? '10 lessons with practice' : '10 lecciones con práctica'}
                   </small>
                 </span>
                 <em>
                   {guidePrompts ? <b>{guidePrompts} prompts</b> : null}
                   {automations ? <b>{automations} automatizaciones</b> : null}
-                  {count ? <b>máx. {maxLessons} lecciones</b> : null}
+                  {count ? <b>{locale === 'en' ? 'Optional references' : 'Ampliaciones opcionales'}</b> : null}
                 </em>
                 <ArrowRight size={13} />
               </a>
@@ -351,7 +348,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
             ? (locale === 'en' ? `Specialization · ${toolMeta?.label || leccion.tool}` : `Especialización · ${toolMeta?.label || leccion.tool}`)
             : (locale === 'en' ? 'Main path' : 'Ruta principal')} · {posicion + 1} {locale === 'en' ? 'of' : 'de'} {rutaActual.length}{stage ? ` · ${stage.title}` : ''}
         </span>
-        <h1>{leccion.title}</h1>
+        <h1>{leccion.title}</h1><SaveResourceButton resource={{ id: `course:${leccion.id}`, kind: 'lesson', title: leccion.title, href: href({ name: 'curso', lessonId: leccion.id }) }} />
         <p className="st-lesson-headline">{leccion.promise}</p>
         <div className="st-lesson-meta">
           <span><Clock size={11} /> {leccion.minutes} min</span>

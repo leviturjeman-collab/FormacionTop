@@ -1,3 +1,4 @@
+import SaveResourceButton from '../components/SaveResourceButton'
 import { copyText } from '../clipboard'
 import { useMemo, useState } from 'react'
 import {
@@ -276,12 +277,12 @@ export default function Kits({ kitId }: { kitId?: string }) {
         <section className="st-kit-board">
           <header className="st-kit-head">
             <span className="st-kicker">{kit.kicker}</span>
-            <h1>{kit.title}</h1>
+            <h1>{kit.title}</h1><SaveResourceButton resource={{ id: `kit:${kit.id}`, kind: 'kit', title: kit.title, href: href({ name: 'kits', kitId: kit.id }) }} />
             <p>{kit.promise}</p>
             <div className="st-kit-actions">
               <CopyButton text={kit.brief.prompt} label={locale === 'en' ? 'Copy the starter brief' : 'Copiar el brief de arranque'} />
               <button type="button" className="st-btn-ghost" onClick={saveToProject}>
-                {saved ? <Check size={12} /> : <Save size={12} />} {saved ? (locale === 'en' ? 'Saved' : 'Guardado') : (locale === 'en' ? 'Save to my project' : 'Guardar en mi proyecto')}
+                {saved ? <Check size={12} /> : <Save size={12} />} {saved ? (locale === 'en' ? 'Brief saved' : 'Brief guardado') : (locale === 'en' ? 'Use brief in my project' : 'Usar brief en mi proyecto')}
               </button>
             </div>
           </header>

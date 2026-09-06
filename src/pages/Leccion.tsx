@@ -1,3 +1,4 @@
+import SaveResourceButton from '../components/SaveResourceButton'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Circle, Clock, Copy, Download, FileText, FolderTree, ListChecks, Target, TriangleAlert, Wrench } from 'lucide-react'
 import type { LessonAsset, LevelId } from '../types'
@@ -114,7 +115,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
     <article className="st-lesson">
       <header className="st-lesson-head">
         <span className="st-kicker">{esFicha ? 'Ficha de consulta' : lesson.kindLabel}</span>
-        <h1>{lesson.title}</h1>
+        <h1>{lesson.title}</h1><SaveResourceButton resource={{ id: `lesson:${slug}`, kind: 'lesson', title: lesson.title, href: href({ name: 'leccion', slug, level: active }) }} />
         <p className="st-lesson-headline">{content.headline}</p>
         <p className="st-lesson-hook">{content.hook}</p>
 

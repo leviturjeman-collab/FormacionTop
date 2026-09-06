@@ -1,8 +1,9 @@
+import ToolLearningPath from '../components/ToolLearningPath'
 import { useState } from 'react'
 import { ArrowRight, Check, ChevronDown, Clipboard, Search, X } from 'lucide-react'
 import type { Block, LevelId, Lesson, ToolAutomation, ToolGuide, ToolPage } from '../types'
 import { useCourse, useIndexes } from '../course'
-import { href, type Route } from '../router'
+import { href, navigate, type Route } from '../router'
 import { useStudent } from '../store'
 import { useLocale, type Locale } from '../i18n'
 import Filters, { applyFilters } from '../components/Filters'
@@ -400,22 +401,22 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
   const hiddenCount = Math.max(0, totalAvailable - tool.count)
   const filters = 'filters' in route ? route.filters : {}
   const shown = applyFilters(all, filters, doneSlugs)
-  const progress = useProgressOf(tool.lessonSlugs)
+  const pathDone = Object.entries(student.lessons).filter(([key, value]) => key.startsWith(`tool-path:${tool.id}:`) && value.done.includes('intermedio')).length
   const promptCount = tool.guide?.counts?.prompts ?? tool.guide?.prompts?.length ?? 0
   const automationCount = tool.guide?.counts?.automations ?? tool.guide?.automations?.length ?? 0
   const toolMapItems = [
+    { id: 'piezas', title: locale === 'en' ? 'Features' : 'Funciones', detail: locale === 'en' ? 'What each feature does' : 'Para qué sirve cada función' },
+    { id: 'referencias', title: locale === 'en' ? 'Further reading' : 'Ampliaciones', detail: locale === 'en' ? 'Optional reference library' : 'Biblioteca de consulta opcional' },
     {
       id: 'guia-herramienta',
       title: locale === 'en' ? 'Quick guide' : 'Guía rápida',
       detail: locale === 'en' ? "What it is, what it's for, and what not to touch yet." : 'Qué es, para qué sirve y qué no debes tocar todavía.',
     },
-    ...(all.length ? [{
+    ...[{
       id: 'lecciones-herramienta',
       title: locale === 'en' ? 'Lessons' : 'Lecciones',
-      detail: locale === 'en'
-        ? `${tool.count} selected${hiddenCount ? ` of ${totalAvailable}` : ''}`
-        : `${tool.count} seleccionadas${hiddenCount ? ` de ${totalAvailable}` : ''}`,
-    }] : []),
+      detail: locale === 'en' ? '10 lessons with practice' : '10 lecciones con práctica',
+    }],
     ...(promptCount ? [{
       id: 'prompts-herramienta',
       title: 'Prompts',
@@ -427,9 +428,9 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
       detail: locale === 'en' ? `${automationCount} explained flows` : `${automationCount} flujos explicados`,
     }] : []),
   ]
-  const jumpTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  const tab = route.name === 'herramienta' ? route.tab || 'lecciones-herramienta' : 'lecciones-herramienta'
+  const jumpTo = (id: string) => navigate({ name: 'herramienta', toolId, tab: id, filters: {} })
+  if (route.name === 'herramienta' && route.lessonId) return <ToolLearningPath tool={tool} lessonId={route.lessonId} />
 
   return (
     <div className="st-page">
@@ -441,21 +442,19 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
           <p>
             {locale === 'en'
               ? (tool.count
-                  ? `The essentials of ${tool.label}, curated into up to ${tool.maxLessons || 25} reference lessons.`
+                  ? `Learn ${tool.label} through 10 practical lessons, with optional reference material.`
                   : `${tool.label} works as a manual reference tool: first you understand what it does, then you use it only when it helps your real work.`)
               : (tool.count
-                  ? `Lo esencial de ${tool.label}, curado en un máximo de ${tool.maxLessons || 25} lecciones de consulta.`
+                  ? `Aprende ${tool.label} con 10 lecciones prácticas y material de consulta opcional.`
                   : `${tool.label} funciona como herramienta manual de consulta: primero entiendes qué hace y después la usas solo cuando te ayuda en tu trabajo real.`)}
-            {hiddenCount ? (locale === 'en'
-              ? ` There are ${hiddenCount} more internal mentions, but they aren't shown here to avoid an endless list.`
-              : ` Hay ${hiddenCount} menciones internas más, pero no se muestran aquí para no crear una lista interminable.`) : ''}
+
           </p>
         </div>
         <div className="st-area-stats">
           {tool.count ? (
             <>
-              <div><strong>{tool.count}</strong><small>{locale === 'en' ? 'selected' : 'seleccionadas'}</small></div>
-              <div><strong>{progress.percent}%</strong><small>{locale === 'en' ? 'complete' : 'completado'}</small></div>
+              <div><strong>10</strong><small>{locale === 'en' ? 'lessons' : 'lecciones'}</small></div>
+              <div><strong>{pathDone * 10}%</strong><small>{locale === 'en' ? 'complete' : 'completado'}</small></div>
             </>
           ) : (
             <>
@@ -467,8 +466,8 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
       </header>
 
       <section className="st-tool-map" aria-label={locale === 'en' ? `Map of ${tool.label}` : `Mapa de ${tool.label}`}>
-        {toolMapItems.map((item, index) => (
-          <button key={item.id} type="button" onClick={() => jumpTo(item.id)}>
+        {[...toolMapItems].sort((a,b) => ['lecciones-herramienta','guia-herramienta','piezas','prompts-herramienta','automatizaciones','referencias'].indexOf(a.id) - ['lecciones-herramienta','guia-herramienta','piezas','prompts-herramienta','automatizaciones','referencias'].indexOf(b.id)).map((item, index) => (
+          <button key={item.id} type="button" aria-pressed={tab === item.id} onClick={() => jumpTo(item.id)}>
             <span>{index + 1}</span>
             <strong>{item.title}</strong>
             <small>{item.detail}</small>
@@ -476,7 +475,8 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
         ))}
       </section>
 
-      {tool.guide && (
+      {tab === 'lecciones-herramienta' && <ToolLearningPath tool={tool} />}
+      {tool.guide && tab === 'guia-herramienta' && (
         <section id="guia-herramienta" className="st-tool-guide">
           <div className="st-section-head">
             <div>
@@ -488,7 +488,7 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
         </section>
       )}
 
-      {all.length > 0 && (
+      {all.length > 0 && tab === 'referencias' && (
         <section id="lecciones-herramienta" className="st-tool-lessons">
           <div className="st-section-head">
             <div>
@@ -507,9 +507,9 @@ export function Herramienta({ toolId, route }: { toolId: string; route: Route })
         </section>
       )}
 
-      {tool.guide && <ToolInside guide={tool.guide} label={tool.label} toolId={tool.id} />}
+      {tool.guide && <ToolInside key={tab} guide={tool.guide} label={tool.label} toolId={tool.id} tab={tab} />}
 
-      <ToolConnections tool={tool.id} />
+      <details className="st-panel"><summary>{locale === 'en' ? 'Related resources' : 'Recursos relacionados'}</summary><ToolConnections tool={tool.id} /></details>
     </div>
   )
 }
@@ -622,20 +622,18 @@ function guideBlocks(guide: NonNullable<ToolPage['guide']>, label: string, local
   return blocks
 }
 
-function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string; toolId: string }) {
+function ToolInside({ guide, label, toolId, tab }: { guide: ToolGuide; label: string; toolId: string; tab: string }) {
   const [selected, setSelected] = useState<NonNullable<ToolGuide['catalog']>['items'][number] | null>(null)
   const locale = useLocale()
 
   function jumpToAutomations() {
     setSelected(null)
-    window.setTimeout(() => {
-      document.getElementById('automatizaciones')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 40)
+    navigate({ name: 'herramienta', toolId, tab: 'automatizaciones', filters: {} })
   }
 
   return (
     <>
-      {guide.catalog?.items?.length ? (
+      {tab === 'piezas' && guide.catalog?.items?.length ? (
         <section className="st-tool-inside" id="piezas">
           <div className="st-section-head">
             <div><span className="st-kicker">{locale === 'en' ? `Inside ${label}` : `Dentro de ${label}`}</span><h2>{locale === 'en' ? "What's here and when to use it" : 'Qué hay aquí y cuándo usarlo'}</h2></div>
@@ -685,8 +683,8 @@ function ToolInside({ guide, label, toolId }: { guide: ToolGuide; label: string;
           )}
         </section>
       ) : null}
-      {guide.prompts?.length ? <ToolPromptLibrary prompts={guide.prompts} label={label} /> : null}
-      {guide.automations?.length ? <AutomationLibrary automations={guide.automations} label={label} /> : null}
+      {tab === 'prompts-herramienta' && guide.prompts?.length ? <ToolPromptLibrary prompts={guide.prompts} label={label} /> : null}
+      {tab === 'automatizaciones' && guide.automations?.length ? <AutomationLibrary automations={guide.automations} label={label} /> : null}
     </>
   )
 }

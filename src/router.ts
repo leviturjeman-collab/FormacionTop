@@ -26,15 +26,16 @@ export type Route =
   | { name: 'prompts'; familyId?: string }
   | { name: 'kits'; kitId?: string }
   | { name: 'agentes'; agentId?: string }
+  | { name: 'classes' }
   | { name: 'admin' }
   | { name: 'guia'; guideId?: string }
   | { name: 'curso'; lessonId?: string }
   | { name: 'biblioteca' }
   | { name: 'carpeta'; folderId: string; filters: Filters }
   | { name: 'herramientas' }
-  | { name: 'herramienta'; toolId: string; filters: Filters }
+  | { name: 'herramienta'; toolId: string; tab?: string; lessonId?: string; filters: Filters }
   | { name: 'preguntas' }
-  | { name: 'indice'; letter?: string }
+  | { name: 'indice'; letter?: string; termId?: string }
   | { name: 'buscar'; query: string; filters: Filters }
   | { name: 'progreso' }
 
@@ -103,6 +104,7 @@ export function parseHash(hash: string): Route {
       return { name: 'kits', kitId: segments[1] }
     case 'agentes':
       return { name: 'agentes', agentId: segments[1] }
+    case 'classes': return { name: 'classes' }
     case 'admin':
     case 'super-admin':
       return { name: 'admin' }
@@ -117,11 +119,11 @@ export function parseHash(hash: string): Route {
     case 'herramientas':
       return { name: 'herramientas' }
     case 'herramienta':
-      return segments[1] ? { name: 'herramienta', toolId: segments[1], filters } : { name: 'herramientas' }
+      return segments[1] ? { name: 'herramienta', toolId: segments[1], tab: segments[2], lessonId: segments[3], filters } : { name: 'herramientas' }
     case 'preguntas':
       return { name: 'preguntas' }
     case 'indice':
-      return { name: 'indice', letter: segments[1] }
+      return { name: 'indice', letter: segments[1], termId: segments[2] }
     case 'buscar':
       return { name: 'buscar', query: params.get('q') || '', filters }
     case 'progreso':
@@ -155,6 +157,7 @@ export function href(route: Route): string {
       return route.kitId ? `#/kits/${encodeURIComponent(route.kitId)}` : '#/kits'
     case 'agentes':
       return route.agentId ? `#/agentes/${encodeURIComponent(route.agentId)}` : '#/agentes'
+    case 'classes': return '#/classes'
     case 'admin':
       return '#/admin'
     case 'guia':
@@ -168,11 +171,11 @@ export function href(route: Route): string {
     case 'herramientas':
       return '#/herramientas'
     case 'herramienta':
-      return `#/herramienta/${encodeURIComponent(route.toolId)}${writeFilters(route.filters)}`
+      return `#/herramienta/${encodeURIComponent(route.toolId)}${route.tab ? '/' + encodeURIComponent(route.tab) : ''}${route.lessonId ? '/' + encodeURIComponent(route.lessonId) : ''}${writeFilters(route.filters)}`
     case 'preguntas':
       return '#/preguntas'
     case 'indice':
-      return route.letter ? `#/indice/${encodeURIComponent(route.letter)}` : '#/indice'
+      return route.letter ? `#/indice/${encodeURIComponent(route.letter)}${route.termId ? '/' + encodeURIComponent(route.termId) : ''}` : '#/indice'
     case 'buscar': {
       const rest = writeFilters(route.filters).replace(/^\?/, '')
       return `#/buscar?q=${encodeURIComponent(route.query)}${rest ? `&${rest}` : ''}`

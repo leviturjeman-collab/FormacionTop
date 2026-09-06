@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react'
 import { academyRpc, hasSupabase } from './supabase'
 import { store, type StudentState } from './store'
 
-export type SessionProfile = { id: string; name: string; role: 'learner' | 'admin'; level: 'basico' | 'intermedio' | 'avanzado'; locale: 'es' | 'en'; goal?: string; tools?: string }
+export type SessionProfile = { id: string; name: string; role: 'learner' | 'admin'; isTeacher?: boolean; level: 'basico' | 'intermedio' | 'avanzado'; locale: 'es' | 'en'; goal?: string; tools?: string }
 type Verified = { ok: boolean; error?: string; token?: string; expiresAt?: string; profile?: SessionProfile; progress?: unknown; version?: number }
 export type SessionState = { status: 'checking' | 'authenticated' | 'anonymous' | 'error'; profile?: SessionProfile; message?: string }
 const TOKEN_KEY = 'academia.session.v2'

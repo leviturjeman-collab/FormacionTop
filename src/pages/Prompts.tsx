@@ -64,6 +64,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
       },
     ]
     store.setProject({
+      ...previous,
       name: previous?.name || '',
       goal: previous?.goal || 'Usar un prompt profesional',
       audience: previous?.audience || '',

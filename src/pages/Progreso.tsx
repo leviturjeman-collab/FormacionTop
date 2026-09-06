@@ -71,6 +71,10 @@ export default function Progreso() {
         </div>
       </div>
 
+      <section className="st-panel"><h2>{locale === 'en' ? 'Tool learning paths' : 'Recorridos de herramientas'}</h2><ul>
+        {course.toolPages.map(tool => { const done = Object.entries(student.lessons).filter(([key, value]) => key.startsWith(`tool-path:${tool.id}:`) && value.done.includes('intermedio')).length; return done ? <li key={tool.id}><a href={href({name:'herramienta',toolId:tool.id,filters:{}})}>{tool.label}</a> · {done}/10</li> : null })}
+      </ul><p>{locale === 'en' ? 'Each tool has ten lessons. Completed lessons stay saved in your account.' : 'Cada herramienta tiene diez lecciones. Las completadas quedan guardadas en tu cuenta.'}</p></section>
+
       <div className="st-actions">
         <p role="status">{persistence.message}</p>
         <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={async (event) => {
