@@ -21,7 +21,6 @@ export type Route =
   | { name: 'area'; stageId: string; filters: Filters }
   | { name: 'categoria'; categoryId: string; filters: Filters }
   | { name: 'leccion'; slug: string; level?: LevelId }
-  | { name: 'presentar'; slug: string; level: LevelId }
   | { name: 'proyecto'; stageId: string }
   | { name: 'deck'; deckId: string }
   | { name: 'prompts'; familyId?: string }
@@ -90,7 +89,8 @@ export function parseHash(hash: string): Route {
     case 'presentar': {
       if (!segments[1]) return { name: 'ruta' }
       const level = params.get('n') as LevelId | null
-      return { name: 'presentar', slug: segments[1], level: level && LEVELS.includes(level) ? level : 'intermedio' }
+      // Old presentation links open the lesson after the feature was removed.
+      return { name: 'leccion', slug: segments[1], level: level && LEVELS.includes(level) ? level : 'intermedio' }
     }
     case 'proyecto':
       return segments[1] ? { name: 'proyecto', stageId: segments[1] } : { name: 'ruta' }
@@ -145,8 +145,6 @@ export function href(route: Route): string {
       return `#/categoria/${encodeURIComponent(route.categoryId)}${writeFilters(route.filters)}`
     case 'leccion':
       return `#/leccion/${encodeURIComponent(route.slug)}${route.level ? `?n=${route.level}` : ''}`
-    case 'presentar':
-      return `#/presentar/${encodeURIComponent(route.slug)}?n=${route.level}`
     case 'proyecto':
       return `#/proyecto/${encodeURIComponent(route.stageId)}`
     case 'deck':

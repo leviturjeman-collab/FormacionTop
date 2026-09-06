@@ -51,7 +51,7 @@ export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
   if (['buscar', 'kits'].includes(route.name)) needs.push('tools')
   if (route.name === 'herramienta') needs.push('tools/' + encodeURIComponent(route.toolId))
   if (['kits', 'buscar'].includes(route.name)) needs.push('kits')
-  if (route.name === 'leccion' || route.name === 'presentar') needs.push('lessons/' + encodeURIComponent(route.slug))
+  if (route.name === 'leccion') needs.push('lessons/' + encodeURIComponent(route.slug))
   const key = locale + ':' + needs.join(',')
   const cache = useRef(new Map<string, Promise<Shard>>())
   const [state, setState] = useState<LoadState & { key: string }>({ course: null, error: null, key: '' })

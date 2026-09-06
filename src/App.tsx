@@ -13,7 +13,6 @@ const Buscar = lazy(() => import('./pages/Buscar'))
 const Indice = lazy(() => import('./pages/Indice'))
 const Preguntas = lazy(() => import('./pages/Preguntas'))
 const Progreso = lazy(() => import('./pages/Progreso'))
-const Presentar = lazy(() => import('./pages/Presentar'))
 const Proyecto = lazy(() => import('./pages/Proyecto'))
 const Deck = lazy(() => import('./pages/Deck'))
 const Prompts = lazy(() => import('./pages/Prompts'))
@@ -289,7 +288,6 @@ function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
       case 'preguntas': return [t('nav.preguntas')]
       case 'indice': return [t('nav.diccionario'), route.letter?.toUpperCase() || ''].filter(Boolean)
       case 'buscar': return [locale === 'en' ? 'Search' : 'Búsqueda', route.query ? `«${route.query}»` : ''].filter(Boolean)
-      case 'presentar': return [locale === 'en' ? 'Presentation' : 'Presentación']
       case 'proyecto': return [locale === 'en' ? 'Final project' : 'Proyecto final']
       case 'deck': return [locale === 'en' ? 'Presentation' : 'Presentación']
       case 'prompts': return [t('nav.prompts')]
@@ -400,7 +398,7 @@ function AccessGate() {
 
 function Pages({ route }: { route: Route }) {
   const session = useSession()
-  if (['admin', 'presentar', 'deck'].includes(route.name) && session.profile?.role !== 'admin') return <RestrictedAccess />
+  if (['admin', 'deck'].includes(route.name) && session.profile?.role !== 'admin') return <RestrictedAccess />
   switch (route.name) {
     case 'inicio': return <Inicio />
     case 'mi-proyecto': return <MiProyecto />
@@ -408,7 +406,6 @@ function Pages({ route }: { route: Route }) {
     case 'area': return <Area stageId={route.stageId} route={route} />
     case 'categoria': return <Categoria categoryId={route.categoryId} route={route} />
     case 'leccion': return <Leccion slug={route.slug} level={route.level} />
-    case 'presentar': return <Presentar slug={route.slug} level={route.level} />
     case 'proyecto': return <Proyecto stageId={route.stageId} />
     case 'deck': return <Deck deckId={route.deckId} />
     case 'prompts': return <Prompts familyId={route.familyId} />
@@ -559,10 +556,9 @@ function Shell() {
     return () => observer.disconnect()
   }, [route])
 
-  if (['admin', 'presentar', 'deck'].includes(route.name) && student.access !== 'admin') return <div className="student-app"><div className="st-page"><RestrictedAccess /></div></div>
+  if (['admin', 'deck'].includes(route.name) && student.access !== 'admin') return <div className="student-app"><div className="st-page"><RestrictedAccess /></div></div>
 
   // Las presentaciones ocupan la pantalla entera: sin barra lateral ni cabecera.
-  if (route.name === 'presentar') return <Presentar slug={route.slug} level={route.level} />
   if (route.name === 'deck') return <Deck deckId={route.deckId} />
   if (!student.access) return <AccessGate />
 

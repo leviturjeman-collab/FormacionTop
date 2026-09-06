@@ -1,29 +1,25 @@
-import { MessageCircleQuestion, Presentation, Timer } from 'lucide-react'
+import { MessageCircleQuestion, Timer } from 'lucide-react'
 import type { Lesson, LevelId } from '../types'
-import { href } from '../router'
 import { buildScript } from '../teacher'
 import { useLocale } from '../i18n'
 
 /**
- * Guion de clase. Solo se ve con el modo profesor activado; el alumno nunca
- * lo carga.
+ * Notas docentes. La lección solo renderiza este apartado para el profesor.
  */
 export default function TeacherPanel({ lesson, level }: { lesson: Lesson; level: LevelId }) {
   const locale = useLocale()
   const script = buildScript(lesson, level)
 
   return (
-    <section className="st-teacher">
+    <details className="st-teacher st-teacher-notes">
+      <summary>{locale === 'en' ? 'Teacher notes' : 'Notas del profesor'}</summary>
       <header>
         <div>
-          <span className="st-kicker">{locale === 'en' ? 'Teacher mode' : 'Modo profesor'}</span>
+          <span className="st-kicker">{locale === 'en' ? 'Teacher material' : 'Material docente'}</span>
           <h2>{locale === 'en' ? 'Class script' : 'Guion de clase'}</h2>
         </div>
         <div className="st-teacher-actions">
           <span className="st-piece-badge"><Timer size={11} /> {script.minutes} min</span>
-          <a className="st-btn-ghost" href={href({ name: 'presentar', slug: lesson.slug, level })}>
-            <Presentation size={13} /> {locale === 'en' ? 'Present' : 'Presentar'}
-          </a>
         </div>
       </header>
 
@@ -58,6 +54,6 @@ export default function TeacherPanel({ lesson, level }: { lesson: Lesson; level:
       )}
 
       <p className="st-teacher-opener"><b>{locale === 'en' ? 'To close:' : 'Para cerrar:'}</b> {script.closer}</p>
-    </section>
+    </details>
   )
 }
