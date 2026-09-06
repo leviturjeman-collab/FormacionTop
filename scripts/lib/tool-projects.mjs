@@ -1,4 +1,5 @@
 import {plainToolLesson} from './plain-tool-lessons.mjs'
+import {learningSequence} from './learning-sequence.mjs'
 import {englishProjectLessons,englishProfiles} from './tool-projects.en.mjs'
 import {basicFiles,starterFiles,requests} from './project-starters.mjs'
 
@@ -114,4 +115,4 @@ export function projectReadme(s) {
  return `# ${s.title}\n\nCaso de estudio ficticio de Aula Norte.\n\n## Objetivo\n${s.goal}\n\n## Preparación\n${s.open}\n\n## Empezar\n${command}\n\n## Construcción\n${s.build}\n\n## Resultado de referencia\n${s.expected}\n\n## Mejora guiada\n${s.improve}\n\n## Entrega y límites\n${s.deliver}\n\n## Documentación\n${s.source}\n`
 }
 
-export function projectLessons(tool,en=false) { const spec={...specs[tool.id],...(en?englishProfiles[tool.id]:{})}; return authoredProjectLessons(tool,en).map((manual,index)=>plainToolLesson(manual,tool,spec,index,en)) }
+export function projectLessons(tool,en=false) { const spec={...specs[tool.id],...(en?englishProfiles[tool.id]:{})}; return authoredProjectLessons(tool,en).map((manual,index)=>learningSequence(plainToolLesson(manual,tool,spec,index,en),tool,spec,index,en)) }

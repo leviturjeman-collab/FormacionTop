@@ -427,6 +427,7 @@ export interface ToolGuide {
 
 /** A runnable project chapter or a complete automation implementation guide. */
 export interface ProjectManual {
+   workedExample?: { before: string; action: string; after: string }
  language?: 'es' | 'en'
   title: string
   outcome: string

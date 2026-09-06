@@ -30,7 +30,7 @@ const concepts = {
  'skills': ['Guarda una forma de trabajar para repetirla','Save a way of working you can repeat','Una skill reúne instrucciones para una tarea que haces a menudo. Por ejemplo, cómo revisar un informe antes de entregarlo. Escribe cuándo se utiliza, qué materiales necesita, qué pasos seguir y cómo comprobar el resultado. Pruébala con otro ejemplo para asegurarte de que no depende de recordar una conversación.','A skill brings together instructions for a frequent task, such as reviewing a report before sharing it. Write when to use it, the materials needed, steps and result checks. Try a different example to make sure it does not depend on remembering a conversation.'],
 }
 
-export function plainProgramLesson(lesson,row,en=false) {
+function authoredPlainProgramLesson(lesson,row,en=false) {
  const c=concepts[lesson.id];if(!c||!row)return lesson
  const t=(es,english)=>en?english:es
  const title=c[en?1:0],concept=c[en?3:2]
@@ -44,4 +44,19 @@ export function plainProgramLesson(lesson,row,en=false) {
  {title:t('Repite cambiando una cosa','Repeat with one change'),where:t('En una copia del ejemplo','In a copy of the example'),action:variation+' '+t('Escribe qué debería cambiar, repite y compara. Guarda las dos versiones.','Write what should change, repeat and compare. Keep both versions.'),expect:t('Puedes explicar con tus palabras por qué las dos respuestas son iguales o diferentes.','You can explain in your own words why the answers are the same or different.'),stuck:t('Vuelve al dato que cambiaste. Pide a la IA que explique solo cómo afecta ese dato.','Return to the detail you changed. Ask AI to explain only how that detail affects the result.')},
  {title:t('Guárdalo y elige dónde lo usarías','Save it and choose where you would use it'),where:t('En tu cuaderno y en Mi proyecto','In your notebook and My project'),action:t('Escribe una tarea de tu trabajo que se parezca al ejemplo. Explica qué datos cambiarías y quién revisaría el resultado. Guarda esta lección en Mi proyecto para encontrarla después. Pide a otra persona que lea tu cuaderno y repita el primer paso sin tu ayuda.','Write down a task at work similar to the example. Explain which details you would change and who would check the result. Save this lesson in My project to find it later. Ask someone to read your notebook and repeat the first step without help.'),expect:t('Tienes un ejemplo resuelto, uno modificado y una idea concreta para usarlo en tu proyecto.','You have a worked example, a changed one and a concrete use in your project.'),stuck:t('Si la otra persona no sabe por dónde empezar, añade el nombre de la aplicación, el documento y la primera acción.','If the other person does not know where to start, add the application name, document and first action.')},
  ],matters:[t('Entender el ejemplo y comprobar sus datos.','Understand the example and check its details.'),t('Guardar lo que has hecho para poder repetirlo.','Save what you did so you can repeat it.')],canDo:[title,t('Explicar el ejemplo y aplicarlo a una tarea parecida.','Explain the example and use it for a similar task.')],words:lesson.words}
+}
+
+export function plainProgramLesson(lesson,row,en=false) {
+ const result=authoredPlainProgramLesson(lesson,row,en)
+ if(!concepts[lesson.id]||!row)return result
+ const t=(es,english)=>en?english:es
+ result.tasks[1]={...result.tasks[1],
+  title:t('Explica por qué el ejemplo queda así','Explain why the example looks this way'),
+  where:t('En tu cuaderno, con el ejemplo a la vista','In your notebook, with the example in view'),
+  action:t(`Lee esta respuesta resuelta: ${row[6]} Busca en el ejemplo de arriba de dónde sale cada nombre, número o decisión. Escribe dos frases: «Esto lo sabemos porque…» y «Esto todavía no lo sabemos…». Si la respuesta describe una acción en una aplicación, señala qué tendrías que mirar allí para comprobarla. Si te atascas, el mensaje de ayuda de abajo es opcional.`,
+   `Read this worked answer: ${row[4]} Find where each name, number or decision comes from in the example above. Write two sentences: “We know this because…” and “We do not know this yet…”. If the answer describes an action in an application, identify what you would need to inspect there to check it. If you get stuck, the help message below is optional.`),
+  expect:t('Puedes relacionar la respuesta con los datos del ejemplo y señalar una cosa que todavía tendrías que comprobar.','You can connect the answer to the example details and identify one thing you would still need to check.'),
+  stuck:t('Empieza por un solo nombre o número de la respuesta. Búscalo en el ejemplo y subráyalo. Si no está, anota qué dato falta.','Start with one name or number in the answer. Find and underline it in the example. If it is absent, note what information is missing.'),
+ }
+ return result
 }
