@@ -34,6 +34,10 @@ Sigue pendiente la ejecución contra las cuentas reales: hace falta identificar 
 
 ## Verificación
 
+Publicado en `www.aibylevi.com` con el código del commit `4f4c2e7`. Despliegue: `formaciontop-6jvwhddbv-leviturjeman-collabs-projects.vercel.app`.
+
+Resultado final: `npm test` completo correcto; 39 comprobaciones del backend Supabase y 18 comprobaciones de publicación en los tres dominios. La prueba real en producción confirmó que una lección guardada y su progreso se conservan después de cerrar sesión y volver a entrar, que el alumno no accede a clases y que el superadmin puede abrir su gestión. La cuenta temporal quedó archivada y sus sesiones revocadas.
+
 - Pruebas de almacén: enlaces seguros, conservación de idioma, exportación/importación y combinación de marcadores de dos dispositivos.
 - Navegador: 320, 390 y 1440 píxeles; navegación a detalle, recarga, guardado, progreso y ausencia de desbordamiento horizontal en las pantallas verificadas.
 - Contenido: las 56 herramientas tienen exactamente diez unidades con explicación, ejemplo, pasos y comprobación en ES/EN.
