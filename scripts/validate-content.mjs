@@ -231,6 +231,14 @@ for (const leccion of course.curso || []) {
     `${donde} tiene ${leccion.theory?.length || 0} apartados de teoría en español y ${traducida.theory?.length || 0} en inglés.`)
   check((traducida.words?.length || 0) === (leccion.words?.length || 0),
     `${donde} tiene ${leccion.words?.length || 0} términos de vocabulario en español y ${traducida.words?.length || 0} en inglés.`)
+  /* Una analogia o un prompt que existen en un idioma y no en el otro dejan al
+   * alumno de esa lengua con menos material del mismo curso. */
+  const conAnalogia = (item) => (item.theory || []).filter((bloque) => bloque.analogy).length
+  const conPrompt = (item) => (item.tasks || []).filter((tarea) => tarea.prompt).length
+  check(conAnalogia(traducida) === conAnalogia(leccion),
+    `${donde} tiene ${conAnalogia(leccion)} analogías en español y ${conAnalogia(traducida)} en inglés.`)
+  check(conPrompt(traducida) === conPrompt(leccion),
+    `${donde} tiene ${conPrompt(leccion)} tareas con prompt en español y ${conPrompt(traducida)} en inglés.`)
 }
 for (const leccion of cursoEn.curso || []) {
   if (!(course.curso || []).some((item) => item.id === leccion.id)) {
