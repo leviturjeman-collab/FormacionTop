@@ -45,11 +45,14 @@ for (const leccion of course.curso || []) {
   revisarVoz(donde, leccion.promise)
   revisarVoz(donde, leccion.why)
   for (const bloque of leccion.theory || []) {
+    // El titulo tambien se lee: por ahi se colo «Lo que el alumno suele hacer mal».
+    revisarVoz(`${donde}, título del apartado`, bloque.title)
     revisarVoz(`${donde}, apartado «${bloque.title}»`, bloque.text)
     revisarVoz(`${donde}, analogía de «${bloque.title}»`, bloque.analogy)
     revisarVoz(`${donde}, ejemplo de «${bloque.title}»`, bloque.example)
   }
   for (const tarea of leccion.tasks || []) {
+    revisarVoz(`${donde}, título de la tarea`, tarea.title)
     revisarVoz(`${donde}, tarea «${tarea.title}»`, tarea.action)
     revisarVoz(`${donde}, tarea «${tarea.title}»`, tarea.expect)
   }
