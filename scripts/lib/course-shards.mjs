@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
 export async function writeCourseShards(course, publicDir, locale) {
+  if (!['es','en'].includes(locale)) throw new Error('Unsupported content locale')
   const directory = path.join(publicDir, 'course-data', locale)
   await fs.mkdir(path.join(directory, 'lessons'), { recursive: true })
   await fs.mkdir(path.join(directory, 'tools'), { recursive: true })
@@ -19,4 +20,12 @@ export async function writeCourseShards(course, publicDir, locale) {
   await write('kits', course.kits)
   for (const tool of course.toolPages) await write('tools/' + encodeURIComponent(tool.id), tool)
   for (const lesson of course.lessons) await write('lessons/' + encodeURIComponent(lesson.slug), lesson)
+  // Retired generated shards must not remain addressable after a curriculum change.
+  for (const [folder, ids] of [['lessons', course.lessons.map(item => item.slug)], ['tools', course.toolPages.map(item => item.id)]]) {
+    const expected = new Set(ids.map(id => encodeURIComponent(id) + '.json'))
+    const target = path.join(directory, folder)
+    for (const entry of await fs.readdir(target, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith('.json') && !expected.has(entry.name)) await fs.unlink(path.join(target, entry.name))
+    }
+  }
 }
