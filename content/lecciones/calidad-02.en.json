@@ -16,7 +16,8 @@
     {
       "title": "The three pieces you always pull out",
       "text": "From any error, however long, you pull out three things and write them down. First: where it happened, meaning at which specific step of your setup. Second: what it says literally, copied and pasted, not summarised in your own words. And third: what you were doing just before. With those three, an error stops being a wall and becomes a specific problem. Without them there's no way for anyone to help you, or even for you to help yourself. And the second is the one people do worst: summarising an error in your own words loses exactly the detail that identified it.",
-      "example": "Álvaro, done properly: «At the Call OpenAI step. It says: 401 Unauthorized - invalid api key. I was testing the form with normal data, and yesterday it worked.»"
+      "example": "Álvaro, done properly: «At the Call OpenAI step. It says: 401 Unauthorized - invalid api key. I was testing the form with normal data, and yesterday it worked.»",
+      "analogy": "When you call about a leak you don't say \"my house is broken\". You say where it's dripping, since when, and what you can see. That gets the right plumber sent; the other gets someone sent to have a look."
     },
     {
       "title": "The numbers that come with internet errors",
@@ -27,17 +28,20 @@
     {
       "title": "The five errors you'll actually meet",
       "text": "In a setup built without programming, ninety per cent of the failures are five. One: the expired or badly copied key, which gives 401 and gets fixed by generating a new one and pasting it whole, with no spaces in front or behind. Two: going too fast, which gives 429 and gets fixed by putting a wait between steps. Three: a missing value the next step expected, which usually says «undefined», «null» or «cannot read property», and means something arrived empty. Four: the format isn't what it expected, typical with dates and with numbers arriving as text. And five: the other service is down, which gives 5xx and gets fixed by waiting. Recognising those five will let you solve almost everything that happens to you on your own.",
-      "example": "«Cannot read property name of undefined» sounds like gibberish and means something very simple: you asked for the name of something that arrived empty. It's almost always a form field nobody filled in."
+      "example": "«Cannot read property name of undefined» sounds like gibberish and means something very simple: you asked for the name of something that arrived empty. It's almost always a form field nobody filled in.",
+      "analogy": "The five car faults behind ninety per cent of breakdowns: battery, tyres, belt, a sensor, and running out of fuel. A mechanic doesn't guess them, they rule them out in order — which is why it takes them ten minutes and you three hours."
     },
     {
       "title": "Giving the error to an AI is the best move, if you give it properly",
       "text": "Error messages are exactly what an AI is best at: they're technical, repetitive and heavily documented text. But most people paste the error bare and get back a general answer that doesn't help. What you have to give it is the three pieces above plus the context of which tool you use and that you're not a programmer. And above all you have to ask for one specific thing: the most likely cause and how to check it, not a list of ten possibilities. A list of ten possibilities is the same as having nothing.",
-      "example": "Bad: «I get a 401, help». Good: «In n8n, at the OpenAI step, I get 401 invalid api key. It worked yesterday, I haven't touched anything. What's the most likely cause and how do I check it in two minutes?»"
+      "example": "Bad: «I get a 401, help». Good: «In n8n, at the OpenAI step, I get 401 invalid api key. It worked yesterday, I haven't touched anything. What's the most likely cause and how do I check it in two minutes?»",
+      "analogy": "Showing a doctor the whole X-ray, or just saying \"it hurts\". With the X-ray they tell you which bone; with the other they ask you twenty questions before starting."
     },
     {
       "title": "One change at a time",
       "text": "When something isn't working, the temptation is to touch four things at once and see whether that fixes it. If it works, you don't know which one it was and you won't be able to repeat it. If it doesn't work, you've added three new problems to the one you had. The discipline to build is dull and it's the one that works: change one thing, test, note whether it improved, and carry on. It looks slower and it's much faster, because every attempt gives you information rather than noise.",
-      "example": "Álvaro changed the key, the URL and the date format all at once. It started working. A month later it failed again and he had no idea which of the three had been the fix."
+      "example": "Álvaro changed the key, the URL and the date format all at once. It started working. A month later it failed again and he had no idea which of the three had been the fix.",
+      "analogy": "Hunting a dead bulb in a string of fairy lights by swapping five at a time. It might light up, but you no longer know which one it was, and next year you start from scratch."
     }
   ],
   "tasks": [
@@ -46,14 +50,16 @@
       "where": "In a file next to your project",
       "action": "Create a file called «breakdowns.txt» with this template at the top, to copy each time: Date. Where it happened (exact step). What it says literally (copied, not summarised). What I was doing. What I tried. What fixed it. It sounds like paperwork and it's the tool that will save you the most time, because errors repeat: in three months the same failure takes you a minute instead of a day.",
       "expect": "A file with the template. Empty for now.",
-      "stuck": "If it feels excessive, do it only for the ones that keep you stuck more than ten minutes. Those alone make it worth it."
+      "stuck": "If it feels excessive, do it only for the ones that keep you stuck more than ten minutes. Those alone make it worth it.",
+      "prompt": "Help me build the template for my fault log, so I always record the same things when something breaks.\n\nTOOLS I USE: [n8n, Zapier, a website, a spreadsheet… whatever]\nWHO WILL READ IT: [just me / someone else too]\n\nWrite me a template of six or seven fields, with each field name and underneath, in italics, one filled-in example line so it's clear what goes there. It must include: the date, the exact step where it happened, the literal message copied without summarising, what I was doing just before, what I tried, and what finally fixed it.\n\nKeep it to half a screen. If one field can be worked out from another, drop it: a long log doesn't get filled in. Finish by telling me why the literal-message field must never be summarised."
     },
     {
       "title": "Trigger an error and pull the three pieces out",
       "where": "In your setup",
       "action": "If you have one outstanding, use it. If not, cause one deliberately: change one letter of your access key and run it. When it fires, write the three pieces in the log. The second has to be copying and pasting the whole message, with the number if it has one, without summarising or «tidying» the wording. Then put the key back properly.",
       "expect": "One complete entry in the log. If the message carries a three-digit number, check in the theory whose fault it is before going any further.",
-      "stuck": "If you can't find the full message, look in the tool for a button saying view details, view execution or view log. Almost always what's on screen is a summary and the real one is a click below."
+      "stuck": "If you can't find the full message, look in the tool for a button saying view details, view execution or view log. Almost always what's on screen is a summary and the real one is a click below.",
+      "prompt": "I've just caused an error on purpose and I want to pull the three pieces out of it before trying to fix anything.\n\nERROR MESSAGE, COPIED IN FULL: [PASTE IT AS IT CAME, DON'T SUMMARISE]\nWHAT I WAS DOING: [ONE LINE]\nWHICH STEP OR NODE IT FIRED IN: [WHERE]\n\nSplit the message into three pieces and nothing else:\n1. WHERE: which concrete step it happened in, according to the message itself.\n2. WHAT IT SAYS: the sentence in the message that actually carries information, without the technical padding around it.\n3. WHAT IT MEANS: what that sentence is saying in plain language, without assuming the cause yet.\n\nThen, and only then, tell me the MOST likely cause in one sentence, and what fact I'm missing to confirm it. If the message isn't enough to know, say so: I'd rather have \"this doesn't tell us\" than an invented cause that costs me an afternoon."
     },
     {
       "title": "Decipher your error with help",
@@ -68,21 +74,24 @@
       "where": "In your setup",
       "action": "Apply the fix it gave you, only that one, and test. Note in the log whether it worked before touching anything else. If it didn't work, undo that change before trying the next one. Undoing what didn't help is half the discipline.",
       "expect": "The log with a «what I tried» line and its result. If it worked, fill in «what fixed it» and you have that breakdown documented forever.",
-      "stuck": "If you're five changes in and it's still broken, stop. Reread the original message in full, including the part you skipped as filler: very often the useful detail is on the second line."
+      "stuck": "If you're five changes in and it's still broken, stop. Reread the original message in full, including the part you skipped as filler: very often the useful detail is on the second line.",
+      "prompt": "I'm about to fix an error by changing one single thing, and I want to do it without making it worse.\n\nTHE ERROR: [PASTE THE MESSAGE]\nTHE FIX I'M GOING TO TRY: [DESCRIBE IT]\n\nBefore I touch it, tell me four things:\n1. What I should note down or save BEFORE changing anything, so I can go back.\n2. Exactly which single change to make, and what NOT to touch even though it looks related.\n3. What I should see if the fix works, and what I'll see if it doesn't.\n4. How to undo the change if it doesn't work, step by step.\n\nIf you think two changes are needed, tell me which comes first and why, but don't give me both at once: if I do them together I won't know which one it was."
     },
     {
       "title": "Learn to tell your fault from theirs",
       "where": "In your log",
       "action": "Go back over the errors you've had in the course so far, or cause two: one with a bad key (401) and one asking for an address that doesn't exist (404, change a letter in the URL). Note next to each whether the number starts with 4 or 5, and therefore whether it's yours or theirs.",
       "expect": "Two entries with the classification done. This distinction will save you hours: when you see a 5xx, the correct response is often to wait twenty minutes and try again.",
-      "stuck": "If your error doesn't have a three-digit number, it isn't a communication failure between services: it'll be a missing value or a wrong format. Look at the five errors in the theory and search the message for «undefined» or «null»."
+      "stuck": "If your error doesn't have a three-digit number, it isn't a communication failure between services: it'll be a missing value or a wrong format. Look at the five errors in the theory and search the message for «undefined» or «null».",
+      "prompt": "Help me tell whether a failure is mine or the service's, because that decides whether I start fixing or start waiting.\n\nERROR A: [PASTE THE MESSAGE AND WHERE IT FIRED]\nERROR B: [PASTE THE MESSAGE AND WHERE IT FIRED]\n\nFor each one tell me: one, whether the problem is in what I'm sending (key, address, format, permissions) or in the service at the other end (it's down, it's slow, something changed). Two, exactly what you're basing that on, pointing at the part of the message that gives it away. Three, what I do in each case.\n\nAlso explain the difference between codes starting with 4 and codes starting with 5, one sentence each, because that's what I want to remember in six months when it happens again."
     },
     {
       "title": "Write your error cheat sheet",
       "where": "At the end of the log",
       "action": "Write a short table with the five errors from the theory: the typical message, what it means and what you do. Add the ones that have happened to you with their real fixes. This cheat sheet is yours and it's what you'll look at before panicking next time.",
       "expect": "Five or six lines at the end of the file. Next time something breaks, you look here first. You'll solve half of them without leaving the file.",
-      "stuck": "If none of the five has happened to you yet, write the five from the theory anyway. They'll all happen, and when they do you'll recognise the message."
+      "stuck": "If none of the five has happened to you yet, write the five from the theory anyway. They'll all happen, and when they do you'll recognise the message.",
+      "prompt": "Help me write my error cheat sheet, to keep beside me so I don't look the same thing up twice.\n\nERRORS THAT HAVE ACTUALLY HAPPENED TO ME: [PASTE THEM WITH WHAT I DID TO FIX THEM]\nTOOLS I USE: [LIST]\n\nBuild me a three-column table: TYPICAL MESSAGE / WHAT IT MEANS / WHAT I DO. Start with the usual five (expired key, mistyped address, missing permission, rate limit, and an empty field arriving) and add mine underneath with the real fix that worked.\n\nThe right-hand column has to be an action, not advice: \"generate a new key and paste it with no spaces\", not \"check your credentials\". Keep it to one screen: if it goes past ten rows, merge the ones with the same fix."
     }
   ],
   "matters": [
@@ -109,11 +118,26 @@
     "Find out about a failure if you didn't switch the warnings on in lesson 35."
   ],
   "words": [
-    ["4xx code", "The problem is in what you sent: not identified (401), no permission (403), doesn't exist (404), too fast (429)."],
-    ["5xx code", "The problem is the other service's. You wait and try again."],
-    ["undefined / null", "Something arrived empty when the next step expected a value. The most common error in workflows."],
-    ["Log", "The record of what happened step by step. Where the full message lives, not the summary."],
-    ["Breakdown log", "The file where you note what broke and what fixed it. Errors repeat."]
+    [
+      "4xx code",
+      "The problem is in what you sent: not identified (401), no permission (403), doesn't exist (404), too fast (429)."
+    ],
+    [
+      "5xx code",
+      "The problem is the other service's. You wait and try again."
+    ],
+    [
+      "undefined / null",
+      "Something arrived empty when the next step expected a value. The most common error in workflows."
+    ],
+    [
+      "Log",
+      "The record of what happened step by step. Where the full message lives, not the summary."
+    ],
+    [
+      "Breakdown log",
+      "The file where you note what broke and what fixed it. Errors repeat."
+    ]
   ],
   "next": "You know how to read what breaks. In lesson 37 you go to the worst case: you've changed something, everything has broken, and you need to get back to how it was twenty minutes ago."
 }
