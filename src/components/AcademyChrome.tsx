@@ -34,7 +34,6 @@ function LanguageSwitch({ compact }: { compact?: boolean }) {
 export function Sidebar({ route, open, onClose }: { route: Route; open: boolean; onClose: () => void }) {
   const course = useCourse()
   const student = useStudent()
-  const session = useSession()
   const t = useT()
   const locale = useLocale()
   const [query, setQuery] = useState('')
@@ -115,7 +114,7 @@ export function Sidebar({ route, open, onClose }: { route: Route; open: boolean;
         <a className={is('curso') ? 'active' : ''} href={href({ name: 'curso' })} onClick={onClose}>
           <GraduationCap size={14} /> {t('nav.programa')}
         </a>
-        {(student.access === 'admin' || session.profile?.isTeacher) && <a href={href({name: 'classes'})} onClick={onClose}><GraduationCap size={14}/>{locale === 'en' ? 'Classes' : 'Clases'}</a>}
+
         <a className={is('mi-proyecto') ? 'active' : ''} href={href({ name: 'mi-proyecto' })} onClick={onClose}>
           <BookMarked size={14} /> {t('nav.miProyecto')}
         </a>
@@ -124,24 +123,15 @@ export function Sidebar({ route, open, onClose }: { route: Route; open: boolean;
             <KeyRound size={14} /> {t('nav.superAdmin')}
           </a>
         )}
-        <details className="st-nav-group" open={['prompts', 'kits', 'agentes', 'herramientas', 'herramienta', 'guia'].includes(route.name)}><summary>{locale === 'en' ? 'Tools and resources' : 'Herramientas y recursos'}</summary>
-        <a className={is('prompts') ? 'active' : ''} href={href({ name: 'prompts' })} onClick={onClose}>
-          <Sparkles size={14} /> {t('nav.prompts')}
-        </a>
-        <a className={is('kits') ? 'active' : ''} href={href({ name: 'kits' })} onClick={onClose}>
-          <Boxes size={14} /> {t('nav.kits')}
-        </a>
-        <a className={is('agentes') ? 'active' : ''} href={href({ name: 'agentes' })} onClick={onClose}>
-          <Bot size={14} /> {t('nav.agentes')}
-        </a>
-
-        <a className={is('herramientas') || is('herramienta') ? 'active' : ''} href={href({ name: 'herramientas' })} onClick={onClose}>
-          <Puzzle size={14} /> {t('nav.herramientas')}
-        </a>
+        <a className={is('kits') ? 'active' : ''} href={href({name:'kits'})} onClick={onClose}><Boxes size={14}/>{t('nav.kits')}</a>
+        <a className={is('herramientas') || is('herramienta') ? 'active' : ''} href={href({name:'herramientas'})} onClick={onClose}><Puzzle size={14}/>{t('nav.herramientas')}</a>
+        <a className={is('automatizaciones') ? 'active' : ''} href={href({name:'automatizaciones'})} onClick={onClose}><Boxes size={14}/>{locale === 'en' ? 'Automations' : 'Automatizaciones'}</a>
+        <a className={is('agentes') ? 'active' : ''} href={href({name:'agentes'})} onClick={onClose}><Bot size={14}/>{t('nav.agentes')}</a>
+        <a className={is('prompts') ? 'active' : ''} href={href({name:'prompts'})} onClick={onClose}><Sparkles size={14}/>{t('nav.prompts')}</a>
         <a className={is('guia') ? 'active' : ''} href={href({ name: 'guia' })} onClick={onClose}>
           <Compass size={14} /> {t('nav.guias')}
         </a>
-        </details><details className="st-nav-group" open={['preguntas','indice','progreso'].includes(route.name)}><summary>{locale === 'en' ? 'Help and progress' : 'Ayuda y progreso'}</summary>
+        <details className="st-nav-group" open={['preguntas','indice','progreso'].includes(route.name)}><summary>{locale === 'en' ? 'Help and progress' : 'Ayuda y progreso'}</summary>
         <a className={is('preguntas') ? 'active' : ''} href={href({ name: 'preguntas' })} onClick={onClose}>
           <HelpCircle size={14} /> {t('nav.preguntas')}
         </a>
@@ -280,7 +270,7 @@ export function Header({ route, onMenu }: { route: Route; onMenu: () => void }) 
         const agent = (course.agents || []).find((item) => item.id === route.agentId)
         return [t('nav.agentes'), agent?.title || route.agentId]
       }
-      case 'classes': return [locale === 'en' ? 'Classes and teachers' : 'Clases y profesores']
+      case 'automatizaciones': return [locale === 'en' ? 'Automations' : 'Automatizaciones']
       case 'admin': return [t('nav.superAdmin')]
       case 'guia': return [t('nav.guias')]
       case 'curso': {

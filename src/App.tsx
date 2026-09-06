@@ -18,7 +18,7 @@ const Deck = lazy(() => import('./pages/Deck'))
 const Prompts = lazy(() => import('./pages/Prompts'))
 const Kits = lazy(() => import('./pages/Kits'))
 const Agentes = lazy(() => import('./pages/Agentes'))
-const Classes = lazy(() => import('./pages/Classes'))
+const Automatizaciones = lazy(() => import('./pages/Automatizaciones'))
 const Admin = lazy(() => import('./pages/Admin'))
 const Guia = lazy(() => import('./pages/Guia'))
 const CursoIndice = lazy(() => import('./pages/Curso').then(module => ({ default: module.CursoIndice })))
@@ -46,7 +46,7 @@ function Pages({ route }: { route: Route }) {
     case 'prompts': return <Prompts familyId={route.familyId} />
     case 'kits': return <Kits key={route.kitId || 'catalog'} kitId={route.kitId} />
     case 'agentes': return <Agentes agentId={route.agentId} />
-    case 'classes': return <Classes />
+    case 'automatizaciones': return <Automatizaciones key={route.automationId || 'catalog'} toolId={route.toolId} automationId={route.automationId} />
     case 'admin': return <Admin />
     case 'guia': return <Guia guideId={route.guideId} />
     case 'curso': return route.lessonId ? <CursoLeccion lessonId={route.lessonId} /> : <CursoIndice />

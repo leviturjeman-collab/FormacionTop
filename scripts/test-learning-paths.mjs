@@ -11,7 +11,7 @@ for (const locale of ['es','en']) {
   for (const tool of course.toolPages) {
     const lessons=toolPath(tool,locale==='en');assert.equal(lessons.length,10,tool.id)
     assert.equal(new Set(lessons.map(l=>l.id)).size,10)
-    for(const lesson of lessons) assert.ok(lesson.title && lesson.example && lesson.check && lesson.steps.length && lesson.explanation.length,`${locale}/${tool.id}/${lesson.id}`)
+    for(const lesson of lessons) { assert.ok(lesson.title && lesson.example && lesson.check && lesson.steps.length && lesson.explanation.length,`${locale}/${tool.id}/${lesson.id}`); assert.ok(lesson.study?.concepts.length>=2 && lesson.study.solution && lesson.study.exercise && lesson.study.criteria.length>=2,`Institutional unit ${locale}/${tool.id}/${lesson.id}`) }
   }
 }
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe'})
@@ -66,7 +66,37 @@ try {
   await visit('#/herramienta/n8n/automatizaciones');await page.locator('#automatizaciones').waitFor()
   assert.equal(await page.locator('#guia-herramienta,.st-tool-path').count(),0,'Automation section is isolated')
   await visit('#/herramienta/codex/lecciones-herramienta/99');await page.getByRole('heading',{name:'Lección no encontrada'}).waitFor()
-  await visit('#/classes');await page.getByRole('heading',{name:'Acceso restringido'}).waitFor()
+  await visit('#/classes');await page.locator('.st-header').waitFor()
+  assert.equal(await page.locator('a[href="#/classes"]').count(),0,'Classes removed from navigation')
+  await page.setViewportSize({width:1440,height:900})
+  const nav=page.getByRole('navigation',{name:'Navegación principal',exact:true})
+  for(const [name,path] of [['Kits','#/kits'],['Herramientas','#/herramientas'],['Automatizaciones','#/automatizaciones'],['Agentes','#/agentes']]) {
+    const link=nav.locator(`a[href="${path}"]`);assert.equal(await link.count(),1,name)
+    assert.ok(await link.isVisible(),`${name} directly visible`)
+    assert.equal(await link.evaluate(el=>!!el.closest('details')),false,`${name} is not collapsed in a group`)
+  }
+  await visit('#/leccion/fases-de-la-formacion');await page.locator('.st-phase-guide h1').waitFor()
+  assert.equal(await page.locator('.st-phase-guide > section').count(),6)
+  assert.doesNotMatch(await page.locator('.st-phase-guide').innerText(),/\.\.\/|DOCUMENTOMAESTRO|CLASESPORHERRAMIENTA/)
+  await page.locator('.st-phase-guide .st-unit-contents a').first().click()
+  await page.getByRole('heading',{name:'Define tu punto de partida',exact:true}).first().waitFor()
+  assert.equal(await page.locator('.st-phase-guide > section').count(),1)
+  await visit('#/automatizaciones');await page.locator('.st-automation-catalog > a').first().waitFor()
+  assert.ok(await page.locator('.st-automation-catalog > a').count()>100)
+  await page.locator('.st-automation-filters select').selectOption('n8n')
+  assert.equal(await page.locator('.st-automation-catalog > a').count(),25)
+  await page.locator('.st-automation-catalog > a').first().click();await page.locator('.st-path-detail h1').waitFor()
+  await page.reload();await page.locator('.st-path-detail h1').waitFor()
+  await visit('#/herramienta/codex/lecciones-herramienta/05');await page.locator('#unit-worked pre').waitFor()
+  assert.match(await page.locator('#unit-worked pre').innerText(),/Number.isInteger/)
+  for(const width of [320,390,1440]) {
+    await page.setViewportSize({width,height:900})
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Worked code no overflow')
+    await page.screenshot({path:`.temp/institutional-codex-${width}.png`,fullPage:false})
+  }
+  await page.getByRole('button',{name:'Ejemplo resuelto',exact:true}).click()
+  assert.ok(await page.locator('#unit-worked').evaluate(el=>el.getBoundingClientRect().top<200),'Contents scrolls to example')
+  await page.screenshot({path:'.temp/institutional-worked.png',fullPage:false})
   assert.deepEqual(errors,[])
-  console.log('PASS: 56 tools × 10 complete learning units × ES/EN; dedicated lesson/term routing, 320/390/1440, persisted bookmarks, completion, manual tool integrity, learner class guard, no runtime errors.')
+  console.log('PASS: 56 tools × 10 complete learning units × ES/EN; dedicated lesson/term routing, 320/390/1440, persisted bookmarks, completion, manual tool integrity, direct menu, retired classes, curated phases, automations catalog, worked code, no runtime errors.')
 } finally {await browser.close()}

@@ -1,4 +1,5 @@
 import SaveResourceButton from '../components/SaveResourceButton'
+import LearningPhases, { isLearningPhase } from '../components/LearningPhases'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Circle, Clock, Copy, Download, FileText, FolderTree, ListChecks, Target, TriangleAlert, Wrench } from 'lucide-react'
 import type { LessonAsset, LevelId } from '../types'
@@ -66,6 +67,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
     if (lesson) store.visit(slug)
   }, [slug, lesson])
 
+  if (isLearningPhase(slug)) return <LearningPhases slug={slug}/>
   if (!lesson) {
     return (
       <div className="st-page">

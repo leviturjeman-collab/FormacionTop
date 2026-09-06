@@ -26,7 +26,7 @@ export type Route =
   | { name: 'prompts'; familyId?: string }
   | { name: 'kits'; kitId?: string }
   | { name: 'agentes'; agentId?: string }
-  | { name: 'classes' }
+  | { name: 'automatizaciones'; toolId?: string; automationId?: string }
   | { name: 'admin' }
   | { name: 'guia'; guideId?: string }
   | { name: 'curso'; lessonId?: string }
@@ -77,7 +77,7 @@ export function parseHash(hash: string): Route {
     case 'mi-proyecto':
       return { name: 'mi-proyecto' }
     case 'automatizaciones':
-      return { name: 'herramienta', toolId: 'n8n', filters: {} }
+      return { name: 'automatizaciones', toolId: segments[1], automationId: segments[2] }
     case 'area':
       return segments[1] ? { name: 'area', stageId: segments[1], filters } : { name: 'ruta' }
     case 'categoria':
@@ -104,7 +104,7 @@ export function parseHash(hash: string): Route {
       return { name: 'kits', kitId: segments[1] }
     case 'agentes':
       return { name: 'agentes', agentId: segments[1] }
-    case 'classes': return { name: 'classes' }
+    case 'classes': return { name: 'inicio' }
     case 'admin':
     case 'super-admin':
       return { name: 'admin' }
@@ -157,7 +157,7 @@ export function href(route: Route): string {
       return route.kitId ? `#/kits/${encodeURIComponent(route.kitId)}` : '#/kits'
     case 'agentes':
       return route.agentId ? `#/agentes/${encodeURIComponent(route.agentId)}` : '#/agentes'
-    case 'classes': return '#/classes'
+    case 'automatizaciones': return '#/automatizaciones' + (route.toolId ? '/' + encodeURIComponent(route.toolId) : '') + (route.automationId ? '/' + encodeURIComponent(route.automationId) : '')
     case 'admin':
       return '#/admin'
     case 'guia':

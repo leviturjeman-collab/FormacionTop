@@ -48,7 +48,7 @@ export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
   const route = useRoute()
   const needs = ['index']
   if (['prompts', 'buscar', 'mi-proyecto'].includes(route.name)) needs.push('prompts')
-  if (['buscar', 'kits'].includes(route.name)) needs.push('tools')
+  if (['buscar', 'kits', 'automatizaciones'].includes(route.name)) needs.push('tools')
   if (route.name === 'herramienta') needs.push('tools/' + encodeURIComponent(route.toolId))
   if (['kits', 'buscar'].includes(route.name)) needs.push('kits')
   if (route.name === 'leccion') needs.push('lessons/' + encodeURIComponent(route.slug))
