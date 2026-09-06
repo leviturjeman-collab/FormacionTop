@@ -1,3 +1,5 @@
+import {connectedManual} from './connected-recipes.mjs'
+import {githubDeploymentManual} from './github-deployment-lesson.mjs'
 import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS } from './automations-reales.mjs'
 import { addVerifiedModels } from './verified-models.mjs'
 import { addToolUsage } from './tool-usage.mjs'
@@ -874,8 +876,10 @@ export function completeToolGuide(existing, tool) {
   guide.projectLessons = projectLessons(tool, process.env.LOCALE === 'en')
   guide.prompts = NO_PROMPT_TOOLS.has(tool.id) ? [] : guide.projectLessons.flatMap((lesson,index)=>lesson.prompts.map(prompt=>({name:`${String(index+1).padStart(2,'0')} · ${prompt.title}`,prompt:prompt.text,when:lesson.title,where:prompt.where,replace:prompt.replace,expected:prompt.expected,followUp:prompt.followUp,projectPrompt:true})))
   if(tool.id==='n8n') {
-    guide.automations=scenarios.map(s=>({name:s.name,goal:s.purpose,difficulty:'intermedia',platform:'n8n · laboratorio y guía de implementación',trigger:s.operation[0],steps:automationManual(s).steps.map(step=>step.title+': '+step.instruction),code:scenarioCode(s),test:s.variation,failure:s.fix,credentials:'Instancia n8n para el laboratorio. Para conectar servicios: credenciales de ensayo del origen y destino descritos en la guía.',project:automationManual(s)}))
+    guide.automations=scenarios.map(s=>({name:automationManual(s,process.env.LOCALE==='en').title,goal:automationManual(s,process.env.LOCALE==='en').outcome,difficulty:'intermedia',platform:'n8n · laboratorio y guía de implementación',trigger:s.operation[0],steps:automationManual(s,process.env.LOCALE==='en').steps.map(step=>step.title+': '+step.instruction),code:scenarioCode(s),test:s.variation,failure:s.fix,credentials:'Instancia n8n para el laboratorio. Para conectar servicios: credenciales de ensayo del origen y destino descritos en la guía.',project:automationManual(s,process.env.LOCALE==='en')}))
   }
+  guide.automations=guide.automations.map((a,index)=>{const m=connectedManual(tool,a,index,process.env.LOCALE==='en');return m?{...a,name:m.title,goal:m.outcome,project:m}:a})
+  if(tool.id==='github') { const a=guide.automations[0];const m=githubDeploymentManual(process.env.LOCALE==='en');guide.automations[0]={...a,name:process.env.LOCALE==='en'?'Push to main → deploy and report the result':a.name,goal:m.outcome,project:m} }
   return addToolUsage(addVerifiedModels(guide, tool.id), tool.id)
 }
 

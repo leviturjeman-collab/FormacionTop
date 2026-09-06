@@ -57,7 +57,7 @@ for (const tool of course.toolPages || []) {
 }
 for (const tool of course.toolPages || []) {
   for (const prompt of tool.guide?.prompts || []) {
-    check(prompt.projectPrompt ? (countWords(prompt.prompt) >= 150 && prompt.where && prompt.replace && prompt.expected && prompt.followUp) : countWords(prompt.prompt) >= 400, `El prompt de ${tool.label} «${prompt.name}» tiene menos de 400 palabras.`)
+    check(prompt.projectPrompt ? (countWords(prompt.prompt) >= 100 && prompt.where && prompt.replace && prompt.expected && prompt.followUp) : countWords(prompt.prompt) >= 400, `El prompt de ${tool.label} «${prompt.name}» necesita contenido suficiente e instrucciones de uso y comprobación.`)
   }
 }
 

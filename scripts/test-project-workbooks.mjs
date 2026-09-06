@@ -30,7 +30,7 @@ for(const locale of ['es','en']){
  }
  assert.equal(course.curso.length,38)
  for(const lesson of course.curso){
-  assert.equal(lesson.instructionalLocale,'es',lesson.id)
+  assert.equal(lesson.instructionalLocale,locale,lesson.id)
   assert.ok(lesson.projectWorkbook?.steps.length>=5||lesson.theory.length>=5,lesson.id)
   assert.ok(lesson.tasks.every(t=>t.action&&t.expect&&t.where),lesson.id)
  }
@@ -53,4 +53,4 @@ for name in ['codex','python']:
   result=json.loads(subprocess.check_output(['python','summarize.py','requests.csv'],cwd=target))
   assert result['accepted']==3 and len(result['errors'])==1,result
 `],{stdio:'inherit'})
-console.log('PASS: 560 workbooks, 38 Programme units, 56 valid ZIPs, API persistence/conflict/concurrency/restart, CSV duplicate rejection; 25 n8n logic labs with positive, missing-input and failing-assertion checks. External integrations not executed.')
+console.log('PASS: 560 workbooks, 38 Programme units, bilingual ZIP packages, API persistence/conflict/concurrency/restart, CSV duplicate rejection; 25 n8n logic labs with positive, missing-input and failing-assertion checks. External integrations not executed.')

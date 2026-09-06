@@ -1,3 +1,4 @@
+import {englishAutomationManual} from './automation-projects.en.mjs'
 /** Original implementations and fixtures. Logic labs run without external accounts. */
 export const scenarios = [
  {id:'classify',name:'Clasificar solicitudes y conservar la decisión',sample:{id:'SOL-001',text:'No puedo entrar en mi cuenta',email:'ana@example.com'},expected:{category:'acceso',review:false},body:`const text = x.text.toLocaleLowerCase();\nconst category = /entrar|acceso|contraseña/.test(text) ? 'acceso' : /cobro|factura/.test(text) ? 'facturacion' : 'otros';\nreturn {id:x.id, category, review:category==='otros', original:x.text};`,required:['id','text','email'],purpose:'Una solicitud entra por formulario y queda clasificada con su texto original. La primera versión utiliza reglas visibles; una ampliación con IA debe respetar las mismas categorías y pasar las mismas pruebas.',operation:['Webhook · recibir POST','Code · clasificar','Postgres · registrar solicitud'],detail:'En el Webhook recibe id, text y email. El nodo Code utiliza las reglas del laboratorio. Después guarda el resultado y el original en Postgres. Si review es true, conserva el caso en una vista de revisión; no lo asignes automáticamente a un equipo por defecto.',failure:'Una petición de acceso termina en otros',fix:'Inspecciona el texto original y la regla. Añade vocabulario solo después de incluir un ejemplo nuevo en las pruebas; no modifiques la categoría a mano en la salida.',variation:'Cambia text por «Necesito ayuda con algo»; category debe ser otros y review true.'},
@@ -42,7 +43,8 @@ export const eventSchema = `-- Ejecuta en una base de pruebas nueva o un esquema
 export const persistQuery = `SELECT state, state = 'created' AS inserted
 FROM academy_projects.persist_result($1,$2,$3::jsonb,$4::jsonb);`
 
-export function automationManual(s) {
+export function automationManual(s,en=false) {
+ if(en)return englishAutomationManual(s,scenarioCode(s),eventSchema,persistQuery)
  const base='/project-assets/automations/'+s.id
  const input=JSON.stringify(s.sample,null,2),expected=JSON.stringify(s.expected,null,2)
  return {
