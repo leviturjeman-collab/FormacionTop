@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import ToolLearningPath from '../components/ToolLearningPath'
 import { useState } from 'react'
 import { ArrowRight, Check, ChevronDown, Clipboard, Search, X } from 'lucide-react'
@@ -706,9 +707,7 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
 
   function copyPrompt() {
     if (!active?.prompt) return
-    navigator.clipboard?.writeText(active.prompt)
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1400)
+    copyText(active.prompt).then(()=>{setCopied(true);window.setTimeout(()=>setCopied(false),1400)},()=>setCopied(false))
   }
 
   return (
@@ -750,10 +749,11 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
                   {locale === 'en' ? (copied ? 'Copied' : 'Copy') : (copied ? 'Copiado' : 'Copiar')}
                 </button>
               </header>
-              <details>
+              <details open>
                 <summary>{locale === 'en' ? 'View the full prompt' : 'Ver el prompt completo'}</summary>
                 <pre><code>{active.prompt}</code></pre>
               </details>
+              {active.where&&<div className="st-tool-prompt-help"><strong>{locale==='en'?'Where to use it':'Dónde utilizarlo'}</strong><p>{active.where}</p><strong>{locale==='en'?'What to replace':'Qué sustituir'}</strong><p>{active.replace}</p><strong>{locale==='en'?'Expected response':'Respuesta esperada'}</strong><p>{active.expected}</p>{active.followUp&&<><strong>{locale==='en'?'Correction prompt':'Prompt de corrección'}</strong><pre><code>{active.followUp}</code></pre></>}</div>}
               <div className="st-tool-prompt-help">
                 <strong>{locale === 'en' ? 'How to use it' : 'Cómo usarlo'}</strong>
                 <span>{locale === 'en'
@@ -769,6 +769,8 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
 }
 
 function AutomationLibrary({ automations, label }: { automations: ToolAutomation[]; label: string }) {
+  const course=useCourse()
+  const courseToolId=course.toolPages.find(t=>t.label===label)?.id
   const [selected, setSelected] = useState<ToolAutomation | null>(null)
   const locale = useLocale()
   return (
@@ -781,7 +783,7 @@ function AutomationLibrary({ automations, label }: { automations: ToolAutomation
         ? 'Every walkthrough has a trigger, a validation step, an observable action, and a recovery path. Real connections need your own credentials and are tested first with fake data.'
         : 'Cada recorrido tiene un disparador, una validación, una acción observable y una ruta de recuperación. Las conexiones reales necesitan tus propias credenciales y primero se prueban con datos ficticios.'}</p>
       <div className="st-automation-grid">
-        {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} onOpen={() => setSelected(automation)} />)}
+        {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} onOpen={() => automation.project ? navigate({name:'automatizaciones',toolId:courseToolId,automationId:automation.name}) : setSelected(automation)} />)}
       </div>
       {selected && (
         <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={locale === 'en' ? `Automation ${selected.name}` : `Automatización ${selected.name}`}>

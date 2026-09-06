@@ -22,6 +22,7 @@ import { STAGES, stageFor, KINDS, TOOLS } from './lib/taxonomy.mjs'
 import { extract } from './lib/extract.mjs'
 import { analyzeSections, isMetaDocument } from './lib/sections.mjs'
 import { completeToolGuide, registerGuides, toolGuideFor } from './lib/toolguides.mjs'
+import { rewriteProgramLesson } from './lib/program-lessons.mjs'
 import { registerRecipes } from './lib/recipes.mjs'
 import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
@@ -52,7 +53,7 @@ const outputFile = LOCALE === 'en' ? 'course.en.json' : 'course.json'
 const IGNORED = new Set([
   'node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '.claude',
   '36_PORTAL_WEB_FORMACION', '99_PENDIENTE_Y_MEJORAS', '23_AUDITORIA_PROFESIONAL',
-  'content', 'scripts', 'src',
+  'content', 'scripts', 'src', '.temp', '.vercel', 'audit', 'audit-output',
 ])
 
 async function exists(target) {
@@ -182,6 +183,7 @@ const deckFiles = await loadContent('decks')
 const promptFiles = await loadContent('prompts')
 const guideFiles = await loadContent('guias')
 const cursoFiles = await loadContent('lecciones')
+for(let i=0;i<cursoFiles.length;i++) cursoFiles[i]=rewriteProgramLesson(cursoFiles[i],LOCALE==='en')
 const kitFiles = await loadContent('kits')
 const agentFiles = await loadContent('agentes')
 const faqFiles = await loadContent('preguntas')

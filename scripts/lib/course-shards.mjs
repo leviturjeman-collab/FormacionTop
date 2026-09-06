@@ -10,7 +10,7 @@ export async function writeCourseShards(course, publicDir, locale) {
     ...course,
     lessons: course.lessons.map(lesson => ({ ...lesson, interactive: [], levels: Object.fromEntries(Object.entries(lesson.levels).map(([level, data]) => [level, { ...data, blocks: [], quiz: [], practice: { ...data.practice, steps: [] } }])) })),
     prompts: course.prompts.map(family => ({ ...family, prompts: family.prompts.map(prompt => ({ ...prompt, prompt: '', fill: [], expect: '', next: '', when: prompt.when?.slice(0, 200) || '' })) })),
-    toolPages: course.toolPages.map(tool => ({ ...tool, guide: tool.guide ? { ...tool.guide, counts: { prompts: tool.guide.prompts?.length || 0, automations: tool.guide.automations?.length || 0 }, prompts: [], automations: [], catalog: undefined } : undefined })),
+    toolPages: course.toolPages.map(tool => ({ ...tool, guide: tool.guide ? { ...tool.guide, counts: { prompts: tool.guide.prompts?.length || 0, automations: tool.guide.automations?.length || 0 }, prompts: [], automations: [], projectLessons: undefined, catalog: undefined } : undefined })),
     kits: course.kits.map(kit => ({ ...kit, phases: [], prompts: [], workflows: [] })),
   }
   await write('index', index)

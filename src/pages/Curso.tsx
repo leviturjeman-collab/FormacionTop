@@ -1,3 +1,4 @@
+import ProjectManualView from '../components/ProjectManualView'
 import SaveResourceButton from '../components/SaveResourceButton'
 import { copyText } from '../clipboard'
 import { useState } from 'react'
@@ -78,7 +79,7 @@ export function CursoIndice() {
     const progress = student.lessons['curso:' + item.id]
     const marked = progress?.checks?.intermedio || []
     if (progress?.done?.includes('intermedio')) return true
-    return item.tasks.length > 0 && marked.length >= item.tasks.length
+    return item.tasks.length > 0 && marked.filter(index => index >= 0 && index < item.tasks.length).length >= item.tasks.length
   }
   const hechas = sueltas.filter(isDone).length
   const siguienteBase = sueltas.find((item) => !isDone(item)) || sueltas[0]
@@ -312,7 +313,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
   const course = useCourse()
   const locale = useLocale()
   const progress = useLessonProgress(`curso:${lessonId}`)
-  const hechas = progress.checks.intermedio || []
+  const checks = progress.checks.intermedio || []
 
   const lecciones = [...(course.curso || [])].sort((a, b) => a.number - b.number)
   const leccion = lecciones.find((item) => item.id === lessonId) as CursoLesson | undefined
@@ -335,6 +336,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
   const anterior = posicion > 0 ? rutaActual[posicion - 1] : null
   const siguiente = posicion >= 0 && posicion < rutaActual.length - 1 ? rutaActual[posicion + 1] : null
   const stage = course.stages.find((item) => item.id === leccion.stageId)
+  const hechas = checks.filter(index => Number.isInteger(index) && index >= 0 && index < leccion.tasks.length)
   const percent = Math.round((hechas.length / Math.max(1, leccion.tasks.length)) * 100)
   const toolMeta = leccion.tool ? course.toolPages.find((tool) => tool.id === leccion.tool) : null
   const leccionCompleta = progress.done.includes('intermedio')
@@ -382,13 +384,15 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       <section className="st-lesson-section-intro">
         <span className="st-kicker">{locale === 'en' ? 'First understand this' : 'Primero entiende esto'}</span>
-        <h2>{locale === 'en' ? 'The explanation is in collapsible blocks' : 'La explicación está en bloques plegables'}</h2>
-        <p>{locale === 'en' ? 'Open only what you need. The first block comes open so you know where to start.' : 'Abre solo lo que necesites. El primer bloque viene abierto para que sepas por dónde empezar.'}</p>
+        <h2>{locale === 'en' ? 'Foundations, worked example and application' : 'Fundamentos, caso resuelto y aplicación'}</h2>
+        <p>{locale === 'en' ? 'Open only what you need. The first block comes open so you know where to start.' : 'Lee los conceptos en orden y contrasta el caso resuelto con los datos antes de realizar la práctica.'}</p>
       </section>
 
+      {locale === 'en' && leccion.instructionalLocale === 'es' && <p lang="en" className="st-panel">This expanded workbook is currently available in Spanish.</p>}
+      {leccion.projectWorkbook && <ProjectManualView manual={leccion.projectWorkbook}/>}
       <div className="st-blocks">
         {leccion.theory.map((part, index) => (
-          <details key={index} className="st-block st-block-seccion" open={index === 0}>
+          <details key={index} className="st-block st-block-seccion" open>
             <summary>
               <span><Lightbulb size={15} /><strong>{part.title}</strong></span>
               <span className="st-block-summary-meta"><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
@@ -411,7 +415,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
       {leccion.words?.length > 0 && (
         <details className="st-block st-block-palabras">
           <summary>
-            <span><Languages size={15} /><strong>{locale === 'en' ? 'The words you’re about to read, in plain terms' : 'Las palabras que vas a leer, en cristiano'}</strong></span>
+            <span><Languages size={15} /><strong>{locale === 'en' ? 'The words you’re about to read, in plain terms' : 'Vocabulario de la unidad'}</strong></span>
             <span className="st-block-summary-meta"><b>{leccion.words.length}</b><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
           </summary>
           <div className="st-block-body">
@@ -458,12 +462,12 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                   </div>
                 </div>
 
-                <details className="st-task-detail" open={index === 0 || hecha}>
+                <details className="st-task-detail" open>
                   <summary>{locale === 'en' ? 'Open steps' : 'Abrir pasos'}</summary>
                   <div>
                     <div className="st-step-guide">
                       <section>
-                        <b>{locale === 'en' ? 'Real example' : 'Ejemplo real'}</b>
+                        <b>{locale === 'en' ? 'Step objective' : 'Objetivo del paso'}</b>
                         <p>{task.title}</p>
                       </section>
                       <section>

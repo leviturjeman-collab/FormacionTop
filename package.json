@@ -4,15 +4,15 @@
   "version": "4.0.0",
   "type": "module",
   "scripts": {
-    "index": "node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs && cross-env LOCALE=en node scripts/build-content-index.mjs",
-    "index:es": "node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs",
+    "index": "node scripts/build-project-assets.mjs && node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs && cross-env LOCALE=en node scripts/build-content-index.mjs",
+    "index:es": "node scripts/build-project-assets.mjs && node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs",
     "index:en": "cross-env LOCALE=en node scripts/build-content-index.mjs",
     "dev": "npm run index && vite",
     "build": "npm run index && npm run typecheck && vite build",
     "preview": "vite preview",
     "validate": "npm run index && node scripts/validate-content.mjs && cross-env LOCALE=en node scripts/validate-content.mjs && node scripts/validate-student-ui.mjs && node scripts/validate-tool-identity.mjs",
     "test:automations": "node scripts/validate-workflows.mjs && node scripts/validate-tool-automation-guides.mjs",
-    "test": "npm run validate && npm run test:automations && npm run test:security && npm run test:quality && npm run test:content && npm run typecheck && vite build",
+    "test": "npm run validate && npm run test:automations && npm run test:security && npm run test:quality && npm run test:content && npm run test:workbooks && npm run typecheck && vite build",
     "typecheck": "tsc -b && tsc -p tsconfig.server.json",
     "test:security": "node scripts/test-store.mjs && node scripts/test-session-client.mjs && node scripts/test-session-server.mjs",
     "test:quality": "node scripts/test-clipboard.mjs",
@@ -22,7 +22,8 @@
     "test:content": "node scripts/test-content-shards.mjs",
     "test:learning": "npm run test:curriculum && node scripts/test-learning-paths.mjs",
     "test:learning:live": "node scripts/test-learning-live.mjs",
-    "test:curriculum": "node scripts/test-institutional-content.mjs"
+    "test:curriculum": "node scripts/test-institutional-content.mjs",
+    "test:workbooks": "node scripts/test-project-workbooks.mjs"
   },
   "dependencies": {
     "@fontsource/fraunces": "^5.2.5",

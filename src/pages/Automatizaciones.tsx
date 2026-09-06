@@ -1,3 +1,4 @@
+import ProjectManualView from '../components/ProjectManualView'
 import { useState } from 'react'
 import { useCourse } from '../course'
 import { useLocale } from '../i18n'
@@ -15,9 +16,11 @@ export default function Automatizaciones({ toolId, automationId }: { toolId?: st
   if (active) {
     const a = active.automation
     return <article className="st-page st-path-detail"><a className="st-btn-ghost" href={href({name:'automatizaciones'})}>{en ? 'Back to automations' : 'Volver a automatizaciones'}</a><header className="st-lesson-head"><span className="st-kicker">{active.tool.label}</span><h1>{a.name}</h1><p>{a.goal}</p></header>
+      {a.project ? <ProjectManualView manual={a.project}/> : <>
       <section className="st-panel"><h2>{en ? 'Before you start' : 'Antes de empezar'}</h2><p>{en ? 'This is a learning recipe. First configure a test destination; the academy does not execute it on your behalf.' : 'Esta es una receta de aprendizaje. Prepara primero un destino de prueba; la academia no ejecuta el flujo por ti.'}</p><h3>{en ? 'What starts it' : 'Qué lo pone en marcha'}</h3><p>{a.trigger}</p><h3>{en ? 'Required connections' : 'Conexiones necesarias'}</h3><p>{a.credentials}</p></section>
       <section className="st-panel"><h2>{en ? 'Build the flow step by step' : 'Construye el flujo paso a paso'}</h2><ol className="st-path-steps">{a.steps.map((step,i)=><li key={i}>{step}</li>)}</ol>{a.code && <pre className="st-institutional-code"><code>{a.code}</code></pre>}</section>
       <section className="st-panel st-path-check"><h2>{en ? 'Test and verify' : 'Prueba y comprueba'}</h2><p>{a.test}</p></section><section className="st-panel"><h2>{en ? 'If it fails' : 'Si falla'}</h2><p>{a.failure}</p></section><a className="st-btn" href={href({name:'herramienta',toolId:active.tool.id,filters:{}})}>{en ? `Learn ${active.tool.label}` : `Aprender ${active.tool.label}`}</a>
+      </>}
     </article>
   }
   const filtered=entries.filter(e=>(platform==='all'||e.tool.id===platform) && `${e.tool.label} ${e.automation.name} ${e.automation.goal}`.toLowerCase().includes(query.toLowerCase()))

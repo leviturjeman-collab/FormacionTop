@@ -87,16 +87,22 @@ try {
   assert.equal(await page.locator('.st-automation-catalog > a').count(),25)
   await page.locator('.st-automation-catalog > a').first().click();await page.locator('.st-path-detail h1').waitFor()
   await page.reload();await page.locator('.st-path-detail h1').waitFor()
-  await visit('#/herramienta/codex/lecciones-herramienta/05');await page.locator('#unit-worked pre').waitFor()
-  assert.match(await page.locator('#unit-worked pre').innerText(),/Number.isInteger/)
+  await visit('#/herramienta/codex/lecciones-herramienta/05');await page.locator('#project-prompts pre').first().waitFor()
+  assert.match(await page.locator('#project-prompts').innerText(),/server.mjs/)
   for(const width of [320,390,1440]) {
     await page.setViewportSize({width,height:900})
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Worked code no overflow')
     await page.screenshot({path:`.temp/institutional-codex-${width}.png`,fullPage:false})
   }
-  await page.getByRole('button',{name:'Ejemplo resuelto',exact:true}).click()
-  assert.ok(await page.locator('#unit-worked').evaluate(el=>el.getBoundingClientRect().top<200),'Contents scrolls to example')
+  await page.getByRole('button',{name:'Pruebas',exact:true}).click()
+  assert.ok(await page.locator('#project-tests').evaluate(el=>el.getBoundingClientRect().top<200),'Contents scrolls to example')
   await page.screenshot({path:'.temp/institutional-worked.png',fullPage:false})
+  for(const id of ['que-es-la-ia','n8n-01','lovable-01']) {
+    await visit('#/curso/'+id);await page.locator('.st-lesson h1').waitFor()
+    if(id==='que-es-la-ia') { assert.equal(await page.locator('.st-block-seccion[open]').count(),5);await page.locator('.st-task-prompt pre').waitFor() }
+    else await page.locator('.st-project-manual').waitFor()
+    for(const width of [320,1440]) { await page.setViewportSize({width,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Programme no overflow: '+id) }
+  }
   assert.deepEqual(errors,[])
   console.log('PASS: 56 tools × 10 complete learning units × ES/EN; dedicated lesson/term routing, 320/390/1440, persisted bookmarks, completion, manual tool integrity, direct menu, retired classes, curated phases, automations catalog, worked code, no runtime errors.')
 } finally {await browser.close()}

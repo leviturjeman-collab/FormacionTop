@@ -382,6 +382,7 @@ export interface ToolCatalogItem {
 }
 
 export interface ToolAutomation {
+  project?: ProjectManual
   name: string
   goal: string
   difficulty: 'basica' | 'intermedia' | 'avanzada' | 'profesional'
@@ -395,6 +396,7 @@ export interface ToolAutomation {
 }
 
 export interface ToolGuide {
+  projectLessons?: ProjectManual[]
   counts?: { prompts: number; automations: number }
   plain: string
   account: { url: string; free: string; steps: [string, string][]; warning?: string }
@@ -412,13 +414,29 @@ export interface ToolGuide {
   /** Errores frecuentes, con el mensaje literal y su arreglo. */
   errors?: [string, string][]
   /** Prompts específicos de esta herramienta. */
-  prompts?: { name: string; prompt: string; when?: string; model?: string; lesson?: string }[]
+    prompts?: { name: string; prompt: string; when?: string; model?: string; lesson?: string; where?:string; replace?:string; expected?:string; followUp?:string; projectPrompt?:boolean }[]
   /** Mapa de las piezas que el alumno encontrará dentro de la herramienta. */
   catalog?: { intro: string; items: ToolCatalogItem[]; sources?: { title: string; url: string; checkedAt: string }[] }
   /** Automatizaciones relacionadas, alojadas dentro de la ficha de la herramienta. */
   automations?: ToolAutomation[]
   /** Cómo se mide el uso: tokens, créditos, tareas, ejecuciones o tiempo. */
   usage?: { unit: string; explanation: string; examples: string[]; updatedAt?: string }
+}
+
+/** A runnable project chapter or a complete automation implementation guide. */
+export interface ProjectManual {
+  title: string
+  outcome: string
+  context: string[]
+  prerequisites: { name: string; instruction: string; check: string }[]
+  inputs: { field: string; example: string; rule: string }[]
+  steps: { title: string; instruction: string; configuration?: string; expected: string; why: string }[]
+  prompts: { title: string; where: string; text: string; replace: string; expected: string; followUp: string }[]
+  files: { name: string; purpose: string; content?: string; url?: string }[]
+  tests: { name: string; input: string; expected: string; inspect: string }[]
+  troubleshooting: { symptom: string; cause: string; fix: string }[]
+  production: string[]
+  sources: { title: string; url: string }[]
 }
 
 export interface ToolPage {
@@ -557,6 +575,8 @@ export interface Guide {
 
 /** Lección del curso curado: escrita a mano, no generada. */
 export interface CursoLesson {
+  projectWorkbook?: ProjectManual
+  instructionalLocale?: string
   id: string
   number: number
   stageId: string

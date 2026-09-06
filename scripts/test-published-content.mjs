@@ -5,7 +5,7 @@ import fs from 'node:fs/promises'
 const domains = (process.env.ACADEMY_TEST_DOMAINS || 'www.aibylevi.com,aibylevi.com,formaciontop.vercel.app').split(',')
 const results = await Promise.all(domains.map(async domain => {
   const base = `https://${domain.trim()}`
-  const checks = await Promise.all(['/', '/course.json', '/course.en.json', '/course-data/es/index.json', '/course-data/en/tools/codex.json', '/generated/workflows/access-check.json'].map(async path => {
+  const checks = await Promise.all(['/', '/course.json', '/course.en.json', '/course-data/es/index.json', '/course-data/en/tools/codex.json', '/generated/workflows/access-check.json', '/project-assets/tools/codex.zip', '/project-assets/automations/classify.n8n.json'].map(async path => {
     const response = await fetch(base + path, { signal: AbortSignal.timeout(20000), cache: 'no-store' })
     assert.equal(response.status, path === '/' ? 200 : 401, base + path)
     const content = await response.text()

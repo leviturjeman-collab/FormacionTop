@@ -1,6 +1,8 @@
 import { AUTOMATION_PLATFORMS, REAL_AUTOMATIONS } from './automations-reales.mjs'
 import { addVerifiedModels } from './verified-models.mjs'
 import { addToolUsage } from './tool-usage.mjs'
+import { projectLessons } from './tool-projects.mjs'
+import { scenarios, automationManual, scenarioCode } from './automation-projects.mjs'
 
 const MAX_TOOL_AUTOMATIONS = 25
 
@@ -841,7 +843,7 @@ function automationFor(tool, profile, blueprint, index) {
       'Registrar éxito, error, consumo, duración y responsable en una tabla de auditoría.',
       'Activar una ruta de error con reintento limitado y aviso humano; nunca repetir indefinidamente.',
     ],
-    code: tool.id === 'n8n' ? `// Nodo Code de n8n: evita duplicados y deja una salida auditable\nconst item = $json;\nconst id = item.id || item.email || item.externalId;\nif (!id) throw new Error('Falta un identificador único');\nreturn [{ json: { ...item, workflowKey: String(id), receivedAt: new Date().toISOString(), needsReview: Boolean(item.needsReview) } }];` : undefined,
+    code: tool.id === 'n8n' ? `// Nodo Code de n8n: prepara una clave; requiere almacenamiento persistente para impedir duplicados\nconst item = $json;\nconst id = item.id || item.email || item.externalId;\nif (!id) throw new Error('Falta un identificador único');\nreturn [{ json: { ...item, workflowKey: String(id), receivedAt: new Date().toISOString(), needsReview: Boolean(item.needsReview) } }];` : undefined,
     test: `Ejecuta ${name.toLowerCase()} con un caso normal, uno incompleto, uno repetido y uno extremo. Comprueba que ${tool.label} recibe solo los campos necesarios, que un duplicado no crea una segunda salida y que el error aparece en el historial.`,
     failure: `Si ${tool.label} cambia el formato, se queda sin crédito o responde con error, conserva la entrada, no repitas la acción irreversible y avisa con el identificador del caso. Revisa primero credenciales, límites, datos y respuesta del servicio.`,
     credentials: `Cuenta de pruebas de ${tool.label}, credencial con permisos mínimos, cuenta de n8n y una tabla o registro de auditoría. Nunca guardes la clave dentro del código ni en un repositorio público.`,
@@ -868,6 +870,11 @@ export function completeToolGuide(existing, tool) {
     guide.automations = REAL_AUTOMATIONS[tool.id].slice(0, MAX_TOOL_AUTOMATIONS)
   } else {
     guide.automations = []
+  }
+  guide.projectLessons = projectLessons(tool, process.env.LOCALE === 'en')
+  guide.prompts = NO_PROMPT_TOOLS.has(tool.id) ? [] : guide.projectLessons.flatMap((lesson,index)=>lesson.prompts.map(prompt=>({name:`${String(index+1).padStart(2,'0')} · ${prompt.title}`,prompt:prompt.text,when:lesson.title,where:prompt.where,replace:prompt.replace,expected:prompt.expected,followUp:prompt.followUp,projectPrompt:true})))
+  if(tool.id==='n8n') {
+    guide.automations=scenarios.map(s=>({name:s.name,goal:s.purpose,difficulty:'intermedia',platform:'n8n · laboratorio y guía de implementación',trigger:s.operation[0],steps:automationManual(s).steps.map(step=>step.title+': '+step.instruction),code:scenarioCode(s),test:s.variation,failure:s.fix,credentials:'Instancia n8n para el laboratorio. Para conectar servicios: credenciales de ensayo del origen y destino descritos en la guía.',project:automationManual(s)}))
   }
   return addToolUsage(addVerifiedModels(guide, tool.id), tool.id)
 }
