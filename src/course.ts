@@ -47,10 +47,15 @@ function assertCourse(value: unknown): asserts value is CourseData {
 export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
   const route = useRoute()
   const needs = ['index']
+  if (['indice', 'buscar'].includes(route.name)) needs.push('glossaryIndex')
+  if (['proyecto','mi-proyecto'].includes(route.name)) needs.push('projects')
   if (['prompts', 'buscar', 'mi-proyecto'].includes(route.name)) needs.push('prompts')
-  if (['buscar', 'kits', 'automatizaciones'].includes(route.name)) needs.push('tools')
+  if (route.name === 'automatizaciones') needs.push(route.automationId && route.toolId ? 'automations/' + encodeURIComponent(route.toolId) : 'automations')
+  if (route.name === 'kits' && route.kitId) needs.push('kits/' + encodeURIComponent(route.kitId), 'automations')
+  if (route.name === 'curso' && route.lessonId) needs.push('curso/' + encodeURIComponent(route.lessonId))
+  if (route.name === 'agentes' && route.agentId) needs.push('agents/' + encodeURIComponent(route.agentId))
   if (route.name === 'herramienta') needs.push('tools/' + encodeURIComponent(route.toolId))
-  if (['kits', 'buscar'].includes(route.name)) needs.push('kits')
+
   if (route.name === 'leccion') needs.push('lessons/' + encodeURIComponent(route.slug))
   const key = locale + ':' + needs.join(',')
   const cache = useRef(new Map<string, Promise<Shard>>())
@@ -75,11 +80,31 @@ export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
       const manifest = await read('index')
       assertCourse(manifest.data)
       const course: CourseData = { ...manifest.data }
-      for (const name of needs.slice(1)) {
+      const requested = needs.slice(1).filter(name => {
+        const [folder, id] = name.split('/')
+        if (!id) return true
+        if (['curso','kits','agents'].includes(folder)) return course[folder as 'curso' | 'kits' | 'agents'].some(item => encodeURIComponent(item.id) === id)
+        return true
+      })
+      const shards = await Promise.all(requested.map(read))
+      for (const [position, name] of requested.entries()) {
         if (name.startsWith('lessons/') && !course.lessons.some(l => 'lessons/' + encodeURIComponent(l.slug) === name)) continue
         if (name.startsWith('tools/') && !course.toolPages.some(tool => 'tools/' + encodeURIComponent(tool.id) === name)) continue
-        const shard = await read(name)
+        const shard = shards[position]
         if (shard.generatedAt !== manifest.generatedAt) { cache.current.clear(); throw new Error(locale === 'en' ? 'The content was updated. Reload to get one consistent version.' : 'El contenido se ha actualizado. Recarga para usar la misma versión.') }
+        if (name === 'automations' || name.startsWith('automations/')) {
+          const parts = (Array.isArray(shard.data) ? shard.data : [shard.data]) as CourseData['toolPages']
+          course.toolPages = course.toolPages.map(tool => {
+            const part = parts.find(item => item.id === tool.id)
+            return part && tool.guide ? { ...tool, guide: { ...tool.guide, automations: part.guide?.automations || [] } } : tool
+          })
+        }
+        for (const folder of ['curso','kits','agents'] as const) if (name.startsWith(folder + '/')) {
+          const item = shard.data as { id: string }
+          if (folder + '/' + encodeURIComponent(item.id) !== name) throw new Error('Invalid content ID')
+          Object.assign(course, { [folder]: course[folder].map(current => current.id === item.id ? shard.data : current) })
+        }
+        if (name === 'projects' || name === 'glossaryIndex') { if (!Array.isArray(shard.data)) throw new Error('Invalid page data'); Object.assign(course, { [name]: shard.data }) }
         if (name === 'prompts') { if (!Array.isArray(shard.data)) throw new Error('Invalid prompt data'); course.prompts = shard.data as CourseData['prompts'] }
         if (name.startsWith('tools/')) {
           const tool = shard.data as CourseData['toolPages'][number]

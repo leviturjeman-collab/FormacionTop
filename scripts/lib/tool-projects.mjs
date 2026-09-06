@@ -1,4 +1,5 @@
-import {englishProjectLessons} from './tool-projects.en.mjs'
+import {plainToolLesson} from './plain-tool-lessons.mjs'
+import {englishProjectLessons,englishProfiles} from './tool-projects.en.mjs'
 import {basicFiles,starterFiles,requests} from './project-starters.mjs'
 
 // Each product has an explicit working surface, implementation and handoff.
@@ -96,7 +97,7 @@ const phases=[
 const nativePromptKinds=new Set(['text','web','code','research'])
 function where(s){if(['image','video','audio','slides'].includes(s.kind))return 'En un asistente de texto para preparar el brief, el prompt visual o el guion. En la herramienta creativa introduce únicamente el prompt de generación o guion que resulte; no pegues allí todo este encargo de tutoría. Revisa el resultado generado y compáralo con el brief.';if(s.kind==='dictation')return 'En un asistente de texto externo, solo para preparar o revisar el guion. En Wispr Flow se dicta el guion; no se pega este encargo como si fuera un chatbot.';return nativePromptKinds.has(s.kind)?`En el asistente de ${s.id} cuando la función esté disponible; para un editor sin chat, utiliza un asistente de texto y aplica el resultado en la herramienta.`:'En un asistente de texto o programación. La configuración, fórmula o código resultante se aplica después en la herramienta; no pegues el encargo en una consola SQL, un campo de datos o un terminal.'}
 
-export function projectLessons(tool,en=false) {
+function authoredProjectLessons(tool,en=false) {
  const s=specs[tool.id];if(!s)throw new Error('Missing project curriculum: '+tool.id)
  const files=starterFiles(s.kind),input=JSON.stringify(requests,null,2)
  if(en)return englishProjectLessons(tool,s,files)
@@ -112,3 +113,5 @@ export function projectReadme(s) {
  const command=['code','node'].includes(s.kind)?'npm test\nnpm start':s.kind==='docker'?'docker compose up --build':['python','colab'].includes(s.kind)?'python summarize.py requests.csv':['web','react','tailwind','vscode','vercel'].includes(s.kind)?'Abre index.html en un navegador. Lee la limitación de almacenamiento local antes de adaptar el proyecto.':'Abre requests.csv, reference.md y el brief. Crea el resultado en la herramienta siguiendo su guía.'
  return `# ${s.title}\n\nCaso de estudio ficticio de Aula Norte.\n\n## Objetivo\n${s.goal}\n\n## Preparación\n${s.open}\n\n## Empezar\n${command}\n\n## Construcción\n${s.build}\n\n## Resultado de referencia\n${s.expected}\n\n## Mejora guiada\n${s.improve}\n\n## Entrega y límites\n${s.deliver}\n\n## Documentación\n${s.source}\n`
 }
+
+export function projectLessons(tool,en=false) { const spec={...specs[tool.id],...(en?englishProfiles[tool.id]:{})}; return authoredProjectLessons(tool,en).map((manual,index)=>plainToolLesson(manual,tool,spec,index,en)) }

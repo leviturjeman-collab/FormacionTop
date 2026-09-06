@@ -1,0 +1,658 @@
+{
+  "id": "archivo-fotografico",
+  "order": 33,
+  "title": "Organizar fotografías y permisos de uso",
+  "kicker": "Organización del centro",
+  "promise": "Un equipo quiere localizar fotos y comprobar si puede usarlas antes de preparar una publicación.",
+  "audience": "Personas del centro que realizan esta tarea y quieren aprender desde cero.",
+  "plain": "Un equipo quiere localizar fotos y comprobar si puede usarlas antes de preparar una publicación. La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+  "fits": [
+    "Un equipo quiere localizar fotos y comprobar si puede usarlas antes de preparar una publicación.",
+    "Tienes varias peticiones parecidas y quieres llevar una lista que cualquiera pueda entender."
+  ],
+  "notFor": [
+    "Tomar decisiones importantes sin la revisión de la persona responsable."
+  ],
+  "scopes": [
+    {
+      "id": "practice",
+      "label": "Primero una práctica",
+      "what": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+      "time": "Una sesión de 60–90 minutos, con pausas.",
+      "cost": "Usa primero las herramientas que ya tengas.",
+      "skip": "Deja los envíos y conexiones reales para después."
+    }
+  ],
+  "brief": {
+    "id": "brief",
+    "name": "Texto para pedir ayuda",
+    "when": "Pégalo en ChatGPT, Claude o el chat de texto que uses. No lo pegues en la caja Code de n8n.",
+    "prompt": "Quiero aprender a hacer este proyecto: Organizar fotografías y permisos de uso. Empiezo desde cero. Háblame con palabras corrientes y explícame cada acción antes de pedirme que la haga.\n\nESTO ES LO QUE TENGO\n{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}\n\nQUÉ SIGNIFICA\nfile es el nombre del archivo; usageChecked indica que la persona responsable ya comprobó el uso previsto. No basta con que una foto esté en una carpeta compartida.\n\nLO QUE DEBERÍA CONSEGUIR\nLa foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.\n\nMI SITUACIÓN\nTrabajo en [MI CENTRO]. Voy a usar [HERRAMIENTA]. La persona que revisará el trabajo es [RESPONSABLE]. De momento vamos a practicar con el ejemplo inventado; después sustituiremos los datos por los de mi proyecto. Si falta información, pregúntame por ella y espera. No rellenes fechas, precios, permisos ni respuestas por tu cuenta.\n\nAYÚDAME EN ESTE ORDEN\n1. Explícame qué problema resuelve el ejemplo usando una situación de la vida diaria. Dime qué tendría delante antes de empezar y qué vería al terminar. Si necesitas una palabra técnica, explica su significado en la misma frase.\n2. Haz tú el ejemplo con los datos que te he dado. Muestra el resultado completo, no una lista de consejos. Señala qué dato te permite tomar cada decisión. Si algo necesita revisión de una persona, escribe qué pregunta debe resolver esa persona.\n3. Ahora guíame para repetirlo yo. Divide el trabajo en pasos numerados. En cada paso dime qué aplicación abrir, qué documento o pantalla buscar, qué texto copiar y qué debería aparecer después. No escribas solamente «configura el sistema». Si no conoces los botones de mi versión, pídeme sus nombres antes de inventar una ubicación.\n4. Prepara una tabla pequeña con: número del ejemplo, qué hemos recibido, qué haremos, quién lo revisa y cómo está ahora. Deja vacío el nombre del responsable si no lo he indicado. No marques ninguna acción como hecha hasta que yo confirme que la he realizado.\n5. Propón un segundo ejemplo cambiando solo un dato. Explica el resultado que debería cambiar y el que debería seguir igual. Después proponme un ejemplo al que le falte un dato necesario y muéstrame cómo pedirlo.\n6. Si una automatización ahorra copiar datos, explica primero el recorrido a mano y después el recorrido automático. Identifica qué parte está hecha en la práctica y qué conexión real falta. No confundas mostrar un resultado en n8n con guardarlo en una hoja o enviar un mensaje.\n7. Ayúdame a adaptar el ejemplo a mi centro. Pídeme un caso pequeño, explica qué regla cambia y conserva la primera versión para volver atrás.\n\nAL TERMINAR\nDéjame un documento sencillo con el ejemplo original, la respuesta resuelta, los pasos que repetí, los errores que encontré y el siguiente paso. Incluye una comprobación que pueda hacer otra persona sin leer esta conversación. No me des por terminado un proyecto solo porque el texto tiene buen aspecto.",
+    "fill": [
+      {
+        "slot": "[MI CENTRO]",
+        "what": "Nombre del lugar donde lo vas a usar.",
+        "example": "Centro Norte"
+      },
+      {
+        "slot": "[HERRAMIENTA]",
+        "what": "Aplicación que tienes abierta.",
+        "example": "n8n"
+      },
+      {
+        "slot": "[RESPONSABLE]",
+        "what": "Persona que revisará las decisiones.",
+        "example": "La coordinadora"
+      }
+    ],
+    "expect": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+    "stuck": "No entiendo el paso [NÚMERO]. Explícalo con palabras más sencillas. Dime qué debo abrir, qué tengo que escribir y qué debería ver después. Resuelve ese paso con el ejemplo antes de pedirme que continúe."
+  },
+  "architecture": [
+    {
+      "layer": "Organizar fotografías y permisos de uso",
+      "what": "Un equipo quiere localizar fotos y comprobar si puede usarlas antes de preparar una publicación.",
+      "nocode": "Una tabla con un ejemplo por fila.",
+      "code": "El archivo de práctica incluido calcula la respuesta con los datos del ejemplo.",
+      "why": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación."
+    },
+    {
+      "layer": "Revisión y guardado",
+      "what": "Una persona comprueba la respuesta antes de actuar.",
+      "nocode": "Escribe su nombre y lo que ha decidido en el cuaderno.",
+      "code": "Añade el guardado en la hoja siguiendo el apartado de uso real.",
+      "why": "La prueba dentro de n8n no confirma una acción del centro."
+    }
+  ],
+  "stack": [
+    {
+      "need": "Aprender la regla",
+      "nocode": "Documento y chat de texto",
+      "code": "n8n",
+      "pick": "Empieza a mano; así sabrás qué debe hacer la automatización."
+    }
+  ],
+  "data": [
+    {
+      "entity": "Organizar fotografías y permisos de uso",
+      "fields": [
+        [
+          "id",
+          "FOT-01"
+        ],
+        [
+          "file",
+          "activity-01.jpg"
+        ],
+        [
+          "usageChecked",
+          "false"
+        ],
+        [
+          "description",
+          "People at workshop"
+        ]
+      ],
+      "note": "file es el nombre del archivo; usageChecked indica que la persona responsable ya comprobó el uso previsto. No basta con que una foto esté en una carpeta compartida."
+    }
+  ],
+  "phases": [
+    {
+      "id": "step-1",
+      "title": "Mira primero el ejemplo",
+      "goal": "Entender un ejemplo pequeño te permite reconocer un resultado equivocado más adelante.",
+      "minutes": 15,
+      "deliverable": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+      "done": [
+        "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación."
+      ],
+      "steps": [
+        {
+          "title": "Mira primero el ejemplo",
+          "minutes": 15,
+          "where": "Tu documento y el chat de ayuda",
+          "action": "Lee el ejemplo de abajo despacio. file es el nombre del archivo; usageChecked indica que la persona responsable ya comprobó el uso previsto. No basta con que una foto esté en una carpeta compartida. Después lee la respuesta resuelta: La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. Señala con el dedo o copia la parte del ejemplo que explica esa respuesta. Por ahora no abras n8n ni conectes cuentas. Primero necesitas entender la decisión que después repetirá la herramienta.",
+          "expect": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+          "stuck": "Vuelve al ejemplo original y compara cada dato. En n8n abre las cajas por orden y encuentra la primera cuya salida es diferente.",
+          "code": {
+            "file": "example.json",
+            "lang": "text",
+            "code": "{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}",
+            "note": "file es el nombre del archivo; usageChecked indica que la persona responsable ya comprobó el uso previsto. No basta con que una foto esté en una carpeta compartida."
+          }
+        }
+      ]
+    },
+    {
+      "id": "step-2",
+      "title": "Prepara dónde guardar tu trabajo",
+      "goal": "Este documento es tu cuaderno de trabajo. No necesitas crear un archivo de programación.",
+      "minutes": 15,
+      "deliverable": "El documento tiene nombre y contiene el ejemplo y la respuesta por separado. Ciérralo y vuelve a abrirlo para comprobar que sabes encontrarlo.",
+      "done": [
+        "El documento tiene nombre y contiene el ejemplo y la respuesta por separado. Ciérralo y vuelve a abrirlo para comprobar que sabes encontrarlo."
+      ],
+      "steps": [
+        {
+          "title": "Prepara dónde guardar tu trabajo",
+          "minutes": 15,
+          "where": "Tu documento y el chat de ayuda",
+          "action": "Abre un documento vacío en Word, Google Docs o la aplicación de notas que ya uses. Ponle el título «Práctica: Organizar fotografías y permisos de uso». Escribe estos cuatro apartados, cada uno en una línea: Ejemplo, Qué debería pasar, Qué pasó al hacerlo, Qué quiero cambiar. Copia los datos en Ejemplo y la respuesta de arriba en Qué debería pasar. Deja vacío Qué pasó al hacerlo: todavía no hemos realizado la prueba.",
+          "expect": "El documento tiene nombre y contiene el ejemplo y la respuesta por separado. Ciérralo y vuelve a abrirlo para comprobar que sabes encontrarlo.",
+          "stuck": "Vuelve al ejemplo original y compara cada dato. En n8n abre las cajas por orden y encuentra la primera cuya salida es diferente."
+        }
+      ]
+    },
+    {
+      "id": "step-3",
+      "title": "Haz el ejemplo a mano",
+      "goal": "El chat ayuda a escribir y explicar. Tú compruebas que usa los datos correctos.",
+      "minutes": 15,
+      "deliverable": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+      "done": [
+        "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación."
+      ],
+      "steps": [
+        {
+          "title": "Haz el ejemplo a mano",
+          "minutes": 15,
+          "where": "Tu documento y el chat de ayuda",
+          "action": "Copia el mensaje del apartado «Texto para pedir ayuda». Cambia solo los tres huecos entre corchetes y pégalo en el chat de IA que utilices. Lee la respuesta con el ejemplo al lado. Comprueba especialmente esto: La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. Si el chat cambia un dato, vuelve a copiar el dato correcto y pídele que rehaga esa parte. Escribe en tu documento la respuesta que has revisado y una frase contando por qué es correcta.",
+          "expect": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+          "stuck": "Vuelve al ejemplo original y compara cada dato. En n8n abre las cajas por orden y encuentra la primera cuya salida es diferente.",
+          "promptId": "brief"
+        }
+      ]
+    },
+    {
+      "id": "step-4",
+      "title": "Prueba la automatización si te ayuda",
+      "goal": "Mirar el dato que sale de cada paso ayuda a encontrar dónde se ha producido un error.",
+      "minutes": 15,
+      "deliverable": "La última caja muestra result y savedExternally: false. Eso confirma que el ejercicio calcula una respuesta dentro de n8n; aún no la ha guardado fuera.",
+      "done": [
+        "La última caja muestra result y savedExternally: false. Eso confirma que el ejercicio calcula una respuesta dentro de n8n; aún no la ha guardado fuera."
+      ],
+      "steps": [
+        {
+          "title": "Prueba la automatización si te ayuda",
+          "minutes": 15,
+          "where": "n8n",
+          "action": "Descarga o copia el archivo JSON de esta práctica. JSON es un formato de texto que n8n sabe leer. En n8n crea un flujo vacío y usa el menú de importar desde archivo. Verás seis cajas unidas por flechas. Una caja es un paso. Pulsa Execute workflow, que significa ejecutar los pasos. Abre la última caja y mira su salida en JSON: contiene los datos originales y result. review significa «una persona tiene que revisarlo»; ready significa «pasa la comprobación del ejemplo»; closed significa «ya está cerrado». approved sigue en false: el programa no concede permisos ni confirma reservas.",
+          "expect": "La última caja muestra result y savedExternally: false. Eso confirma que el ejercicio calcula una respuesta dentro de n8n; aún no la ha guardado fuera.",
+          "stuck": "Vuelve al ejemplo original y compara cada dato. En n8n abre las cajas por orden y encuentra la primera cuya salida es diferente."
+        }
+      ]
+    },
+    {
+      "id": "step-5",
+      "title": "Comprueba un segundo ejemplo",
+      "goal": "Una sola prueba puede salir bien por casualidad. Cambiar un dato demuestra si entiendes la regla.",
+      "minutes": 15,
+      "deliverable": "Tu cuaderno contiene tres intentos: el ejemplo original, uno modificado y uno incompleto, cada uno con lo que viste al hacerlo.",
+      "done": [
+        "Tu cuaderno contiene tres intentos: el ejemplo original, uno modificado y uno incompleto, cada uno con lo que viste al hacerlo."
+      ],
+      "steps": [
+        {
+          "title": "Comprueba un segundo ejemplo",
+          "minutes": 15,
+          "where": "Tu documento y el chat de ayuda",
+          "action": "Haz una copia del ejemplo y cambia un solo dato relacionado con la decisión. Escribe primero qué debería pasar. En el caso de este kit, empieza por la información que determina esta respuesta: La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. Repite los pasos y compara. Después haz una segunda copia a la que le falte el número o una información necesaria. No aceptes una confirmación inventada. Anota qué pregunta o aviso necesitas ver. Guarda las copias junto al primer ejemplo para poder repetir las tres pruebas mañana.",
+          "expect": "Tu cuaderno contiene tres intentos: el ejemplo original, uno modificado y uno incompleto, cada uno con lo que viste al hacerlo.",
+          "stuck": "Vuelve al ejemplo original y compara cada dato. En n8n abre las cajas por orden y encuentra la primera cuya salida es diferente."
+        }
+      ]
+    },
+    {
+      "id": "step-6",
+      "title": "Llévalo a tu propio proyecto",
+      "goal": "El proyecto empieza a ser útil cuando otra persona puede entenderlo y repetirlo.",
+      "minutes": 15,
+      "deliverable": "Una persona del centro puede repetir tu ejemplo siguiendo el documento y sabe qué queda pendiente antes de usarlo a diario.",
+      "done": [
+        "Una persona del centro puede repetir tu ejemplo siguiendo el documento y sabe qué queda pendiente antes de usarlo a diario."
+      ],
+      "steps": [
+        {
+          "title": "Llévalo a tu propio proyecto",
+          "minutes": 15,
+          "where": "Tu documento y el chat de ayuda",
+          "action": "Elige una situación de tu centro parecida al ejemplo. Escribe quién la realiza hoy, qué recibe y qué tiene que dejar preparado. Sustituye los nombres inventados solo en una copia. Pide a la persona responsable que confirme la regla: La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. es la solución del ejemplo, no una norma obligatoria para todos los centros. Prueba tres casos pequeños con ella. Apunta dónde se guarda el resultado, quién lo revisa y cómo volver a trabajar a mano si la herramienta falla.",
+          "expect": "Una persona del centro puede repetir tu ejemplo siguiendo el documento y sabe qué queda pendiente antes de usarlo a diario.",
+          "stuck": "Vuelve al ejemplo original y compara cada dato. En n8n abre las cajas por orden y encuentra la primera cuya salida es diferente."
+        }
+      ]
+    }
+  ],
+  "prompts": [
+    {
+      "id": "guided-practice",
+      "name": "Resuelve el ejemplo conmigo",
+      "when": "Pégalo en ChatGPT, Claude o el chat de texto que uses. No lo pegues en la caja Code de n8n.",
+      "prompt": "Quiero aprender a hacer este proyecto: Organizar fotografías y permisos de uso. Empiezo desde cero. Háblame con palabras corrientes y explícame cada acción antes de pedirme que la haga.\n\nESTO ES LO QUE TENGO\n{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}\n\nQUÉ SIGNIFICA\nfile es el nombre del archivo; usageChecked indica que la persona responsable ya comprobó el uso previsto. No basta con que una foto esté en una carpeta compartida.\n\nLO QUE DEBERÍA CONSEGUIR\nLa foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.\n\nMI SITUACIÓN\nTrabajo en [MI CENTRO]. Voy a usar [HERRAMIENTA]. La persona que revisará el trabajo es [RESPONSABLE]. De momento vamos a practicar con el ejemplo inventado; después sustituiremos los datos por los de mi proyecto. Si falta información, pregúntame por ella y espera. No rellenes fechas, precios, permisos ni respuestas por tu cuenta.\n\nAYÚDAME EN ESTE ORDEN\n1. Explícame qué problema resuelve el ejemplo usando una situación de la vida diaria. Dime qué tendría delante antes de empezar y qué vería al terminar. Si necesitas una palabra técnica, explica su significado en la misma frase.\n2. Haz tú el ejemplo con los datos que te he dado. Muestra el resultado completo, no una lista de consejos. Señala qué dato te permite tomar cada decisión. Si algo necesita revisión de una persona, escribe qué pregunta debe resolver esa persona.\n3. Ahora guíame para repetirlo yo. Divide el trabajo en pasos numerados. En cada paso dime qué aplicación abrir, qué documento o pantalla buscar, qué texto copiar y qué debería aparecer después. No escribas solamente «configura el sistema». Si no conoces los botones de mi versión, pídeme sus nombres antes de inventar una ubicación.\n4. Prepara una tabla pequeña con: número del ejemplo, qué hemos recibido, qué haremos, quién lo revisa y cómo está ahora. Deja vacío el nombre del responsable si no lo he indicado. No marques ninguna acción como hecha hasta que yo confirme que la he realizado.\n5. Propón un segundo ejemplo cambiando solo un dato. Explica el resultado que debería cambiar y el que debería seguir igual. Después proponme un ejemplo al que le falte un dato necesario y muéstrame cómo pedirlo.\n6. Si una automatización ahorra copiar datos, explica primero el recorrido a mano y después el recorrido automático. Identifica qué parte está hecha en la práctica y qué conexión real falta. No confundas mostrar un resultado en n8n con guardarlo en una hoja o enviar un mensaje.\n7. Ayúdame a adaptar el ejemplo a mi centro. Pídeme un caso pequeño, explica qué regla cambia y conserva la primera versión para volver atrás.\n\nAL TERMINAR\nDéjame un documento sencillo con el ejemplo original, la respuesta resuelta, los pasos que repetí, los errores que encontré y el siguiente paso. Incluye una comprobación que pueda hacer otra persona sin leer esta conversación. No me des por terminado un proyecto solo porque el texto tiene buen aspecto.",
+      "fill": [
+        {
+          "slot": "[MI CENTRO]",
+          "what": "Nombre del lugar donde lo vas a usar.",
+          "example": "Centro Norte"
+        },
+        {
+          "slot": "[HERRAMIENTA]",
+          "what": "Aplicación que tienes abierta.",
+          "example": "n8n"
+        },
+        {
+          "slot": "[RESPONSABLE]",
+          "what": "Persona que revisará las decisiones.",
+          "example": "La coordinadora"
+        }
+      ],
+      "expect": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+      "stuck": "No entiendo el paso [NÚMERO]. Explícalo con palabras más sencillas. Dime qué debo abrir, qué tengo que escribir y qué debería ver después. Resuelve ese paso con el ejemplo antes de pedirme que continúe."
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Organizar fotografías y permisos de uso · práctica de seis pasos",
+      "what": "Seis pasos para practicar dentro de n8n. No necesita claves, no envía mensajes y no guarda datos en otras aplicaciones.",
+      "needs": [
+        "Una cuenta o instalación de n8n que puedas abrir."
+      ],
+      "flow": {
+        "name": "Organizar fotografías y permisos de uso · práctica",
+        "active": false,
+        "nodes": [
+          {
+            "id": "archivo-fotografico-0",
+            "name": "Empezar práctica",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+              0,
+              0
+            ],
+            "parameters": {}
+          },
+          {
+            "id": "archivo-fotografico-1",
+            "name": "Datos de ejemplo",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              240,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "return [{ json: {\"id\":\"FOT-01\",\"file\":\"activity-01.jpg\",\"usageChecked\":false,\"description\":\"People at workshop\"} }];"
+            }
+          },
+          {
+            "id": "archivo-fotografico-2",
+            "name": "Comprobar el número",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              480,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "const seen = new Set(); return $input.all().map(item => { const x = item.json; if (typeof x.id !== 'string' || !x.id.trim()) throw new Error('Missing id'); const sample = {\"id\":\"FOT-01\",\"file\":\"activity-01.jpg\",\"usageChecked\":false,\"description\":\"People at workshop\"}; for (const [key,value] of Object.entries(sample)) { if (!(key in x)) throw new Error('Missing field: '+key); if (value !== null && typeof x[key] !== typeof value) throw new Error('Wrong type: '+key); if (typeof value === 'number' && (!Number.isFinite(x[key]) || x[key] < 0)) throw new Error('Invalid number: '+key); } if (seen.has(x.id)) throw new Error('Repeated id in this run'); seen.add(x.id); return item; });"
+            }
+          },
+          {
+            "id": "archivo-fotografico-3",
+            "name": "Organizar fotografías y permisos de uso",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              720,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "return $input.all().map(item => { const x = item.json; return { json: { ...x, result: x.usageChecked ? \"ready\" : \"review\" } }; });"
+            }
+          },
+          {
+            "id": "archivo-fotografico-4",
+            "name": "Dejar para revisión",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              960,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "return $input.all().map(item => ({ json: { ...item.json, reviewedBy: '', approved: false } }));"
+            }
+          },
+          {
+            "id": "archivo-fotografico-5",
+            "name": "Mostrar el resultado",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              1200,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "return $input.all().map(item => ({ json: { ...item.json, practiceOnly: true, savedExternally: false } }));"
+            }
+          }
+        ],
+        "connections": {
+          "Empezar práctica": {
+            "main": [
+              [
+                {
+                  "node": "Datos de ejemplo",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Datos de ejemplo": {
+            "main": [
+              [
+                {
+                  "node": "Comprobar el número",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Comprobar el número": {
+            "main": [
+              [
+                {
+                  "node": "Organizar fotografías y permisos de uso",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Organizar fotografías y permisos de uso": {
+            "main": [
+              [
+                {
+                  "node": "Dejar para revisión",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Dejar para revisión": {
+            "main": [
+              [
+                {
+                  "node": "Mostrar el resultado",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          }
+        },
+        "settings": {
+          "executionOrder": "v1"
+        }
+      },
+      "fill": [],
+      "careful": [
+        "Importa el archivo, pulsa ejecutar y abre la última caja. El resultado permanece dentro de n8n.",
+        "Para «Organizar fotografías y permisos de uso», confirma quién revisa la decisión antes de hacerla efectiva. Practicar una respuesta no equivale a autorizar una compra, devolver un objeto o confirmar una reserva.",
+        "Para guardar el resultado de n8n, crea primero una hoja de prueba con las columnas id, result, reviewedBy y approved. Añade Google Sheets al final y conecta tu cuenta en el apartado de credenciales. Elige Append or Update Row, selecciona documento y pestaña, y usa id como columna de coincidencia. Relaciona cada columna con el dato del mismo nombre de la caja anterior. Ejecuta un ejemplo, abre la hoja y comprueba los valores.",
+        "Repite el mismo número: en esta práctica debe actualizar su fila. Luego prueba otro número. Una hoja no garantiza evitar duplicados si varias ejecuciones escriben a la vez; para ese uso pide preparar una base de datos que impida números repetidos. Deja los avisos reales para después de comprobar el guardado y la revisión.",
+        "Prueba también dejando un campo necesario vacío. El flujo comprueba que estén todos los campos del ejemplo y que tengan el tipo de dato correcto. Antes de usarlo a diario añade las reglas de tu centro, como fechas posibles y cantidades permitidas, y la ruta para pedir datos que falten. Anota cómo detener el proceso y dónde seguir trabajando a mano."
+      ]
+    }
+  ],
+  "testData": [
+    {
+      "name": "Ejemplo resuelto",
+      "input": "{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}",
+      "expect": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación."
+    },
+    {
+      "name": "Un dato distinto",
+      "input": "Una copia en la que cambia un dato que afecta a la decisión.",
+      "expect": "La respuesta cambia por esa razón y conserva los demás datos."
+    },
+    {
+      "name": "Falta información",
+      "input": "Una copia sin el número del ejemplo.",
+      "expect": "Se pide completar el número; no se presenta como una acción aprobada."
+    }
+  ],
+  "costs": [
+    {
+      "item": "Organizar fotografías y permisos de uso",
+      "free": "La práctica manual utiliza tu aplicación de notas.",
+      "paid": "Comprueba en cada proveedor el coste de la cuenta, las ejecuciones y las conexiones que elijas.",
+      "note": "Anota el precio actual antes de contratar; este kit no promete una tarifa."
+    }
+  ],
+  "legal": [
+    "Para organizar fotografías y permisos de uso, empieza con los datos inventados del ejemplo. Antes de añadir datos reales, acuerda qué información hace falta, quién puede verla y cuándo se borrará."
+  ],
+  "risks": [
+    {
+      "risk": "Dar por aprobada una respuesta automática",
+      "sign": "Aparece ready y alguien actúa sin revisar.",
+      "fix": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación."
+    },
+    {
+      "risk": "Perder el resultado al cerrar",
+      "sign": "Solo existe en la pantalla de prueba.",
+      "fix": "Para guardar el resultado de n8n, crea primero una hoja de prueba con las columnas id, result, reviewedBy y approved. Añade Google Sheets al final y conecta tu cuenta en el apartado de credenciales. Elige Append or Update Row, selecciona documento y pestaña, y usa id como columna de coincidencia. Relaciona cada columna con el dato del mismo nombre de la caja anterior. Ejecuta un ejemplo, abre la hoja y comprueba los valores."
+    }
+  ],
+  "delivery": [
+    {
+      "name": "mi-practica.txt",
+      "what": "El cuaderno que otra persona puede seguir.",
+      "template": "Organizar fotografías y permisos de uso\n\nEjemplo:\n{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}\n\nQué debería pasar:\nLa foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.\n\nQué pasó al hacerlo:\n\nQué quiero cambiar en mi proyecto:\n"
+    },
+    {
+      "name": "archivo-fotografico.n8n.json",
+      "what": "Seis pasos para practicar dentro de n8n. No necesita claves, no envía mensajes y no guarda datos en otras aplicaciones.",
+      "template": "{\n  \"name\": \"Organizar fotografías y permisos de uso · práctica\",\n  \"active\": false,\n  \"nodes\": [\n    {\n      \"id\": \"archivo-fotografico-0\",\n      \"name\": \"Empezar práctica\",\n      \"type\": \"n8n-nodes-base.manualTrigger\",\n      \"typeVersion\": 1,\n      \"position\": [\n        0,\n        0\n      ],\n      \"parameters\": {}\n    },\n    {\n      \"id\": \"archivo-fotografico-1\",\n      \"name\": \"Datos de ejemplo\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        240,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return [{ json: {\\\"id\\\":\\\"FOT-01\\\",\\\"file\\\":\\\"activity-01.jpg\\\",\\\"usageChecked\\\":false,\\\"description\\\":\\\"People at workshop\\\"} }];\"\n      }\n    },\n    {\n      \"id\": \"archivo-fotografico-2\",\n      \"name\": \"Comprobar el número\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        480,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"const seen = new Set(); return $input.all().map(item => { const x = item.json; if (typeof x.id !== 'string' || !x.id.trim()) throw new Error('Missing id'); const sample = {\\\"id\\\":\\\"FOT-01\\\",\\\"file\\\":\\\"activity-01.jpg\\\",\\\"usageChecked\\\":false,\\\"description\\\":\\\"People at workshop\\\"}; for (const [key,value] of Object.entries(sample)) { if (!(key in x)) throw new Error('Missing field: '+key); if (value !== null && typeof x[key] !== typeof value) throw new Error('Wrong type: '+key); if (typeof value === 'number' && (!Number.isFinite(x[key]) || x[key] < 0)) throw new Error('Invalid number: '+key); } if (seen.has(x.id)) throw new Error('Repeated id in this run'); seen.add(x.id); return item; });\"\n      }\n    },\n    {\n      \"id\": \"archivo-fotografico-3\",\n      \"name\": \"Organizar fotografías y permisos de uso\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        720,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => { const x = item.json; return { json: { ...x, result: x.usageChecked ? \\\"ready\\\" : \\\"review\\\" } }; });\"\n      }\n    },\n    {\n      \"id\": \"archivo-fotografico-4\",\n      \"name\": \"Dejar para revisión\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        960,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => ({ json: { ...item.json, reviewedBy: '', approved: false } }));\"\n      }\n    },\n    {\n      \"id\": \"archivo-fotografico-5\",\n      \"name\": \"Mostrar el resultado\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        1200,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => ({ json: { ...item.json, practiceOnly: true, savedExternally: false } }));\"\n      }\n    }\n  ],\n  \"connections\": {\n    \"Empezar práctica\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Datos de ejemplo\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Datos de ejemplo\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Comprobar el número\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Comprobar el número\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Organizar fotografías y permisos de uso\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Organizar fotografías y permisos de uso\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Dejar para revisión\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Dejar para revisión\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Mostrar el resultado\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    }
+  ],
+  "pricing": [
+    {
+      "tier": "Organizar fotografías y permisos de uso",
+      "what": "Acuerda por escrito si vas a entregar solo la práctica o también las conexiones y la formación del equipo.",
+      "price": "Calcula horas de preparación, pruebas y ayuda; no hay un precio universal.",
+      "note": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación."
+    }
+  ],
+  "defend": [
+    {
+      "question": "¿Cómo demuestro que este proyecto sirve?",
+      "answer": "Un equipo quiere localizar fotos y comprobar si puede usarlas antes de preparar una publicación. La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. Enseña el ejemplo original, el modificado y el incompleto. Luego pide a otra persona que repita uno usando tu cuaderno."
+    }
+  ],
+  "words": [
+    [
+      "n8n",
+      "Una aplicación que une pasos para que se repitan en orden."
+    ],
+    [
+      "JSON",
+      "Un formato de texto para que una aplicación pueda leer nombres y valores."
+    ],
+    [
+      "review",
+      "Necesita que una persona lo revise."
+    ],
+    [
+      "ready",
+      "Ha pasado esta comprobación; todavía no es una autorización."
+    ]
+  ],
+  "tools": [
+    "n8n",
+    "sheets",
+    "openai"
+  ],
+  "promptFamilies": [],
+  "skillKeywords": [
+    "archivo-fotografico"
+  ],
+  "deliverables": [
+    "Cuaderno con tres pruebas y sus resultados",
+    "Flujo de práctica para importar en n8n"
+  ],
+  "workbook": {
+    "language": "es",
+    "title": "Empieza aquí: un ejemplo completo desde cero",
+    "outcome": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+    "context": [
+      "Un equipo quiere localizar fotos y comprobar si puede usarlas antes de preparar una publicación.",
+      "En esta guía vamos a hacer primero una práctica pequeña de «Organizar fotografías y permisos de uso». No necesitas saber programar para entenderla. Lee el ejemplo, repítelo y después cambia sus datos por los de una situación parecida. Los botones de abajo te permiten recorrer los pasos sin perderte; debajo encontrarás el texto completo para copiarlo y trabajar a tu ritmo."
+    ],
+    "prerequisites": [
+      {
+        "name": "Un lugar para escribir",
+        "instruction": "Usa tu aplicación de notas habitual. Crea un documento con el nombre de este kit y comprueba que puedes volver a abrirlo.",
+        "check": "Puedes escribir, guardar y encontrar el documento."
+      },
+      {
+        "name": "La herramienta del paso que vas a practicar",
+        "instruction": "Para los tres primeros pasos basta con tu documento y un chat de IA. n8n se utiliza en el paso de automatización; puedes leerlo antes de abrir una cuenta.",
+        "check": "Sabes qué paso vas a hacer y tienes abierta su herramienta."
+      }
+    ],
+    "inputs": [
+      {
+        "field": "Ejemplo inventado",
+        "example": "{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}",
+        "rule": "file es el nombre del archivo; usageChecked indica que la persona responsable ya comprobó el uso previsto. No basta con que una foto esté en una carpeta compartida."
+      },
+      {
+        "field": "Respuesta que vas a comprobar",
+        "example": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+        "rule": "Compara tu resultado con esta respuesta después de hacer la práctica."
+      }
+    ],
+    "steps": [
+      {
+        "title": "Mira primero el ejemplo",
+        "instruction": "Lee el ejemplo de abajo despacio. file es el nombre del archivo; usageChecked indica que la persona responsable ya comprobó el uso previsto. No basta con que una foto esté en una carpeta compartida. Después lee la respuesta resuelta: La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. Señala con el dedo o copia la parte del ejemplo que explica esa respuesta. Por ahora no abras n8n ni conectes cuentas. Primero necesitas entender la decisión que después repetirá la herramienta.",
+        "configuration": "{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}",
+        "expected": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+        "why": "Entender un ejemplo pequeño te permite reconocer un resultado equivocado más adelante."
+      },
+      {
+        "title": "Prepara dónde guardar tu trabajo",
+        "instruction": "Abre un documento vacío en Word, Google Docs o la aplicación de notas que ya uses. Ponle el título «Práctica: Organizar fotografías y permisos de uso». Escribe estos cuatro apartados, cada uno en una línea: Ejemplo, Qué debería pasar, Qué pasó al hacerlo, Qué quiero cambiar. Copia los datos en Ejemplo y la respuesta de arriba en Qué debería pasar. Deja vacío Qué pasó al hacerlo: todavía no hemos realizado la prueba.",
+        "expected": "El documento tiene nombre y contiene el ejemplo y la respuesta por separado. Ciérralo y vuelve a abrirlo para comprobar que sabes encontrarlo.",
+        "why": "Este documento es tu cuaderno de trabajo. No necesitas crear un archivo de programación."
+      },
+      {
+        "title": "Haz el ejemplo a mano",
+        "instruction": "Copia el mensaje del apartado «Texto para pedir ayuda». Cambia solo los tres huecos entre corchetes y pégalo en el chat de IA que utilices. Lee la respuesta con el ejemplo al lado. Comprueba especialmente esto: La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. Si el chat cambia un dato, vuelve a copiar el dato correcto y pídele que rehaga esa parte. Escribe en tu documento la respuesta que has revisado y una frase contando por qué es correcta.",
+        "expected": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+        "why": "El chat ayuda a escribir y explicar. Tú compruebas que usa los datos correctos."
+      },
+      {
+        "title": "Prueba la automatización si te ayuda",
+        "instruction": "Descarga o copia el archivo JSON de esta práctica. JSON es un formato de texto que n8n sabe leer. En n8n crea un flujo vacío y usa el menú de importar desde archivo. Verás seis cajas unidas por flechas. Una caja es un paso. Pulsa Execute workflow, que significa ejecutar los pasos. Abre la última caja y mira su salida en JSON: contiene los datos originales y result. review significa «una persona tiene que revisarlo»; ready significa «pasa la comprobación del ejemplo»; closed significa «ya está cerrado». approved sigue en false: el programa no concede permisos ni confirma reservas.",
+        "expected": "La última caja muestra result y savedExternally: false. Eso confirma que el ejercicio calcula una respuesta dentro de n8n; aún no la ha guardado fuera.",
+        "why": "Mirar el dato que sale de cada paso ayuda a encontrar dónde se ha producido un error."
+      },
+      {
+        "title": "Comprueba un segundo ejemplo",
+        "instruction": "Haz una copia del ejemplo y cambia un solo dato relacionado con la decisión. Escribe primero qué debería pasar. En el caso de este kit, empieza por la información que determina esta respuesta: La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. Repite los pasos y compara. Después haz una segunda copia a la que le falte el número o una información necesaria. No aceptes una confirmación inventada. Anota qué pregunta o aviso necesitas ver. Guarda las copias junto al primer ejemplo para poder repetir las tres pruebas mañana.",
+        "expected": "Tu cuaderno contiene tres intentos: el ejemplo original, uno modificado y uno incompleto, cada uno con lo que viste al hacerlo.",
+        "why": "Una sola prueba puede salir bien por casualidad. Cambiar un dato demuestra si entiendes la regla."
+      },
+      {
+        "title": "Llévalo a tu propio proyecto",
+        "instruction": "Elige una situación de tu centro parecida al ejemplo. Escribe quién la realiza hoy, qué recibe y qué tiene que dejar preparado. Sustituye los nombres inventados solo en una copia. Pide a la persona responsable que confirme la regla: La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación. es la solución del ejemplo, no una norma obligatoria para todos los centros. Prueba tres casos pequeños con ella. Apunta dónde se guarda el resultado, quién lo revisa y cómo volver a trabajar a mano si la herramienta falla.",
+        "expected": "Una persona del centro puede repetir tu ejemplo siguiendo el documento y sabe qué queda pendiente antes de usarlo a diario.",
+        "why": "El proyecto empieza a ser útil cuando otra persona puede entenderlo y repetirlo."
+      }
+    ],
+    "prompts": [
+      {
+        "title": "Texto para pedir ayuda",
+        "where": "Pégalo en ChatGPT, Claude o el chat de texto que uses. No lo pegues en la caja Code de n8n.",
+        "text": "Quiero aprender a hacer este proyecto: Organizar fotografías y permisos de uso. Empiezo desde cero. Háblame con palabras corrientes y explícame cada acción antes de pedirme que la haga.\n\nESTO ES LO QUE TENGO\n{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}\n\nQUÉ SIGNIFICA\nfile es el nombre del archivo; usageChecked indica que la persona responsable ya comprobó el uso previsto. No basta con que una foto esté en una carpeta compartida.\n\nLO QUE DEBERÍA CONSEGUIR\nLa foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.\n\nMI SITUACIÓN\nTrabajo en [MI CENTRO]. Voy a usar [HERRAMIENTA]. La persona que revisará el trabajo es [RESPONSABLE]. De momento vamos a practicar con el ejemplo inventado; después sustituiremos los datos por los de mi proyecto. Si falta información, pregúntame por ella y espera. No rellenes fechas, precios, permisos ni respuestas por tu cuenta.\n\nAYÚDAME EN ESTE ORDEN\n1. Explícame qué problema resuelve el ejemplo usando una situación de la vida diaria. Dime qué tendría delante antes de empezar y qué vería al terminar. Si necesitas una palabra técnica, explica su significado en la misma frase.\n2. Haz tú el ejemplo con los datos que te he dado. Muestra el resultado completo, no una lista de consejos. Señala qué dato te permite tomar cada decisión. Si algo necesita revisión de una persona, escribe qué pregunta debe resolver esa persona.\n3. Ahora guíame para repetirlo yo. Divide el trabajo en pasos numerados. En cada paso dime qué aplicación abrir, qué documento o pantalla buscar, qué texto copiar y qué debería aparecer después. No escribas solamente «configura el sistema». Si no conoces los botones de mi versión, pídeme sus nombres antes de inventar una ubicación.\n4. Prepara una tabla pequeña con: número del ejemplo, qué hemos recibido, qué haremos, quién lo revisa y cómo está ahora. Deja vacío el nombre del responsable si no lo he indicado. No marques ninguna acción como hecha hasta que yo confirme que la he realizado.\n5. Propón un segundo ejemplo cambiando solo un dato. Explica el resultado que debería cambiar y el que debería seguir igual. Después proponme un ejemplo al que le falte un dato necesario y muéstrame cómo pedirlo.\n6. Si una automatización ahorra copiar datos, explica primero el recorrido a mano y después el recorrido automático. Identifica qué parte está hecha en la práctica y qué conexión real falta. No confundas mostrar un resultado en n8n con guardarlo en una hoja o enviar un mensaje.\n7. Ayúdame a adaptar el ejemplo a mi centro. Pídeme un caso pequeño, explica qué regla cambia y conserva la primera versión para volver atrás.\n\nAL TERMINAR\nDéjame un documento sencillo con el ejemplo original, la respuesta resuelta, los pasos que repetí, los errores que encontré y el siguiente paso. Incluye una comprobación que pueda hacer otra persona sin leer esta conversación. No me des por terminado un proyecto solo porque el texto tiene buen aspecto.",
+        "replace": "Cambia MI CENTRO, HERRAMIENTA y RESPONSABLE. Si no sabes quién revisará, escribe «aún por decidir».",
+        "expected": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+        "followUp": "No entiendo el paso [NÚMERO]. Explícalo con palabras más sencillas. Dime qué debo abrir, qué tengo que escribir y qué debería ver después. Resuelve ese paso con el ejemplo antes de pedirme que continúe."
+      }
+    ],
+    "files": [
+      {
+        "name": "mi-practica.txt",
+        "purpose": "Tu cuaderno: copia este texto en un documento y completa lo que has hecho.",
+        "content": "Organizar fotografías y permisos de uso\n\nEjemplo:\n{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}\n\nQué debería pasar:\nLa foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.\n\nQué pasó al hacerlo:\n\nQué quiero cambiar en mi proyecto:\n"
+      },
+      {
+        "name": "archivo-fotografico.n8n.json",
+        "purpose": "Seis pasos para practicar dentro de n8n. No necesita claves, no envía mensajes y no guarda datos en otras aplicaciones.",
+        "content": "{\n  \"name\": \"Organizar fotografías y permisos de uso · práctica\",\n  \"active\": false,\n  \"nodes\": [\n    {\n      \"id\": \"archivo-fotografico-0\",\n      \"name\": \"Empezar práctica\",\n      \"type\": \"n8n-nodes-base.manualTrigger\",\n      \"typeVersion\": 1,\n      \"position\": [\n        0,\n        0\n      ],\n      \"parameters\": {}\n    },\n    {\n      \"id\": \"archivo-fotografico-1\",\n      \"name\": \"Datos de ejemplo\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        240,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return [{ json: {\\\"id\\\":\\\"FOT-01\\\",\\\"file\\\":\\\"activity-01.jpg\\\",\\\"usageChecked\\\":false,\\\"description\\\":\\\"People at workshop\\\"} }];\"\n      }\n    },\n    {\n      \"id\": \"archivo-fotografico-2\",\n      \"name\": \"Comprobar el número\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        480,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"const seen = new Set(); return $input.all().map(item => { const x = item.json; if (typeof x.id !== 'string' || !x.id.trim()) throw new Error('Missing id'); const sample = {\\\"id\\\":\\\"FOT-01\\\",\\\"file\\\":\\\"activity-01.jpg\\\",\\\"usageChecked\\\":false,\\\"description\\\":\\\"People at workshop\\\"}; for (const [key,value] of Object.entries(sample)) { if (!(key in x)) throw new Error('Missing field: '+key); if (value !== null && typeof x[key] !== typeof value) throw new Error('Wrong type: '+key); if (typeof value === 'number' && (!Number.isFinite(x[key]) || x[key] < 0)) throw new Error('Invalid number: '+key); } if (seen.has(x.id)) throw new Error('Repeated id in this run'); seen.add(x.id); return item; });\"\n      }\n    },\n    {\n      \"id\": \"archivo-fotografico-3\",\n      \"name\": \"Organizar fotografías y permisos de uso\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        720,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => { const x = item.json; return { json: { ...x, result: x.usageChecked ? \\\"ready\\\" : \\\"review\\\" } }; });\"\n      }\n    },\n    {\n      \"id\": \"archivo-fotografico-4\",\n      \"name\": \"Dejar para revisión\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        960,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => ({ json: { ...item.json, reviewedBy: '', approved: false } }));\"\n      }\n    },\n    {\n      \"id\": \"archivo-fotografico-5\",\n      \"name\": \"Mostrar el resultado\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        1200,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => ({ json: { ...item.json, practiceOnly: true, savedExternally: false } }));\"\n      }\n    }\n  ],\n  \"connections\": {\n    \"Empezar práctica\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Datos de ejemplo\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Datos de ejemplo\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Comprobar el número\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Comprobar el número\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Organizar fotografías y permisos de uso\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Organizar fotografías y permisos de uso\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Dejar para revisión\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Dejar para revisión\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Mostrar el resultado\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+      }
+    ],
+    "tests": [
+      {
+        "name": "Ejemplo resuelto",
+        "input": "{\n  \"id\": \"FOT-01\",\n  \"file\": \"activity-01.jpg\",\n  \"usageChecked\": false,\n  \"description\": \"People at workshop\"\n}",
+        "expected": "La foto tiene nombre y descripción, pero su permiso de uso no está revisado. No se incluye todavía en una publicación.",
+        "inspect": "Tu respuesta o la salida de la última caja de n8n."
+      },
+      {
+        "name": "Un dato distinto",
+        "input": "Una copia en la que cambia un dato que afecta a la decisión.",
+        "expected": "La respuesta cambia por esa razón y conserva los demás datos.",
+        "inspect": "Las dos copias una al lado de la otra."
+      },
+      {
+        "name": "Falta información",
+        "input": "Una copia sin el número del ejemplo.",
+        "expected": "Se pide completar el número; no se presenta como una acción aprobada.",
+        "inspect": "El aviso de revisión o error, antes de continuar."
+      }
+    ],
+    "troubleshooting": [
+      {
+        "symptom": "No entiendo una palabra",
+        "cause": "La explicación ha saltado un paso que necesitas.",
+        "fix": "Usa el mensaje de ayuda y pide resolver un solo paso con el ejemplo. No necesitas aprender todas las palabras de la herramienta de una vez."
+      },
+      {
+        "symptom": "La respuesta no coincide",
+        "cause": "Puede haber cambiado un dato o una regla.",
+        "fix": "Vuelve al ejemplo original y compara cada dato. En n8n abre las cajas por orden y encuentra la primera cuya salida es diferente."
+      }
+    ],
+    "production": [
+      "Para «Organizar fotografías y permisos de uso», confirma quién revisa la decisión antes de hacerla efectiva. Practicar una respuesta no equivale a autorizar una compra, devolver un objeto o confirmar una reserva.",
+      "Para guardar el resultado de n8n, crea primero una hoja de prueba con las columnas id, result, reviewedBy y approved. Añade Google Sheets al final y conecta tu cuenta en el apartado de credenciales. Elige Append or Update Row, selecciona documento y pestaña, y usa id como columna de coincidencia. Relaciona cada columna con el dato del mismo nombre de la caja anterior. Ejecuta un ejemplo, abre la hoja y comprueba los valores.",
+      "Repite el mismo número: en esta práctica debe actualizar su fila. Luego prueba otro número. Una hoja no garantiza evitar duplicados si varias ejecuciones escriben a la vez; para ese uso pide preparar una base de datos que impida números repetidos. Deja los avisos reales para después de comprobar el guardado y la revisión.",
+      "Prueba también dejando un campo necesario vacío. El flujo comprueba que estén todos los campos del ejemplo y que tengan el tipo de dato correcto. Antes de usarlo a diario añade las reglas de tu centro, como fechas posibles y cantidades permitidas, y la ruta para pedir datos que falten. Anota cómo detener el proceso y dónde seguir trabajando a mano."
+    ],
+    "sources": [
+      {
+        "title": "Cómo importar el ejemplo en n8n",
+        "url": "https://docs.n8n.io/workflows/export-import/"
+      },
+      {
+        "title": "Cómo guardar filas en Google Sheets",
+        "url": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/sheet-operations/"
+      }
+    ]
+  }
+}

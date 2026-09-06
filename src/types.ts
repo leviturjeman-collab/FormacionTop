@@ -382,6 +382,8 @@ export interface ToolCatalogItem {
 }
 
 export interface ToolAutomation {
+  id?: string
+  aliases?: string[]
   project?: ProjectManual
   name: string
   goal: string
@@ -744,6 +746,7 @@ export interface KitTestCase {
 }
 
 export interface InstitutionalKit {
+  workbook?: ProjectManual
   id: string
   title: string
   kicker: string

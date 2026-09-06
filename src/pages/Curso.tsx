@@ -1,3 +1,4 @@
+import TaskDisclosure from '../components/TaskDisclosure'
 import ProjectManualView from '../components/ProjectManualView'
 import SaveResourceButton from '../components/SaveResourceButton'
 import { copyText } from '../clipboard'
@@ -384,7 +385,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       <section className="st-lesson-section-intro">
         <span className="st-kicker">{locale === 'en' ? 'First understand this' : 'Primero entiende esto'}</span>
-        <h2>{locale === 'en' ? 'Foundations, worked example and application' : 'Fundamentos, caso resuelto y aplicación'}</h2>
+        <h2>{locale === 'en' ? 'Foundations, worked example and application' : 'Entiende el ejemplo y aprende a repetirlo'}</h2>
         <p>{locale === 'en' ? 'Open only what you need. The first block comes open so you know where to start.' : 'Lee los conceptos en orden y contrasta el caso resuelto con los datos antes de realizar la práctica.'}</p>
       </section>
 
@@ -415,7 +416,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
       {leccion.words?.length > 0 && (
         <details className="st-block st-block-palabras">
           <summary>
-            <span><Languages size={15} /><strong>{locale === 'en' ? 'The words you’re about to read, in plain terms' : 'Vocabulario de la unidad'}</strong></span>
+            <span><Languages size={15} /><strong>{locale === 'en' ? 'The words you’re about to read, in plain terms' : 'Palabras que aparecen en esta lección'}</strong></span>
             <span className="st-block-summary-meta"><b>{leccion.words.length}</b><i>{locale === 'en' ? 'Open' : 'Abrir'}</i></span>
           </summary>
           <div className="st-block-body">
@@ -462,8 +463,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                   </div>
                 </div>
 
-                <details className="st-task-detail" open>
-                  <summary>{locale === 'en' ? 'Open steps' : 'Abrir pasos'}</summary>
+                <TaskDisclosure key={`${lessonId}:${index}`} done={hecha}>
                   <div>
                     <div className="st-step-guide">
                       <section>
@@ -504,7 +504,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
                       {hecha ? (locale === 'en' ? 'Done' : 'Hecho') : (locale === 'en' ? 'OK, done' : 'OK, hecho')}
                     </button>
                   </div>
-                </details>
+                </TaskDisclosure>
               </li>
             )
           })}

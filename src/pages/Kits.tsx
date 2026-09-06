@@ -1,4 +1,5 @@
 import SaveResourceButton from '../components/SaveResourceButton'
+import ProjectManualView from '../components/ProjectManualView'
 import { copyText } from '../clipboard'
 import { useMemo, useState } from 'react'
 import {
@@ -30,11 +31,11 @@ const TABS = (locale: Locale): { id: TabId; label: string }[] =>
   locale === 'en'
     ? [
         { id: 'resumen', label: 'What it is and who it’s for' },
-        { id: 'arranque', label: 'Define your project' },
-        { id: 'arquitectura', label: 'Architecture and stack' },
+        { id: 'arranque', label: 'What you want to make' },
+        { id: 'arquitectura', label: 'Parts and tools' },
         { id: 'fases', label: 'Phases step by step' },
         { id: 'prompts', label: 'Kit prompts' },
-        { id: 'flujo', label: 'Importable flow' },
+        { id: 'flujo', label: 'Try the automation' },
         { id: 'pruebas', label: 'Tests and risks' },
         { id: 'coste', label: 'Cost and legal' },
         { id: 'entrega', label: 'Delivery and price' },
@@ -42,11 +43,11 @@ const TABS = (locale: Locale): { id: TabId; label: string }[] =>
       ]
     : [
         { id: 'resumen', label: 'Qué es y para quién' },
-        { id: 'arranque', label: 'Define tu proyecto' },
-        { id: 'arquitectura', label: 'Arquitectura y stack' },
+        { id: 'arranque', label: 'Qué quieres hacer' },
+        { id: 'arquitectura', label: 'Partes y herramientas' },
         { id: 'fases', label: 'Fases paso a paso' },
         { id: 'prompts', label: 'Prompts del kit' },
-        { id: 'flujo', label: 'Flujo importable' },
+        { id: 'flujo', label: 'Prueba la automatización' },
         { id: 'pruebas', label: 'Pruebas y riesgos' },
         { id: 'coste', label: 'Coste y legal' },
         { id: 'entrega', label: 'Entrega y precio' },
@@ -253,7 +254,7 @@ export default function Kits({ kitId }: { kitId?: string }) {
         {
           id: `kit-${kit.id}-${Date.now()}`,
           family: locale === 'en' ? 'Institutional kit' : 'Kit institucional',
-          name: `${locale === 'en' ? 'Define your project' : 'Define tu proyecto'} · ${kit.title}`,
+          name: `${locale === 'en' ? 'What you want to make' : 'Qué quieres hacer'} · ${kit.title}`,
           prompt: kit.brief.prompt,
           savedAt: new Date().toISOString(),
           source: locale === 'en' ? 'Institutional kits' : 'Kits institucionales',
@@ -280,9 +281,9 @@ export default function Kits({ kitId }: { kitId?: string }) {
             <h1>{kit.title}</h1><SaveResourceButton resource={{ id: `kit:${kit.id}`, kind: 'kit', title: kit.title, href: href({ name: 'kits', kitId: kit.id }) }} />
             <p>{kit.promise}</p>
             <div className="st-kit-actions">
-              <CopyButton text={kit.brief.prompt} label={locale === 'en' ? 'Copy the starter brief' : 'Copiar el brief de arranque'} />
+              <CopyButton text={kit.brief.prompt} label={locale === 'en' ? 'Copy the starting message' : 'Copiar el mensaje para empezar'} />
               <button type="button" className="st-btn-ghost" onClick={saveToProject}>
-                {saved ? <Check size={12} /> : <Save size={12} />} {saved ? (locale === 'en' ? 'Brief saved' : 'Brief guardado') : (locale === 'en' ? 'Use brief in my project' : 'Usar brief en mi proyecto')}
+                {saved ? <Check size={12} /> : <Save size={12} />} {saved ? (locale === 'en' ? 'Message saved' : 'Mensaje guardado') : (locale === 'en' ? 'Use this message in my project' : 'Usar este mensaje en mi proyecto')}
               </button>
             </div>
           </header>
@@ -302,6 +303,7 @@ export default function Kits({ kitId }: { kitId?: string }) {
             ))}
           </nav>
 
+          {tab === 'resumen' && kit.workbook && <ProjectManualView manual={kit.workbook} />}
           {tab === 'resumen' && (
             <div className="st-kit-panel">
               <section className="st-kit-block">
@@ -480,7 +482,7 @@ export default function Kits({ kitId }: { kitId?: string }) {
                   </ol>
 
                   <div className="st-kit-phase-end">
-                    <p><strong>{locale === 'en' ? 'Phase deliverable.' : 'Entregable de la fase.'}</strong> {phase.deliverable}</p>
+                    <p><strong>{locale === 'en' ? 'What to keep from this phase.' : 'Qué debes guardar de esta fase.'}</strong> {phase.deliverable}</p>
                     <ul>{phase.done.map((item) => <li key={item}><Check size={11} /> {item}</li>)}</ul>
                   </div>
                 </section>
@@ -672,7 +674,7 @@ export default function Kits({ kitId }: { kitId?: string }) {
             <div className="st-kit-panel">
               <section className="st-kit-block">
                 <div className="st-section-head">
-                  <div><span className="st-kicker">{locale === 'en' ? 'Combined stack' : 'Stack combinado'}</span><h2>{locale === 'en' ? 'Tools that complement each other' : 'Herramientas que se complementan'}</h2></div>
+                  <div><span className="st-kicker">{locale === 'en' ? 'Related tools' : 'Herramientas relacionadas'}</span><h2>{locale === 'en' ? 'Tools that complement each other' : 'Herramientas que se complementan'}</h2></div>
                   <span>{tools.length} {locale === 'en' ? 'pieces' : 'piezas'}</span>
                 </div>
                 <div className="st-kit-tools">
@@ -703,7 +705,7 @@ export default function Kits({ kitId }: { kitId?: string }) {
                   <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Automations' : 'Automatizaciones'}</span><h2>{locale === 'en' ? 'Candidate flows' : 'Flujos candidatos'}</h2></div></div>
                   <div className="st-kit-resource-list">
                     {automations.slice(0, 20).map(({ tool, automation }: { tool: ToolPage; automation: ToolAutomation }) => (
-                      <a key={`${tool.id}-${automation.name}`} href={href({ name: 'herramienta', toolId: tool.id, filters: {} })}>
+                      <a key={`${tool.id}-${automation.name}`} href={href({ name: 'automatizaciones', toolId: tool.id, automationId: automation.id || automation.name })}>
                         <Workflow size={14} />
                         <span><strong>{automation.name}</strong><small>{tool.label} · {automation.difficulty} · {automation.trigger}</small></span>
                         <ArrowRight size={13} />
@@ -737,8 +739,8 @@ export default function Kits({ kitId }: { kitId?: string }) {
               <strong>{locale === 'en' ? 'How to use this kit' : 'Cómo se usa este kit'}</strong>
               <p>
                 {locale === 'en'
-                  ? 'Run the brief and answer what it asks. Choose your scope. Follow the phases in order and don’t skip the checks: each step says what you should see on screen. Each phase leaves a deliverable, and those deliverables are the project.'
-                  : 'Pasa el brief y contesta a lo que te pregunte. Elige alcance. Sigue las fases en orden y no te saltes las comprobaciones: cada paso dice lo que tienes que ver en pantalla. Cada fase deja un entregable, y esos entregables son el proyecto.'}
+                  ? 'Copy the starting message and answer its questions. Choose how far to go. Follow the steps in order and compare what you see with the example. Keep each part’s result; together they form your project.'
+                  : 'Copia el mensaje para empezar y contesta a sus preguntas. Elige hasta dónde quieres llegar. Sigue los pasos en orden y compara lo que ves con el ejemplo. Guarda el resultado de cada parte: juntos forman tu proyecto.'}
               </p>
             </div>
             <Wrench size={15} />

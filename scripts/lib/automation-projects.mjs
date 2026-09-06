@@ -1,3 +1,4 @@
+import {plainAutomationManual} from './plain-automation-lessons.mjs'
 import {englishAutomationManual} from './automation-projects.en.mjs'
 /** Original implementations and fixtures. Logic labs run without external accounts. */
 export const scenarios = [
@@ -43,7 +44,7 @@ export const eventSchema = `-- Ejecuta en una base de pruebas nueva o un esquema
 export const persistQuery = `SELECT state, state = 'created' AS inserted
 FROM academy_projects.persist_result($1,$2,$3::jsonb,$4::jsonb);`
 
-export function automationManual(s,en=false) {
+function authoredAutomationManual(s,en=false) {
  if(en)return englishAutomationManual(s,scenarioCode(s),eventSchema,persistQuery)
  const base='/project-assets/automations/'+s.id
  const input=JSON.stringify(s.sample,null,2),expected=JSON.stringify(s.expected,null,2)
@@ -61,3 +62,5 @@ export function automationManual(s,en=false) {
  sources:[{title:'n8n · Webhook y URLs de prueba/producción',url:'https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/'},{title:'n8n · Postgres y Query Parameters',url:'https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.postgres/'},{title:'n8n · Code y modos de ejecución',url:'https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/'},{title:'n8n · workflows de errores',url:'https://docs.n8n.io/flow-logic/error-handling/'}]
  }
 }
+
+export function automationManual(s,en=false) { return plainAutomationManual(authoredAutomationManual(s,en),s,en) }

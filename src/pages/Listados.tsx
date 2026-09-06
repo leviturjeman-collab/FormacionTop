@@ -783,7 +783,7 @@ function AutomationLibrary({ automations, label }: { automations: ToolAutomation
         ? 'Every walkthrough has a trigger, a validation step, an observable action, and a recovery path. Real connections need your own credentials and are tested first with fake data.'
         : 'Cada recorrido tiene un disparador, una validación, una acción observable y una ruta de recuperación. Las conexiones reales necesitan tus propias credenciales y primero se prueban con datos ficticios.'}</p>
       <div className="st-automation-grid">
-        {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} onOpen={() => automation.project ? navigate({name:'automatizaciones',toolId:courseToolId,automationId:automation.name}) : setSelected(automation)} />)}
+        {automations.map((automation) => <AutomationCard key={automation.name} automation={automation} onOpen={() => automation.project ? navigate({name:'automatizaciones',toolId:courseToolId,automationId:automation.id || automation.name}) : setSelected(automation)} />)}
       </div>
       {selected && (
         <div className="st-focus-modal" role="dialog" aria-modal="true" aria-label={locale === 'en' ? `Automation ${selected.name}` : `Automatización ${selected.name}`}>

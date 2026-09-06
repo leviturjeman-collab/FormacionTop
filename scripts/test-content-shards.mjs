@@ -19,11 +19,15 @@ for (const locale of ['es', 'en']) {
     if (!tool.guide) continue
     assert.deepEqual(index.toolPages.find(item => item.id === tool.id).guide.counts, { prompts: tool.guide.prompts?.length || 0, automations: tool.guide.automations?.length || 0 }); checks++
   }
-  for (const name of ['prompts', 'tools', 'kits']) { assert.deepEqual(await read(name), full[name === 'tools' ? 'toolPages' : name]); checks++ }
+  for (const name of ['prompts', 'tools', 'kits','projects','glossaryIndex']) { assert.deepEqual(await read(name), full[name === 'tools' ? 'toolPages' : name]); checks++ }
   for (const lesson of full.lessons) { assert.deepEqual(await read('lessons/' + encodeURIComponent(lesson.slug)), lesson); checks++ }
   for (const tool of full.toolPages) { assert.deepEqual(await read('tools/' + encodeURIComponent(tool.id)), tool); checks++ }
-  for (const key of ['curso', 'agents', 'projects', 'guides', 'preguntas', 'decks', 'glossaryIndex']) { assert.deepEqual(index[key], full[key]); checks++ }
+  for (const key of ['guides', 'preguntas', 'decks']) { assert.deepEqual(index[key], full[key]); checks++ }
+  for (const key of ['curso','kits','agents']) for (const item of full[key]) { assert.deepEqual(await read(key + '/' + encodeURIComponent(item.id)), item); checks++ }
+  for (const tool of full.toolPages) { assert.deepEqual((await read('automations/' + encodeURIComponent(tool.id))).guide.automations, tool.guide?.automations || []); checks++ }
+  for (const item of full.curso) assert.equal(index.curso.find(x => x.id === item.id).tasks.length, item.tasks.length, 'Task totals survive light indexing')
   const manifest = await fs.readFile(`${directory}/index.json`)
+  assert.ok(gzipSync(manifest).length < 450000, 'Initial compressed index stays below 450 KB')
   assert.ok(manifest.length < raw.length * 0.3, 'Initial course index must stay below 30% of full payload'); checks++
   console.log(`${locale}: ${full.lessons.length} lessons and ${full.toolPages.length} tools preserved; initial index ${manifest.length} bytes (${gzipSync(manifest).length} gzip), full course ${raw.length} bytes.`)
 }

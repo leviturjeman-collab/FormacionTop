@@ -1,3 +1,4 @@
+import TaskDisclosure from '../components/TaskDisclosure'
 import SaveResourceButton from '../components/SaveResourceButton'
 import LearningPhases, { isLearningPhase } from '../components/LearningPhases'
 import { useEffect, useState } from 'react'
@@ -256,8 +257,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                   </div>
                 </div>
 
-                <details className="st-task-detail" open={index === 0 || hecha}>
-                  <summary>Abrir pasos</summary>
+                <TaskDisclosure key={`${slug}:${active}:${index}`} done={hecha}>
                   <div>
                     <div className="st-step-guide">
                       <section>
@@ -289,7 +289,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                       {hecha ? (locale === 'en' ? 'Done' : 'Hecho') : (locale === 'en' ? 'OK, done' : 'OK, hecho')}
                     </button>
                   </div>
-                </details>
+                </TaskDisclosure>
               </li>
             )
           })}

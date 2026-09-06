@@ -1,0 +1,658 @@
+{
+  "id": "salidas-educativas",
+  "order": 30,
+  "title": "Prepare educational trips step by step",
+  "kicker": "Centre organisation",
+  "promise": "A centre checks trip preparations before a person approves the outing.",
+  "audience": "People at the centre who handle this task and want to learn from zero.",
+  "plain": "A centre checks trip preparations before a person approves the outing. Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+  "fits": [
+    "A centre checks trip preparations before a person approves the outing.",
+    "You have several similar requests and want a list anyone can understand."
+  ],
+  "notFor": [
+    "Making important decisions without the responsible person checking them."
+  ],
+  "scopes": [
+    {
+      "id": "practice",
+      "label": "First a practice",
+      "what": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+      "time": "One 60–90 minute session, with breaks.",
+      "cost": "Start with tools you already have.",
+      "skip": "Leave real messages and connections until later."
+    }
+  ],
+  "brief": {
+    "id": "brief",
+    "name": "Text to ask for help",
+    "when": "Paste it into ChatGPT, Claude or your usual text chat. Do not paste it into n8n’s Code box.",
+    "prompt": "I want to learn to build this project: Prepare educational trips step by step. I am starting from zero. Use everyday words and explain each action before asking me to do it.\n\nWHAT I HAVE\n{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}\n\nWHAT IT MEANS\ntransportConfirmed means the transport is confirmed; permissionsComplete means the person in charge checked the required permissions.\n\nWHAT I SHOULD ACHIEVE\nTransport is confirmed but permissions are incomplete. Keep the outing awaiting review.\n\nMY SITUATION\nI work at [MY CENTRE]. I will use [TOOL]. [REVIEWER] will check the work. First use this fictional example; later we will replace it with my project details. Ask me when information is missing and wait for an answer. Do not fill in dates, prices, permissions or answers yourself.\n\nHELP ME IN THIS ORDER\n1. Explain the problem through an everyday situation. Describe what I would have in front of me before starting and what I would see at the end. Explain any technical word in the same sentence.\n2. Solve the example using the details supplied. Show the complete result, not a list of tips. Point to the detail supporting each decision. If a person must review something, state the question they need to answer.\n3. Guide me through repeating it myself. Use numbered steps. For each step, say which application to open, which document or screen to find, what to copy and what should appear next. Do not simply say “configure the system”. If you do not know my version’s controls, ask for their names instead of inventing a location.\n4. Prepare a small table with: example number, what we received, what we will do, who reviews it and its current state. Leave the reviewer blank if I have not named them. Do not mark an action done until I confirm I performed it.\n5. Suggest a second example changing just one detail. Explain what should change and what should remain the same. Then show an example missing a required detail and explain how to ask for it.\n6. If automation would save copying, explain the manual route first and the automatic route second. Identify what the practice actually does and which real connection is still needed. Showing a result in n8n is different from saving it to a spreadsheet or sending a message.\n7. Help me adapt the example to my centre. Ask for one small case, explain which rule changes and keep the first version so I can return to it.\n\nAT THE END\nLeave a simple document containing the original example, worked answer, steps I repeated, errors I found and the next step. Include a check another person can carry out without reading this conversation. Do not treat an attractive document as proof that the project works.",
+    "fill": [
+      {
+        "slot": "[MY CENTRE]",
+        "what": "Name of the place where you will use it.",
+        "example": "North Centre"
+      },
+      {
+        "slot": "[TOOL]",
+        "what": "Application you have open.",
+        "example": "n8n"
+      },
+      {
+        "slot": "[REVIEWER]",
+        "what": "Person who will review decisions.",
+        "example": "The coordinator"
+      }
+    ],
+    "expect": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+    "stuck": "I do not understand step [NUMBER]. Explain it in simpler words. Say what to open, what to type and what I should see next. Solve that step with the example before asking me to continue."
+  },
+  "architecture": [
+    {
+      "layer": "Prepare educational trips step by step",
+      "what": "A centre checks trip preparations before a person approves the outing.",
+      "nocode": "A table with one example per row.",
+      "code": "The included practice file calculates the answer from the example details.",
+      "why": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review."
+    },
+    {
+      "layer": "Review and saving",
+      "what": "A person checks the answer before acting.",
+      "nocode": "Write their name and decision in the notebook.",
+      "code": "Add saving to the sheet following the daily-use section.",
+      "why": "The test inside n8n does not confirm a centre action."
+    }
+  ],
+  "stack": [
+    {
+      "need": "Learn the rule",
+      "nocode": "Document and text chat",
+      "code": "n8n",
+      "pick": "Start manually so you know what the automation should do."
+    }
+  ],
+  "data": [
+    {
+      "entity": "Prepare educational trips step by step",
+      "fields": [
+        [
+          "id",
+          "SAL-01"
+        ],
+        [
+          "activity",
+          "Museum visit"
+        ],
+        [
+          "transportConfirmed",
+          "true"
+        ],
+        [
+          "permissionsComplete",
+          "false"
+        ]
+      ],
+      "note": "transportConfirmed means the transport is confirmed; permissionsComplete means the person in charge checked the required permissions."
+    }
+  ],
+  "phases": [
+    {
+      "id": "step-1",
+      "title": "See the example first",
+      "goal": "Understanding a small example helps you recognise a wrong result later.",
+      "minutes": 15,
+      "deliverable": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+      "done": [
+        "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review."
+      ],
+      "steps": [
+        {
+          "title": "See the example first",
+          "minutes": 15,
+          "where": "Your document and help chat",
+          "action": "Read the example below slowly. transportConfirmed means the transport is confirmed; permissionsComplete means the person in charge checked the required permissions. Then read the worked answer: Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. Point to or copy the detail explaining that answer. Do not open n8n or connect accounts yet. First understand the decision the tool will later repeat.",
+          "expect": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+          "stuck": "Return to the original example and compare each detail. In n8n open boxes in order and find the first different output.",
+          "code": {
+            "file": "example.json",
+            "lang": "text",
+            "code": "{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}",
+            "note": "transportConfirmed means the transport is confirmed; permissionsComplete means the person in charge checked the required permissions."
+          }
+        }
+      ]
+    },
+    {
+      "id": "step-2",
+      "title": "Make a place to keep your work",
+      "goal": "This document is your practice notebook. You do not need a programming file.",
+      "minutes": 15,
+      "deliverable": "The named document contains the example and answer separately. Close and reopen it to check that you can find it.",
+      "done": [
+        "The named document contains the example and answer separately. Close and reopen it to check that you can find it."
+      ],
+      "steps": [
+        {
+          "title": "Make a place to keep your work",
+          "minutes": 15,
+          "where": "Your document and help chat",
+          "action": "Open a blank document in Word, Google Docs or your usual notes app. Title it “Practice: Prepare educational trips step by step”. Write four headings on separate lines: Example, What should happen, What happened when I tried it, What I want to change. Put the data under Example and the answer above under What should happen. Leave What happened empty because you have not run the test yet.",
+          "expect": "The named document contains the example and answer separately. Close and reopen it to check that you can find it.",
+          "stuck": "Return to the original example and compare each detail. In n8n open boxes in order and find the first different output."
+        }
+      ]
+    },
+    {
+      "id": "step-3",
+      "title": "Do the example by hand",
+      "goal": "The chat helps write and explain. You check that it uses the right details.",
+      "minutes": 15,
+      "deliverable": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+      "done": [
+        "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review."
+      ],
+      "steps": [
+        {
+          "title": "Do the example by hand",
+          "minutes": 15,
+          "where": "Your document and help chat",
+          "action": "Copy the message in “Text to ask for help”. Change only the three bracketed spaces and paste it into your AI chat. Read the reply beside the example. Check this in particular: Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. If the chat changes a detail, paste the correct detail and ask it to redo that part. Save the checked answer and one sentence explaining why it is correct.",
+          "expect": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+          "stuck": "Return to the original example and compare each detail. In n8n open boxes in order and find the first different output.",
+          "promptId": "brief"
+        }
+      ]
+    },
+    {
+      "id": "step-4",
+      "title": "Try the optional automation",
+      "goal": "Looking at what leaves each step helps locate an error.",
+      "minutes": 15,
+      "deliverable": "The last box shows result and savedExternally: false. This confirms that the exercise calculates an answer inside n8n; it has not saved it elsewhere.",
+      "done": [
+        "The last box shows result and savedExternally: false. This confirms that the exercise calculates an answer inside n8n; it has not saved it elsewhere."
+      ],
+      "steps": [
+        {
+          "title": "Try the optional automation",
+          "minutes": 15,
+          "where": "n8n",
+          "action": "Download or copy this practice’s JSON file. JSON is a text format n8n can read. Create an empty workflow in n8n and use the import-from-file menu. You will see six boxes joined by arrows. Each box is one step. Click Execute workflow. Open the final box and view its JSON output: it contains the original details and result. review means a person must check it; ready means it passes this example’s check; closed means it is already closed. approved remains false: the program does not grant permission or confirm bookings.",
+          "expect": "The last box shows result and savedExternally: false. This confirms that the exercise calculates an answer inside n8n; it has not saved it elsewhere.",
+          "stuck": "Return to the original example and compare each detail. In n8n open boxes in order and find the first different output."
+        }
+      ]
+    },
+    {
+      "id": "step-5",
+      "title": "Check a second example",
+      "goal": "One test can pass by chance. Changing a detail shows whether you understand the rule.",
+      "minutes": 15,
+      "deliverable": "Your notebook contains three attempts: the original, a changed example and an incomplete one, each with what you actually saw.",
+      "done": [
+        "Your notebook contains three attempts: the original, a changed example and an incomplete one, each with what you actually saw."
+      ],
+      "steps": [
+        {
+          "title": "Check a second example",
+          "minutes": 15,
+          "where": "Your document and help chat",
+          "action": "Copy the example and change one detail that affects the decision. Write what should happen first. For this kit, start with the detail that determines this answer: Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. Repeat the steps and compare. Then make another copy with its number or a required detail missing. Do not accept an invented confirmation. Write the question or warning you need to see. Keep these copies beside the first example so you can repeat all three checks tomorrow.",
+          "expect": "Your notebook contains three attempts: the original, a changed example and an incomplete one, each with what you actually saw.",
+          "stuck": "Return to the original example and compare each detail. In n8n open boxes in order and find the first different output."
+        }
+      ]
+    },
+    {
+      "id": "step-6",
+      "title": "Use it in your own project",
+      "goal": "The project becomes useful when another person can understand and repeat it.",
+      "minutes": 15,
+      "deliverable": "A person at the centre can repeat your example from the document and knows what remains before daily use.",
+      "done": [
+        "A person at the centre can repeat your example from the document and knows what remains before daily use."
+      ],
+      "steps": [
+        {
+          "title": "Use it in your own project",
+          "minutes": 15,
+          "where": "Your document and help chat",
+          "action": "Choose a situation at your centre similar to the example. Write who handles it today, what they receive and what they must prepare. Replace fictional names only in a copy. Ask the person in charge to confirm the rule: Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. is the example answer, not a mandatory rule for every centre. Try three small cases together. Record where the result is saved, who checks it and how to return to working manually if the tool fails.",
+          "expect": "A person at the centre can repeat your example from the document and knows what remains before daily use.",
+          "stuck": "Return to the original example and compare each detail. In n8n open boxes in order and find the first different output."
+        }
+      ]
+    }
+  ],
+  "prompts": [
+    {
+      "id": "guided-practice",
+      "name": "Work through the example with me",
+      "when": "Paste it into ChatGPT, Claude or your usual text chat. Do not paste it into n8n’s Code box.",
+      "prompt": "I want to learn to build this project: Prepare educational trips step by step. I am starting from zero. Use everyday words and explain each action before asking me to do it.\n\nWHAT I HAVE\n{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}\n\nWHAT IT MEANS\ntransportConfirmed means the transport is confirmed; permissionsComplete means the person in charge checked the required permissions.\n\nWHAT I SHOULD ACHIEVE\nTransport is confirmed but permissions are incomplete. Keep the outing awaiting review.\n\nMY SITUATION\nI work at [MY CENTRE]. I will use [TOOL]. [REVIEWER] will check the work. First use this fictional example; later we will replace it with my project details. Ask me when information is missing and wait for an answer. Do not fill in dates, prices, permissions or answers yourself.\n\nHELP ME IN THIS ORDER\n1. Explain the problem through an everyday situation. Describe what I would have in front of me before starting and what I would see at the end. Explain any technical word in the same sentence.\n2. Solve the example using the details supplied. Show the complete result, not a list of tips. Point to the detail supporting each decision. If a person must review something, state the question they need to answer.\n3. Guide me through repeating it myself. Use numbered steps. For each step, say which application to open, which document or screen to find, what to copy and what should appear next. Do not simply say “configure the system”. If you do not know my version’s controls, ask for their names instead of inventing a location.\n4. Prepare a small table with: example number, what we received, what we will do, who reviews it and its current state. Leave the reviewer blank if I have not named them. Do not mark an action done until I confirm I performed it.\n5. Suggest a second example changing just one detail. Explain what should change and what should remain the same. Then show an example missing a required detail and explain how to ask for it.\n6. If automation would save copying, explain the manual route first and the automatic route second. Identify what the practice actually does and which real connection is still needed. Showing a result in n8n is different from saving it to a spreadsheet or sending a message.\n7. Help me adapt the example to my centre. Ask for one small case, explain which rule changes and keep the first version so I can return to it.\n\nAT THE END\nLeave a simple document containing the original example, worked answer, steps I repeated, errors I found and the next step. Include a check another person can carry out without reading this conversation. Do not treat an attractive document as proof that the project works.",
+      "fill": [
+        {
+          "slot": "[MY CENTRE]",
+          "what": "Name of the place where you will use it.",
+          "example": "North Centre"
+        },
+        {
+          "slot": "[TOOL]",
+          "what": "Application you have open.",
+          "example": "n8n"
+        },
+        {
+          "slot": "[REVIEWER]",
+          "what": "Person who will review decisions.",
+          "example": "The coordinator"
+        }
+      ],
+      "expect": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+      "stuck": "I do not understand step [NUMBER]. Explain it in simpler words. Say what to open, what to type and what I should see next. Solve that step with the example before asking me to continue."
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Prepare educational trips step by step · six-step practice",
+      "what": "Six steps to practise inside n8n. No keys are needed; it does not send messages or save data to other applications.",
+      "needs": [
+        "An n8n account or installation you can open."
+      ],
+      "flow": {
+        "name": "Prepare educational trips step by step · practice",
+        "active": false,
+        "nodes": [
+          {
+            "id": "salidas-educativas-0",
+            "name": "Start practice",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+              0,
+              0
+            ],
+            "parameters": {}
+          },
+          {
+            "id": "salidas-educativas-1",
+            "name": "Example data",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              240,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "return [{ json: {\"id\":\"SAL-01\",\"activity\":\"Museum visit\",\"transportConfirmed\":true,\"permissionsComplete\":false} }];"
+            }
+          },
+          {
+            "id": "salidas-educativas-2",
+            "name": "Check the number",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              480,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "const seen = new Set(); return $input.all().map(item => { const x = item.json; if (typeof x.id !== 'string' || !x.id.trim()) throw new Error('Missing id'); const sample = {\"id\":\"SAL-01\",\"activity\":\"Museum visit\",\"transportConfirmed\":true,\"permissionsComplete\":false}; for (const [key,value] of Object.entries(sample)) { if (!(key in x)) throw new Error('Missing field: '+key); if (value !== null && typeof x[key] !== typeof value) throw new Error('Wrong type: '+key); if (typeof value === 'number' && (!Number.isFinite(x[key]) || x[key] < 0)) throw new Error('Invalid number: '+key); } if (seen.has(x.id)) throw new Error('Repeated id in this run'); seen.add(x.id); return item; });"
+            }
+          },
+          {
+            "id": "salidas-educativas-3",
+            "name": "Prepare educational trips step by step",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              720,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "return $input.all().map(item => { const x = item.json; return { json: { ...x, result: x.transportConfirmed && x.permissionsComplete ? \"ready\" : \"review\" } }; });"
+            }
+          },
+          {
+            "id": "salidas-educativas-4",
+            "name": "Keep for review",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              960,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "return $input.all().map(item => ({ json: { ...item.json, reviewedBy: '', approved: false } }));"
+            }
+          },
+          {
+            "id": "salidas-educativas-5",
+            "name": "Show the result",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+              1200,
+              0
+            ],
+            "parameters": {
+              "mode": "runOnceForAllItems",
+              "jsCode": "return $input.all().map(item => ({ json: { ...item.json, practiceOnly: true, savedExternally: false } }));"
+            }
+          }
+        ],
+        "connections": {
+          "Start practice": {
+            "main": [
+              [
+                {
+                  "node": "Example data",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Example data": {
+            "main": [
+              [
+                {
+                  "node": "Check the number",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Check the number": {
+            "main": [
+              [
+                {
+                  "node": "Prepare educational trips step by step",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Prepare educational trips step by step": {
+            "main": [
+              [
+                {
+                  "node": "Keep for review",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Keep for review": {
+            "main": [
+              [
+                {
+                  "node": "Show the result",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          }
+        },
+        "settings": {
+          "executionOrder": "v1"
+        }
+      },
+      "fill": [],
+      "careful": [
+        "Import the file, run it and open the last box. The result remains inside n8n.",
+        "For “Prepare educational trips step by step”, confirm who reviews a decision before it takes effect. Practising an answer is not approval to purchase, return an item or confirm a booking.",
+        "To save the n8n result, first create a test sheet with id, result, reviewedBy and approved columns. Add Google Sheets at the end and connect your account under credentials. Choose Append or Update Row, select the document and sheet, and use id as the matching column. Map each column to the same-named value from the previous box. Run one example, open the sheet and check its values.",
+        "Repeat the same number: this practice should update its row. Then try another number. A spreadsheet cannot guarantee preventing duplicates when several runs write at once; for that use, arrange a database that enforces unique numbers. Add real notifications after checking saving and review.",
+        "Also test leaving a required field empty. The workflow checks that all example fields exist and have the correct data type. Before daily use, add your centre’s rules, such as possible dates and allowed quantities, and a route to request missing details. Write down how to stop the process and where to continue manually."
+      ]
+    }
+  ],
+  "testData": [
+    {
+      "name": "Worked example",
+      "input": "{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}",
+      "expect": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review."
+    },
+    {
+      "name": "One changed detail",
+      "input": "A copy with one detail changed that affects the decision.",
+      "expect": "The answer changes for that reason and preserves the other details."
+    },
+    {
+      "name": "Missing information",
+      "input": "A copy without the example number.",
+      "expect": "Ask for the missing number; do not present the action as approved."
+    }
+  ],
+  "costs": [
+    {
+      "item": "Prepare educational trips step by step",
+      "free": "The manual practice uses your notes app.",
+      "paid": "Check each provider for the cost of the account, runs and connections you choose.",
+      "note": "Record the current price before purchasing; this kit does not promise a rate."
+    }
+  ],
+  "legal": [
+    "For prepare educational trips step by step, begin with the fictional example. Before adding real details, agree what information is needed, who may see it and when it will be removed."
+  ],
+  "risks": [
+    {
+      "risk": "Treating an automatic answer as approval",
+      "sign": "ready appears and someone acts without checking.",
+      "fix": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review."
+    },
+    {
+      "risk": "Losing the result when closing",
+      "sign": "It exists only on the test screen.",
+      "fix": "To save the n8n result, first create a test sheet with id, result, reviewedBy and approved columns. Add Google Sheets at the end and connect your account under credentials. Choose Append or Update Row, select the document and sheet, and use id as the matching column. Map each column to the same-named value from the previous box. Run one example, open the sheet and check its values."
+    }
+  ],
+  "delivery": [
+    {
+      "name": "my-practice.txt",
+      "what": "The notebook another person can follow.",
+      "template": "Prepare educational trips step by step\n\nExample:\n{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}\n\nWhat should happen:\nTransport is confirmed but permissions are incomplete. Keep the outing awaiting review.\n\nWhat happened when I tried it:\n\nWhat I want to change in my project:\n"
+    },
+    {
+      "name": "salidas-educativas.n8n.json",
+      "what": "Six steps to practise inside n8n. No keys are needed; it does not send messages or save data to other applications.",
+      "template": "{\n  \"name\": \"Prepare educational trips step by step · practice\",\n  \"active\": false,\n  \"nodes\": [\n    {\n      \"id\": \"salidas-educativas-0\",\n      \"name\": \"Start practice\",\n      \"type\": \"n8n-nodes-base.manualTrigger\",\n      \"typeVersion\": 1,\n      \"position\": [\n        0,\n        0\n      ],\n      \"parameters\": {}\n    },\n    {\n      \"id\": \"salidas-educativas-1\",\n      \"name\": \"Example data\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        240,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return [{ json: {\\\"id\\\":\\\"SAL-01\\\",\\\"activity\\\":\\\"Museum visit\\\",\\\"transportConfirmed\\\":true,\\\"permissionsComplete\\\":false} }];\"\n      }\n    },\n    {\n      \"id\": \"salidas-educativas-2\",\n      \"name\": \"Check the number\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        480,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"const seen = new Set(); return $input.all().map(item => { const x = item.json; if (typeof x.id !== 'string' || !x.id.trim()) throw new Error('Missing id'); const sample = {\\\"id\\\":\\\"SAL-01\\\",\\\"activity\\\":\\\"Museum visit\\\",\\\"transportConfirmed\\\":true,\\\"permissionsComplete\\\":false}; for (const [key,value] of Object.entries(sample)) { if (!(key in x)) throw new Error('Missing field: '+key); if (value !== null && typeof x[key] !== typeof value) throw new Error('Wrong type: '+key); if (typeof value === 'number' && (!Number.isFinite(x[key]) || x[key] < 0)) throw new Error('Invalid number: '+key); } if (seen.has(x.id)) throw new Error('Repeated id in this run'); seen.add(x.id); return item; });\"\n      }\n    },\n    {\n      \"id\": \"salidas-educativas-3\",\n      \"name\": \"Prepare educational trips step by step\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        720,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => { const x = item.json; return { json: { ...x, result: x.transportConfirmed && x.permissionsComplete ? \\\"ready\\\" : \\\"review\\\" } }; });\"\n      }\n    },\n    {\n      \"id\": \"salidas-educativas-4\",\n      \"name\": \"Keep for review\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        960,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => ({ json: { ...item.json, reviewedBy: '', approved: false } }));\"\n      }\n    },\n    {\n      \"id\": \"salidas-educativas-5\",\n      \"name\": \"Show the result\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        1200,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => ({ json: { ...item.json, practiceOnly: true, savedExternally: false } }));\"\n      }\n    }\n  ],\n  \"connections\": {\n    \"Start practice\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Example data\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Example data\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Check the number\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Check the number\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Prepare educational trips step by step\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Prepare educational trips step by step\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Keep for review\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Keep for review\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Show the result\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+    }
+  ],
+  "pricing": [
+    {
+      "tier": "Prepare educational trips step by step",
+      "what": "Agree in writing whether you will deliver only the practice or also the connections and team training.",
+      "price": "Calculate preparation, testing and support hours; there is no universal price.",
+      "note": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review."
+    }
+  ],
+  "defend": [
+    {
+      "question": "How do I show this project is useful?",
+      "answer": "A centre checks trip preparations before a person approves the outing. Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. Show the original, changed and incomplete examples. Then ask another person to repeat one using your notebook."
+    }
+  ],
+  "words": [
+    [
+      "n8n",
+      "An application that joins steps so they repeat in order."
+    ],
+    [
+      "JSON",
+      "A text format an application can read as names and values."
+    ],
+    [
+      "review",
+      "Needs a person to check it."
+    ],
+    [
+      "ready",
+      "Passed this check; it is not approval yet."
+    ]
+  ],
+  "tools": [
+    "n8n",
+    "sheets",
+    "openai"
+  ],
+  "promptFamilies": [],
+  "skillKeywords": [
+    "salidas-educativas"
+  ],
+  "deliverables": [
+    "Notebook with three tests and their results",
+    "Practice workflow to import into n8n"
+  ],
+  "workbook": {
+    "language": "en",
+    "title": "Start here: a complete example from zero",
+    "outcome": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+    "context": [
+      "A centre checks trip preparations before a person approves the outing.",
+      "This guide starts with a small practice for “Prepare educational trips step by step”. You do not need programming knowledge to understand it. Read the example, repeat it and then replace its details with a similar situation. The buttons below let you move through the steps; the complete text follows so you can copy it and work at your own pace."
+    ],
+    "prerequisites": [
+      {
+        "name": "A place to write",
+        "instruction": "Use your usual notes app. Create a document named after this kit and check that you can reopen it.",
+        "check": "You can write, save and find the document."
+      },
+      {
+        "name": "The tool for the step you will practise",
+        "instruction": "For the first three steps you only need your document and an AI chat. n8n is used in the automation step; you can read it before opening an account.",
+        "check": "You know which step you will do and have its tool open."
+      }
+    ],
+    "inputs": [
+      {
+        "field": "Fictional example",
+        "example": "{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}",
+        "rule": "transportConfirmed means the transport is confirmed; permissionsComplete means the person in charge checked the required permissions."
+      },
+      {
+        "field": "Answer to check",
+        "example": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+        "rule": "Compare your result with this answer after doing the practice."
+      }
+    ],
+    "steps": [
+      {
+        "title": "See the example first",
+        "instruction": "Read the example below slowly. transportConfirmed means the transport is confirmed; permissionsComplete means the person in charge checked the required permissions. Then read the worked answer: Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. Point to or copy the detail explaining that answer. Do not open n8n or connect accounts yet. First understand the decision the tool will later repeat.",
+        "configuration": "{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}",
+        "expected": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+        "why": "Understanding a small example helps you recognise a wrong result later."
+      },
+      {
+        "title": "Make a place to keep your work",
+        "instruction": "Open a blank document in Word, Google Docs or your usual notes app. Title it “Practice: Prepare educational trips step by step”. Write four headings on separate lines: Example, What should happen, What happened when I tried it, What I want to change. Put the data under Example and the answer above under What should happen. Leave What happened empty because you have not run the test yet.",
+        "expected": "The named document contains the example and answer separately. Close and reopen it to check that you can find it.",
+        "why": "This document is your practice notebook. You do not need a programming file."
+      },
+      {
+        "title": "Do the example by hand",
+        "instruction": "Copy the message in “Text to ask for help”. Change only the three bracketed spaces and paste it into your AI chat. Read the reply beside the example. Check this in particular: Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. If the chat changes a detail, paste the correct detail and ask it to redo that part. Save the checked answer and one sentence explaining why it is correct.",
+        "expected": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+        "why": "The chat helps write and explain. You check that it uses the right details."
+      },
+      {
+        "title": "Try the optional automation",
+        "instruction": "Download or copy this practice’s JSON file. JSON is a text format n8n can read. Create an empty workflow in n8n and use the import-from-file menu. You will see six boxes joined by arrows. Each box is one step. Click Execute workflow. Open the final box and view its JSON output: it contains the original details and result. review means a person must check it; ready means it passes this example’s check; closed means it is already closed. approved remains false: the program does not grant permission or confirm bookings.",
+        "expected": "The last box shows result and savedExternally: false. This confirms that the exercise calculates an answer inside n8n; it has not saved it elsewhere.",
+        "why": "Looking at what leaves each step helps locate an error."
+      },
+      {
+        "title": "Check a second example",
+        "instruction": "Copy the example and change one detail that affects the decision. Write what should happen first. For this kit, start with the detail that determines this answer: Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. Repeat the steps and compare. Then make another copy with its number or a required detail missing. Do not accept an invented confirmation. Write the question or warning you need to see. Keep these copies beside the first example so you can repeat all three checks tomorrow.",
+        "expected": "Your notebook contains three attempts: the original, a changed example and an incomplete one, each with what you actually saw.",
+        "why": "One test can pass by chance. Changing a detail shows whether you understand the rule."
+      },
+      {
+        "title": "Use it in your own project",
+        "instruction": "Choose a situation at your centre similar to the example. Write who handles it today, what they receive and what they must prepare. Replace fictional names only in a copy. Ask the person in charge to confirm the rule: Transport is confirmed but permissions are incomplete. Keep the outing awaiting review. is the example answer, not a mandatory rule for every centre. Try three small cases together. Record where the result is saved, who checks it and how to return to working manually if the tool fails.",
+        "expected": "A person at the centre can repeat your example from the document and knows what remains before daily use.",
+        "why": "The project becomes useful when another person can understand and repeat it."
+      }
+    ],
+    "prompts": [
+      {
+        "title": "Text to ask for help",
+        "where": "Paste it into ChatGPT, Claude or your usual text chat. Do not paste it into n8n’s Code box.",
+        "text": "I want to learn to build this project: Prepare educational trips step by step. I am starting from zero. Use everyday words and explain each action before asking me to do it.\n\nWHAT I HAVE\n{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}\n\nWHAT IT MEANS\ntransportConfirmed means the transport is confirmed; permissionsComplete means the person in charge checked the required permissions.\n\nWHAT I SHOULD ACHIEVE\nTransport is confirmed but permissions are incomplete. Keep the outing awaiting review.\n\nMY SITUATION\nI work at [MY CENTRE]. I will use [TOOL]. [REVIEWER] will check the work. First use this fictional example; later we will replace it with my project details. Ask me when information is missing and wait for an answer. Do not fill in dates, prices, permissions or answers yourself.\n\nHELP ME IN THIS ORDER\n1. Explain the problem through an everyday situation. Describe what I would have in front of me before starting and what I would see at the end. Explain any technical word in the same sentence.\n2. Solve the example using the details supplied. Show the complete result, not a list of tips. Point to the detail supporting each decision. If a person must review something, state the question they need to answer.\n3. Guide me through repeating it myself. Use numbered steps. For each step, say which application to open, which document or screen to find, what to copy and what should appear next. Do not simply say “configure the system”. If you do not know my version’s controls, ask for their names instead of inventing a location.\n4. Prepare a small table with: example number, what we received, what we will do, who reviews it and its current state. Leave the reviewer blank if I have not named them. Do not mark an action done until I confirm I performed it.\n5. Suggest a second example changing just one detail. Explain what should change and what should remain the same. Then show an example missing a required detail and explain how to ask for it.\n6. If automation would save copying, explain the manual route first and the automatic route second. Identify what the practice actually does and which real connection is still needed. Showing a result in n8n is different from saving it to a spreadsheet or sending a message.\n7. Help me adapt the example to my centre. Ask for one small case, explain which rule changes and keep the first version so I can return to it.\n\nAT THE END\nLeave a simple document containing the original example, worked answer, steps I repeated, errors I found and the next step. Include a check another person can carry out without reading this conversation. Do not treat an attractive document as proof that the project works.",
+        "replace": "Replace MY CENTRE, TOOL and REVIEWER. If you do not know who will check it, write “not decided yet”.",
+        "expected": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+        "followUp": "I do not understand step [NUMBER]. Explain it in simpler words. Say what to open, what to type and what I should see next. Solve that step with the example before asking me to continue."
+      }
+    ],
+    "files": [
+      {
+        "name": "my-practice.txt",
+        "purpose": "Your notebook: copy this text into a document and fill in what you did.",
+        "content": "Prepare educational trips step by step\n\nExample:\n{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}\n\nWhat should happen:\nTransport is confirmed but permissions are incomplete. Keep the outing awaiting review.\n\nWhat happened when I tried it:\n\nWhat I want to change in my project:\n"
+      },
+      {
+        "name": "salidas-educativas.n8n.json",
+        "purpose": "Six steps to practise inside n8n. No keys are needed; it does not send messages or save data to other applications.",
+        "content": "{\n  \"name\": \"Prepare educational trips step by step · practice\",\n  \"active\": false,\n  \"nodes\": [\n    {\n      \"id\": \"salidas-educativas-0\",\n      \"name\": \"Start practice\",\n      \"type\": \"n8n-nodes-base.manualTrigger\",\n      \"typeVersion\": 1,\n      \"position\": [\n        0,\n        0\n      ],\n      \"parameters\": {}\n    },\n    {\n      \"id\": \"salidas-educativas-1\",\n      \"name\": \"Example data\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        240,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return [{ json: {\\\"id\\\":\\\"SAL-01\\\",\\\"activity\\\":\\\"Museum visit\\\",\\\"transportConfirmed\\\":true,\\\"permissionsComplete\\\":false} }];\"\n      }\n    },\n    {\n      \"id\": \"salidas-educativas-2\",\n      \"name\": \"Check the number\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        480,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"const seen = new Set(); return $input.all().map(item => { const x = item.json; if (typeof x.id !== 'string' || !x.id.trim()) throw new Error('Missing id'); const sample = {\\\"id\\\":\\\"SAL-01\\\",\\\"activity\\\":\\\"Museum visit\\\",\\\"transportConfirmed\\\":true,\\\"permissionsComplete\\\":false}; for (const [key,value] of Object.entries(sample)) { if (!(key in x)) throw new Error('Missing field: '+key); if (value !== null && typeof x[key] !== typeof value) throw new Error('Wrong type: '+key); if (typeof value === 'number' && (!Number.isFinite(x[key]) || x[key] < 0)) throw new Error('Invalid number: '+key); } if (seen.has(x.id)) throw new Error('Repeated id in this run'); seen.add(x.id); return item; });\"\n      }\n    },\n    {\n      \"id\": \"salidas-educativas-3\",\n      \"name\": \"Prepare educational trips step by step\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        720,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => { const x = item.json; return { json: { ...x, result: x.transportConfirmed && x.permissionsComplete ? \\\"ready\\\" : \\\"review\\\" } }; });\"\n      }\n    },\n    {\n      \"id\": \"salidas-educativas-4\",\n      \"name\": \"Keep for review\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        960,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => ({ json: { ...item.json, reviewedBy: '', approved: false } }));\"\n      }\n    },\n    {\n      \"id\": \"salidas-educativas-5\",\n      \"name\": \"Show the result\",\n      \"type\": \"n8n-nodes-base.code\",\n      \"typeVersion\": 2,\n      \"position\": [\n        1200,\n        0\n      ],\n      \"parameters\": {\n        \"mode\": \"runOnceForAllItems\",\n        \"jsCode\": \"return $input.all().map(item => ({ json: { ...item.json, practiceOnly: true, savedExternally: false } }));\"\n      }\n    }\n  ],\n  \"connections\": {\n    \"Start practice\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Example data\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Example data\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Check the number\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Check the number\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Prepare educational trips step by step\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Prepare educational trips step by step\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Keep for review\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Keep for review\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Show the result\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"settings\": {\n    \"executionOrder\": \"v1\"\n  }\n}"
+      }
+    ],
+    "tests": [
+      {
+        "name": "Worked example",
+        "input": "{\n  \"id\": \"SAL-01\",\n  \"activity\": \"Museum visit\",\n  \"transportConfirmed\": true,\n  \"permissionsComplete\": false\n}",
+        "expected": "Transport is confirmed but permissions are incomplete. Keep the outing awaiting review.",
+        "inspect": "Your answer or the output of the last n8n box."
+      },
+      {
+        "name": "One changed detail",
+        "input": "A copy with one detail changed that affects the decision.",
+        "expected": "The answer changes for that reason and preserves the other details.",
+        "inspect": "Both copies side by side."
+      },
+      {
+        "name": "Missing information",
+        "input": "A copy without the example number.",
+        "expected": "Ask for the missing number; do not present the action as approved.",
+        "inspect": "The review or error message before continuing."
+      }
+    ],
+    "troubleshooting": [
+      {
+        "symptom": "I do not understand a word",
+        "cause": "The explanation skipped a step you need.",
+        "fix": "Use the help message and ask for just one step using the example. You do not need to learn every tool term at once."
+      },
+      {
+        "symptom": "The answer does not match",
+        "cause": "A detail or rule may have changed.",
+        "fix": "Return to the original example and compare each detail. In n8n open boxes in order and find the first different output."
+      }
+    ],
+    "production": [
+      "For “Prepare educational trips step by step”, confirm who reviews a decision before it takes effect. Practising an answer is not approval to purchase, return an item or confirm a booking.",
+      "To save the n8n result, first create a test sheet with id, result, reviewedBy and approved columns. Add Google Sheets at the end and connect your account under credentials. Choose Append or Update Row, select the document and sheet, and use id as the matching column. Map each column to the same-named value from the previous box. Run one example, open the sheet and check its values.",
+      "Repeat the same number: this practice should update its row. Then try another number. A spreadsheet cannot guarantee preventing duplicates when several runs write at once; for that use, arrange a database that enforces unique numbers. Add real notifications after checking saving and review.",
+      "Also test leaving a required field empty. The workflow checks that all example fields exist and have the correct data type. Before daily use, add your centre’s rules, such as possible dates and allowed quantities, and a route to request missing details. Write down how to stop the process and where to continue manually."
+    ],
+    "sources": [
+      {
+        "title": "How to import the example into n8n",
+        "url": "https://docs.n8n.io/workflows/export-import/"
+      },
+      {
+        "title": "How to save rows to Google Sheets",
+        "url": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets/sheet-operations/"
+      }
+    ]
+  }
+}
