@@ -176,15 +176,14 @@ function PromptCard({ prompt, open }: { prompt: KitPrompt; open?: boolean }) {
   )
 }
 
-export default function Kits() {
+export default function Kits({ kitId }: { kitId?: string }) {
   const course = useCourse()
   const locale = useLocale()
   const student = useStudent()
   const kits = course.kits || []
-  const [active, setActive] = useState(kits[0]?.id || '')
   const [tab, setTab] = useState<TabId>('resumen')
   const [saved, setSaved] = useState(false)
-  const kit = kits.find((item) => item.id === active) || kits[0]
+  const kit = kits.find((item) => item.id === kitId)
 
   const tools = useMemo(() => (kit ? kitTools(course, kit) : []), [course, kit])
   const promptFamilies = useMemo(() => (kit ? kitPromptFamilies(course, kit) : []), [course, kit])
@@ -200,24 +199,45 @@ export default function Kits() {
     [kit],
   )
 
+  if (!kitId) {
+    return (
+      <div className="st-page">
+        <header className="st-page-title">
+          <span className="st-kicker"><Sparkles size={12} /> {locale === 'en' ? 'Large projects' : 'Proyectos grandes'}</span>
+          <h1>{locale === 'en' ? 'Institutional kits' : 'Kits institucionales'}</h1>
+          <p>{locale === 'en' ? 'Choose a kit to open its project, steps and resources.' : 'Elige un kit para abrir su proyecto, sus pasos y sus recursos.'}</p>
+        </header>
+        <nav className="st-kit-catalog" aria-label={locale === 'en' ? 'Available kits' : 'Kits disponibles'}>
+          {kits.map(item => (
+            <a key={item.id} href={href({ name: 'kits', kitId: item.id })}>
+              <span className="st-kicker">{item.kicker}</span>
+              <h2>{item.title}</h2>
+              <p>{item.promise}</p>
+              <span className="st-kit-open">{locale === 'en' ? 'Open kit' : 'Abrir kit'} <ArrowRight size={16} /></span>
+            </a>
+          ))}
+        </nav>
+        {!kits.length && <p>{locale === 'en' ? 'No kits available.' : 'No hay kits disponibles.'}</p>}
+      </div>
+    )
+  }
+
   if (!kit) {
     return (
       <div className="st-page">
         <div className="st-page-title">
-          <h1>{locale === 'en' ? 'Institutional kits' : 'Kits institucionales'}</h1>
-          <p>
-            {locale === 'en'
-              ? <>No kits found in <code>content/kits/</code>. Add a .json file and regenerate the index.</>
-              : <>No hay ningún kit en <code>content/kits/</code>. Añade un archivo .json y vuelve a generar el índice.</>}
-          </p>
+          <h1>{locale === 'en' ? 'Kit not found' : 'Kit no encontrado'}</h1>
+          <a className="st-btn" href={href({ name: 'kits' })}>{locale === 'en' ? 'Back to kits' : 'Volver a los kits'}</a>
         </div>
       </div>
     )
   }
 
   function saveToProject() {
+    if (!kit) return
     const previous = student.project
     store.setProject({
+      ...previous,
       name: previous?.name || kit.title,
       goal: previous?.goal || kit.title,
       audience: previous?.audience || kit.audience,
@@ -249,35 +269,14 @@ export default function Kits() {
 
   return (
     <div className="st-page">
-      <div className="st-page-title">
-        <span className="st-kicker"><Sparkles size={12} /> {locale === 'en' ? 'Large projects' : 'Proyectos grandes'}</span>
-        <h1>{locale === 'en' ? 'Institutional kits' : 'Kits institucionales'}</h1>
-        <p>
-          {locale === 'en'
-            ? 'Each kit is a complete project: define your case with the brief, follow the phases, copy the prompts and build the system without leaving this page. The main path does not require coding; the code is below for anyone who wants to dig in.'
-            : 'Cada kit es un proyecto completo: define tu caso con el brief, sigue las fases, copia los prompts y monta el sistema sin salir de esta página. La ruta principal no exige programar; el código está debajo para quien quiera bajar.'}
-        </p>
-      </div>
+      <a className="st-btn-ghost st-kit-back" href={href({ name: 'kits' })}>{locale === 'en' ? '← Back to kits' : '← Volver a los kits'}</a>
 
-      <div className="st-kit-layout">
-        <aside className="st-kit-index" aria-label={locale === 'en' ? 'Available kits' : 'Kits disponibles'}>
-          {kits.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={item.id === kit.id ? 'on' : ''}
-              onClick={() => { setActive(item.id); setTab('resumen') }}
-            >
-              <span>{item.kicker}</span>
-              <strong>{item.title}</strong>
-            </button>
-          ))}
-        </aside>
+      <div className="st-kit-detail-layout">
 
         <section className="st-kit-board">
           <header className="st-kit-head">
             <span className="st-kicker">{kit.kicker}</span>
-            <h2>{kit.title}</h2>
+            <h1>{kit.title}</h1>
             <p>{kit.promise}</p>
             <div className="st-kit-actions">
               <CopyButton text={kit.brief.prompt} label={locale === 'en' ? 'Copy the starter brief' : 'Copiar el brief de arranque'} />

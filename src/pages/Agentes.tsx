@@ -229,7 +229,7 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
           <div className="st-section-head"><div><span className="st-kicker">{locale === 'en' ? 'Fits with' : 'Encaja con'}</span><h2>{locale === 'en' ? 'Kits that use this agent' : 'Kits que usan este agente'}</h2></div></div>
           <div className="st-kit-resource-list">
             {relatedKits.map((kit) => kit && (
-              <a key={kit.id} href={href({ name: 'kits' })}>
+              <a key={kit.id} href={href({ name: 'kits', kitId: kit.id })}>
                 <ArrowRight size={13} />
                 <span><strong>{kit.title}</strong><small>{kit.promise}</small></span>
               </a>

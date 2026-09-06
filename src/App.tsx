@@ -409,7 +409,7 @@ function Pages({ route }: { route: Route }) {
     case 'proyecto': return <Proyecto stageId={route.stageId} />
     case 'deck': return <Deck deckId={route.deckId} />
     case 'prompts': return <Prompts familyId={route.familyId} />
-    case 'kits': return <Kits />
+    case 'kits': return <Kits key={route.kitId || 'catalog'} kitId={route.kitId} />
     case 'agentes': return <Agentes agentId={route.agentId} />
     case 'admin': return <Admin />
     case 'guia': return <Guia guideId={route.guideId} />
