@@ -1,6 +1,6 @@
-import { copyText } from '../clipboard'
+import PromptEditor from '../components/PromptEditor'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Ban, Check, Copy, Lightbulb, Save, Search, Sparkles, X } from 'lucide-react'
+import { Ban, Check, Lightbulb, Search, Sparkles, X } from 'lucide-react'
 import type { PromptFamily, PromptItem } from '../types'
 import { useCourse } from '../course'
 import { store, useStudent } from '../store'
@@ -16,8 +16,6 @@ type SearchResult = { prompt: PromptItem; family: PromptFamily }
  * devolver y qué hacer después con esa respuesta.
  */
 function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: string }) {
-  const [copied, setCopied] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [open, setOpen] = useState(false)
   const dialogRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -50,15 +48,15 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
   const student = useStudent()
   const locale = useLocale()
 
-  function saveToProject() {
+  function saveToProject(prepared: string) {
     const previous = student.project
     const savedPrompts = [
-      ...(previous?.savedPrompts || []).filter((saved) => saved.prompt !== prompt.prompt),
+      ...(previous?.savedPrompts || []).filter((saved) => saved.prompt !== prepared),
       {
         id: prompt.id || `${Date.now()}-${prompt.name}`,
         family: familyTitle,
         name: prompt.name,
-        prompt: prompt.prompt,
+        prompt: prepared,
         savedAt: new Date().toISOString(),
         source: prompt.source ? `Biblioteca de prompts · ${prompt.source}` : 'Biblioteca de prompts',
       },
@@ -77,8 +75,6 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
       savedPrompts,
       updatedAt: new Date().toISOString(),
     })
-    setSaved(true)
-    window.setTimeout(() => setSaved(false), 1800)
   }
 
   return (
@@ -110,49 +106,16 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
               <button type="button" className="st-icon-close" onClick={() => setOpen(false)} aria-label={locale === 'en' ? 'Close prompt' : 'Cerrar prompt'}><X size={16} /></button>
             </header>
             <div className="st-prompt-body">
-              <div className="st-prompt-text">
-                <button
-                  type="button"
-                  className="st-prompt-copy"
-                  onClick={() => {
-                    copyText(prompt.prompt).then(
-                      () => {
-                        setCopied(true)
-                        window.setTimeout(() => setCopied(false), 1800)
-                      },
-                      () => setCopied(false),
-                    )
-                  }}
-                >
-                  {copied ? <Check size={12} /> : <Copy size={12} />}
-                  {copied ? (locale === 'en' ? 'Copied' : 'Copiado') : (locale === 'en' ? 'Copy prompt' : 'Copiar el prompt')}
-                </button>
-                <button type="button" className="st-prompt-save" onClick={saveToProject}>
-                  {saved ? <Check size={12} /> : <Save size={12} />}
-                  {saved ? (locale === 'en' ? 'Saved' : 'Guardado') : (locale === 'en' ? 'Save to my project' : 'Guardar en mi proyecto')}
-                </button>
-                <pre>{prompt.prompt}</pre>
-                <small className="st-prompt-length">{prompt.prompt.trim().split(/\s+/).filter(Boolean).length} {locale === 'en' ? 'words · full brief with context, tests, cost and delivery' : 'palabras · encargo completo con contexto, pruebas, coste y entrega'}</small>
-              </div>
-
-              {prompt.fill?.length > 0 && (
-                <dl className="st-prompt-fill">
-                  <dt className="st-prompt-fill-title">{locale === 'en' ? 'What you need to replace' : 'Lo que tienes que sustituir'}</dt>
-                  {prompt.fill.map(([hueco, que]) => (
-                    <div key={hueco}>
-                      <dt><code>{hueco}</code></dt>
-                      <dd>{que}</dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
-
+              <p><strong>{locale === 'en' ? 'Where to use it: ' : 'Dónde usarlo: '}</strong>{prompt.where}</p>
+              {prompt.example && <details className="st-template-preview"><summary>{locale === 'en' ? 'See the worked example' : 'Ver el ejemplo resuelto'}</summary><h4>{locale === 'en' ? 'Starting details' : 'Datos de partida'}</h4><pre>{prompt.example.input}</pre><h4>{locale === 'en' ? 'Reference result' : 'Resultado de referencia'}</h4><pre>{prompt.example.output}</pre><p>{prompt.example.why}</p></details>}
+              <PromptEditor key={`${prompt.id}-${locale}`} name={prompt.name} text={prompt.prompt} hints={prompt.fill} exampleValues={prompt.exampleValues} onSave={saveToProject}/>
+              {prompt.practiceHref && <a className="st-btn-ghost" href={prompt.practiceHref} onClick={()=>setOpen(false)}>{locale === 'en' ? 'Open the practice and its files' : 'Abrir la práctica y sus archivos'}</a>}
               <p className="st-prompt-expect"><b>{locale === 'en' ? "It'll give you:" : 'Te va a devolver:'}</b> {prompt.expect}</p>
               {prompt.next && <p className="st-prompt-next"><b>{locale === 'en' ? 'And then:' : 'Y después:'}</b> {prompt.next}</p>}
               <div className="st-prompt-flow">
-                <span>{locale === 'en' ? '1. Copy' : '1. Copia'}</span>
-                <span>{locale === 'en' ? '2. Paste into your AI' : '2. Pega en tu IA'}</span>
-                <span>{locale === 'en' ? '3. Save the result' : '3. Guarda resultado'}</span>
+                <span>{locale === 'en' ? '1. Fill in' : '1. Rellena'}</span>
+                <span>{locale === 'en' ? '2. Check and copy' : '2. Revisa y copia'}</span>
+                <span>{locale === 'en' ? '3. Try in your AI' : '3. Prueba en tu IA'}</span>
                 <span>{locale === 'en' ? '4. Bring it to My project' : '4. Llévalo a Mi proyecto'}</span>
               </div>
             </div>
@@ -297,7 +260,7 @@ export default function Prompts({ familyId }: { familyId?: string }) {
       <section className="st-prompt-steps" aria-label={locale === 'en' ? 'Recommended workflow for using prompts' : 'Flujo recomendado para usar prompts'}>
         <div><span>01</span><strong>{locale === 'en' ? 'Open a block' : 'Abre un bloque'}</strong><small>{locale === 'en' ? 'Each block covers one thing: a task or a tool. Click the title to expand it.' : 'Cada bloque va de una cosa: una tarea o una herramienta. Pulsa el título para desplegarlo.'}</small></div>
         <div><span>02</span><strong>{locale === 'en' ? 'Search if unsure' : 'Busca si dudas'}</strong><small>{locale === 'en' ? 'Type any word: email, error, privacy, video, RAG, web, proposal...' : 'Escribe cualquier palabra: correo, error, privacidad, vídeo, RAG, web, propuesta...'}</small></div>
-        <div><span>03</span><strong>{locale === 'en' ? 'Save evidence' : 'Guarda evidencia'}</strong><small>{locale === 'en' ? 'Copy the prompt, fill in the brackets and save the useful result to My project.' : 'Copia el prompt, rellena corchetes y guarda el resultado útil en Mi proyecto.'}</small></div>
+        <div><span>03</span><strong>{locale === 'en' ? 'Save evidence' : 'Guarda evidencia'}</strong><small>{locale === 'en' ? 'Fill in the fields, copy your prepared prompt and save the useful result.' : 'Rellena los campos, copia tu prompt preparado y guarda el resultado útil.'}</small></div>
       </section>
 
       <section className="st-prompt-refine st-prompt-refine-top" aria-label={locale === 'en' ? 'Search the whole library' : 'Buscar en toda la biblioteca'}>

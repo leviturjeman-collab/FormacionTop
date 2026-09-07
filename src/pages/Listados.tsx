@@ -1,3 +1,4 @@
+import PromptEditor from '../components/PromptEditor'
 import { copyText } from '../clipboard'
 import ToolLearningPath from '../components/ToolLearningPath'
 import { useState } from 'react'
@@ -746,13 +747,10 @@ function ToolPromptLibrary({ prompts, label }: { prompts: ToolPrompt[]; label: s
                 </div>
                 <button type="button" className="st-btn" onClick={copyPrompt}>
                   {copied ? <Check size={13} /> : <Clipboard size={13} />}
-                  {locale === 'en' ? (copied ? 'Copied' : 'Copy') : (copied ? 'Copiado' : 'Copiar')}
+                  {locale === 'en' ? (copied ? 'Copied' : 'Copy original template') : (copied ? 'Copiado' : 'Copiar plantilla original')}
                 </button>
               </header>
-              <details open>
-                <summary>{locale === 'en' ? 'View the full prompt' : 'Ver el prompt completo'}</summary>
-                <pre><code>{active.prompt}</code></pre>
-              </details>
+              <PromptEditor key={active.name+locale} name={active.name} text={active.prompt}/>
               {active.where&&<div className="st-tool-prompt-help"><strong>{locale==='en'?'Where to use it':'Dónde utilizarlo'}</strong><p>{active.where}</p><strong>{locale==='en'?'What to replace':'Qué sustituir'}</strong><p>{active.replace}</p><strong>{locale==='en'?'Expected response':'Respuesta esperada'}</strong><p>{active.expected}</p>{active.followUp&&<><strong>{locale==='en'?'Correction prompt':'Prompt de corrección'}</strong><pre><code>{active.followUp}</code></pre></>}</div>}
               <div className="st-tool-prompt-help">
                 <strong>{locale === 'en' ? 'How to use it' : 'Cómo usarlo'}</strong>

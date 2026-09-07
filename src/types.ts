@@ -454,7 +454,7 @@ export interface ProjectManual {
   inputs: { field: string; example: string; rule: string }[]
   steps: { title: string; instruction: string; configuration?: string; expected: string; why: string }[]
   prompts: { title: string; where: string; text: string; replace: string; expected: string; followUp: string }[]
-  files: { name: string; purpose: string; content?: string; url?: string; verification?: {version:string;checkedAt:string;status:'passed'|'expected-error';expectedError?:string} }[]
+  files: { name: string; purpose: string; content?: string; url?: string; personalization?: import('./workflow-personalization').WorkflowPersonalization; verification?: {version:string;checkedAt:string;status:'passed'|'expected-error';expectedError?:string} }[]
   tests: { name: string; input: string; expected: string; inspect: string }[]
   troubleshooting: { symptom: string; cause: string; fix: string }[]
   production: string[]
@@ -543,6 +543,10 @@ export interface Deck {
 }
 
 export interface PromptItem {
+  exampleValues?: Record<string,string>
+  where?: string
+  practiceHref?: string
+  example?: {input:string;output:string;why:string}
   id?: string
   name: string
   when: string

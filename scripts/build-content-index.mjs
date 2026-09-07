@@ -1,4 +1,5 @@
 import {enrichCoursePractical} from './lib/course-practical.mjs'
+import {makePromptLibraryPractical} from './lib/practical-prompt-library.mjs'
 import {attachWorkflowEvidence} from './lib/workflow-evidence.mjs'
 import { writeCourseShards } from './lib/course-shards.mjs'
 /**
@@ -775,6 +776,7 @@ const course = {
 }
 
 enrichCoursePractical(course, LOCALE === 'en')
+makePromptLibraryPractical(course, LOCALE === 'en')
 attachWorkflowEvidence(course)
 await fs.writeFile(path.join(publicDir, outputFile), JSON.stringify(course), 'utf8')
 await writeCourseShards(course, publicDir, LOCALE)

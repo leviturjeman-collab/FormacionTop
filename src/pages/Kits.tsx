@@ -1,4 +1,5 @@
 import SaveResourceButton from '../components/SaveResourceButton'
+import PromptEditor from '../components/PromptEditor'
 import ProjectManualView from '../components/ProjectManualView'
 import { copyText } from '../clipboard'
 import { useMemo, useState } from 'react'
@@ -148,7 +149,7 @@ function PromptCard({ prompt, open }: { prompt: KitPrompt; open?: boolean }) {
         </div>
       </header>
 
-      {shown && <pre className="st-kit-pre">{prompt.prompt}</pre>}
+      {shown && <PromptEditor key={prompt.id+locale} name={prompt.name} text={prompt.prompt} hints={(prompt.fill||[]).map(f=>[f.slot,f.what+' '+f.example])}/>}
 
       {prompt.fill?.length > 0 && (
         <div className="st-kit-fill">

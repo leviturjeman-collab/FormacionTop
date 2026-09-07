@@ -35,9 +35,9 @@ for (const lesson of course.lessons) {
 for (const family of course.prompts || []) {
   check((family.prompts || []).length <= 50, `La categoria de prompts «${family.title}» tiene ${family.prompts?.length || 0}; debe tener como máximo 50.`)
   for (const prompt of family.prompts || []) {
-    check(countWords(prompt.prompt) >= 450, `El prompt «${prompt.name}» tiene menos de 450 palabras.`)
-    check(/\[[^\]]+\]/.test(prompt.prompt), `El prompt institucional «${prompt.name}» no tiene corchetes rellenables.`)
-    check(/institucional/i.test(prompt.prompt), `El prompt «${prompt.name}» no está marcado como institucional.`)
+    check(countWords(prompt.prompt) >= 35 && prompt.expect && prompt.where, `El prompt «${prompt.name}» necesita un encargo, resultado y lugar de uso.`)
+    check(prompt.fill.every(([slot])=>prompt.prompt.includes(slot)), `El prompt «${prompt.name}» tiene campos que no se utilizan.`)
+    check(!/## (Reglas institucionales|Institutional rules|Cierre institucional obligatorio|Required institutional close)/.test(prompt.prompt), `El prompt «${prompt.name}» conserva el envoltorio genérico.`)
   }
 }
 // Nombres de familia sin duplicados visibles («… · Programa» vs «… · Biblioteca anterior»).

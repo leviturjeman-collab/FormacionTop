@@ -2,6 +2,7 @@ import {enrichManualPractice,makePracticeLab} from './practice-labs.mjs'
 import {kitWorkedAnswer} from './kit-worked-answers.mjs'
 import {programWorkedAnswer} from './program-worked-answers.mjs'
 import {toolProjectSpecs} from './tool-projects.mjs'
+import {scenarios} from './automation-projects.mjs'
 
 function kitStarter(kit,fixture,en){
  const t=(es,english)=>en?english:es,[input,answer,reason,challenge,challengeAnswer]=fixture
@@ -27,7 +28,14 @@ export function enrichCoursePractical(course,en=false){
    result.practiceLab.navigation=[{label:t(`Herramientas → ${tool.label} → Lección ${String(i+1).padStart(2,'0')}`,`Tools → ${tool.label} → Lesson ${String(i+1).padStart(2,'0')}`),href:`#/herramienta/${tool.id}/lecciones-herramienta/${String(i+1).padStart(2,'0')}`,when:t('Estás practicando esta lección. Utiliza su preparación y sus archivos.','You are practising this lesson. Use its preparation and files.')},...(i?[{label:t('Volver a la lección anterior','Return to the previous lesson'),href:`#/herramienta/${tool.id}/lecciones-herramienta/${String(i).padStart(2,'0')}`,when:t('Entra aquí si te falta la preparación que se reutiliza en este paso.','Open this if you need preparation reused in this step.')}]:[])]
    return result
   })
-  for(const a of tool.guide.automations||[])if(a.project)a.project=enrichManualPractice(a.project,{kind,en})
+  for(const a of tool.guide.automations||[])if(a.project){
+   a.project=enrichManualPractice(a.project,{kind,en})
+   if(en&&tool.id==='n8n'&&a.project.prompts.length===1){
+    const m=a.project
+    m.prompts.push({title:'Review an error using what happened',where:'In a text or coding assistant after copying the failing node’s input and error, without credentials.',replace:'Replace NODE AND OPERATION, ACTUAL INPUT and ERROR with what you observed.',text:`I am checking this n8n practice: ${m.title}.\nREFERENCE INPUT\n${m.practiceLab.source}\nREFERENCE RESULT\n${m.practiceLab.answer}\nFAILING NODE\n[NODE AND OPERATION]\nACTUAL INPUT\n[ACTUAL INPUT]\nERROR OR OUTPUT\n[ERROR]\nCompare the input with the practice sample. Identify the first difference and explain one possible cause in simple words. Give one small check that can confirm or reject that cause before changing anything else. Then give the exact field or code change and the result I should see. Preserve the exercise’s rules; do not remove a required check simply to make the node turn green. If an external action may already have happened, explain where to look for it before retrying. Do not claim an execution that you have not observed. If my report lacks a necessary detail, ask for it instead of guessing.`,expected:'A diagnosis linked to the actual input and error, with a specific check and correction.',followUp:'The result still differs after that change. Here is the new input and output: [NEW EVIDENCE]. Reconsider the cause and suggest one different check.'})
+   }
+   if(tool.id==='n8n')for(const s of scenarios){const file=a.project.files.find(f=>f.name===s.id+'.n8n.json');if(file)file.personalization={sample:s.sample,required:s.required}}
+  }
  }
  for(const lesson of course.curso){
   if(lesson.projectWorkbook){lesson.projectWorkbook=enrichManualPractice(lesson.projectWorkbook,{kind:toolProjectSpecs[lesson.tool]?.kind||'automation',en});continue}
