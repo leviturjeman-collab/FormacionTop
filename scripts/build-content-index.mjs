@@ -1,3 +1,5 @@
+import {enrichCoursePractical} from './lib/course-practical.mjs'
+import {attachWorkflowEvidence} from './lib/workflow-evidence.mjs'
 import { writeCourseShards } from './lib/course-shards.mjs'
 /**
  * Generador del curso.
@@ -772,6 +774,8 @@ const course = {
   lessons,
 }
 
+enrichCoursePractical(course, LOCALE === 'en')
+attachWorkflowEvidence(course)
 await fs.writeFile(path.join(publicDir, outputFile), JSON.stringify(course), 'utf8')
 await writeCourseShards(course, publicDir, LOCALE)
 

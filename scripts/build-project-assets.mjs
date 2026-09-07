@@ -2,6 +2,7 @@ import {englishProfiles} from './lib/tool-projects.en.mjs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {scenarios,labWorkflow,eventSchema} from './lib/automation-projects.mjs'
+import {scenarioVariation} from './lib/automation-variations.mjs'
 import {toolProjectSpecs,projectReadme} from './lib/tool-projects.mjs'
 import {starterFiles} from './lib/project-starters.mjs'
 import {deflateRawSync} from 'node:zlib'
@@ -9,7 +10,13 @@ import {deflateRawSync} from 'node:zlib'
 const out=path.resolve('public/project-assets')
 await fs.mkdir(path.join(out,'automations'),{recursive:true})
 await fs.mkdir(path.join(out,'tools'),{recursive:true})
-for(const s of scenarios)await fs.writeFile(path.join(out,'automations',s.id+'.n8n.json'),JSON.stringify(labWorkflow(s),null,2))
+for(const s of scenarios){
+ await fs.writeFile(path.join(out,'automations',s.id+'.n8n.json'),JSON.stringify(labWorkflow(s),null,2))
+ const variation=scenarioVariation(s)
+ await fs.writeFile(path.join(out,'automations',s.id+'-variation.n8n.json'),JSON.stringify(labWorkflow(variation),null,2))
+ const missing=structuredClone(s);delete missing.sample[s.required[0]];missing.name+=' · dato ausente'
+ await fs.writeFile(path.join(out,'automations',s.id+'-missing.n8n.json'),JSON.stringify(labWorkflow(missing),null,2))
+}
 await fs.writeFile(path.join(out,'automations','schema.sql'),eventSchema)
 const packages={}
 for(const [id,s] of Object.entries(toolProjectSpecs))packages[id]={...starterFiles(s.kind),'README.md':projectReadme(s)}

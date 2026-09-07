@@ -6,11 +6,13 @@ import { href } from '../router'
 import { Code } from '../components/Parts'
 import { useLocale } from '../i18n'
 
+function isWorkflowFragment(code:string){try{const value=JSON.parse(code);return Array.isArray(value.nodes)&&value.connections&&!value.name}catch{return false}}
+
 /**
  * Proyecto final de un área.
  *
  * Es lo que el alumno construye al terminar el área juntando todo lo aprendido:
- * código completo, paso a paso, que se copia y funciona.
+ * Cada fragmento pertenece a su paso; las conexiones requieren su preparación.
  */
 export default function Proyecto({ stageId }: { stageId: string }) {
   const course = useCourse()
@@ -106,6 +108,7 @@ export default function Proyecto({ stageId }: { stageId: string }) {
             </div>
 
             <p className="st-project-why">{step.why}</p>
+            {isWorkflowFragment(step.code)&&<p className="st-panel">{locale==='en'?'This is a fragment to add to the workflow you are building, not a complete standalone workflow. Paste it into the editor at this step and connect it following the project instructions.':'Este es un fragmento para añadir al flujo que estás construyendo, no un flujo completo independiente. Pégalo en el editor al llegar a este paso y conéctalo siguiendo las instrucciones del proyecto.'} <a href="#/herramienta/n8n/lecciones-herramienta/01">{locale==='en'?'Start with a complete introductory practice':'Empezar con una práctica inicial completa'}</a></p>}
             <Code code={step.code} lang={step.lang} />
             <p className="st-practice-expected"><b>{locale === 'en' ? 'You should see:' : 'Tienes que ver:'}</b> {step.expected}</p>
             {step.trouble && (

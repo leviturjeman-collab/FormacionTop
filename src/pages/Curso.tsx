@@ -1,5 +1,6 @@
 import TaskDisclosure from '../components/TaskDisclosure'
 import ProjectManualView from '../components/ProjectManualView'
+import PracticeLabView from '../components/PracticeLabView'
 import SaveResourceButton from '../components/SaveResourceButton'
 import { copyText } from '../clipboard'
 import { useState } from 'react'
@@ -391,6 +392,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       {locale === 'en' && leccion.instructionalLocale === 'es' && <p lang="en" className="st-panel">This expanded workbook is currently available in Spanish.</p>}
       {leccion.projectWorkbook && <ProjectManualView manual={leccion.projectWorkbook}/>}
+      {leccion.practiceLab && <PracticeLabView lab={leccion.practiceLab}/>}
       <div className="st-blocks">
         {leccion.theory.map((part, index) => (
           <details key={index} className="st-block st-block-seccion" open>

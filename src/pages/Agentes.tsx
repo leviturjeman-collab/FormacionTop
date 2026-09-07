@@ -1,3 +1,4 @@
+import PracticeLabView from '../components/PracticeLabView'
 import { copyText } from '../clipboard'
 import { useMemo, useState } from 'react'
 import {
@@ -146,6 +147,7 @@ function AgentDetail({ agent, all }: { agent: ReadyAgent; all: ReadyAgent[] }) {
 
       <section className="st-kit-block">
         <div className="st-section-head"><div><span className="st-kicker"><ListChecks size={11} /> {locale === 'en' ? 'Installation' : 'Instalación'}</span><h2>{locale === 'en' ? 'Set it up step by step' : 'Móntalo paso a paso'}</h2></div></div>
+        {agent.practiceLab && <PracticeLabView lab={agent.practiceLab}/>}
         <ol className="st-kit-steps">
           {agent.setup.map((step, index) => (
             <li key={step.title}>

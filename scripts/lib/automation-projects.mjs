@@ -1,3 +1,4 @@
+import {scenarioVariation} from './automation-variations.mjs'
 import {plainAutomationManual} from './plain-automation-lessons.mjs'
 import {englishAutomationManual} from './automation-projects.en.mjs'
 /** Original implementations and fixtures. Logic labs run without external accounts. */
@@ -63,4 +64,13 @@ function authoredAutomationManual(s,en=false) {
  }
 }
 
-export function automationManual(s,en=false) { return plainAutomationManual(authoredAutomationManual(s,en),s,en) }
+export function automationManual(s,en=false) {
+ const m=plainAutomationManual(authoredAutomationManual(s,en),s,en),v=scenarioVariation(s),t=(es,english)=>en?english:es
+ const expected=v.expectedError?t(`La caja Resolver se detiene con el error «${v.expectedError}». En esta prueba el error es el resultado esperado: no debe llegar a Comprobar resultado.`,`Resolver stops with “${v.expectedError}”. The error is expected in this test: it must not reach Comprobar resultado.`):JSON.stringify(v.expected,null,2)
+ m.steps[0].instruction=t(`Descarga ${s.id}.n8n.json del apartado Archivos. En n8n crea un workflow vacío e importa ese archivo con Import from File, o utiliza Copiar flujo completo y pégalo en el lienzo. Deben aparecer Inicio manual, Muestra del proyecto, Resolver y Comprobar resultado. Pulsa Execute workflow. Abre Comprobar resultado: passed debe ser true. Este archivo utiliza datos inventados y no conecta cuentas externas.`,`Download ${s.id}.n8n.json from Files. In n8n create an empty workflow and import it with Import from File, or use Copy complete workflow and paste into the canvas. You should see Inicio manual, Muestra del proyecto, Resolver and Comprobar resultado. Select Execute workflow, then open Comprobar resultado: passed should be true. This file uses fictional details and connects no external accounts. Node names stay unchanged to match the file.`)
+ m.steps[2].instruction=t(`Ahora abre un workflow nuevo e importa ${s.id}-variation.n8n.json. Incluye el segundo ejemplo y su comprobación ya preparados. Compara Muestra del proyecto con el primer archivo y señala el dato que ha cambiado. Ejecuta y compara la salida con la referencia de abajo. Si editas tú la muestra original, también debes actualizar el objeto expected de Comprobar resultado; el archivo del segundo intento muestra exactamente cómo queda.`,`Now open a new workflow and import ${s.id}-variation.n8n.json. It includes the second example and its prepared check. Compare Muestra del proyecto with the first file and identify the changed detail. Run it and compare the output below. When editing the original sample yourself, also update expected in Comprobar resultado; the second-attempt file shows the exact configuration.`)
+ m.steps[2].expected=expected
+ m.tests[1]={...m.tests[1],input:JSON.stringify(v.sample,null,2),expected,inspect:t(`Importa ${s.id}-variation.n8n.json en otro workflow y abre ${v.expectedError?'Resolver':'Comprobar resultado'} después de ejecutar.`,`Import ${s.id}-variation.n8n.json into another workflow and open ${v.expectedError?'Resolver':'Comprobar resultado'} after running.`)}
+ m.files.push({name:s.id+'-variation.n8n.json',url:'/project-assets/automations/'+s.id+'-variation.n8n.json',purpose:t('Segundo intento completo: datos nuevos y comprobación preparada. Lee el resultado esperado antes de ejecutarlo.','Complete second attempt: changed details and prepared check. Read its expected result before running.')},{name:s.id+'-missing.n8n.json',url:'/project-assets/automations/'+s.id+'-missing.n8n.json',purpose:t(`Prueba de error intencionado: falta ${s.required[0]}. Resolver debe detenerse con «Falta ${s.required[0]}». Este archivo enseña a reconocer un dato ausente.`,`Intentional error test: ${s.required[0]} is missing. Resolver must stop with “Falta ${s.required[0]}”. This file teaches how to recognise missing input.`)})
+ return m
+}

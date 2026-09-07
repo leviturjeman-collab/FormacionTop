@@ -1,3 +1,5 @@
+import {programWorkedAnswer} from './program-worked-answers.mjs'
+
 const concepts = {
  'que-es-la-ia': ['Qué puedes pedir a una IA','What you can ask an AI to do','Una IA puede ayudarte a escribir, ordenar información y explicar un tema. Trabaja con lo que recibe y con lo que aprendió antes. No sabe por sí sola qué ha pasado en tu centro. Si le das dos peticiones y le pides una tabla, puede ordenarlas; eso no significa que haya llamado a esas personas ni reservado sus plazas.','An AI can help write, organise information and explain a topic. It uses what it receives and what it learned earlier. It does not automatically know what happened at your centre. Giving it two requests and asking for a table can organise them; it does not mean it called those people or booked their places.'],
  'por-que-se-inventa': ['Cómo detectar una respuesta inventada','How to spot an invented answer','La IA puede escribir con mucha seguridad aunque le falte información. Si una petición no dice el horario, una respuesta correcta debe señalar que falta. No basta con que la frase suene bien. Compara cada nombre, fecha y cantidad con el documento original y pregunta de dónde sale cualquier dato nuevo.','AI can sound confident while missing information. If a request does not give a time, a correct reply must flag that gap. Sounding convincing is not enough. Compare every name, date and amount with the original document and ask where any new detail came from.'],
@@ -47,9 +49,12 @@ function authoredPlainProgramLesson(lesson,row,en=false) {
 }
 
 export function plainProgramLesson(lesson,row,en=false) {
+ const fixture=programWorkedAnswer(lesson.id,en)
+ if(fixture&&row){row=[...row];row[en?3:5]=fixture[0];row[en?4:6]=fixture[1];row[en?6:8]=fixture[3]}
  const result=authoredPlainProgramLesson(lesson,row,en)
  if(!concepts[lesson.id]||!row)return result
  const t=(es,english)=>en?english:es
+ if(fixture)result.errors=[{message:t('Mi respuesta no coincide con la referencia','My answer differs from the reference'),means:t('Revisa primero qué dato es diferente.','First check which detail differs.'),fix:fixture[2]}]
  result.tasks[1]={...result.tasks[1],
   title:t('Explica por qué el ejemplo queda así','Explain why the example looks this way'),
   where:t('En tu cuaderno, con el ejemplo a la vista','In your notebook, with the example in view'),

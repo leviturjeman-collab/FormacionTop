@@ -428,7 +428,22 @@ export interface ToolGuide {
 }
 
 /** A runnable project chapter or a complete automation implementation guide. */
+export interface PracticeLab {
+  navigation?: {label:string;href:string;when:string}[]
+  title: string
+  introduction: string
+  materials: string[]
+  notes: string[]
+  source: string
+  walkthrough: { title: string; action: string; result: string }[]
+  answer: string
+  challenge: { task: string; hints: string[]; answer: string }
+  adaptation: string[]
+  prompt: string
+}
+
 export interface ProjectManual {
+   practiceLab?: PracticeLab
    visualGuide?: {src:string;alt:string;caption:string;source:string;points:string[]}
    workedExample?: { before: string; action: string; after: string }
  language?: 'es' | 'en'
@@ -439,7 +454,7 @@ export interface ProjectManual {
   inputs: { field: string; example: string; rule: string }[]
   steps: { title: string; instruction: string; configuration?: string; expected: string; why: string }[]
   prompts: { title: string; where: string; text: string; replace: string; expected: string; followUp: string }[]
-  files: { name: string; purpose: string; content?: string; url?: string }[]
+  files: { name: string; purpose: string; content?: string; url?: string; verification?: {version:string;checkedAt:string;status:'passed'|'expected-error';expectedError?:string} }[]
   tests: { name: string; input: string; expected: string; inspect: string }[]
   troubleshooting: { symptom: string; cause: string; fix: string }[]
   production: string[]
@@ -582,6 +597,7 @@ export interface Guide {
 
 /** Lección del curso curado: escrita a mano, no generada. */
 export interface CursoLesson {
+  practiceLab?: PracticeLab
   projectWorkbook?: ProjectManual
   instructionalLocale?: string
   id: string
@@ -823,6 +839,7 @@ export interface AgentExample {
 
 /** Un agente completo: configuración, instalación, prueba y límites. */
 export interface ReadyAgent {
+  practiceLab?: PracticeLab
   id: string
   order?: number
   title: string
