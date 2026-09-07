@@ -21,7 +21,17 @@ for (const locale of ['es', 'en']) {
   }
   for (const name of ['prompts', 'tools', 'kits','projects','glossaryIndex']) { assert.deepEqual(await read(name), full[name === 'tools' ? 'toolPages' : name]); checks++ }
   for (const lesson of full.lessons) { assert.deepEqual(await read('lessons/' + encodeURIComponent(lesson.slug)), lesson); checks++ }
-  for (const tool of full.toolPages) { assert.deepEqual(await read('tools/' + encodeURIComponent(tool.id)), tool); checks++ }
+  for (const tool of full.toolPages) {
+    const shell=await read('tools/'+encodeURIComponent(tool.id))
+    assert.equal(shell.id,tool.id)
+    assert.deepEqual(shell.guide?.projectLessons?.map(m=>m.title),tool.guide?.projectLessons?.map(m=>m.title))
+    assert.ok(shell.guide?.projectLessons?.every(m=>m.steps.length===0))
+    for(const [i,manual] of (tool.guide?.projectLessons||[]).entries()){
+      const lesson=await read('tool-lessons/'+encodeURIComponent(tool.id)+'-'+String(i+1).padStart(2,'0'))
+      assert.equal(lesson.toolId,tool.id);assert.deepEqual(lesson.manual,manual);checks++
+    }
+    checks++
+  }
   for (const key of ['guides', 'preguntas', 'decks']) { assert.deepEqual(index[key], full[key]); checks++ }
   for (const key of ['curso','kits','agents']) for (const item of full[key]) { assert.deepEqual(await read(key + '/' + encodeURIComponent(item.id)), item); checks++ }
   for (const tool of full.toolPages) { assert.deepEqual((await read('automations/' + encodeURIComponent(tool.id))).guide.automations, tool.guide?.automations || []); checks++ }

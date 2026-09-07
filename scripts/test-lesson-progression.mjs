@@ -49,7 +49,7 @@ try{
    assert.equal(await page.locator('.st-learning-flow-track button[aria-pressed="true"]').count(),1)
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))
    const downloadPromise=page.waitForEvent('download')
-   await page.locator('#project-files').getByRole('button',{name:locale==='en'?'Download file':'Descargar archivo',exact:true}).click()
+   await page.locator('#project-files').getByRole('button',{name:locale==='en'?'Download file':'Descargar archivo',exact:true}).first().click()
    assert.equal((await downloadPromise).suggestedFilename(),'first-practice.txt')
    if(locale==='es'&&id==='n8n')await page.locator('.st-worked-example').screenshot({path:'.temp/first-practice-es.png'})
   }

@@ -340,7 +340,7 @@ function buildBasico(signal, stage, tools) {
   return {
     level: 'basico',
     headline: `«${signal.title}», explicado desde cero`,
-    hook: 'Vamos a explicarlo sin una sola palabra técnica sin traducir. Si algo no se entiende, es culpa de la explicación, no tuya.',
+    hook: 'Lee el ejemplo, identifica lo que necesitas y realiza una acción cada vez.',
     minutes: minutesFor(blocks, practice, 6),
     objectives: [
       'Explicar con tus palabras de qué va este tema y qué problema resuelve',
@@ -484,7 +484,7 @@ function buildIntermedio(signal, stage, tools) {
   return {
     level: 'intermedio',
     headline: `«${signal.title}», paso a paso`,
-    hook: 'Aquí se trabaja con las manos. Al final tienes que tener algo que funcione, aunque sea pequeño y feo. Feo y funcionando gana a bonito y teórico.',
+    hook: 'Realiza la práctica, guarda el resultado y comprueba que puedes repetir los pasos.',
     minutes: minutesFor(blocks, practice, 10),
     objectives: [
       'Ejecutar el procedimiento completo al menos una vez, de principio a fin',
@@ -624,7 +624,7 @@ function buildAvanzado(signal, stage, tools) {
   return {
     level: 'avanzado',
     headline: `«${signal.title}»: límites, coste y decisiones`,
-    hook: 'Aquí se rompe a propósito. El objetivo no es que funcione: es saber exactamente cómo se comporta cuando deja de funcionar, y poder explicarlo.',
+    hook: 'Prueba en una copia qué ocurre si falta un dato o aparece un error. Después explica cómo recuperar el trabajo.',
     minutes: minutesFor(blocks, practice, 14),
     objectives: [
       'Justificar la elección frente a al menos una alternativa real',

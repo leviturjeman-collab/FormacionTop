@@ -5,7 +5,7 @@ export async function writeCourseShards(course, publicDir, locale) {
   if (!['es','en'].includes(locale)) throw new Error('Unsupported content locale')
   const directory = path.join(publicDir, 'course-data', locale)
   await fs.mkdir(path.join(directory, 'lessons'), { recursive: true })
-  for (const folder of ['tools','curso','kits','agents','automations']) await fs.mkdir(path.join(directory, folder), { recursive: true })
+  for (const folder of ['tools','tool-lessons','curso','kits','agents','automations']) await fs.mkdir(path.join(directory, folder), { recursive: true })
   const write = (name, data) => fs.writeFile(path.join(directory, name + '.json'), JSON.stringify({ schemaVersion: 1, generatedAt: course.generatedAt, data }), 'utf8')
   const index = {
     ...course,
@@ -26,10 +26,15 @@ export async function writeCourseShards(course, publicDir, locale) {
   await write('prompts', course.prompts)
   await write('tools', course.toolPages)
   await write('kits', course.kits)
-  for (const tool of course.toolPages) await write('tools/' + encodeURIComponent(tool.id), tool)
+  for (const tool of course.toolPages) {
+    const compactManual = m => ({title:m.title,outcome:m.outcome,language:m.language,context:[],prerequisites:[],inputs:[],steps:[],prompts:[],files:[],tests:[],troubleshooting:[],production:[],sources:[]})
+    const compact = tool.guide ? {...tool,guide:{...tool.guide,projectLessons:tool.guide.projectLessons?.map(compactManual),automations:tool.guide.automations?.map(a=>({...a,project:a.project?compactManual(a.project):undefined}))}} : tool
+    await write('tools/' + encodeURIComponent(tool.id), compact)
+    for(const [i,lesson] of (tool.guide?.projectLessons||[]).entries()) await write('tool-lessons/'+encodeURIComponent(tool.id)+'-'+String(i+1).padStart(2,'0'),{toolId:tool.id,lessonId:String(i+1).padStart(2,'0'),manual:lesson})
+  }
   for (const lesson of course.lessons) await write('lessons/' + encodeURIComponent(lesson.slug), lesson)
   // Retired generated shards must not remain addressable after a curriculum change.
-  for (const [folder, ids] of [['lessons', course.lessons.map(item => item.slug)], ['tools', course.toolPages.map(item => item.id)], ['automations', course.toolPages.map(item => item.id)], ...['curso','kits','agents'].map(key => [key,course[key].map(item => item.id)])]) {
+  for (const [folder, ids] of [['lessons', course.lessons.map(item => item.slug)], ['tool-lessons',course.toolPages.flatMap(t=>(t.guide?.projectLessons||[]).map((_,i)=>t.id+'-'+String(i+1).padStart(2,'0')))], ['tools', course.toolPages.map(item => item.id)], ['automations', course.toolPages.map(item => item.id)], ...['curso','kits','agents'].map(key => [key,course[key].map(item => item.id)])]) {
     const expected = new Set(ids.map(id => encodeURIComponent(id) + '.json'))
     const target = path.join(directory, folder)
     for (const entry of await fs.readdir(target, { withFileTypes: true })) {

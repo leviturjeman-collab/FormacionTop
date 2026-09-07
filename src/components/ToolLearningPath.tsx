@@ -1,7 +1,7 @@
 import ProjectManualView from './ProjectManualView'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ToolPage } from '../types'
-import { toolPath } from '../tool-path'
+import type { PathLesson } from '../tool-path'
 import { href } from '../router'
 import { store, useStudent } from '../store'
 import { useLocale } from '../i18n'
@@ -11,11 +11,14 @@ export default function ToolLearningPath({ tool, lessonId }: { tool: ToolPage; l
   const en = useLocale() === 'en'
   const student = useStudent()
   const [need, setNeed] = useState('all')
-  const lessons = toolPath(tool, en).map((lesson,index)=>{const project=tool.guide?.projectLessons?.[index];return project?{...lesson,title:project.title.replace(/^\d+ · /,''),purpose:project.outcome}:lesson})
+  const [fallback,setFallback]=useState<PathLesson[]>([])
+  useEffect(()=>{let cancelled=false;if(!tool.guide?.projectLessons?.length)void import('../tool-path').then(({toolPath})=>{if(!cancelled)setFallback(toolPath(tool,en))});return()=>{cancelled=true}},[tool,en])
+  const lessons:PathLesson[]=tool.guide?.projectLessons?.length?tool.guide.projectLessons.map((project,index)=>({id:String(index+1).padStart(2,'0'),title:project.title.replace(/^\d+ · /,''),purpose:project.outcome,explanation:[],example:'',steps:[],check:'',errors:[]})):fallback
   const url = (id?: string) => href({ name: 'herramienta', toolId: tool.id, tab: 'lecciones-herramienta', lessonId: id, filters: {} })
   const done = (id: string) => student.lessons[`tool-path:${tool.id}:${id}`]?.done.includes('intermedio')
   const active = lessons.find(item => item.id === lessonId)
   const manual = active ? tool.guide?.projectLessons?.[Number(active.id)-1] : undefined
+  if(!lessons.length)return <p role="status">{en?'Loading lessons…':'Cargando lecciones…'}</p>
   if (lessonId && !active) return <div className="st-page"><h1>{en ? 'Lesson not found' : 'Lección no encontrada'}</h1><a href={url()}>{en ? 'Back to lessons' : 'Volver a las lecciones'}</a></div>
   if (active) return <article className="st-page st-path-detail">
     <a className="st-btn-ghost" href={url()}>{en ? `Back to ${tool.label}` : `Volver a ${tool.label}`}</a>
@@ -34,6 +37,7 @@ export default function ToolLearningPath({ tool, lessonId }: { tool: ToolPage; l
     {tool.id==='supabase' && <p><a href="https://supabase.com/docs/guides/database/postgres/row-level-security" target="_blank" rel="noreferrer">{en?'Supabase: row-level access policies':'Supabase: políticas de acceso por fila'}</a></p>}
     </>}
     <button className="st-btn" type="button" aria-pressed={!!done(active.id)} onClick={() => store.toggleDone(`tool-path:${tool.id}:${active.id}`, 'intermedio')}>{done(active.id) ? (en ? 'Completed · undo' : 'Completada · deshacer') : (en ? 'Mark lesson completed' : 'Marcar lección completada')}</button>
+    {done(active.id)&&<section className="st-panel st-completion-result" role="status"><span className="st-kicker">{en?'Your saved progress':'Tu avance guardado'}</span><h2>{en?'What you take away':'Qué te llevas de esta práctica'}</h2><p>{active.purpose}</p><p>{en?'Keep your result and the check you performed. This mark records your own confirmation.':'Conserva tu resultado y la comprobación que has hecho. Esta marca guarda tu propia confirmación.'}</p>{lessons[Number(active.id)]?<a className="st-btn" href={url(lessons[Number(active.id)].id)}>{en?'Continue with: ':'Sigue con: '}{lessons[Number(active.id)].title}</a>:<a className="st-btn" href={href({name:'mi-proyecto'})}>{en?'Bring it to my project':'Llévalo a Mi proyecto'}</a>}</section>}
     <nav className="st-lesson-nav" aria-label={en ? 'Lesson navigation' : 'Navegación de lecciones'}>{Number(active.id) > 1 && <a href={url(String(Number(active.id) - 1).padStart(2, '0'))}>{en ? 'Previous' : 'Anterior'}</a>}{Number(active.id) < 10 ? <a href={url(String(Number(active.id) + 1).padStart(2, '0'))}>{en ? 'Next lesson' : 'Siguiente lección'}</a> : <a href={href({ name: 'mi-proyecto' })}>{en ? 'Open my project' : 'Abrir mi proyecto'}</a>}</nav>
   </article>
   return <section className="st-tool-path"><div className="st-section-head"><div><span className="st-kicker">{en ? 'Tool curriculum' : 'Programa de la herramienta'}</span><h2>{en ? `${tool.label}: ten practical learning units` : `${tool.label}: diez unidades de aprendizaje práctico`}</h2><p>{en ? 'Each unit develops concepts, a worked example, guided practice and a personal exercise. Start at 01 and advance when you can demonstrate the learning evidence.' : 'Cada unidad desarrolla conceptos, un ejemplo resuelto, una práctica guiada y un ejercicio propio. Empieza por la 01 y avanza cuando puedas demostrar lo aprendido.'}</p></div><span>{lessons.filter(item => done(item.id)).length}/10</span></div>

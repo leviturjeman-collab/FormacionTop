@@ -57,6 +57,7 @@ function AssetCode({ asset }: { asset: LessonAsset }) {
 export default function Leccion({ slug, level }: { slug: string; level?: LevelId }) {
   const course = useCourse()
   const locale = useLocale()
+  const t=(es:string,en:string)=>locale==='en'?en:es
   const { bySlug, stageById } = useIndexes()
   const student = useStudent()
   const progress = useLessonProgress(slug)
@@ -73,9 +74,9 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
     return (
       <div className="st-page">
         <div className="st-empty">
-          <h2>Esa lección no existe</h2>
+          <h2>{t("Esa lección no existe","Lesson not found")}</h2>
           <p>El enlace apunta a «{slug}», que no está en el curso. Puede que hayas renombrado el archivo en Obsidian y haya que regenerar el índice.</p>
-          <a className="st-btn" href={href({ name: 'ruta' })}>Volver a la ruta</a>
+          <a className="st-btn" href={href({ name: 'ruta' })}>{t("Volver a la ruta","Return to the path")}</a>
         </div>
       </div>
     )
@@ -90,7 +91,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
   const isDone = progress.done.includes(active)
   const checks = progress.checks[active] || []
   // Las tareas comparten almacén con el checklist, desplazadas para no chocar.
-  const taskDone = checks.filter((item) => item >= 100).map((item) => item - 100)
+  const taskDone = checks.filter((item) => item >= 100 && item < 100 + content.practice.steps.length).map((item) => item - 100)
 
   /* Anterior y siguiente. Se recorre la categoría, que es el orden natural,
    * pero cuando se acaba (o cuando la categoría tiene una sola lección) se
@@ -116,8 +117,9 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
 
   return (
     <article className="st-lesson">
-      <header className="st-lesson-head">
-        <span className="st-kicker">{esFicha ? 'Ficha de consulta' : lesson.kindLabel}</span>
+      {locale==='en'&&lesson.contentLanguage==='es'&&<aside className="st-panel" lang="en"><h2>Spanish reference document</h2><p>This original reference has not been fully translated. For a guided practice in English, open the updated programme or the tool’s lessons.</p><a className="st-btn" href={lesson.tools[0]?`#/herramienta/${encodeURIComponent(lesson.tools[0])}/lecciones-herramienta/01`:'#/curso'}>Open the guided practice in English</a></aside>}
+      <header className="st-lesson-head" lang={lesson.contentLanguage}>
+        <span className="st-kicker">{esFicha ? t("Ficha de consulta","Reference page") : lesson.kindLabel}</span>
         <h1>{lesson.title}</h1><SaveResourceButton resource={{ id: `lesson:${slug}`, kind: 'lesson', title: lesson.title, href: href({ name: 'leccion', slug, level: active }) }} />
         <p className="st-lesson-headline">{content.headline}</p>
         <p className="st-lesson-hook">{content.hook}</p>
@@ -134,8 +136,8 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
             </a>
           )}
           {section && <span>{section.label}</span>}
-          <span><Clock size={11} /> {content.minutes} min en este nivel</span>
-          {position >= 0 && <span>{position + 1} de {siblings.length} en la categoría</span>}
+          <span><Clock size={11} /> {content.minutes} {t("min en este nivel","min at this level")}</span>
+          {position >= 0 && <span>{position + 1} / {siblings.length} {t("en la categoría","in this category")}</span>}
         </div>
 
         <ToolStrip tools={lesson.tools} size={14} />
@@ -144,12 +146,12 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
       <section className={`st-lesson-map${esFicha ? ' st-lesson-map-support' : ''}`}>
         <div>
           <BookOpen size={15} />
-          <strong>{esFicha ? '1. Consulta' : '1. Elige nivel'}</strong>
-          <small>{esFicha ? 'Esta página es apoyo puntual. No tienes que estudiarla en orden.' : 'Básico, intermedio o avanzado cambian la profundidad de la explicación.'}</small>
+          <strong>{esFicha ? t("1. Consulta","1. Reference") : t("1. Elige nivel","1. Choose a level")}</strong>
+          <small>{esFicha ? t("Esta página es apoyo puntual. No tienes que estudiarla en orden.","Use this page when you need a reference. You do not need to study it in order.") : t("Básico, intermedio o avanzado cambian la profundidad de la explicación.","Basic, intermediate and advanced offer different levels of detail.")}</small>
         </div>
         <div>
           <ListChecks size={15} />
-          <strong>{esFicha ? '2. Usa lo necesario' : '2. Haz práctica'}</strong>
+          <strong>{esFicha ? t("2. Usa lo necesario","2. Use what you need") : t("2. Haz práctica","2. Practise")}</strong>
           <small>
             {esFicha
               ? (locale === 'en' ? 'Copy the file, data or idea you need and go back to your task.' : 'Copia el archivo, dato o idea que necesites y vuelve a tu tarea.')
@@ -158,13 +160,13 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         </div>
         <div>
           <Wrench size={15} />
-          <strong>{esFicha ? '3. Vuelve al programa' : '3. No mezcles rutas'}</strong>
-          <small>{esFicha ? 'Si te pierdes, vuelve a Programa o a Mi proyecto.' : 'Esta lección pertenece a su categoría; las herramientas son apoyo aparte.'}</small>
+          <strong>{esFicha ? t("3. Vuelve al programa","3. Return to the programme") : t("3. No mezcles rutas","3. Continue this path")}</strong>
+          <small>{esFicha ? t("Si te pierdes, vuelve a Programa o a Mi proyecto.","If you get lost, return to Programme or My project.") : t("Esta lección pertenece a su categoría; las herramientas son apoyo aparte.","Follow this lesson\u2019s steps and use the tool guide when you need help.")}</small>
         </div>
       </section>
 
       {!esFicha && (
-      <div className="st-level-tabs" role="tablist" aria-label="Nivel de la lección">
+      <div className="st-level-tabs" role="tablist" aria-label={t("Nivel de la lección","Lesson level")}>
         {course.levels.map((meta) => {
           const levelDone = progress.done.includes(meta.id)
           return (
@@ -187,7 +189,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
 
       {!esFicha && (
       <section className="st-objectives">
-        <strong><Target size={11} /> Al terminar este nivel</strong>
+        <strong><Target size={11} /> {t("Al terminar este nivel","After this level")}</strong>
         <ul>
           {content.objectives.map((objective) => <li key={objective}>{objective}</li>)}
         </ul>
@@ -200,10 +202,10 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         <section className="st-lesson-assets">
           <div className="st-section-head">
             <div>
-              <span className="st-kicker">Material ejecutable</span>
-              <h2>Lo que tienes que usar</h2>
+              <span className="st-kicker">{t("Material ejecutable","Practice files")}</span>
+              <h2>{t("Lo que tienes que usar","What you need")}</h2>
             </div>
-            <span>{lesson.assets.length} archivos asociados</span>
+            <span>{lesson.assets.length} {t("archivos asociados","related files")}</span>
           </div>
           <p className="st-assets-intro">Estos son los archivos reales vinculados a esta lección. Lee primero la explicación, después copia el archivo y prueba el caso de ejemplo con datos ficticios.</p>
           <div className="st-assets-list">
@@ -216,7 +218,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
 
       {lesson.interactive.length > 0 && (
         <section className="st-interactive">
-          <h2>Practica con esto</h2>
+          <h2>{t("Practica con esto","Try this")}</h2>
           {lesson.interactive.map((piece, index) => <Piece key={index} piece={piece} />)}
         </section>
       )}
@@ -225,11 +227,11 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
       <section className="st-tasks">
         <div className="st-tasks-head">
           <div>
-            <span className="st-kicker">Tu turno</span>
+            <span className="st-kicker">{t("Tu turno","Your turn")}</span>
             <h2>{content.practice.goal}</h2>
           </div>
           <span className="st-piece-badge" data-full={taskDone.length === content.practice.steps.length ? 'true' : undefined}>
-            {taskDone.length}/{content.practice.steps.length} tareas
+            {taskDone.length}/{content.practice.steps.length} {t("tareas","tasks")}
           </span>
         </div>
         <div className="st-checkbar">
@@ -247,7 +249,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                     className="st-task-tick"
                     onClick={() => store.toggleCheck(slug, active, 100 + index)}
                     aria-pressed={hecha}
-                    aria-label={hecha ? 'Marcar como pendiente' : 'Marcar como hecha'}
+                    aria-label={hecha ? t("Marcar como pendiente","Mark as pending") : t("Marcar como hecha","Mark as done")}
                   >
                     {hecha ? <CheckCircle2 size={18} /> : <Circle size={18} />}
                   </button>
@@ -261,18 +263,18 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
                   <div>
                     <div className="st-step-guide">
                       <section>
-                        <b>Ejemplo real</b>
+                        <b>{t("Ejemplo real","Worked example")}</b>
                         <p>{step.title}</p>
                       </section>
                       <section>
-                        <b>Paso a paso</b>
+                        <b>{t("Paso a paso","Step by step")}</b>
                         <ol>
                           <li>{step.where}</li>
                           <li>{step.action}</li>
                         </ol>
                       </section>
                       <section>
-                        <b>Qué mirar al final</b>
+                        <b>{t("Qué mirar al final","What to check afterwards")}</b>
                         <p>{step.expected}</p>
                       </section>
                     </div>
@@ -298,7 +300,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
         <div className="st-final-check">
           <CheckCircle2 size={15} />
           <div>
-            <b>Al final deberías ver esto</b>
+            <b>{t("Al final deberías ver esto","What you should see at the end")}</b>
             <p>{content.practice.evidence}</p>
           </div>
         </div>
@@ -307,7 +309,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
 
       {content.pitfalls.length > 0 && (
         <section className="st-pitfalls">
-          <h2><TriangleAlert size={16} /> Dónde se atasca todo el mundo</h2>
+          <h2><TriangleAlert size={16} /> {t("Dónde se atasca todo el mundo","If you get stuck")}</h2>
           <ul>
             {content.pitfalls.map((pitfall, index) => (
               <li key={index}>
@@ -320,7 +322,7 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
       )}
 
       <section className="st-checklist">
-        <h2>Antes de darlo por hecho</h2>
+        <h2>{t("Antes de darlo por hecho","Check before marking completion")}</h2>
         <ul>
           {content.checklist.map((item, index) => (
             <li key={item}>
@@ -337,13 +339,13 @@ export default function Leccion({ slug, level }: { slug: string; level?: LevelId
           onClick={() => store.toggleDone(slug, active)}
         >
           {isDone ? <CheckCircle2 size={15} /> : <Circle size={15} />}
-          {isDone ? `Nivel ${active} completado` : `Marcar nivel ${active} como completado`}
+          {isDone ? t(`Nivel ${active} completado`,`Completed: ${course.levels.find(l=>l.id===active)?.label||active}`) : t(`Marcar nivel ${active} como completado`,`Mark ${course.levels.find(l=>l.id===active)?.label||active} as completed`)}
         </button>
       </section>
 
       {lesson.related.length > 0 && (
         <section className="st-related">
-          <h2>Relacionado en la academia</h2>
+          <h2>{t("Relacionado en la academia","Related in the academy")}</h2>
           <ul>
             {lesson.related.map((relatedSlug) => {
               const related = bySlug.get(relatedSlug)

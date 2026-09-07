@@ -323,6 +323,8 @@ export type InteractivePiece =
   | CanvasPiece | DataFlowPiece | DecisionPiece | ScreenMapPiece | BeforeAfterPiece
 
 export interface Lesson {
+   contentLanguage?: 'es' | 'en'
+   reviewStatus?: 'updated' | 'reference'
   id: string
   slug: string
   title: string
@@ -427,6 +429,7 @@ export interface ToolGuide {
 
 /** A runnable project chapter or a complete automation implementation guide. */
 export interface ProjectManual {
+   visualGuide?: {src:string;alt:string;caption:string;source:string;points:string[]}
    workedExample?: { before: string; action: string; after: string }
  language?: 'es' | 'en'
   title: string

@@ -25,6 +25,7 @@ import { completeToolGuide, registerGuides, toolGuideFor } from './lib/toolguide
 import { rewriteProgramLesson } from './lib/program-lessons.mjs'
 import { registerRecipes } from './lib/recipes.mjs'
 import { buildLevels, LEVELS, LEVEL_META } from './lib/levels.mjs'
+import {reviewLibrary} from './lib/library-review.mjs'
 import { buildInteractive } from './lib/interactive.mjs'
 import { buildCategories, buildGlossaryIndex, categoryKeyFor, sectionFor, SECTIONS } from './lib/categories.mjs'
 import { buildInstitutionalPromptLibrary } from './lib/institutional-prompts.mjs'
@@ -442,8 +443,10 @@ for (const absolute of markdownFiles) {
 const authoredDir = path.join(projectDir, 'content', 'authored')
 let authoredCount = 0
 if (await exists(authoredDir)) {
-  for (const name of (await fs.readdir(authoredDir)).filter((file) => file.endsWith('.json'))) {
-    const override = JSON.parse(await fs.readFile(path.join(authoredDir, name), 'utf8'))
+  for (const name of (await fs.readdir(authoredDir)).filter((file) => file.endsWith('.json')&&!file.endsWith('.en.json'))) {
+    const english=path.join(authoredDir,name.replace(/\.json$/,'.en.json'))
+    const translated=LOCALE==='en'&&await exists(english)
+    const override = JSON.parse(await fs.readFile(translated?english:path.join(authoredDir,name), 'utf8'))
     const target = lessons.find(
       (lesson) => lesson.sourcePath === override.sourcePath || lesson.slug === override.slug,
     )
@@ -457,13 +460,18 @@ if (await exists(authoredDir)) {
     if (override.interactive) target.interactive = override.interactive
     if (override.title) target.title = override.title
     target.authored = true
+    target.contentLanguage=translated?'en':'es'
     authoredCount += 1
   }
 }
 
 /* --- Relaciones entre lecciones ------------------------------------ */
 
-const byTitle = new Map(lessons.map((lesson) => [lesson.title.toLowerCase(), lesson.slug]))
+const originalLessonTitles = lessons.map(lesson=>[lesson.title.toLowerCase(),lesson.slug])
+reviewLibrary(lessons,cursoFiles,LOCALE==='en')
+if(LOCALE==='en')for(const lesson of lessons){lesson.kindLabel=KIND_EN[lesson.kind]?.label||lesson.kindLabel;lesson.folderLabel=translateFolderLabel(lesson.folderLabel)}
+
+const byTitle = new Map([...originalLessonTitles,...lessons.map((lesson) => [lesson.title.toLowerCase(), lesson.slug])])
 for (const lesson of lessons) {
   lesson.related = (lesson.relatedTitles || [])
     .map((title) => byTitle.get(title.toLowerCase()))

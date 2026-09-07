@@ -599,6 +599,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         </button>
       </section>
 
+      {leccionCompleta&&<section className="st-panel st-completion-result" role="status"><span className="st-kicker">{locale==='en'?'Your saved progress':'Tu avance guardado'}</span><h2>{locale==='en'?'What you can now do':'Qué sabes hacer ahora'}</h2><ul>{leccion.canDo.map(text=><li key={text}>{text}</li>)}</ul><p>{locale==='en'?'Keep the example you completed and one version adapted to your activity. This is your own completion record.':'Guarda el ejemplo que has hecho y una versión adaptada a tu actividad. Esta marca recoge tu propia confirmación.'}</p>{siguiente?<a className="st-btn" href={href({name:'curso',lessonId:siguiente.id})}>{locale==='en'?'Continue with: ':'Sigue con: '}{siguiente.title}</a>:<a className="st-btn" href={href({name:'mi-proyecto'})}>{locale==='en'?'Open my project':'Abrir Mi proyecto'}</a>}</section>}
       <nav className="st-lesson-nav">
         {anterior ? (
           <a href={href({ name: 'curso', lessonId: anterior.id })}>

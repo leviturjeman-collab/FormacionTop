@@ -1,6 +1,6 @@
 import { useRoute } from './router'
 import { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react'
-import type { Course, Lesson, Stage } from './types'
+import type { Course, Lesson, Stage, ProjectManual } from './types'
 
 export interface CourseData extends Course {
   tools: { id: string; label: string; icon: string }[]
@@ -55,6 +55,7 @@ export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
   if (route.name === 'curso' && route.lessonId) needs.push('curso/' + encodeURIComponent(route.lessonId))
   if (route.name === 'agentes' && route.agentId) needs.push('agents/' + encodeURIComponent(route.agentId))
   if (route.name === 'herramienta') needs.push('tools/' + encodeURIComponent(route.toolId))
+  if (route.name === 'herramienta' && route.lessonId && /^(0[1-9]|10)$/.test(route.lessonId)) needs.push('tool-lessons/' + encodeURIComponent(route.toolId) + '-' + route.lessonId)
 
   if (route.name === 'leccion') needs.push('lessons/' + encodeURIComponent(route.slug))
   const key = locale + ':' + needs.join(',')
@@ -112,6 +113,11 @@ export function useCourseLoader(locale: 'es' | 'en' = 'es'): LoadState {
           course.toolPages = course.toolPages.map(item => item.id === tool.id ? tool : item)
         }
         if (name === 'tools') { if (!Array.isArray(shard.data)) throw new Error('Invalid tool data'); course.toolPages = shard.data as CourseData['toolPages'] }
+        if (name.startsWith('tool-lessons/')) {
+          const item = shard.data as {toolId:string;lessonId:string;manual:ProjectManual}
+          if (name !== 'tool-lessons/' + encodeURIComponent(item.toolId) + '-' + item.lessonId || !item.manual?.steps?.length) throw new Error('Invalid tool lesson')
+          course.toolPages = course.toolPages.map(tool=>tool.id===item.toolId&&tool.guide?{...tool,guide:{...tool.guide,projectLessons:tool.guide.projectLessons?.map((m,i)=>String(i+1).padStart(2,'0')===item.lessonId?item.manual:m)}}:tool)
+        }
         if (name === 'kits') { if (!Array.isArray(shard.data)) throw new Error('Invalid kit data'); course.kits = shard.data as CourseData['kits'] }
         if (name.startsWith('lessons/')) {
           const lesson = shard.data as Lesson
