@@ -7,3 +7,5 @@
 
 - El PIN del propietario para entrar como profesor/administrador es el valor fijo ya establecido en `scripts/test-owner-access.mjs`. No cambiarlo, rotarlo, sustituirlo por una variable distinta ni modificar su hash para otro valor. Mantener esta regla en código, migraciones, configuración y despliegues. No afecta a los PIN individuales de alumnos.
 - Ejecuta `npm run test:owner:live` antes y después de publicar: debe comprobar el acceso real con ese valor fijo y el rol administrador verificado por el servidor. No elimines ni debilites esta comprobación.
+
+- Hay dos proyectos Vercel de esta web: `formacion-top` recibe los pushes de GitHub y usa `deploy-hfe-exact-sin-relleno` como rama de producción; `formaciontop` es el proyecto vinculado a la CLI y sirve `www.aibylevi.com`. Comprueba ambos destinos al publicar. Un despliegue correcto en uno no acredita el estado del otro. Los pushes a la rama indicada deben aparecer como Production en `formacion-top`; verifica el commit publicado, no solo que exista una versión Ready.
