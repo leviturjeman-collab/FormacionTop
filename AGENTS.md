@@ -4,3 +4,6 @@
 - Guarda los cambios en Git y súbelos al repositorio remoto. Utiliza `npm run deploy:production` para publicar en el proyecto Vercel ya vinculado y verifica el resultado del despliegue.
 - Si una prueba necesaria falla o el despliegue queda bloqueado, resuelve el problema cuando sea posible y comunica el estado real. No presentes un cambio local como publicado.
 - Para el contenido y el diseño, sigue `docs/ESTILO_EXPLICACIONES.md`: explicaciones sencillas y detalladas con ejemplos concretos como el de Marta, también en automatizaciones y prompts, sin solapamientos.
+
+- El PIN del propietario para entrar como profesor/administrador es el valor fijo ya establecido en `scripts/test-owner-access.mjs`. No cambiarlo, rotarlo, sustituirlo por una variable distinta ni modificar su hash para otro valor. Mantener esta regla en código, migraciones, configuración y despliegues. No afecta a los PIN individuales de alumnos.
+- Ejecuta `npm run test:owner:live` antes y después de publicar: debe comprobar el acceso real con ese valor fijo y el rol administrador verificado por el servidor. No elimines ni debilites esta comprobación.
