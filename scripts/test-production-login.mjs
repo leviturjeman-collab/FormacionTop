@@ -19,7 +19,7 @@ try{
   await page.goto(base+'#/curso/que-es-la-ia',{waitUntil:'domcontentloaded'})
   await page.locator('.st-curso-why').waitFor({timeout:30000})
   assert.match(await page.locator('.st-curso-why').innerText(),/Marta/)
-  await page.getByRole('button',{name:/^(Salir|Sign out)$/}).click()
+  await page.getByRole('button',{name:/^(Salir|Exit)$/}).click()
   await page.locator('.st-access-form input').waitFor({timeout:15000})
   console.log('PASS published login, protected lesson and logout: '+base)
   await context.close()
