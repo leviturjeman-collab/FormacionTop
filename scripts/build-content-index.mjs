@@ -57,7 +57,7 @@ const outputFile = LOCALE === 'en' ? 'course.en.json' : 'course.json'
 const IGNORED = new Set([
   'node_modules', 'dist', 'public', '.git', '.obsidian', '.vscode', '.claude',
   '36_PORTAL_WEB_FORMACION', '99_PENDIENTE_Y_MEJORAS', '23_AUDITORIA_PROFESIONAL',
-  'content', 'scripts', 'src', '.temp', '.vercel', 'audit', 'audit-output',
+  'content', 'scripts', 'src', 'AGENTS.md', '.temp', '.vercel', 'audit', 'audit-output',
 ])
 
 async function exists(target) {
@@ -316,6 +316,7 @@ for (const absolute of markdownFiles) {
   // Los .md sueltos en la raíz (README, changelog, planes) son documentación
   // del proyecto, no material del curso.
   if (!relativePath.includes('/')) continue
+  if (relativePath === 'docs/ESTILO_EXPLICACIONES.md') continue
   const raw = await fs.readFile(absolute, 'utf8')
   const signal = extract(raw, relativePath)
 
