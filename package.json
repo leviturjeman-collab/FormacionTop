@@ -8,7 +8,7 @@
     "index:es": "node scripts/build-project-assets.mjs && node scripts/build-brand-icons.mjs && node scripts/build-content-index.mjs",
     "index:en": "cross-env LOCALE=en node scripts/build-content-index.mjs",
     "dev": "npm run index && vite",
-    "build": "npm run index && npm run typecheck && vite build",
+    "build": "npm run check:access && npm run index && npm run typecheck && vite build",
     "preview": "vite preview",
     "validate": "npm run index && node scripts/validate-content.mjs && cross-env LOCALE=en node scripts/validate-content.mjs && node scripts/validate-student-ui.mjs && node scripts/validate-tool-identity.mjs",
     "test:automations": "node scripts/validate-workflows.mjs && node scripts/validate-tool-automation-guides.mjs",
@@ -28,7 +28,9 @@
     "deploy:production": "npm run test:owner:live && npx vercel --prod --yes && npm run test:owner:live",
     "test:beginner": "node scripts/test-beginner-experience.mjs",
     "test:optimization": "node scripts/audit-learner-content.mjs && node scripts/test-student-optimization.mjs",
-    "test:reading": "node scripts/test-readable-layout.mjs"
+    "test:reading": "node scripts/test-readable-layout.mjs",
+    "check:access": "node scripts/check-production-access.mjs",
+    "test:login:production": "node scripts/test-production-login.mjs"
   },
   "dependencies": {
     "@fontsource/fraunces": "^5.2.5",
