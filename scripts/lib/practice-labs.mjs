@@ -7,7 +7,7 @@ export function makePracticeLab({title,fixture,notes=[],materials=[],where='',ac
  if([input,answer,reason,challenge,challengeAnswer].some(x=>!x?.trim()))throw new Error(`Incomplete worked practice: ${title}`)
  return {
   title,
-  introduction:t('Este caso representa una situación de trabajo con datos inventados. Primero verás una resolución explicada. Después tendrás un segundo intento para hacerlo tú. La solución es una referencia para comparar; no significa que la academia haya ejecutado la tarea en tu cuenta.','This case represents a work situation using fictional details. First read an explained solution, then try a second attempt yourself. The answer is a reference for comparison; it does not mean the academy executed the task in your account.'),
+  introduction:t('Vamos a seguir un caso ficticio desde el principio: qué información llega, qué hacemos con ella y por qué obtenemos esa respuesta. Después cambiarás un dato y podrás comprobar si has entendido la regla.','Follow a fictional case from the beginning: what arrives, what we do with it and why we get that answer. Then change one detail and check whether you have understood the rule.'),
   materials,
   notes,
   source:input,
@@ -39,6 +39,6 @@ export function enrichManualPractice(manual,{kind,en=false,fixture,notes}={}){
  const first=manual.tests[0],second=manual.tests[1]||first
  const source=manual.workedExample?.before||manual.inputs.map(x=>`${x.field}: ${x.example}`).join('\n')||first.input
  const specific=fixture||[source,manual.workedExample?.after||first.expected,manual.steps.map(s=>s.why).filter(Boolean).join(' '),second.input,second.expected]
- const lab=makePracticeLab({title:manual.title,fixture:specific,notes:notes||practicalExplanation(kind||'text',en),materials:manual.prerequisites.map(p=>p.name+': '+p.instruction),where:t('el espacio de práctica indicado en la preparación','the practice workspace specified in preparation'),action:fixture?undefined:manual.workedExample?.action||manual.steps[1]?.instruction,en})
+ const lab=makePracticeLab({title:manual.title,fixture:specific,notes:notes||[...manual.context.slice(0,1),...practicalExplanation(kind||'text',en)],materials:manual.prerequisites.map(p=>p.name+': '+p.instruction),where:t('el espacio de práctica indicado en la preparación','the practice workspace specified in preparation'),action:fixture?undefined:manual.workedExample?.action||manual.steps[1]?.instruction,en})
  return {...manual,practiceLab:lab,files:[...manual.files,{name:en?'WORKED-CASE.txt':'CASO-RESUELTO.txt',purpose:t('Caso explicado, segundo intento con pistas y solución, y una guía para aplicarlo a tu proyecto.','Explained case, second attempt with hints and answer, and guidance for your own project.'),content:practiceLabText(lab,en)}]}
 }

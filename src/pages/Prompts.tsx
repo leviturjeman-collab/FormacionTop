@@ -107,7 +107,7 @@ function PromptCard({ prompt, familyTitle }: { prompt: PromptItem; familyTitle: 
             </header>
             <div className="st-prompt-body">
               <p><strong>{locale === 'en' ? 'Where to use it: ' : 'Dónde usarlo: '}</strong>{prompt.where}</p>
-              {prompt.example && <details className="st-template-preview"><summary>{locale === 'en' ? 'See the worked example' : 'Ver el ejemplo resuelto'}</summary><h4>{locale === 'en' ? 'Starting details' : 'Datos de partida'}</h4><pre>{prompt.example.input}</pre><h4>{locale === 'en' ? 'Reference result' : 'Resultado de referencia'}</h4><pre>{prompt.example.output}</pre><p>{prompt.example.why}</p></details>}
+              {prompt.example && <details open className="st-template-preview"><summary>{locale === 'en' ? 'See the worked example' : 'Ver el ejemplo resuelto'}</summary><h4>{locale === 'en' ? 'Starting details' : 'Datos de partida'}</h4><pre>{prompt.example.input}</pre><h4>{locale === 'en' ? 'Reference result' : 'Resultado de referencia'}</h4><pre>{prompt.example.output}</pre><h4>{locale === 'en' ? 'Why it works this way' : 'Por qué se hace así'}</h4><p>{prompt.example.why}</p></details>}
               <PromptEditor key={`${prompt.id}-${locale}`} name={prompt.name} text={prompt.prompt} hints={prompt.fill} exampleValues={prompt.exampleValues} onSave={saveToProject}/>
               {prompt.practiceHref && <a className="st-btn-ghost" href={prompt.practiceHref} onClick={()=>setOpen(false)}>{locale === 'en' ? 'Open the practice and its files' : 'Abrir la práctica y sus archivos'}</a>}
               <p className="st-prompt-expect"><b>{locale === 'en' ? "It'll give you:" : 'Te va a devolver:'}</b> {prompt.expect}</p>

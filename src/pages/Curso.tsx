@@ -365,7 +365,7 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
         <div>
           <BookOpen size={15} />
           <strong>{locale === 'en' ? '1. Understand' : '1. Entiende'}</strong>
-          <small>{locale === 'en' ? 'Read the first open block. The others open if you need more context.' : 'Lee el primer bloque abierto. Los demás se abren si necesitas más contexto.'}</small>
+          <small>{locale === 'en' ? 'Start with the story, then read the explanations and examples in order.' : 'Empieza por la historia y lee las explicaciones y los ejemplos en orden.'}</small>
         </div>
         <div>
           <ListChecks size={15} />
@@ -386,13 +386,11 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
 
       <section className="st-lesson-section-intro">
         <span className="st-kicker">{locale === 'en' ? 'First understand this' : 'Primero entiende esto'}</span>
-        <h2>{locale === 'en' ? 'Foundations, worked example and application' : 'Entiende el ejemplo y aprende a repetirlo'}</h2>
-        <p>{locale === 'en' ? 'Open only what you need. The first block comes open so you know where to start.' : 'Lee los conceptos en orden y contrasta el caso resuelto con los datos antes de realizar la práctica.'}</p>
+        <h2>{locale === 'en' ? 'Let’s look at it step by step' : 'Vamos a entenderlo paso a paso'}</h2>
+        <p>{locale === 'en' ? 'Each explanation includes an example. Afterwards, try the worked case yourself.' : 'Cada explicación tiene un ejemplo para que veas cómo se aplica. Después podrás probarlo tú en la práctica.'}</p>
       </section>
 
       {locale === 'en' && leccion.instructionalLocale === 'es' && <p lang="en" className="st-panel">This expanded workbook is currently available in Spanish.</p>}
-      {leccion.projectWorkbook && <ProjectManualView manual={leccion.projectWorkbook}/>}
-      {leccion.practiceLab && <PracticeLabView lab={leccion.practiceLab}/>}
       <div className="st-blocks">
         {leccion.theory.map((part, index) => (
           <details key={index} className="st-block st-block-seccion" open>
@@ -414,6 +412,9 @@ export function CursoLeccion({ lessonId }: { lessonId: string }) {
           </details>
         ))}
       </div>
+
+      {leccion.projectWorkbook && <ProjectManualView manual={leccion.projectWorkbook}/>}
+      {leccion.practiceLab && <PracticeLabView lab={leccion.practiceLab}/>}
 
       {leccion.words?.length > 0 && (
         <details className="st-block st-block-palabras">

@@ -8,6 +8,7 @@ const errors=[];fs.mkdirSync('.temp/mobile',{recursive:true});
 for(const width of [320,375,390,430,768,1440]){
  const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'}); const page=await context.newPage();
  await page.route('**/rest/v1/rpc/**',route=>route.fulfill({json:{ok:true,token:'test-session',expiresAt:'2099-01-01T00:00:00Z',profile:{id:'test-mobile',name:'Alumno prueba',role:'learner',level:'intermedio',locale:'es'},progress:{},state:{},version:0}}));
+ await page.route('**/api/session',route=>route.fulfill({json:{ok:true}}));
  await page.addInitScript(()=>sessionStorage.setItem('academia.session.v2','test-session'));
  await page.goto(base); await page.locator('.st-header').waitFor();
  for(const url of urls){
